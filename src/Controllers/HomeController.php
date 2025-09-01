@@ -49,9 +49,9 @@ class HomeController extends AbstractController
 //          dd($user);;
 
 //   $user = User::find(1);
-//   dd($user->getRelation('status'), $user->status()->first());
+//   dd($user->status()->first());
 
-   dd(User::with('status')->get());
+//   dd(User::with('status')->get());
 
           return $this->view('home.index');
     }
