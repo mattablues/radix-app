@@ -1,0 +1,83 @@
+.activated {
+  @apply bg-green-600/70 text-white;
+}
+
+.activate {
+  @apply bg-orange-400/70 text-white;
+}
+
+.blocked {
+  @apply bg-red-600/70 text-white;
+}
+
+.closed {
+  @apply bg-gray-600/70 text-white;
+}
+
+.offline {
+  @apply bg-gray-200/70 text-gray-400;
+}
+
+.online {
+  @apply bg-green-600/70 text-white;
+}
+
+.container-base {
+  @apply w-full xl:max-w-[1440px] px-3 md:px-5 lg:px-7;
+}
+
+.container-centered {
+  @apply w-full xl:max-w-[1440px] mx-auto px-3 md:px-5 lg:px-7;
+}
+
+.container-centered-sm {
+  @apply w-full xl:max-w-[900px] mx-auto px-3 md:px-5 lg:px-7;
+}
+
+.flash {
+  @apply w-full xl:max-w-[1440px] mx-auto px-3 md:px-5 lg:px-7 mb-2 rounded;
+}
+
+.flash-enlightenment {
+  @apply text-slate-800;
+}
+
+.flash-success {
+  @apply text-green-800;
+}
+
+.flash-warning {
+  @apply text-orange-800;
+}
+
+.flash-error {
+  @apply text-red-800;
+}
+
+.flash-info {
+  @apply text-blue-800;
+}
+
+.flash-box {
+  @apply w-full border py-2 px-3 mb-2 rounded;
+}
+
+.flash-box-enlightenment {
+  @apply bg-slate-50 border-slate-500 text-slate-800;
+}
+
+.flash-box-success {
+  @apply bg-green-50 border-green-500 text-green-800;
+}
+
+.flash-box-warning {
+  @apply bg-orange-50 border-orange-500 text-orange-800;
+}
+
+.flash-box-error {
+  @apply bg-red-50 border-red-500 text-red-800;
+}
+
+.flash-box-info {
+  @apply bg-blue-50 border-blue-500 text-blue-800;
+}

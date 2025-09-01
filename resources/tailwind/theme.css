@@ -1,0 +1,37 @@
+@theme {
+  --animate-move-in-top: moveInTop .3s ease-out backwards;
+  --animate-move-in-bottom: moveInBottom .3s ease-out backwards;
+  --animate-fade-in-top: fadeInTop .5s ease-out forwards;
+
+  @keyframes moveInTop {
+    0% {
+      transform: translateY(0);
+    }
+
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes moveInBottom {
+    0% {
+      transform: translateY(100px);
+    }
+
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInTop {
+    0% {
+      opacity: 1;
+      transform: translateY(-300px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

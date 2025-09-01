@@ -1,0 +1,65 @@
+$router->group(['middleware' => ['auth']], function (Router $router) {
+    $router->get('/profile', fn() => 'User profile');
+    $router->get('/settings', fn() => 'User settings');
+    $router->post('/update', fn() => 'Update user');
+});
+
+$router->group(['middleware' => ['admin']], function (Router $router) {
+    $router->get('/admin/dashboard', fn() => 'Admin dashboard');
+    $router->post('/admin/settings', fn() => 'Update admin settings');
+});
+
+$rules = [
+    'email' => 'unique:User,email,id=5',
+];
+
+'username' => 'required|regex:/^[a-zA-Z0-9_-]{3,16}$/'
+'status' => 'required|in:active,inactive,pending'
+'role' => 'required|not_in:admin,superuser'
+'is_active' => 'required|boolean'
+'birthdate' => 'required|date'
+'start_date' => 'required|date_format:Y-m-d'
+'username' => 'required|starts_with:admin_,mod_'
+'file_name' => 'required|ends_with:.png,.jpg,.jpeg'
+'server_ip' => 'required|ip'
+
+$rules = [
+    'username' => 'required|alphanumeric|starts_with:admin_',
+    'email' => 'required|email',
+    'role' => 'required|in:admin,editor,viewer'
+];
+
+$data = [
+    'password' => 'hemligt123',
+    'password_confirmation' => 'hemligt123'
+];
+
+$rules = [
+    'password' => 'required|confirmed'
+];
+
+
+$validator = new Validator($formData, $rules);
+
+if (!$validator->validate()) {
+    // Exempel: Inloggningslogik
+    if (isset($formData['email']) && isset($formData['password'])) {
+        // Kontrollera felaktighet i inloggningsuppgifter
+        if (!authCheck($formData['email'], $formData['password'])) { // authCheck: din kontrollmetod
+            $validator->addGeneralError("E-post eller lösenord är felaktigt.");
+        }
+    }
+
+    $errors = $validator->errors();
+}
+
+<div class="card">
+    <div class="card-header">{{ $header }}</div>
+    <div class="card-body">
+        {{ slot }}
+    </div>
+</div>
+
+   @foreach($photoAlbum as $photo)
+       <img src="{{ versionedFile('photos/' . $photo) }}" alt="Photo">
+   @endforeach

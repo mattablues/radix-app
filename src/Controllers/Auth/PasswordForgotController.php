@@ -1,0 +1,132 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers\Auth;
+
+use App\Models\User;
+use App\Services\AuthService;
+use Radix\Controller\AbstractController;
+use Radix\Http\RedirectResponse;
+use Radix\Http\Response;
+use Radix\Mailer\MailManager;
+use Radix\Support\Token;
+use Radix\Support\Validator;
+
+class PasswordForgotController extends AbstractController
+{
+    public function __construct(
+        private readonly MailManager $mailManager,
+        private readonly AuthService $authService,
+    )
+    {
+    }
+
+    public function index(): Response
+    {
+        return $this->view('auth.password-forgot.index');
+    }
+
+    public function create(): Response
+    {
+        $data = $this->request->post;
+
+        $validator = new Validator($data, [
+            'email' => 'required|email',
+        ]);
+
+        if (!$validator->validate()) {
+            return $this->view('auth.password-forgot.index', [
+                'errors' => $validator->errors(),
+            ]);
+        }
+
+        $email = $data['email'];
+        $ip = $this->request->ip(); // Hämta användarens IP-adress
+
+        // Kontrollera om användaren är tillfälligt blockerad på grund av för många försök
+        if ($this->authService->isBlocked($email)) {
+            $blockedUntil = $this->authService->getBlockedUntil($email);
+            $remainingTime = $blockedUntil - time();
+
+            // Räkna ut minuter och sekunder kvar
+            $minutes = intdiv($remainingTime, 60);
+            $seconds = $remainingTime % 60;
+            $status = true;
+            $errorMessage = "För många försök. Försök igen om $minutes minuter och $seconds sekunder.";
+
+            return $this->view('auth.password-forgot.index', [
+                'errors' => [
+                    'form-error' => [$errorMessage],
+                ],
+            ]);
+        }
+
+        if ($this->authService->isIpBlocked($ip)) {
+            $blockedUntil = $this->authService->getBlockedIpUntil($ip);
+            $remainingTime = $blockedUntil - time();
+
+            // Räkna ut minuter och sekunder kvar
+            $minutes = intdiv($remainingTime, 60);
+            $seconds = $remainingTime % 60;
+
+            $errorMessage = "För många förfrågningar från denna IP. Försök igen om $minutes minuter och $seconds sekunder.";
+
+            return $this->view('auth.password-forgot.index', [
+                'errors' => [
+                    'form-error' => [$errorMessage],
+                ],
+            ]);
+        }
+
+        $user = User::where('email', '=', $email)->first();
+
+        if ($user) {
+            $status = $user->status()->first();
+
+            if ($status && $status->getAttribute('status') === 'activated') {
+                $token = new Token();
+                $tokenValue = $token->value();
+                $tokenHash = $token->hashHmac();
+                $resetExpiresAt = time() + 60 * 60 * 2;
+
+                $status->fill([
+                    'password_reset' => $tokenHash,
+                    'reset_expires_at' => date('Y-m-d H:i:s', $resetExpiresAt),
+                ]);
+
+                $status->save();
+
+                // Skicka mejl för lösenordsåterställning
+                $this->mailManager->send(
+                    $email,
+                    'Återställ lösenord',
+                    '',
+                    [
+                        'template' => 'emails.password-reset',
+                        'data' => [
+                            'title' => 'Återställ lösenord',
+                            'body' => 'Här kommer din återställningslänk.',
+                            'url' => getenv('APP_URL') . route('auth.password-reset.index', ['token' => $tokenValue]),
+                        ],
+                        'reply_to' => $email,
+                    ]
+                );
+
+                // Återställ misslyckade försök vid framgång
+                $this->authService->clearFailedAttempts($email);
+                $this->authService->clearFailedIpAttempt($ip);
+            }
+        }
+
+        // Spara misslyckat försök om användaren inte finns eller något annat går fel
+        if (!$user || !$status || $status->getAttribute('status') !== 'activated') {
+            $this->authService->trackFailedAttempt($email);
+            $this->authService->trackFailedIpAttempt($ip);
+        }
+
+        $this->request->session()->setFlashMessage('Ett e-postmeddelande med återställningsinformation har skickats till din e-postadress.', 'enlightenment');
+
+        return new RedirectResponse(route('auth.login.index'));
+    }
+}

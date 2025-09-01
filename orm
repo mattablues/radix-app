@@ -1,0 +1,96 @@
+//        $post = new Post();
+//        $post->fill(['title' => 'Title', 'content' => 'Updated Content']);
+//        $post->save();
+
+//        dd(Post::find(3));
+    // Uppdatera en post (kontrollera att den hittas först)
+//    $post = Post::find(1);
+//    if ($post) {
+//        $post->fill(['title' => 'Updated Title', 'content' => 'Updated Content']);
+//        $post->save();
+//    } else {
+//        echo "Post with ID 2 not found.\n";
+//    }
+//
+    // Försök att radera en post
+//    $post = Post::find(1);
+//    if ($post) {
+//        $post->delete(); // Soft-deletar posten
+//    } else {
+//        echo "Post with ID 1 not found.\n";
+//    }
+
+//$user = User::find(2);
+//
+//if ($user) {
+//    $user->delete(); // Soft-deletar posten genom att sätta `deleted_at`
+//    echo "User soft-deleted.";
+//} else {
+//    echo "User not found.";
+//}
+
+//$user = User::find(2, true); // Tillåt att hämta soft-deleted poster
+//
+//if ($user && $user->restore()) {
+//    echo "User successfully restored.";
+//} else {
+//    echo "Failed to restore user.";
+//}
+
+//$user = User::find(2, true); // Hitta även soft-deleted poster
+//
+//if ($user && $user->forceDelete()) {
+//    echo "User permanently deleted.";
+//} else {
+//    echo "Failed to delete user.";
+//}
+
+
+//
+//// Bekräfta att deleted_at är null igen
+//print_r($post->getAttributes());
+
+//    $post = Post::find(1, true);
+//    var_dump($post);;
+//    if ($post) {
+//        $post->restore(); // Soft-deletar posten
+//    } else {
+//        echo "Post with ID 1 not found.\n";
+//    }
+
+//        $user = User::find(1); // Hämta användaren med ID 1
+//        $posts = $user->posts()->get(); // Hämta relaterade poster
+//
+//        dd($posts);;
+//        foreach ($posts as $post) {
+//            echo $post->title;  // Direkt tillgång till `title`
+//            echo $post->content; // Direkt tillgång till `content`
+//            echo $user->email;
+//        }
+//
+//        dd(User::query()
+//            ->where('user_id', '=', 1)
+//            ->leftJoin('posts', 'users.id', '=', 'posts.user_id')
+//            ->paginate(1, 2));
+
+$mailManager = $this->container->get(\App\Mail\MailManager::class);
+
+$sent = $mailManager->send(
+    'recipient@example.com',
+    'Welcome Email',
+    '',
+    [
+        'template' => 'email',
+        'data' => ['title' => 'Welcome', 'body' => 'Your account has been created.'],
+    ]
+);
+
+if ($sent) {
+    echo 'Email sent successfully!';
+} else {
+    echo 'Failed to send email.';
+}
+
+User::with('status')->search('mats', ['email'], 5, 1);
+User::search('mats', ['email'], 5, 1);
+

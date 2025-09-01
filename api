@@ -1,0 +1,20 @@
+fetch('/api/v1/users', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer <din-token>'
+    },
+    body: JSON.stringify({
+        first_name: '',
+        last_name: '',
+        email: '',
+        password: ''
+    })
+}).then(response => {
+    if (!response.ok) {
+        return response.json().then(data => {
+            console.error('Valideringsfel:', data.errors);
+            // Hantera felen, t.ex. visa dem på sidan
+        });
+    }
+});
