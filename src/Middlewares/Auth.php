@@ -13,9 +13,9 @@ use Radix\Http\Response;
 use Radix\Middleware\MiddlewareInterface;
 use App\Models\User;
 
-class Auth implements MiddlewareInterface
+readonly class Auth implements MiddlewareInterface
 {
-    public function __construct(private readonly EventDispatcher $eventDispatcher) {
+    public function __construct(private EventDispatcher $eventDispatcher) {
     }
 
     public function process(Request $request, RequestHandlerInterface $next): Response

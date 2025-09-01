@@ -7,12 +7,12 @@
     "test": "tests"
   },
   "scripts": {
-    "watch:tailwind": "cmd /c \"del /f public\\css\\app.css\" && npx @tailwindcss/cli -i resources/tailwind/index.css -o public\\css\\app.css --watch && npx touch public\\css\\app.css",
-    "watch:alpinejs": "cmd /c \"del /f public\\js\\app.js\" && npx esbuild resources\\js\\index.js --outfile=public\\js\\app.js --bundle --watch && npx touch public\\js\\app.js",
+    "watch:tailwind": "npx rimraf public/css/app.css && npx @tailwindcss/cli -i resources/tailwind/index.css -o public/css/app.css --watch && npx touch public/css/app.css",
+    "watch:alpinejs": "npx rimraf public/js/app.js && npx esbuild resources/js/index.js --outfile=public/js/app.js --bundle --watch && npx touch public/js/app.js",
     "start:dev": "npm-run-all --parallel watch:tailwind watch:alpinejs",
-    "prefix:css": "postcss public\\css\\app.css --use autoprefixer -o public\\css\\app.css",
-    "compress:css": "npx tailwindcss -o public\\css\\app.css --minify",
-    "compress:js": "uglifyjs public\\js\\app.js -o public\\js\\app.js --compress",
+    "prefix:css": "postcss public/css/app.css --use autoprefixer -o public/css/app.css",
+    "compress:css": "npx tailwindcss -o public/css/app.css --minify",
+    "compress:js": "uglifyjs public/js/app.js -o public/js/app.js --compress",
     "start:build": "npm-run-all compress:js prefix:css compress:css"
   },
   "author": "Mats Åkebrand",
@@ -30,6 +30,7 @@
     "esbuild": "^0.25.9",
     "npm-run-all": "^4.1.5",
     "postcss-cli": "^11.0.1",
+    "rimraf": "^6.0.1",
     "uglify-js": "^3.19.3"
   }
 }

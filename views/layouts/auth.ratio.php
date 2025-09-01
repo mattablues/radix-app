@@ -6,7 +6,7 @@
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>{% yield title %}</title>
-  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="{{ versioned_file('/css/app.css') }}">
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/public/icons/favicon-16x16.png">
@@ -40,7 +40,7 @@
   </footer>
   {% include "components/cookie-consent.ratio.php" %}
   {% yield alpinejs %}
-  <script src="/js/app.js"  charset="UTF-8"></script>
+  <script src="{{ versioned_file('/js/app.js') }}"></script>
   {% yield script %}
 </body>
 </html>
