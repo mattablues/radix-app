@@ -47,6 +47,12 @@ class HomeController extends AbstractController
 //          $user = User::with('status')->search('åkebrand', ['last_name', 'first_name']);
 //
 //          dd($user);;
+
+//   $user = User::find(1);
+//   dd($user->getRelation('status'), $user->status()->first());
+
+   dd(User::with('status')->get());
+
           return $this->view('home.index');
     }
 }
