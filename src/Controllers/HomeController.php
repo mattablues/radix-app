@@ -6,7 +6,6 @@ namespace App\Controllers;
 
 use Radix\Controller\AbstractController;
 use Radix\Http\Response;
-use App\Models\User;
 
 class HomeController extends AbstractController
 {

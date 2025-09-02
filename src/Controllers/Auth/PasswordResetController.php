@@ -73,7 +73,7 @@ class PasswordResetController extends AbstractController
         $user->password = $data['password'];
         $user->save();
 
-        $this->request->session()->setFlashMessage('Ditt lösenord har återställts, du kan nu logga in.', 'enlightenment');;
+        $this->request->session()->setFlashMessage('Ditt lösenord har återställts, du kan nu logga in.', 'enlightenment');
 
         return new RedirectResponse(route('auth.login.index'));
     }

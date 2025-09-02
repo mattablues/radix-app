@@ -92,8 +92,7 @@ class UploadService
             $uploadDirectory,
             function (Image $image) {
                 $image->resizeImage(600, 600); // Ändra storlek på produktbild
-            },
-            null
+            }
         );
     }
 }

@@ -8,7 +8,6 @@ use App\Models\Status;
 use App\Models\User;
 use Radix\Controller\ApiController;
 use Radix\Http\JsonResponse;
-use Radix\Support\Validator;
 
 class UserController extends ApiController
 {

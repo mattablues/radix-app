@@ -8,7 +8,7 @@ ini_set('session.gc_maxlifetime', '1200'); // 20 minuter
 ini_set('session.gc_probability', '1');
 ini_set('session.gc_divisor', '100');
 
-date_default_timezone_set($_ENV['APP_TIMEZONE']);
+date_default_timezone_set(getenv('APP_TIMEZONE'));
 
 set_error_handler('\Radix\Error\RadixErrorHandler::handleError');
 set_exception_handler('\Radix\Error\RadixErrorHandler::handleException');

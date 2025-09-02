@@ -7,7 +7,6 @@ namespace App\Controllers\Auth;
 use App\Models\Status;
 use App\Models\User;
 use Radix\Controller\AbstractController;
-use Radix\Http\Exception\PageNotFoundException;
 use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
 use Radix\Mailer\MailManager;
