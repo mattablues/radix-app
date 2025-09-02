@@ -22,12 +22,10 @@ readonly class Admin implements MiddlewareInterface
             throw new NotAuthorizedException('Unable to identify user session.');
         }
 
-        $user = User::unguardQuery(function () use ($id) {
-            return User::select(['id', 'role'])
+        $user =  User::select(['id', 'role'])
                 ->where('id', '=', $id)
                 ->where('role', '=', 'admin')
                 ->first();
-        });
 
         if (!$user) {
             throw new NotAuthorizedException('You do not have permission to access this page');

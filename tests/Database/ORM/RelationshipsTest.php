@@ -539,8 +539,6 @@ class RelationshipsTest extends TestCase
 
     public function testHasManyFirstReturnsRelatedRecord(): void
     {
-        $expectedResults = ['id' => 1, 'post_id' => 10, 'content' => 'First comment'];
-
         // Mocka Comment-modellen
         $commentMock = $this->createMock(Model::class);
         $commentMock->method('getAttribute')->willReturnMap([

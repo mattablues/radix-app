@@ -23,7 +23,7 @@ class AuthService
         $blockedUntilKey = $this->getBlockedUntilKey($email);
 
         $failedAttempts = $this->session->get($failedKey, 0);
-        $blockedUntil = $this->session->get($blockedUntilKey, null);
+        $blockedUntil = $this->session->get($blockedUntilKey);
 
         // Om användaren är blockerad tills ett visst datum
         if ($blockedUntil && time() < $blockedUntil) {
@@ -64,7 +64,7 @@ class AuthService
     public function getBlockedUntil(string $email): ?int
     {
         $blockedUntilKey = $this->getBlockedUntilKey($email);
-        return $this->session->get($blockedUntilKey, null);
+        return $this->session->get($blockedUntilKey);
     }
 
     // ---- Kontroll och hantering för lösenordsåterställning ----
@@ -74,7 +74,7 @@ class AuthService
         $blockedUntilKey = $this->getBlockedResetUntilKey($email);
 
         $failedAttempts = $this->session->get($failedKey, 0);
-        $blockedUntil = $this->session->get($blockedUntilKey, null);
+        $blockedUntil = $this->session->get($blockedUntilKey);
 
         if ($blockedUntil && time() < $blockedUntil) {
             return true;
@@ -116,7 +116,7 @@ class AuthService
         $blockedUntilKey = $this->getBlockedIpUntilKey($ip);
 
         $failedAttempts = $this->session->get($failedKey, 0);
-        $blockedUntil = $this->session->get($blockedUntilKey, null);
+        $blockedUntil = $this->session->get($blockedUntilKey);
 
         if ($blockedUntil && time() < $blockedUntil) {
             return true;
@@ -148,12 +148,9 @@ class AuthService
     public function getBlockedIpUntil(string $ip): ?int
     {
         $blockedUntilKey = $this->getBlockedIpUntilKey($ip);
-        return $this->session->get($blockedUntilKey, null);
+        return $this->session->get($blockedUntilKey);
     }
 
-// ... existing code ...
-
-// ... existing code ...
     public function login(array $data): ?User
     {
         $email = $data['email'];
@@ -163,22 +160,16 @@ class AuthService
         }
 
         // Uppdatera frågan för att inkludera soft-deleted användare
-        $user = User::unguardQuery(function () use ($email) {
-            return User::query()
-                ->withSoftDeletes() // Aktivera soft-deletes
+        $user =  User::withSoftDeletes() // Aktivera soft-deletes
                 ->select(['id', 'first_name', 'last_name', 'email'])
                 ->where('email', '=', $email)
                 ->first(); // Hämta den faktiska användaren
-        });
-
 
         // Kontrollera om användaren inte hittades
         if (!$user) {
             $this->trackFailedAttempt($email);
             return null;
         }
-
-        // Kontrollera om kontot är soft-deleted
 
         // Validera lösenord
         $password = $user->fetchGuardedAttribute('password');

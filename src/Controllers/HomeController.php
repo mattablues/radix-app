@@ -37,9 +37,10 @@ class HomeController extends AbstractController
 
 //          $user = User::find(2, true);
 //          $user->restore();
-        //$users = User::with('status')->paginate();
+//
+//       $users = User::with('status')->paginate();
 //          $users = User::paginate();
-          //dd($users);
+//          dd($users);
 //
 //          $softDeletedUsers = User::getOnlySoftDeleted()->get();
 //          dd($softDeletedUsers);
