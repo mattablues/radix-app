@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 namespace App\Controllers\Auth;
 
+use App\Events\UserPasswordEvent;
 use App\Models\User;
 use App\Services\AuthService;
 use Radix\Controller\AbstractController;
+use Radix\EventDispatcher\EventDispatcher;
 use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
-use Radix\Mailer\MailManager;
 use Radix\Support\Token;
 use Radix\Support\Validator;
 
 class PasswordForgotController extends AbstractController
 {
     public function __construct(
-        private readonly MailManager $mailManager,
+        private readonly EventDispatcher  $eventDispatcher,
         private readonly AuthService $authService,
     )
     {
@@ -97,21 +98,13 @@ class PasswordForgotController extends AbstractController
 
                 $status->save();
 
-                // Skicka mejl för lösenordsåterställning
-                $this->mailManager->send(
-                    $email,
-                    'Återställ lösenord',
-                    '',
-                    [
-                        'template' => 'emails.password-reset',
-                        'data' => [
-                            'title' => 'Återställ lösenord',
-                            'body' => 'Här kommer din återställningslänk.',
-                            'url' => getenv('APP_URL') . route('auth.password-reset.index', ['token' => $tokenValue]),
-                        ],
-                        'reply_to' => $email,
-                    ]
-                );
+                $resetLink = getenv('APP_URL') . route('auth.password-reset.index', ['token' => $tokenValue]);
+
+                // Skicka e-postmeddelande
+                $this->eventDispatcher->dispatch(new UserPasswordEvent(
+                    email: $data['email'],
+                    resetLink: $resetLink
+                ));
 
                 // Återställ misslyckade försök vid framgång
                 $this->authService->clearFailedAttempts($email);

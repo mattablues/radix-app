@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\EventListeners;
+
+use App\Events\ContactFormEvent;
+use Radix\Mailer\MailManager;
+
+readonly class SendContactEmailListener
+{
+    public function __construct(private MailManager $mailManager) {}
+
+    public function __invoke(ContactFormEvent $event): void
+    {
+        $this->mailManager->send(
+            getenv('MAIL_EMAIL'), // Mottagarens e-postadress
+            'Förfrågan', // E-postämne
+            '', // Tom body eftersom template används
+            [
+                'template' => 'emails.contact', // Skicka template att rendera
+                'data' => [
+                    'heading' => 'Message from contact form',
+                    'body'  => $event->message,
+                    'name' => $event->firstName . ' ' . $event->lastName,
+                ], // Template-data
+                'from' => getenv('MAIL_EMAIL'), // Statisk avsändaradress (din server kräver detta)
+                'from_name' => 'Support Team', // Text för avsändare
+                'reply_to' => $event->email, // Registrerarens e-postadress (gör det möjligt att svara till avsändaren)
+            ]
+        );
+    }
+}

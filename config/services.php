@@ -16,8 +16,9 @@ $dotenv->load();
 
 // Skapa containern
 $container = new Radix\Container\Container();
+$container->add(\Psr\Container\ContainerInterface::class, $container);
 
-$excludeFiles = ['services.php', 'routes.php', 'middleware.php', 'providers.php'];
+$excludeFiles = ['services.php', 'routes.php', 'middleware.php', 'providers.php', 'listeners.php'];
 $configFiles = glob(ROOT_PATH . '/config/*.php');
 $configFiles = array_filter($configFiles, function ($file) use ($excludeFiles) {
     return !in_array(basename($file), $excludeFiles, true);
@@ -220,18 +221,14 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
             ->first())
     ) {
         $viewer->shared('currentUser', $user); // Gör currentUser tillgänglig i alla vyer
+    } else {
+        $viewer->shared('currentUser', null);
     }
 
     return $viewer;
 });
 
 $container->addShared(\Radix\EventDispatcher\EventDispatcher::class, \Radix\EventDispatcher\EventDispatcher::class);
-$dispatcher = $container->get(\Radix\EventDispatcher\EventDispatcher::class);
-
-$dispatcher->addListener(
-    \App\Events\UserBlockedEvent::class,
-    $container->get(\App\EventListeners\LogoutListener::class) // Lyssnaren hämtas automatiskt från containern
-);
 
 $container->add(\Radix\Mailer\MailManager::class, function () use ($container) {
     $templateViewer = $container->get(\Radix\Viewer\TemplateViewerInterface::class);

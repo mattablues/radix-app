@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\EventListeners;
+namespace Radix\Http\EventListeners;
 
 use Radix\Http\Event\ResponseEvent;
 

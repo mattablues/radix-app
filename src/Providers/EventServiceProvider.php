@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\EventListeners\ContentLengthListener;
 use Radix\EventDispatcher\EventDispatcher;
 use Radix\Http\Event\ResponseEvent;
+use Radix\Http\EventListeners\CacheControlListener;
+use Radix\Http\EventListeners\ContentLengthListener;
+use Radix\Http\EventListeners\CorsListener;
 use Radix\ServiceProvider\ServiceProviderInterface;
 
 class EventServiceProvider implements ServiceProviderInterface
 {
     private array $listen = [
         ResponseEvent::class => [
+            CorsListener::class,
             ContentLengthListener::class,
+            CacheControlListener::class
         ],
     ];
 

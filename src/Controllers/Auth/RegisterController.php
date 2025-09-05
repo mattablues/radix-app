@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace App\Controllers\Auth;
 
+use App\Events\UserRegisteredEvent;
 use App\Models\Status;
 use App\Models\User;
 use Radix\Controller\AbstractController;
+use Radix\EventDispatcher\EventDispatcher;
 use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
-use Radix\Mailer\MailManager;
 use Radix\Support\Token;
 use Radix\Support\Validator;
 
 class RegisterController extends AbstractController
 {
-    public function __construct(private readonly MailManager $mailManager)
+    public function __construct(private readonly EventDispatcher $eventDispatcher)
     {
     }
 
@@ -80,21 +81,13 @@ class RegisterController extends AbstractController
         $status->user_id = $user->id;
         $status->save();
 
+        $activationLink = getenv('APP_URL') . route('auth.register.activate', ['token' => $tokenValue]);
+
         // Skicka e-postmeddelande
-        $this->mailManager->send(
-            $data['email'], // Mottagarens e-postadress
-            'Aktivera ditt konto', // Ämne
-            '', // Body behövs inte, eftersom template används
-            [
-                'template' => 'emails.activate',
-                'data' => [
-                    'title' => 'Welcome',
-                    'body' => 'Your account has been created.',
-                    'url' => getenv('APP_URL') . route('auth.register.activate', ['token' => $tokenValue]),
-                ],
-                'reply_to' => $data['email'],
-            ]
-        );
+        $this->eventDispatcher->dispatch(new UserRegisteredEvent(
+            email: $data['email'],
+            activationLink: $activationLink
+        ));
 
         // Ställ in flash-meddelande och omdirigera
         $this->request->session()->setFlashMessage(

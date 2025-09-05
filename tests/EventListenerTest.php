@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Radix\Tests;
 
-use App\EventListeners\CacheControlListener;
-use App\EventListeners\ContentLengthListener;
-use App\EventListeners\CorsListener;
 use PHPUnit\Framework\TestCase;
 use Radix\EventDispatcher\EventDispatcher;
 use Radix\Http\Event\ResponseEvent;
-use Radix\Http\Response;
+use Radix\Http\EventListeners\CacheControlListener;
+use Radix\Http\EventListeners\ContentLengthListener;
+use Radix\Http\EventListeners\CorsListener;
 use Radix\Http\Request;
+use Radix\Http\Response;
 
 class EventListenerTest extends TestCase
 {
