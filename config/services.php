@@ -221,8 +221,6 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
             ->first())
     ) {
         $viewer->shared('currentUser', $user); // Gör currentUser tillgänglig i alla vyer
-    } else {
-        $viewer->shared('currentUser', null);
     }
 
     return $viewer;

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use \Psr\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Radix\ServiceProvider\ServiceProviderInterface;
 
 readonly class ListenersServiceProvider implements ServiceProviderInterface
 {
-    public function __construct(private ContainerInterface $container) {
-
+    public function __construct(private ContainerInterface $container)
+    {
     }
 
     public function register(): void
