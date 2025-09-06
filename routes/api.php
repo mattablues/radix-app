@@ -25,5 +25,9 @@ $router->group(['path' => '/api/v1'], function (\Radix\Routing\Router $router) {
     // Route för att radera en användare (DELETE)
     $router->delete('/users/{id}', [\App\Controllers\Api\UserController::class, 'delete'])
         ->name('api.users.delete');
+
+    $router->post('/users/search', [\App\Controllers\Api\UserController::class, 'search'])
+           ->name('api.users.search');
+
 });
 

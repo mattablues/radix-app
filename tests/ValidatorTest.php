@@ -17,6 +17,60 @@ class ValidatorTest extends TestCase
         $this->assertTrue($validator->validate());
     }
 
+    public function testDotNotationValidationPasses(): void
+    {
+        $rules = [
+            'search.term' => 'required|string|min:1',
+            'search.current_page' => 'nullable|integer|min:1',
+        ];
+
+        $data = [
+            'search' => [
+                'term' => 'example',
+                'current_page' => 1,
+            ]
+        ];
+
+        $validator = new Validator($data, $rules);
+        $this->assertTrue($validator->validate());
+    }
+
+    public function testMinRulePassesWithInteger(): void
+    {
+        $rules = ['current_page' => 'min:1'];
+        $data = ['current_page' => 1];
+
+        $validator = new Validator($data, $rules);
+        $this->assertTrue($validator->validate());
+    }
+
+    public function testMinRuleFailsWithInteger(): void
+    {
+        $rules = ['current_page' => 'min:5'];
+        $data = ['current_page' => 2];
+
+        $validator = new Validator($data, $rules);
+        $this->assertFalse($validator->validate());
+    }
+
+    public function testMaxRulePassesWithInteger(): void
+    {
+        $rules = ['current_page' => 'max:10'];
+        $data = ['current_page' => 5];
+
+        $validator = new Validator($data, $rules);
+        $this->assertTrue($validator->validate());
+    }
+
+    public function testMaxRuleFailsWithInteger(): void
+    {
+        $rules = ['current_page' => 'max:5'];
+        $data = ['current_page' => 10];
+
+        $validator = new Validator($data, $rules);
+        $this->assertFalse($validator->validate());
+    }
+
     public function testStringRuleFails(): void
     {
         $data = ['name' => 123];
@@ -68,6 +122,15 @@ class ValidatorTest extends TestCase
         $validator = new Validator($data, $rules);
 
         $this->assertFalse($validator->validate());
+    }
+
+    public function testIntegerPasses(): void
+    {
+        $rules = ['current_page' => 'integer'];
+        $data = ['current_page' => 5];
+
+        $validator = new Validator($data, $rules);
+        $this->assertTrue($validator->validate());
     }
 
     public function testNullableStringPassesWithString(): void
