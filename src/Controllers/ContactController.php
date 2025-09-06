@@ -9,7 +9,6 @@ use Radix\Controller\AbstractController;
 use Radix\EventDispatcher\EventDispatcher;
 use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
-use Radix\Mailer\MailManager;
 use Radix\Support\Validator;
 
 class ContactController extends AbstractController
