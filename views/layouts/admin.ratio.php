@@ -185,5 +185,3 @@
   {% yield script %}
 </body>
 </html>
-
-

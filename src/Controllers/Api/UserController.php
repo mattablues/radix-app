@@ -57,7 +57,7 @@ class UserController extends ApiController
         }
 
         // Utför sökningen i User-modellen med hjälp av QueryBuilder
-        $results = User::search($term, ['first_name', 'last_name', 'email'], 10, $currentPage);
+        $results = User::with('status')->search($term, ['first_name', 'last_name', 'email'], 10, $currentPage);
 
         // Formatera resultaten som JSON
         $data = array_map(fn($user) => $user->toArray(), $results['data']);
@@ -216,4 +216,3 @@ class UserController extends ApiController
         ]);
     }
 }
-
