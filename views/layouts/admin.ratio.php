@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport"
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="Authorization" content="Bearer {{ $currentToken }}">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>{% yield title %}</title>
   <link rel="stylesheet" href="{{ versioned_file('/css/app.css') }}">
@@ -162,7 +163,7 @@
   </div>
     {% include "components/modal-close.ratio.php" %}
     {% include "components/modal-delete.ratio.php" %}
-  <main
+  <main id="mainContent"
     class="xl:max-w-[1140px] lg:ml-[300px] pt-4 px-3 md-px-5 lg:px-7 pb-2 min-h-[calc(100vh-108px)]"
     x-on:click="if (openSidebar) openSidebar = false"
   >
