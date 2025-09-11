@@ -9,7 +9,7 @@ export default class Search {
 
     init() {
         if (this.searchInput) {
-            // Lägg till eventlistener för inputs med debounce
+            // Lägg till event listener för inputs med debounce
             this.searchInput.addEventListener('input', this.debounce(async (e) => { // Gör callback-funktionen async
                 const term = e.target.value.trim();
                 if (term.length > 0) {
@@ -54,11 +54,9 @@ export default class Search {
 
             // Hämta och logga hela JSON-svaret
             const responseJson = await response.json();
-            console.log('Fullständigt svar från API:', responseJson);
 
             // Tilldela `data` från `body` till `this.results`
             this.results = responseJson.body.data || [];
-            console.log('Resultat som tilldelas:', this.results);
 
             // Rendera resultaten om datan finns
             this.renderResults();
@@ -72,7 +70,6 @@ export default class Search {
     }
 
     renderResults() {
-        console.log('Resultat som ska renderas:', this.results); // Debug-logga resultaten
 
         if (this.mainContent) {
             // Skapa eller identifiera resultatbehållaren
@@ -95,11 +92,15 @@ export default class Search {
                 this.results.forEach(result => {
                     const li = document.createElement('li');
                     li.classList.add('search-result-item');
+
+                    // Generera länken till användarens sida
+                    const userRoute = `/user/${result.id}/show`; // Dynamiskt skapa länken baserat på ID
+
                     li.innerHTML = `
                         <div class="flex items-center gap-4">
                             <img src="${result.avatar}" alt="${result.first_name}" class="w-10 h-10 rounded-full object-cover">
                             <div>
-                                <p class="font-semibold">${result.first_name} ${result.last_name}</p>
+                                <a href="${userRoute}" class="font-semibold text-blue-600 hover:underline">${result.first_name} ${result.last_name}</a>
                                 <p class="text-sm text-gray-600">${result.email}</p>
                             </div>
                         </div>

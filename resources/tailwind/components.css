@@ -81,3 +81,11 @@
 .flash-box-info {
   @apply bg-blue-50 border-blue-500 text-blue-800;
 }
+
+.search-results {
+  @apply py-4;
+}
+
+.search-result-item {
+  @apply py-2;
+}
