@@ -216,11 +216,12 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
 
     $userId = $session->get(\Radix\Session\Session::AUTH_KEY);
     
-    if ($userId && ($user = \App\Models\User::with('status')
+    if ($userId && ($user = \App\Models\User::with('status', 'token')
             ->where('id', '=', $userId)
             ->first())
     ) {
         $viewer->shared('currentUser', $user); // Gör currentUser tillgänglig i alla vyer
+        $viewer->shared('currentToken', $user->getRelation('token')->getAttribute('value') ?? null); // Gör currentStatus tillgänglig i alla vyer
     }
 
     return $viewer;

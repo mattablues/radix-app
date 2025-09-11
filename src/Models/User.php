@@ -93,6 +93,16 @@ class User extends Model
         return $this->hasOne(Status::class, 'user_id', 'id');
     }
 
+    /**
+     * Relation till Status.
+     *
+     * @return \Radix\Database\ORM\Relationships\HasOne<\App\Models\Token>
+     */
+    public function token():  \Radix\Database\ORM\Relationships\HasOne
+    {
+        return $this->hasOne(Token::class, 'user_id', 'id');
+    }
+
     public function setOnline(): self
     {
         // Försök använda relationen om den är laddad

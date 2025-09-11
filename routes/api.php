@@ -7,8 +7,8 @@ declare(strict_types=1);
 // API-rutter med versionering
 $router->group(['path' => '/api/v1'], function (\Radix\Routing\Router $router) {
 //    // Route för att hämta alla användare
-//    $router->get('/users', [\App\Controllers\Api\UserController::class, 'index'])
-//        ->name('api.users.index');
+    $router->get('/users', [\App\Controllers\Api\UserController::class, 'index'])
+        ->name('api.users.index');
 //
 //    // Route för att skapa en ny användare
 //    $router->post('/users', [\App\Controllers\Api\UserController::class, 'store'])
