@@ -163,7 +163,7 @@
   </div>
     {% include "components/modal-close.ratio.php" %}
     {% include "components/modal-delete.ratio.php" %}
-  <main id="mainContent"
+  <main
     class="xl:max-w-[1140px] lg:ml-[300px] pt-4 px-3 md-px-5 lg:px-7 pb-2 min-h-[calc(100vh-108px)]"
     x-on:click="if (openSidebar) openSidebar = false"
   >
