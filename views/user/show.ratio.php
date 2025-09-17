@@ -1,8 +1,7 @@
 {% extends "layouts/admin.ratio.php" %}
 {% block title %}User show{% endblock %}
 {% block pageId %}show{% endblock %}
-{% block pageClass %}show{% endblock %}
-
+{% block searchId %}search-users{% endblock %}
 {% block body %}
     <section>
       <h1 class="text-3xl">Visa konto</h1>

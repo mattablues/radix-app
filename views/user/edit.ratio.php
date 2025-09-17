@@ -1,8 +1,7 @@
 {% extends "layouts/admin.ratio.php" %}
 {% block title %}Edit{% endblock %}
 {% block pageId %}home{% endblock %}
-{% block pageClass %}home{% endblock %}
-
+{% block searchId %}search-users{% endblock %}
 {% block body %}
     <section>
       <h1 class="text-3xl mb-8">Redigera konto</h1>

@@ -45,8 +45,8 @@
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-sm">
             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
           </svg>
-          <label for="search"></label>
-          <input class="text-[15px] ml-4 w-full bg-transparent border-none py-0 px-0 focus:ring-0" id="search" placeholder="Search" autocomplete="off">
+          <label for="{% yield searchId %}"></label>
+          <input class="text-[15px] ml-4 w-full bg-transparent border-none py-0 px-0 focus:ring-0" id="{% yield searchId %}" placeholder="Search" autocomplete="off">
         </div>
 
         <div class="mt-2 px-4 flex items-center rounded-md transition-all duration-300 cursor-pointer hover:bg-blue-600">

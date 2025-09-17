@@ -1,6 +1,7 @@
 {% extends "layouts/admin.ratio.php" %}
 {% block title %}Admin user index{% endblock %}
 {% block pageId %}admin-user{% endblock %}
+{% block searchId %}search-users{% endblock %}
 {% block body %}
     <section>
       <h1 class="text-3xl mb-8">Stängda konton</h1>

@@ -10,111 +10,29 @@ export default class Search {
     init() {
         if (this.searchInput) {
             // Lägg till event listener för inputs med debounce
-            this.searchInput.addEventListener('input', this.debounce(async (e) => { // Gör callback-funktionen async
+            this.searchInput.addEventListener('input', this.debounce(async (e) => {
                 const term = e.target.value.trim();
                 if (term.length > 0) {
                     try {
                         await this.performSearch(term); // Vänta på att sökningen blir klar
                     } catch (error) {
-                        console.error('Fel vid sökningen:', error); // Hantera eventuella fel
+                        console.error('Fel vid sökningen:', error.message);
                     }
                 } else {
-                    this.clearResults(); // Rensa resultaten om termen är tom
+                    this.clearResults();
                 }
             }, 300));
         } else {
-            console.error(`Sökfältet med ID "${this.searchInputId}" hittades inte.`);
+            console.error(`Sökfältet med ID "${searchInputId}" hittades inte.`);
         }
     }
 
     async performSearch(term) {
-        try {
-            // Visa en laddningsindikator
-            this.showLoading();
-
-            // Skicka API-anropet
-            const response = await fetch('/api/v1/search/users', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.token}` // Skickar rätt token
-                },
-                body: JSON.stringify({
-                    search: {
-                        term: term,
-                        current_page: 1
-                    }
-                })
-            });
-
-            // Kontrollera om svaret är OK
-            if (!response.ok) {
-                throw new Error('Något gick fel med sökningen.');
-            }
-
-            // Hämta och logga hela JSON-svaret
-            const responseJson = await response.json();
-
-            // Tilldela `data` från `body` till `this.results`
-            this.results = responseJson.body.data || [];
-
-            // Rendera resultaten om datan finns
-            this.renderResults();
-
-        } catch (error) {
-            console.error('Sökfel:', error.message);
-            this.mainContent.innerHTML = `<p class="text-red-500">Kunde inte hämta resultaten. Försök igen.</p>`;
-        } finally {
-            this.hideLoading(); // Dölj laddningsindikatorn oavsett om det lyckades eller ej
-        }
+        throw new Error("Metoden 'performSearch' måste implementeras av underklassen.");
     }
 
     renderResults() {
-
-        if (this.mainContent) {
-            // Skapa eller identifiera resultatbehållaren
-            let resultContainer = this.mainContent.querySelector('.result-container');
-            if (!resultContainer) {
-                resultContainer = document.createElement('div');
-                resultContainer.classList.add('result-container');
-                this.mainContent.appendChild(resultContainer); // Lägg till efter <h1>
-            }
-
-            // Rensa tidigare renderat resultat
-            resultContainer.innerHTML = '';
-
-            // Rendera sökresultaten
-            if (this.results.length > 0) {
-                const ul = document.createElement('ul');
-                ul.classList.add('search-results'); // Lägg till klass för styling
-
-                // Lägg in resultaten
-                this.results.forEach(result => {
-                    const li = document.createElement('li');
-                    li.classList.add('search-result-item');
-
-                    // Generera länken till användarens sida
-                    const userRoute = `/user/${result.id}/show`; // Dynamiskt skapa länken baserat på ID
-
-                    li.innerHTML = `
-                        <div class="flex items-center gap-4">
-                            <img src="${result.avatar}" alt="${result.first_name}" class="w-10 h-10 rounded-full object-cover">
-                            <div>
-                                <a href="${userRoute}" class="font-semibold text-blue-600 hover:underline">${result.first_name} ${result.last_name}</a>
-                                <p class="text-sm text-gray-600">${result.email}</p>
-                            </div>
-                        </div>
-                    `;
-                    ul.appendChild(li);
-                });
-
-                resultContainer.appendChild(ul);
-
-            } else {
-                // Om inga resultat hittades
-                resultContainer.innerHTML = `<p class="text-gray-500">Inga resultat hittades.</p>`;
-            }
-        }
+        throw new Error("Metoden 'renderResults' måste implementeras av underklassen.");
     }
 
     clearResults() {
@@ -124,7 +42,6 @@ export default class Search {
     }
 
     showLoading() {
-        // Hitta eller skapa ett särskilt laddningselement
         let loadingIndicator = this.mainContent.querySelector('.loading-indicator');
         if (!loadingIndicator) {
             loadingIndicator = document.createElement('p');
@@ -132,13 +49,13 @@ export default class Search {
             loadingIndicator.innerText = 'Laddar...';
             this.mainContent.appendChild(loadingIndicator);
         }
-        loadingIndicator.style.display = 'block'; // Visa laddningselementet
+        loadingIndicator.style.display = 'block';
     }
 
     hideLoading() {
         const loadingIndicator = this.mainContent.querySelector('.loading-indicator');
         if (loadingIndicator) {
-            loadingIndicator.style.display = 'none'; // Dölj laddningselementet
+            loadingIndicator.style.display = 'none';
         }
     }
 
