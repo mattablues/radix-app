@@ -7,7 +7,9 @@
       <h1 class="text-3xl">Visa konto</h1>
 {% if($user) : %}
       <p>{{ $user->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</p>
+      {% if($user->getRelation('status')->getAttribute('active_at')) : %}
       <p>Senast aktiv {{ $datetime->frame($user->getRelation('status')->getAttribute('active_at')) }}</p>
+      {% endif; %}
 {% else : %}
       <p>User not found</p>
 {% endif; %}
