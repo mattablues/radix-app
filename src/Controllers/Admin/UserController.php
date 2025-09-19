@@ -227,21 +227,13 @@ class UserController extends AbstractController
 
         $status->save();
 
+        $activationLink = getenv('APP_URL') . route('auth.register.activate', ['token' => $tokenValue]);
+
         // Skicka e-postmeddelande
-        $this->mailManager->send(
-            $user->email, // Mottagarens e-postadress
-            'Aktivera ditt konto', // Ämne
-            '', // Body behövs inte, eftersom template används
-            [
-                'template' => 'emails.activate',
-                'data' => [
-                    'title' => 'Welcome',
-                    'body' => 'Här kommer din aktiveringslänk.',
-                    'url' => getenv('APP_URL') . route('auth.register.activate', ['token' => $tokenValue]),
-                ],
-                'reply_to' => $user->email,
-            ]
-        );
+        $this->eventDispatcher->dispatch(new UserRegisteredEvent(
+            email: $user->email,
+            activationLink: $activationLink
+        ));
 
         $this->request->session()->setFlashMessage(
             "Konto för $user->first_name $user->last_name har återställts, aktiveringslänk skickad."
