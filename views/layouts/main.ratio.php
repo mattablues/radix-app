@@ -45,11 +45,16 @@
         </button>
 
         <!-- Fullscreen Overlay Menu -->
-        <div
+<div
           x-show="open"
+          x-transition:enter="transition ease-out duration-300"
+          x-transition:enter-start="opacity-0 transform scale-95"
+          x-transition:enter-end="opacity-100 transform scale-100"
+          x-transition:leave="transition ease-in duration-200"
+          x-transition:leave-start="opacity-100 transform scale-100"
+          x-transition:leave-end="opacity-0 transform scale-95"
           x-on:click.away="open = false"
           class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center space-y-4 text-xl font-light text-gray-800"
-          style="display: none;"
           x-cloak>
           <!-- Close Button -->
           <button class="absolute top-4 right-4 text-gray-800" x-on:click="open = false">
