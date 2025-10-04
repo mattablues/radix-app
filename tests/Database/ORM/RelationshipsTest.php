@@ -340,7 +340,7 @@ class RelationshipsTest extends TestCase
             $connection,
             get_class($profileClass),
             'user_id',
-            5
+            '5'
         );
 
         // Hämta relaterad modell via first()
