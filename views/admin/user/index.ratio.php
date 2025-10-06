@@ -12,20 +12,20 @@
             <th data-cell="id" class="px-1.5 py-2.5 text-sm max-md:hidden">ID</th>
             <th data-cell="namn" class="px-1.5 py-2.5 text-sm max-md:hidden">Namn</th>
             <th data-cell="e-post" class="px-1.5 py-2.5 text-sm max-md:hidden">E-postadress</th>
-            <th data-cell="status" class="px-1.5 py-2.5 text-sm max-md:hidden">Status</th>
-            <th data-cell="aktiv" class="px-1.5 py-2.5 text-sm max-md:hidden">Aktiv</th>
-            <th data-cell="åtgärd" class="px-1.5 py-2.5 text-sm max-md:hidden">Åtgärd</th>
+            <th data-cell="status" class="px-1.5 md:px-3 py-2.5 text-sm max-md:hidden">Status</th>
+            <th data-cell="aktiv" class="px-1.5 md:px-3 py-2.5 text-sm max-md:hidden">Aktiv</th>
+            <th data-cell="åtgärd" class="px-1.5 md:px-3 py-2.5 text-sm max-md:hidden">Åtgärd</th>
           </tr>
         </thead>
         <tbody>
 {% foreach($users['data'] as $user) : %}
           <tr class="text-left border-b border-gray-200 hover:bg-gray-100 even:bg-white odd:bg-gray-50">
-            <td data-cell="id" class=" px-1.5 py-2.5 max-md:py-1.5 text-sm max-md:before:content-[attr(data-cell)] max-md:grid max-md:grid-cols-[1fr_2fr] max-md:gap-1 max-md:before:font-semibold max-md:before:text-sm max-md:before:capitalize">{{ $user->getAttribute('id') }}</td>
-            <td data-cell="namn" class=" px-1.5 py-2.5 max-md:py-1.5 text-sm max-md:before:content-[attr(data-cell)] max-md:grid max-md:grid-cols-[1fr_2fr] max-md:gap-1 max-md:before:font-semibold max-md:before:text-sm max-md:before:capitalize">{{ $user->getAttribute('first_name') }} {{ $user->getAttribute('last_name') }}</td>
-            <td data-cell="e-post" class=" px-1.5 py-2.5 max-md:py-1.5 text-sm max-md:before:content-[attr(data-cell)] max-md:grid max-md:grid-cols-[1fr_2fr] max-md:gap-1 max-md:before:font-semibold max-md:before:text-sm max-md:before:capitalize">{{ $user->getAttribute('email') }}</td>
-            <td data-cell="status" class="px-1.5 py-2.5 max-md:py-1.5 text-sm max-md:before:content-[attr(data-cell)] max-md:grid max-md:grid-cols-[1fr_2fr] max-md:gap-1 max-md:before:font-semibold max-md:before:text-sm max-md:before:capitalize"><div class="flex items-center text-xs"><span class="{{ $user->getRelation('status')->getAttribute('status') }} inline-block px-2 rounded-lg">{{ $user->getRelation('status')->getAttribute('status')  }}</span></div></td>
-            <td data-cell="aktiv" class=" px-1.5 py-2.5 max-md:py-1.5 text-sm max-md:before:content-[attr(data-cell)] max-md:grid max-md:grid-cols-[1fr_2fr] max-md:gap-1 max-md:before:font-semibold max-md:before:text-sm max-md:before:capitalize"><div class="flex items-center text-xs rounded-lg"><span class="{{ $user->getRelation('status')->getAttribute('active') }} inline-block px-2 rounded-lg">{{ $user->getRelation('status')->getAttribute('active') }}</span></div></td>
-            <td data-cell="åtgärd" class=" px-1.5 py-2.5 max-md:py-1.5 text-sm max-md:before:content-[attr(data-cell)] max-md:grid max-md:grid-cols-[1fr_2fr] max-md:gap-1 max-md:before:font-semibold max-md:before:text-sm max-md:before:capitalize">
+            <td data-cell="id" class=" px-1.5 md:px-3 py-2.5 max-md:py-1.5 text-sm max-md:before:content-[attr(data-cell)] max-md:grid max-md:grid-cols-[1fr_2fr] max-md:gap-1 max-md:before:font-semibold max-md:before:text-sm max-md:before:capitalize">{{ $user->getAttribute('id') }}</td>
+            <td data-cell="namn" class=" px-1.5 md:px-3 py-2.5 max-md:py-1.5 text-sm max-md:before:content-[attr(data-cell)] max-md:grid max-md:grid-cols-[1fr_2fr] max-md:gap-1 max-md:before:font-semibold max-md:before:text-sm max-md:before:capitalize">{{ $user->getAttribute('first_name') }} {{ $user->getAttribute('last_name') }}</td>
+            <td data-cell="e-post" class="px-1.5 md:px-3 py-2.5 max-md:py-1.5 text-sm max-md:before:content-[attr(data-cell)] max-md:grid max-md:grid-cols-[1fr_2fr] max-md:gap-1 max-md:before:font-semibold max-md:before:text-sm max-md:before:capitalize">{{ $user->getAttribute('email') }}</td>
+            <td data-cell="status" class="px-1.5 md:px-3 py-2.5 max-md:py-1.5 text-sm max-md:before:content-[attr(data-cell)] max-md:grid max-md:grid-cols-[1fr_2fr] max-md:gap-1 max-md:before:font-semibold max-md:before:text-sm max-md:before:capitalize"><div class="flex items-center text-xs"><span class="{{ $user->getRelation('status')->getAttribute('status') }} inline-block px-2 rounded-lg">{{ $user->getRelation('status')->getAttribute('status')  }}</span></div></td>
+            <td data-cell="aktiv" class="px-1.5 md:px-3 py-2.5 max-md:py-1.5 text-sm max-md:before:content-[attr(data-cell)] max-md:grid max-md:grid-cols-[1fr_2fr] max-md:gap-1 max-md:before:font-semibold max-md:before:text-sm max-md:before:capitalize"><div class="flex items-center text-xs rounded-lg"><span class="{{ $user->getRelation('status')->getAttribute('active') }} inline-block px-2 rounded-lg">{{ $user->getRelation('status')->getAttribute('active') }}</span></div></td>
+            <td data-cell="åtgärd" class="px-1.5 md:px-3 py-2.5 max-md:py-1.5 text-sm max-md:before:content-[attr(data-cell)] max-md:grid max-md:grid-cols-[1fr_2fr] max-md:gap-1 max-md:before:font-semibold max-md:before:text-sm max-md:before:capitalize">
               <div class="flex items-center gap-1.5">
 {% if($user->hasRole('admin')) : %}
                 <span class="text-xs font-semibold bg-gray-200/70 text-gray-400 py-1 px-1.5 rounded-lg">Aktivering</span>
