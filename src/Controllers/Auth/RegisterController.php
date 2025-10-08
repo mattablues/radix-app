@@ -22,13 +22,26 @@ class RegisterController extends AbstractController
 
     public function index(): Response
     {
-        return $this->view('auth.register.index');
+        $honeypotId = generate_honeypot_id();
+
+        // Spara id:t i sessionen
+        $this->request->session()->set('honeypot_id', $honeypotId);
+
+        return $this->view('auth.register.index', [
+            'honeypotId' => $honeypotId, // Skicka också till vyn
+        ]);
     }
 
     public function create(): Response
     {
         $this->before();
         $data = $this->request->post;
+
+        $expectedHoneypotId = $this->request->session()->get('honeypot_id');
+
+        if (!$expectedHoneypotId) {
+            return new RedirectResponse(route('auth.register.index')); // Tillbaka till formuläret
+        }
 
         // Validera inkommande data
         $validator = new Validator($data, [
@@ -37,19 +50,39 @@ class RegisterController extends AbstractController
             'email' => 'required|email|unique:App\Models\User,email',
             'password' => 'required|min:8|max:15',
             'password_confirmation' => 'required|confirmed:password',
+            $expectedHoneypotId => 'honeypot', // Dynamisk validering
         ]);
 
         // Om validering misslyckas
         if (!$validator->validate()) {
             $this->request->session()->set('old', $data);
 
+            $newHoneypotId = generate_honeypot_id();
+            $this->request->session()->set('honeypot_id', $newHoneypotId);
+
+            // Kontrollera fel och hantera potentiella honeypot-fält.
+            $errors = $validator->errors();
+
+            // Hämta det förväntade honeypot-id:t från sessionen.
+            $newHoneypotId = $this->request->session()->get('honeypot_id');
+
+            // Om honeypot-felet är närvarande, lägg till ett specifikt fel.
+            $honeypotErrors = preg_grep('/^hp_/', array_keys($errors));
+
+            if (!empty($honeypotErrors)) {
+                // Om det finns minst en nyckel som börjar med 'hp_', hantera felet.
+                $validator->addError('form-error', 'Det verkar som att du försöker skicka spam. Försök igen.');
+            }
+
             return $this->view('auth.register.index', [
+                'honeypotId' => $newHoneypotId, // Skicka det nya id:t till vyn
                 'errors' => $validator->errors(),
             ]);
         }
 
         // Rensa och filtrera data innan lagring
         $data = $this->request->filterFields($data);
+        $this->request->session()->remove('honeypot_id');
         $this->request->session()->remove('old');
 
         // Skapa en ny användare

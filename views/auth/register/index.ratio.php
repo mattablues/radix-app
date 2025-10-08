@@ -10,6 +10,7 @@
         </a>
       </header>
       {{ csrf_field()|raw }}
+      {{ honeypot_field()|raw }}
       <div class="relative mb-2">
         <label for="firstname" class="block text-sm text-slate-600 mb-1.5 ml-1">Förnamn</label>
         <input type="text" name="first_name" id="firstname" value="{{ old('first_name') }}" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 ring-0 focus:ring-indigo-500 transition duration-300 ease-in">
@@ -55,6 +56,9 @@
         <div class="flex justify-end gap-2 items-center mt-1 mr-1.5">
           <a href="{{ route('auth.login.index') }}" class="text-sm text-blue-600 hover:text-blue-800 transition-all duration-300  text-left">Logga in</a>
         </div>
+        {% if (error($errors, 'form-error')) : %}
+        <span class="block left-1 right-1 absolute top-16 text-xs text-red-600 leading-3.5">{{ error($errors, 'form-error') }}</span>
+        {% endif %}
       </div>
     </form>
 {% endblock %}
