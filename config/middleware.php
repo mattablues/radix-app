@@ -7,4 +7,5 @@ return [
     'guest' => \App\Middlewares\Guest::class,
     'admin' => \App\Middlewares\Admin::class,
     'private' => \App\Middlewares\PrivateApp::class,
+    'location' => \App\Middlewares\Location::class,
 ];
