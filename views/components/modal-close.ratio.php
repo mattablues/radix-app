@@ -19,19 +19,14 @@
         class="relative min-w-80 max-w-xl rounded-xl bg-white p-6 shadow-lg"
       >
         <h2 class="flex items-center gap-1.5 text-gray-800 mb-2" :id="$id('modal-title')">
-          <span>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-7 text-red-600">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-            </svg>
-          </span>
           <span class="text-2xl text-gray-700">Stäng konto</span>
         </h2>
 
-        <p class="mt-3 mb-2 px-1 text-[15px] text-gray-700 max-w-sm">
+        <p class="mt-3 mb-2text-[15px] text-gray-700 max-w-sm">
           Ditt konto kommer att stängas och du kommer inte kunna logga in igen. Om du vill aktivera kontot igen,
           kontakta support från din registrerade e-postadress så hjälper vi dig.
         </p>
-        <p class="mt-3 mb-4 px-1 text-[14px] text-gray-700 max-w-sm">Är du säker på att du vill fortsätta och stänga ditt konto?</p>
+        <p class="mt-3 mb-4 text-[14px] text-gray-700 max-w-sm">Är du säker på att du vill fortsätta och stänga ditt konto?</p>
 
         <form action="{{ route('user.close') }}" method="post" class="mt-3 flex justify-end space-x-2">
           {{ csrf_field()|raw }}
