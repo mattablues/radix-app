@@ -21,16 +21,54 @@ handleCookiesBanner();
 
 document.addEventListener('DOMContentLoaded', () => {
     const tokenMeta = document.querySelector('meta[name="Authorization"]');
-    if (!tokenMeta) {
-        return;
-    }
-
-    const token = tokenMeta.content || '';
-    const searchUsers = document.getElementById('search-users');
+    const token = tokenMeta ? (tokenMeta.content || '') : '';
     const mainContent = document.querySelector('main');
 
-    if (searchUsers && mainContent) {
-        new SearchUsers('search-users', 'main', token); // Använder SearchUsers här
+    const searchInput = document.getElementById('search-users');
+
+    if (searchInput && mainContent) {
+        new SearchUsers('search-users', 'main', token);
     }
+
+    const btn = document.getElementById('search-toggle');
+    const wrap = document.getElementById('search-wrap');
+    if (!btn || !wrap) return;
+
+    const open = () => {
+        wrap.classList.remove('hidden');
+        wrap.style.position = 'absolute';
+        wrap.style.left = '0';
+        wrap.style.right = '0';
+        wrap.style.top = '100%';
+        wrap.style.marginTop = '0.5rem';
+        wrap.style.zIndex = '70';
+        setTimeout(() => searchInput && searchInput.focus(), 0);
+    };
+
+    const close = () => {
+        wrap.classList.add('hidden');
+        wrap.removeAttribute('style');
+        // Rensa input + dropdown + cache
+        if (searchInput) searchInput.value = '';
+        const dropdown = document.getElementById('search-dropdown');
+        const resultContainer = dropdown ? dropdown.querySelector('.result-container') : null;
+        if (resultContainer) resultContainer.innerHTML = '';
+        // Trigger clear via event (om SearchUsers lyssnar på input) eller manuellt:
+        // Manuell rensning:
+        if (dropdown) dropdown.classList.add('hidden');
+    };
+
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (wrap.classList.contains('hidden')) open(); else close();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!wrap.contains(e.target) && !btn.contains(e.target)) close();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+    });
 });
 

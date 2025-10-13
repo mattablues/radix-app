@@ -29,13 +29,52 @@ export default class SearchUsers extends Search {
 
         } catch (error) {
             console.error('Sökfel:', error.message);
-            this.mainContent.innerHTML = `<p class="text-red-500">Kunde inte hämta resultaten. Försök igen.</p>`;
+            if (this.resultContainer) {
+                this.resultContainer.innerHTML = `<p class="p-3 text-red-500">Kunde inte hämta resultaten. Försök igen.</p>`;
+            } else if (this.mainContent) {
+                this.mainContent.innerHTML = `<p class="text-red-500">Kunde inte hämta resultaten. Försök igen.</p>`;
+            }
         } finally {
             this.hideLoading();
         }
     }
 
     renderResults() {
+        // Dropdown-rendering om den finns
+        if (this.resultContainer) {
+            this.resultContainer.innerHTML = '';
+
+            if (this.results.length > 0) {
+                const ul = document.createElement('ul');
+                ul.className = 'divide-y divide-gray-100';
+
+                this.results.forEach(result => {
+                    const li = document.createElement('li');
+                    li.className = 'px-3 py-1.5 hover:bg-gray-50';
+                    const userRoute = `/user/${result.id}/show`;
+
+                    li.innerHTML = `
+                        <a href="${userRoute}" class="flex items-center gap-3">
+                            <img src="${result.avatar}" alt="${result.first_name}" class="w-8 h-8 rounded-full object-cover">
+                            <div>
+                                <div class="text-sm font-medium text-blue-600 hover:underline">${result.first_name} ${result.last_name}</div>
+                                <p class="text-xs text-gray-600">${result.email}</p>
+                            </div>
+                        </a>
+                    `;
+                    ul.appendChild(li);
+                });
+
+                this.resultContainer.appendChild(ul);
+            } else {
+                this.resultContainer.innerHTML = `<p class="p-3 text-gray-500">Inga resultat hittades.</p>`;
+            }
+
+            this.showDropdown();
+            return;
+        }
+
+        // Fallback: rendera i mainContent (som tidigare)
         if (this.mainContent) {
             let resultContainer = this.mainContent.querySelector('.result-container');
             if (!resultContainer) {

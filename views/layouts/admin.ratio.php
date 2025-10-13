@@ -15,21 +15,55 @@
 </head>
 <body x-data="{ openSidebar: false, openCloseModal: false, openDeleteModal: false }" id="{% yield pageId %}" class="relative min-h-screen {% yield pageClass %}">
   <header class="sticky top-0 z-50 w-full bg-gray-900">
-    <div class="container-base h-15 flex items-center justify-between">
-      <a href="{{ route('home.index') }}" class="flex items-center gap-2">
-        <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-10">
-        <span class="text-xl text-white">{{ getenv('APP_NAME') }}</span>
-      </a>
-      <div class="flex items-center justify-between gap-4">
-        <a href="{{ route('user.index') }}" class="flex items-center text-gray-200 transition-colors duration-300 hover:text-white gap-3">
-          <span class="hidden text-sm sm:block">{{ $currentUser->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</span>
-          <img src="{{ versioned_file($currentUser->getAttribute('avatar'), '/images/graphics/avatar.png') }}" alt="Avatar {{ $currentUser->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}" class="w-9 h-9 rounded-full object-cover">
+    <div class="container-base relative">
+      <div class="h-15 flex items-center justify-between">
+        <a href="{{ route('home.index') }}" class="flex items-center gap-2">
+          <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-10">
+          <span class="text-xl text-white">{{ getenv('APP_NAME') }}</span>
         </a>
-        <span class="text-white lg:hidden text-4xl cursor-pointer" x-on:click="openSidebar = !openSidebar">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" />
-          </svg>
-        </span>
+
+        <div class="flex items-center gap-2">
+          <!-- Mobil: sökikon -->
+          <button type="button" id="search-toggle" class="md:hidden p-2 rounded-md text-gray-200 hover:text-white hover:bg-gray-800" aria-label="Öppna sök">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197M15.803 15.803A7.5 7.5 0 1 1 5.196 5.196a7.5 7.5 0 0 1 10.607 10.607Z"/>
+            </svg>
+          </button>
+
+          <!-- Namn + avatar (desktop/sm uppåt) -->
+          <a href="{{ route('user.index') }}" class="hidden sm:flex items-center text-gray-200 hover:text-white gap-3 transition-colors duration-300">
+            <span class="text-sm">{{ $currentUser->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</span>
+            <img src="{{ versioned_file($currentUser->getAttribute('avatar'), '/images/graphics/avatar.png') }}" alt="Avatar {{ $currentUser->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}" class="w-9 h-9 rounded-full object-cover">
+          </a>
+
+          <!-- Hamburger -->
+          <span class="text-white lg:hidden text-4xl cursor-pointer" x-on:click="openSidebar = !openSidebar" aria-label="Öppna meny">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" />
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Sök: centrerad på md+, nedfällbar på mobil -->
+      <div class="relative md:absolute md:left-1/2 md:-translate-x-1/2 md:top-1/2 md:-translate-y-1/2 z-[60]">
+        <div id="search-wrap" class="hidden md:block md:static md:translate-x-0 md:translate-y-0 md:mt-0 mt-2">
+          <div class="relative">
+            <div class="p-2.5 px-4 flex items-center rounded-md bg-gray-700">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-sm text-gray-300">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+              <label for="{% yield searchId %}" class="sr-only">Sök</label>
+              <input class="text-[15px] ml-4 w-full md:w-[320px] bg-transparent border-none py-0 px-0 focus:ring-0 text-gray-100 placeholder:text-gray-300"
+                     id="{% yield searchId %}" placeholder="Sök..." autocomplete="off">
+            </div>
+
+            <div id="search-dropdown"
+                 class="absolute left-0 mt-1 w-full md:w-[420px] max-h-[60vh] overflow-auto bg-white text-gray-900 rounded-md shadow-lg border border-gray-200 hidden z-[70]">
+              <div class="result-container"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -41,14 +75,6 @@
       <hr class="my-2 text-gray-600">
 {% if($session->isAuthenticated()) : %}
       <div class="pt-2">
-        <div class="p-2.5 mt-3 px-4 flex items-center rounded-md transition-all duration-300 cursor-pointer bg-gray-700">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-sm">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-          </svg>
-          <label for="{% yield searchId %}"></label>
-          <input class="text-[15px] ml-4 w-full bg-transparent border-none py-0 px-0 focus:ring-0" id="{% yield searchId %}" placeholder="Search" autocomplete="off">
-        </div>
-
         <div class="mt-2 px-4 flex items-center rounded-md transition-all duration-300 cursor-pointer hover:bg-blue-600">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
             <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z" />
