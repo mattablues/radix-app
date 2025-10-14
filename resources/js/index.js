@@ -6,6 +6,7 @@ import Focus from "@alpinejs/focus";
 import { addTableAria } from "./addTableAria";
 import { handleCookiesBanner } from "./cookies";
 import SearchUsers from './search-users';
+import SearchDeletedUsers from './search-deleted-users';
 
 window.Alpine = Alpine;
 Alpine.plugin(Collapse);
@@ -24,10 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = tokenMeta ? (tokenMeta.content || '') : '';
     const mainContent = document.querySelector('main');
 
-    const searchInput = document.getElementById('search-users');
+    const searchUserInput = document.getElementById('search-users');
+    const searchDeletedInput = document.getElementById('search-deleted-users');
 
-    if (searchInput && mainContent) {
+    if (searchUserInput && mainContent) {
         new SearchUsers('search-users', 'main', token);
+    }
+
+    if (searchDeletedInput && mainContent) {
+        new SearchDeletedUsers('search-deleted-users', 'main', token);
     }
 
     const btn = document.getElementById('search-toggle');
@@ -42,20 +48,32 @@ document.addEventListener('DOMContentLoaded', () => {
         wrap.style.top = '100%';
         wrap.style.marginTop = '0.5rem';
         wrap.style.zIndex = '70';
-        setTimeout(() => searchInput && searchInput.focus(), 0);
+        // ... existing code ...
+        setTimeout(() => {
+            if (searchUserInput) {
+                searchUserInput.focus();
+            } else if (searchDeletedInput) {
+                searchDeletedInput.focus();
+            }
+        }, 0);
     };
 
     const close = () => {
         wrap.classList.add('hidden');
         wrap.removeAttribute('style');
-        // Rensa input + dropdown + cache
-        if (searchInput) searchInput.value = '';
-        const dropdown = document.getElementById('search-dropdown');
-        const resultContainer = dropdown ? dropdown.querySelector('.result-container') : null;
-        if (resultContainer) resultContainer.innerHTML = '';
-        // Trigger clear via event (om SearchUsers lyssnar på input) eller manuellt:
-        // Manuell rensning:
-        if (dropdown) dropdown.classList.add('hidden');
+
+        if (searchUserInput) searchUserInput.value = '';
+        if (searchDeletedInput) searchDeletedInput.value = '';
+
+        // Hitta och rensa första matchande dropdown som finns
+        const dropdown =
+            document.getElementById('search-dropdown');
+
+        if (dropdown) {
+            const resultContainer = dropdown.querySelector('.result-container');
+            if (resultContainer) resultContainer.innerHTML = '';
+            dropdown.classList.add('hidden');
+        }
     };
 
     btn.addEventListener('click', (e) => {

@@ -28,5 +28,8 @@ $router->group(['path' => '/api/v1'], function (\Radix\Routing\Router $router) {
 
     $router->post('/search/users', [\App\Controllers\Api\SearchController::class, 'users'])
            ->name('api.search.users');
+
+    $router->post('/search/deleted-users', [\App\Controllers\Api\SearchController::class, 'softDeletedUsers'])
+       ->name('api.search.deleted-users');
 });
 

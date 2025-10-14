@@ -22,7 +22,12 @@ class UserController extends AbstractController
 
     public function show(string $id): Response
     {
-        $user = User::with('status')->where('id', '=', $id)->first();
+        $authUser = User::find($this->request->session()->get(Session::AUTH_KEY));
+        if (!$authUser || !$authUser->hasRole('admin')) {
+            $user = User::with('status')->where('id', '=', $id)->first();
+        } else {
+            $user = User::with('status')->withSoftDeletes()->where('id', '=', $id)->first();
+        }
 
         return $this->view('user.show', ['user' => $user]);
     }
