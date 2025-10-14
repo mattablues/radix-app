@@ -29,11 +29,11 @@
 
         <form action="{{ route('user.delete') }}" method="post" class="mt-3 flex justify-end space-x-2">
           {{ csrf_field()|raw }}
-          <button type="reset" x-on:click="openDeleteModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-800/20 bg-transparent px-4 py-1.5 text-gray-800 hover:bg-gray-800/5 transition-colors duration-300">
+          <button type="reset" x-on:click="openDeleteModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-800/20 bg-transparent px-3 py-0.5 text-gray-800 hover:bg-gray-800/5 transition-colors duration-300">
               Avbryt
           </button>
 
-          <button x-on:click="openDeleteModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-red-500 px-4 py-1.5 text-white hover:bg-red-600 transition-colors duration-300">
+          <button x-on:click="openDeleteModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-red-500 px-3 py-0.5 text-white hover:bg-red-600 transition-colors duration-300">
               Radera
           </button>
         </form>

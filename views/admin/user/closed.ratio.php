@@ -30,7 +30,7 @@
                 <button
                   type="button"
                   x-on:click="selectedUser = { id: {{ $user->getAttribute('id') }}, email: '{{ addslashes($user->getAttribute('email')) }}' }; openClosedModal = true"
-                  class="text-xs font-semibold bg-green-600 text-white py-1 px-1.5 rounded-lg cursor-pointer hover:bg-green-700 transition-colors duration-300"
+                  class="text-xs font-semibold bg-green-600 text-white py-0.5 px-1.5 rounded cursor-pointer hover:bg-green-700 transition-colors duration-300"
                 >
                   Återställ
                 </button>
@@ -71,10 +71,10 @@
 
             <form x-bind:action="'{{ route('admin.user.restore', ['id' => $user->getAttribute('id')]) }}?page={{ $users['pagination']['current_page'] }}'.replace('__ID__', selectedUser.id)" method="post" class="mt-3 flex justify-end space-x-2">
               {{ csrf_field()|raw }}
-              <button type="submit" x-on:click="openClosedModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-green-600 px-4 py-1.5 text-white hover:bg-green-700 transition-colors duration-300">
+              <button type="submit" x-on:click="openClosedModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-green-600 px-3 py-1 text-white hover:bg-green-700 transition-colors duration-300">
                 Återställ
               </button>
-              <button type="button" x-on:click="openClosedModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-800/20 bg-transparent px-4 py-1.5 text-gray-800 hover:bg-gray-800/5 transition-colors duration-300">
+              <button type="button" x-on:click="openClosedModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-800/20 bg-transparent px-3 py-1 text-gray-800 hover:bg-gray-800/5 transition-colors duration-300">
                 Avbryt
               </button>
             </form>

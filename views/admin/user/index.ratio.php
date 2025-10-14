@@ -28,24 +28,24 @@
             <td data-cell="åtgärd" class="ml-auto px-1.5 md:px-3 py-2.5 max-md:py-1.5 text-sm max-md:before:content-[attr(data-cell)] max-md:grid max-md:grid-cols-[1fr_2fr] max-md:gap-1 max-md:before:font-semibold max-md:before:text-sm max-md:before:capitalize">
               <div class="flex items-center gap-1.5">
 {% if($user->hasRole('admin')) : %}
-                <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-1 px-1.5 rounded-lg">Aktivering</span>
-                <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-1 px-1.5 rounded-lg">Blockera</span>
+                <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-0.5 px-1.5 rounded">Aktivering</span>
+                <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-0.5 px-1.5 rounded">Blockera</span>
 {% else : %}
                 <form action="{{ route('admin.user.send-activation', ['id' => $user->getAttribute('id')]) }}?page={{ $users['pagination']['current_page'] }}" method="post">
 
                   {{ csrf_field()|raw }}
-                  <button class="text-xs font-semibold bg-blue-600 text-white py-1 px-1.5 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors duration-300">Aktivering</button>
+                  <button class="text-xs font-semibold bg-blue-600 text-white py-0.5 px-1.5 rounded cursor-pointer hover:bg-blue-700 transition-colors duration-300">Aktivering</button>
                 </form>
 {% if($user->getRelation('status')->getAttribute('status') !== 'blocked') : %}
                 <button
                   type="button"
                   x-on:click="selectedUser = { id: {{ $user->getAttribute('id') }}, email: '{{ addslashes($user->getAttribute('email')) }}' }; openBlockModal = true"
-                  class="text-xs font-semibold bg-red-600 text-white py-1 px-1.5 rounded-lg cursor-pointer hover:bg-red-700 transition-colors duration-300 whitespace-nowrap"
+                  class="text-xs font-semibold bg-red-600 text-white py-0.5 px-1.5 rounded cursor-pointer hover:bg-red-700 transition-colors duration-300 whitespace-nowrap"
                 >
                   Blockera
                 </button>
 {% else : %}
-                <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-1 px-1.5 rounded-lg">Blockera</span>
+                <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-0.5 px-1.5 rounded">Blockera</span>
 {% endif; %}
 {% endif; %}
               </div>
@@ -85,10 +85,10 @@
 
             <form x-bind:action="'{{ route('admin.user.block', ['id' => '__ID__']) }}?page={{ $users['pagination']['current_page'] }}'.replace('__ID__', selectedUser.id)" method="post" class="mt-3 flex justify-end space-x-2">
               {{ csrf_field()|raw }}
-              <button type="button" x-on:click="openBlockModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-800/20 bg-transparent px-4 py-1.5 text-gray-800 hover:bg-gray-800/5 transition-colors duration-300">
+              <button type="button" x-on:click="openBlockModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-800/20 bg-transparent px-3 py-0.5 text-gray-800 hover:bg-gray-800/5 transition-colors duration-300">
                 Avbryt
               </button>
-              <button type="submit" x-on:click="openBlockModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-red-500 px-4 py-1.5 text-white hover:bg-red-600 transition-colors duration-300">
+              <button type="submit" x-on:click="openBlockModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-red-500 px-3 py-0.5 text-white hover:bg-red-600 transition-colors duration-300">
                 Blockera
               </button>
             </form>
