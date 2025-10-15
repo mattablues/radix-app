@@ -12,6 +12,10 @@ $router->get('/contact', [
     \App\Controllers\ContactController::class, 'index'
 ])->name('contact.index');
 
+$router->get('/about', [
+    \App\Controllers\AboutController::class, 'index'
+])->name('about.index');
+
 $router->post('/contact', [
     \App\Controllers\ContactController::class, 'create'
 ])->name('contact.create');

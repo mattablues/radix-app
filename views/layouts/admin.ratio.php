@@ -24,7 +24,7 @@
 
         <div class="flex items-center gap-2">
           <!-- Mobil: sökikon -->
-          <button type="button" id="search-toggle" class="md:hidden p-2 rounded-md text-gray-200 hover:text-white hover:bg-gray-800" aria-label="Öppna sök">
+          <button type="button" id="search-toggle" class="md:hidden p-2 rounded-md text-gray-200 hover:text-white hover:bg-gray-800 cursor-pointer" aria-label="Öppna sök">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197M15.803 15.803A7.5 7.5 0 1 1 5.196 5.196a7.5 7.5 0 0 1 10.607 10.607Z"/>
             </svg>
