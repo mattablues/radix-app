@@ -34,6 +34,7 @@ class PasswordResetController extends AbstractController
 
     public function create(string $token): Response
     {
+        $this->before();
         $data = $this->request->post;
 
         $validator = new Validator($data, [

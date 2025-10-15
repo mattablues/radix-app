@@ -25,6 +25,7 @@ class LoginController extends AbstractController
 
     public function create(): Response
     {
+        $this->before();
         $data = $this->request->post;
 
         // Validera inskickade data
