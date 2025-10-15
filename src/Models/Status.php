@@ -94,6 +94,17 @@ class Status extends Model
         }
     }
 
+    public function translateStatus(string $status): string
+    {
+        return match ($status) {
+            'activate' => 'aktivera',
+            'activated' => 'aktiverad',
+            'blocked' => 'blockerad', // rättad
+            'closed' => 'stängt',
+            default => $status,
+        };
+    }
+
     /**
      * Visa senaste aktiveringstidpunkt som ett läsbart datum.
      */

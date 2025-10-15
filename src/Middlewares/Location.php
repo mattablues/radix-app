@@ -19,7 +19,9 @@ readonly class Location implements MiddlewareInterface
 
     public function process(Request $request, RequestHandlerInterface $next): Response
     {
-        if (getenv('APP_ENV') !== 'development') {
+        $appEnv = getenv('APP_ENV') ?: 'production';
+
+        if ($appEnv !== 'development') {
             $location = $this->geoLocator->getLocation(); // Hämta plats för besökaren
 
             if ($location['country'] !== getenv('LOCATOR_COUNTRY') && $location['city'] !== getenv('LOCATOR_CITY')) {
