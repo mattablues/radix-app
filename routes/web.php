@@ -8,6 +8,10 @@ $router->get('/', [
     \App\Controllers\HomeController::class, 'index'
 ])->name('home.index');
 
+$router->get('/sidebar', [
+    \App\Controllers\HomeController::class, 'sidebar'
+])->name('home.sidebar');
+
 $router->get('/contact', [
     \App\Controllers\ContactController::class, 'index'
 ])->name('contact.index');

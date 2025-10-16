@@ -23,4 +23,9 @@ class HomeController extends AbstractController
 //        echo "Land för 85.228.5.49: $country";
         return $this->view('home.index');
     }
+
+    public function sidebar(): Response
+    {
+        return $this->view('home.sidebar');
+    }
 }
