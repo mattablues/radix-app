@@ -22,7 +22,7 @@
           hello
         </aside>
 
-        <div class="area-content min-h-[200vh]">
+        <div class="area-content">
           <h1 class="text-3xl my-6">Contact</h1>
           hello
         </div>
