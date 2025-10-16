@@ -13,4 +13,75 @@
   [x-cloak] {
     display: none !important;
   }
+
+  /* Default: ingen intern scroll */
+  .sticky-top {
+    position: sticky;
+    top: var(--header-h, 60px);
+    align-self: start;
+    overflow: visible;
+  }
+
+  /* När vi vill skydda från footer: aktivera begränsning och intern scroll vid behov */
+  .sticky-top.limit-vh {
+    max-height: calc(100vh - var(--header-h, 60px) - var(--footer-h, 0px));
+    overflow: auto;
+  }
+  /* Gemensamma area-namn */
+  .area-aside-left { grid-area: aside-left; }
+  .area-aside-right { grid-area: aside-right; }
+  .area-content { grid-area: content; }
+
+  /* 1) Vänster aside + content */
+  .layout-aside-left {
+    display: grid;
+    gap: var(--gap-lg);
+    grid-template-areas:
+      "content"
+      "aside-left";
+  }
+  @media (min-width: 1024px) {
+    .layout-aside-left {
+      grid-template-columns: var(--aside-w, 300px) 1fr;
+      grid-template-areas: "aside-left content";
+      align-items: start;
+      overflow: visible;
+    }
+  }
+
+  /* 2) Höger aside + content */
+  .layout-aside-right {
+    display: grid;
+    gap: var(--gap-lg);
+    grid-template-areas:
+      "content"
+      "aside-right";
+  }
+  @media (min-width: 1024px) {
+    .layout-aside-right {
+      grid-template-columns: 1fr var(--aside-w, 300px);
+      grid-template-areas: "content aside-right";
+      align-items: start;
+      overflow: visible;
+    }
+  }
+
+  /* 3) Båda asides + content */
+  .layout-aside-both {
+    display: grid;
+    gap: 0; /* inget mellanrum på små skärmar */
+    grid-template-areas:
+      "content"
+      "aside-left"
+      "aside-right";
+  }
+  @media (min-width: 1024px) {
+    .layout-aside-both {
+      gap: var(--gap-lg); /* mellanrum på desktop */
+      grid-template-columns: var(--aside-left-w, var(--aside-w,300px)) 1fr var(--aside-right-w, var(--aside-w,300px));
+      grid-template-areas: "aside-left content aside-right";
+      align-items: start;
+      overflow: visible;
+    }
+  }
 }

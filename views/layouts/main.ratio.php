@@ -14,8 +14,8 @@
   <link rel="manifest" href="/icons/site.webmanifest">
 </head>
 <body id="{% yield pageId %}" class="flex flex-col min-h-screen {% yield pageClass %}">
-  <header class="sticky top-0 z-50 w-full bg-white shadow-xs">
-    <div class="container-base h-15 flex items-center justify-between">
+  <header class="sticky top-0 z-50 w-full bg-white shadow-xs [--header-h:60px]">
+    <div class="container-centered h-15 flex items-center justify-between">
       <a href="{{ route('home.index') }}" class="flex items-center gap-2">
         <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-10">
         <span class="text-xl text-gray-900">{{ getenv('APP_NAME') }}</span>

@@ -2,6 +2,18 @@
   --animate-move-in-top: moveInTop .3s ease-out backwards;
   --animate-move-in-bottom: moveInBottom .3s ease-out backwards;
   --animate-fade-in-top: fadeInTop .5s ease-out forwards;
+  --header-h: 60px;
+    /* Layout-variabler */
+  --aside-w: 300px;        /* default för enkel layout */
+  --aside-left-w: 300px;   /* default vänster i both */
+  --aside-right-w: 300px;  /* default höger i both */
+  --container-max: 1200px;
+  --footer-h: 50px;
+
+
+  /* Spacing (exempel) */
+  --space-6: 1.5rem; /* motsv. tailwind top-6 */
+  --gap-lg: 1.75rem;   /* motsv. gap-8 */
 
   @keyframes moveInTop {
     0% {
