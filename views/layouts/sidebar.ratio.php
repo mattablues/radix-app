@@ -1,36 +1,18 @@
-<!doctype html>
-<html lang="{{ getenv('APP_LANG') }}">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>{% yield title %}</title>
-  <link rel="stylesheet" href="{{ versioned_file('/css/app.css') }}">
-
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/public/icons/favicon-16x16.png">
-  <link rel="manifest" href="/icons/site.webmanifest">
-</head>
-<body id="{% yield pageId %}" class="flex flex-col min-h-screen {% yield pageClass %}">
-  <header class="sticky top-0 z-50 w-full bg-white shadow-xs [--header-h:60px]">
+{% extends "layouts/main.ratio.php" %}
+{% block headerContainer %}
     <div class="container-base h-15 flex items-center justify-between">
       <a href="{{ route('home.index') }}" class="flex items-center gap-2">
         <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-10">
         <span class="text-xl text-gray-900">{{ getenv('APP_NAME') }}</span>
       </a>
-
       <nav class="hidden lg:flex gap-4">
-        <a href="{{ route('home.index') }}" class="text-gray-600 hover:text-gray-900 transition duration-300">Hem</a>
-        <a href="{{ route('home.sidebar') }}" class="text-gray-600 hover:text-gray-900 transition duration-300">Sidebar</a>
-        <a href="{{ route('contact.index') }}" class="text-gray-600 hover:text-gray-900 transition duration-300">Kontakta oss</a>
-        <a href="{{ route('about.index') }}" class="text-gray-600 hover:text-gray-900 transition duration-300">Om oss</a>
+        <a href="{{ route('home.index') }}" class="text-gray-600 hover:text-gray-900">Hem</a>
+        <a href="{{ route('contact.index') }}" class="text-gray-600 hover:text-gray-900">Kontakta oss</a>
+        <a href="{{ route('about.index') }}" class="text-gray-600 hover:text-gray-900">Om oss</a>
       </nav>
 
       <div class="lg:hidden" x-data="{ menu:false, sidebar:false }">
-        <button
-          class="flex items-center text-lg font-light text-gray-900 focus:outline-none cursor-pointer"
+        <button class="flex items-center text-lg font-light text-gray-900 focus:outline-none cursor-pointer"
           x-on:click="menu = true">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" />
@@ -55,26 +37,31 @@
           </button>
 
           <a href="{{ route('home.index') }}" class="text-gray-600 hover:text-gray-900 white transition duration-300">Hem</a>
-          <a href="{{ route('home.sidebar') }}" class="text-gray-600 hover:text-gray-900 white transition duration-300">Sidebar</a>
           <a href="{{ route('contact.index') }}" class="text-gray-600 hover:text-gray-900 white transition duration-300">Kontakta oss</a>
           <a href="{{ route('about.index') }}" class="text-gray-600 hover:text-gray-900 white transition duration-300">Om oss</a>
         </div>
       </div>
     </div>
-  </header>
+{% endblock %}
 
-  <!-- Innehållsyta: fyller höjd under headern -->
+{% block footerContainer %}
+    <div class="container-base py-4">
+      <p class="text-xs text-slate-500 font-semibold text-center">
+        &copy;{{ copyright(getenv('APP_COPY'), getenv('APP_COPY_YEAR')) }}
+        | <a href="{{ route('cookie.index') }}" class="underline hover:no-underline">Cookies</a>
+      </p>
+    </div>
+{% endblock %}
+
+{% block content %}
   <div class="flex-1 min-h-[calc(100vh-108px)]">
-    <div x-data="{ sidebarOpen:false }" class="relative">
-      <!-- Sidebar: fixed på lg+, off-canvas på små -->
-      <aside
-        class="fixed lg:left-0 left-[-300px] top-[60px] h-[calc(100vh-60px)] w-[220px] bg-white shadow z-40 overflow-y-auto hide-scrollbar transition-all duration-200"
-        x-bind:class="sidebarOpen ? 'left-0' : 'left-[-300px]'"
-        aria-label="Sidomeny">
+    <div class="relative">
+      <aside x-data="{ sidebarOpen:false }" class="fixed lg:left-0 left-[-300px] top-[60px] h-[calc(100vh-60px)] w-[220px] bg-white shadow z-40 overflow-y-auto hide-scrollbar transition-all duration-200"
+             x-bind:class="sidebarOpen ? 'left-0' : 'left-[-300px]'">
         <div class="container-base py-4">
           <nav class="space-y-1 text-sm">
             <a href="{{ route('home.index') }}" class="block py-1.5 rounded hover:bg-gray-50 text-gray-700">Hem</a>
-            <a href="{{ route('home.sidebar') }}" class="block py-1.5 rounded hover:bg-gray-50 text-gray-700">Sidebar</a>
+
             <hr class="my-2 border-gray-200" />
             <a href="{{ route('contact.index') }}" class="block py-1.5 rounded hover:bg-gray-50 text-gray-700">Kontakta oss</a>
             <a href="{{ route('about.index') }}" class="block py-1.5 rounded hover:bg-gray-50 text-gray-700">Om oss</a>
@@ -82,8 +69,6 @@
         </div>
       </aside>
 
-
-      <!-- Main: lämna plats för fixed sidebar på lg+ -->
       <main class="xl:max-w-[1220px] min-h-[calc(100vh-108px)] overflow-y-auto transition-[margin] duration-200 lg:ml-[220px]">
         <div class="container-base pt-4 pb-8">
           {% include "components/flash.ratio.php" %}
@@ -93,19 +78,4 @@
       </main>
     </div>
   </div>
-
-  <footer class="text-center [--footer-h:60px]">
-    <div class="container-centered py-4">
-      <p class="text-xs text-slate-500 font-semibold text-center">
-        &copy;{{ copyright(getenv('APP_COPY'), getenv('APP_COPY_YEAR')) }}
-        | <a href="{{ route('cookie.index') }}" class="underline hover:no-underline transition duration-300">Cookies</a>
-      </p>
-    </div>
-  </footer>
-
-  {% include "components/cookie-consent.ratio.php" %}
-  {% yield alpinejs %}
-  <script src="{{ versioned_file('/js/app.js') }}"></script>
-  {% yield script %}
-</body>
-</html>
+{% endblock %}

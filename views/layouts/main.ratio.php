@@ -2,30 +2,22 @@
 <html lang="{{ getenv('APP_LANG') }}">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>{% yield title %}</title>
   <link rel="stylesheet" href="{{ versioned_file('/css/app.css') }}">
-
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/public/icons/favicon-16x16.png">
-  <link rel="manifest" href="/icons/site.webmanifest">
 </head>
 <body id="{% yield pageId %}" class="flex flex-col min-h-screen {% yield pageClass %}">
   <header class="sticky top-0 z-50 w-full bg-white shadow-xs [--header-h:60px]">
+    {% yield headerContainer %}
     <div class="container-centered h-15 flex items-center justify-between">
       <a href="{{ route('home.index') }}" class="flex items-center gap-2">
         <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-10">
         <span class="text-xl text-gray-900">{{ getenv('APP_NAME') }}</span>
       </a>
-
       <nav class="hidden lg:flex gap-4">
-        <a href="{{ route('home.index') }}" class="text-gray-600 hover:text-gray-900 transition duration-300">Hem</a>
-        <a href="{{ route('home.sidebar') }}" class="text-gray-600 hover:text-gray-900 transition duration-300">Sidebar</a>
-        <a href="{{ route('contact.index') }}" class="text-gray-600 hover:text-gray-900 transition duration-300">Kontakta oss</a>
-        <a href="{{ route('about.index') }}" class="text-gray-600 hover:text-gray-900 transition duration-300">Om oss</a>
+        <a href="{{ route('home.index') }}" class="text-gray-600 hover:text-gray-900">Hem</a>
+        <a href="{{ route('contact.index') }}" class="text-gray-600 hover:text-gray-900">Kontakta oss</a>
+        <a href="{{ route('about.index') }}" class="text-gray-600 hover:text-gray-900">Om oss</a>
       </nav>
 
       <div class="lg:hidden" x-data="{ menu:false, sidebar:false }">
@@ -54,27 +46,31 @@
           </button>
 
           <a href="{{ route('home.index') }}" class="text-gray-600 hover:text-gray-900 white transition duration-300">Hem</a>
-          <a href="{{ route('home.sidebar') }}" class="text-gray-600 hover:text-gray-900 white transition duration-300">Sidebar</a>
           <a href="{{ route('contact.index') }}" class="text-gray-600 hover:text-gray-900 white transition duration-300">Kontakta oss</a>
           <a href="{{ route('about.index') }}" class="text-gray-600 hover:text-gray-900 white transition duration-300">Om oss</a>
         </div>
       </div>
     </div>
+    {% endyield headerContainer %}
   </header>
 
+  {% yield content %}
   <main class="flex-grow">
     {% include "components/flash.ratio.php" %}
     {% include "components/noscript.ratio.php" %}
     {% yield body %}
   </main>
+  {% endyield content %}
 
   <footer class="text-center [--footer-h:60px]">
+    {% yield footerContainer %}
     <div class="container-centered py-4">
       <p class="text-xs text-slate-500 font-semibold text-center">
         &copy;{{ copyright(getenv('APP_COPY'), getenv('APP_COPY_YEAR')) }}
-        | <a href="{{ route('cookie.index') }}" class="underline hover:no-underline transition duration-300">Cookies</a>
+        | <a href="{{ route('cookie.index') }}" class="underline hover:no-underline">Cookies</a>
       </p>
     </div>
+    {% endyield footerContainer %}
   </footer>
 
   {% include "components/cookie-consent.ratio.php" %}
