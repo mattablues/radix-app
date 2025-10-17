@@ -4,7 +4,7 @@
 {% block body %}
     <section>
       <div class="container-centered layout-aside-both [--aside-left-w:250px] [--aside-right-w:250px]">
-        <aside class="area-aside-left lg:sticky-top lg:pt-5">
+        <aside class="area-aside-left sticky-top lg:py-5">
           <div class="lg:mb-4 width-[250px]">
             <ul class="flex flex-col gap-3">
               <li class="border border-gray-200 px-3 pt-1 pb-2 rounded">
@@ -27,7 +27,7 @@
           </div>
         </aside>
 
-        <div class="area-content">
+        <div class="area-content  min-h-[200vh]">
           <h1 class="text-3xl my-6">Contact</h1>
 
           <form action="{{ route('contact.create') }}" method="post" class="w-full bg-white max-w-xl">
@@ -79,7 +79,7 @@
           </form>
         </div>
 
-        <aside class="area-aside-right lg:sticky-top lg:pt-5">
+        <aside class="area-aside-right sticky-top lg:py-5">
           <div class="lg:mb-4 width-[250px] py-3 lg:py-0">
             <ul class="flex flex-col gap-3">
               <li class="border border-gray-200 px-3 pt-1 pb-2 rounded">

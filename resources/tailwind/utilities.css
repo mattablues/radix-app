@@ -14,25 +14,30 @@
     display: none !important;
   }
 
-  /* Default: ingen intern scroll */
+  /* Responsiv sticky: av på små skärmar, på från lg */
   .sticky-top {
-    position: sticky;
-    top: var(--header-h, 60px);
+    position: static;
+    top: auto;
     align-self: start;
     overflow: visible;
   }
-
-  /* När vi vill skydda från footer: aktivera begränsning och intern scroll vid behov */
-  .sticky-top.limit-vh {
-    max-height: calc(100vh - var(--header-h, 60px) - var(--footer-h, 0px));
-    overflow: auto;
+  @media (min-width: 1024px) {
+    .sticky-top {
+      position: sticky;
+      top: var(--header-h, 60px);
+    }
+    .sticky-top.limit-vh {
+      max-height: calc(100vh - var(--header-h, 60px) - var(--footer-h, 0px));
+      overflow: auto;
+    }
   }
-  /* Gemensamma area-namn */
+
+  /* Gemensamma areas (för left/right/both) */
   .area-aside-left { grid-area: aside-left; }
   .area-aside-right { grid-area: aside-right; }
   .area-content { grid-area: content; }
 
-  /* 1) Vänster aside + content */
+  /* Left */
   .layout-aside-left {
     display: grid;
     gap: var(--gap-lg);
@@ -49,7 +54,7 @@
     }
   }
 
-  /* 2) Höger aside + content */
+  /* Right */
   .layout-aside-right {
     display: grid;
     gap: var(--gap-lg);
@@ -66,10 +71,10 @@
     }
   }
 
-  /* 3) Båda asides + content */
+  /* Both: inget gap på små skärmar, gap på lg+ */
   .layout-aside-both {
     display: grid;
-    gap: 0; /* inget mellanrum på små skärmar */
+    gap: 0;
     grid-template-areas:
       "content"
       "aside-left"
@@ -77,7 +82,7 @@
   }
   @media (min-width: 1024px) {
     .layout-aside-both {
-      gap: var(--gap-lg); /* mellanrum på desktop */
+      gap: var(--gap-lg);
       grid-template-columns: var(--aside-left-w, var(--aside-w,300px)) 1fr var(--aside-right-w, var(--aside-w,300px));
       grid-template-areas: "aside-left content aside-right";
       align-items: start;
