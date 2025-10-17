@@ -30,3 +30,8 @@
       </div>
     </section>
 {% endblock %}
+{% block test %}
+    <section>
+      <p>Shit happens</p>
+    </section>
+{% endblock %}
