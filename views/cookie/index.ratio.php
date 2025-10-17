@@ -2,7 +2,7 @@
 {% block title %}Cookies{% endblock %}
 {% block pageId %}cookies{% endblock %}
 {% block body %}
-    <section class="py-10">
+    <section class="py-6">
       <div class="container-centered-sm">
         <h1 class="text-3xl font-semibold mb-8">Cookies</h1>
 

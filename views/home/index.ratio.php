@@ -3,9 +3,17 @@
 {% block pageId %}home{% endblock %}
 {% block pageClass %}home{% endblock %}
 {% block body %}
-    <section class="py-10">
+    <section class="py-6 bg-gray-100 h-[calc(100vh-60px)]">
+      <div class="flex justify-center items-center h-full">
+        <div>
+          <h1 class="text-4xl md:text-6xl lg:text-8xl font-extralight text-slate-400 w-au">Hero Section</h1>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-16">
       <div class="container-centered">
-        <div class="mt-5 flex justify-center content-stretch gap-5 flex-wrap">
+        <div class="flex justify-center content-stretch gap-5 flex-wrap">
           <x-card class="bg-blue-600">
             <x-slot:header>Card</x-slot:header>
               Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy
@@ -28,10 +36,5 @@
           </x-card>
         </div>
       </div>
-    </section>
-{% endblock %}
-{% block test %}
-    <section>
-      <p>Shit happens</p>
     </section>
 {% endblock %}

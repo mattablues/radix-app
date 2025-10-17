@@ -32,7 +32,6 @@
           {% include "components/flash.ratio.php" %}
           {% include "components/noscript.ratio.php" %}
           {% yield body %}
-          {% yield test %}
         </div>
       </main>
     </div>

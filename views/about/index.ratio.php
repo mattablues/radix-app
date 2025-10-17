@@ -4,43 +4,57 @@
 {% block pageClass %}about{% endblock %}
 {% block body %}
     <section>
-<!--    <section>-->
-<!--      <div class="container-centered layout-aside-left [--aside-w:250px]">-->
-<!--        <aside class="area-aside-left sticky-top py-5">-->
-<!--          <ul class="flex flex-col gap-3 w-[250px] bg-yellow-300">-->
-<!--            test-->
-<!--          </ul>-->
-<!--        </aside>-->
-<!--        <div class="area-content min-h-[200vh]">-->
-<!--          <h1 class="text-3xl my-6">Om oss</h1>-->
-<!--        </div>-->
-<!--      </div>-->
-
-
       <div class="container-centered layout-aside-both [--aside-left-w:250px] [--aside-right-w:250px]">
-        <aside class="area-aside-left sticky-top py-5 bg-yellow-200 z-50">
-          hello
+        <aside class="area-aside-left sticky-top lg:py-5">
+          <div class="lg:mb-4 width-[250px]">
+            <ul class="flex flex-col gap-3">
+              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
+                <h4 class="mb-2 text-[18px]">Sidebar left</h4>
+                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Beatae cumque distinctio exercitationem ipsa officiis porro quae quis recusandae.</p>
+              </li>
+              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
+                <h4 class="mb-2 text-[18px]">Sidebar left</h4>
+                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Architecto facilis labore porro quam? Accusamus ad aliquam laudantium velit.</p>
+              </li>
+              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
+                <h4 class="mb-2 text-[18px]">Sidebar left</h4>
+                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusamus itaque, laborum minus molestiae!</p>
+              </li>
+            </ul>
+          </div>
         </aside>
 
         <div class="area-content">
-          <h1 class="text-3xl my-6">Contact</h1>
-          hello
+          <h1 class="text-3xl font-semibold my-6">About</h1>
+
+          <h2 class="text-2xl font-semibold mb-4">Lorem ipsum</h2>
+          <p class="mb-3">Lorem ipsum dolor sit amet, consectetur adipisicing elit. At, cupiditate delectus eaque eligendi enim pariatur quia! Dolorem facilis ipsum magni officia provident ratione similique! Aliquid atque cupiditate delectus deserunt doloremque impedit inventore iste iure nobis, non pariatur quasi qui velit voluptatem voluptatibus! Eligendi, incidunt ipsum! Cum nemo porro quasi quia!</p>
+          <h2 class="mb-1 text-[18px] font-semibold">Lorem ipsum</h2>
+          <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Amet cupiditate ea eos esse expedita fugiat impedit, iusto laboriosam possimus quas, reprehenderit similique soluta temporibus vero voluptatibus! Delectus dolorem earum eius, est fuga hic impedit ipsa ipsam iste mollitia quas quasi quo quod quos reiciendis repellendus tempore? Aspernatur cum cupiditate deleniti, dignissimos dolorum eius nisi numquam quibusdam rerum, unde ut veritatis? Aperiam atque autem commodi consectetur distinctio, eum harum quasi quisquam reprehenderit repudiandae saepe similique tempore!</p>
         </div>
 
-        <aside class="area-aside-right sticky-top py-5 bg-blue-200 z-50">
-          hello
+        <aside class="area-aside-right sticky-top lg:py-5">
+          <div class="lg:mb-4 width-[250px] py-3 lg:py-0">
+            <ul class="flex flex-col gap-3">
+              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
+                <h4 class="mb-2 text-[18px]">Sidebar right</h4>
+                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Beatae cumque distinctio exercitationem ipsa officiis porro quae quis recusandae.</p>
+              </li>
+              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
+                <h4 class="mb-2 text-[18px]">Sidebar right</h4>
+                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Architecto facilis labore porro quam.</p>
+              </li>
+              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
+                <h4 class="mb-2 text-[18px]">Sidebar right</h4>
+                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusamus itaque, laborum minus molestiae nostrum tempora vitae!</p>
+              </li>
+              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
+                <h4 class="mb-2 text-[18px]">Sidebar right</h4>
+                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Atque culpa dolores molestiae quas reiciendis?</p>
+              </li>
+            </ul>
+          </div>
         </aside>
       </div>
-
-<!--      <div class="container-centered layout-aside-right [--aside-w:250px]">-->
-<!--        <aside class="area-aside-right sticky-top py-5">-->
-<!--          <ul class="flex flex-col gap-3 w-[250px] bg-yellow-300">-->
-<!--            test-->
-<!--          </ul>-->
-<!--        </aside>-->
-<!--        <div class="area-content min-h-[200vh]">-->
-<!--          <h1 class="text-3xl my-6">Om oss</h1>-->
-<!--        </div>-->
-<!--      </div>-->
     </section>
 {% endblock %}
