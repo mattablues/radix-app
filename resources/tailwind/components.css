@@ -38,6 +38,10 @@
   @apply w-full xl:max-w-[1440px] mx-auto px-3 md:px-5 lg:px-7 mb-2 rounded;
 }
 
+.container-base  .flash {
+  @apply w-full xl:max-w-[1440px] px-0 mb-2 rounded;
+}
+
 .flash-enlightenment {
   @apply text-slate-800;
 }
