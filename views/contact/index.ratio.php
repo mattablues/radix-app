@@ -24,7 +24,7 @@
         </aside>
 
         <div class="area-content">
-          <h1 class="text-3xl my-6">Contact</h1>
+          <h1 class="text-3xl font-semibold my-6">Contact</h1>
 
           <form action="{{ route('contact.create') }}" method="post" class="w-full bg-white max-w-xl">
             {{ csrf_field()|raw }}

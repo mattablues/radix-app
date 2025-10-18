@@ -30,6 +30,17 @@
       max-height: calc(100vh - var(--header-h, 60px) - var(--footer-h, 0px));
       overflow: auto;
     }
+
+    /* Nolla offset (ignorera header-h) */
+    .sticky-top--no-offset {
+      top: 0;
+    }
+
+    /* Begränsa höjd med samma offset som sticky-top */
+    .sticky-top--limit {
+      max-height: calc(100vh - var(--header-h, 60px) - var(--footer-h, 0px));
+      overflow: auto;
+    }
   }
 
   /* Gemensamma areas (för left/right/both) */
