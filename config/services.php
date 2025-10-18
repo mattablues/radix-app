@@ -216,7 +216,7 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
 
     $userId = $session->get(\Radix\Session\Session::AUTH_KEY);
     
-    if ($userId && ($user = \App\Models\User::with('status', 'token')
+    if ($userId && ($user = \App\Models\User::with(['status', 'token'])
             ->where('id', '=', $userId)
             ->first())
     ) {
