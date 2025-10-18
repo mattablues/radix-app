@@ -22,7 +22,7 @@ class PasswordResetController extends AbstractController
 
 
         if (!$status || strtotime($status->reset_expires_at) < time()) {
-            $this->request->session()->setFlashMessage('Återställningslänken är inte giltig, begär en ny.','enlightenment');
+            $this->request->session()->setFlashMessage('Återställningslänken är inte giltig, begär en ny.','error');
 
             return new RedirectResponse(route('auth.password-forgot.index'));
         }
@@ -55,7 +55,7 @@ class PasswordResetController extends AbstractController
         $status = Status::where('password_reset', '=', $hashedToken)->first();
 
         if (!$status || strtotime($status->reset_expires_at) < time()) {
-            $this->request->session()->setFlashMessage('Återställningslänken är inte giltig, begär en ny.','enlightenment');
+            $this->request->session()->setFlashMessage('Återställningslänken är inte giltig, begär en ny.','error');
 
             return new RedirectResponse(route('auth.password-forgot.index'));
         }
@@ -74,7 +74,7 @@ class PasswordResetController extends AbstractController
         $user->password = $data['password'];
         $user->save();
 
-        $this->request->session()->setFlashMessage('Ditt lösenord har återställts, du kan nu logga in.', 'enlightenment');
+        $this->request->session()->setFlashMessage('Ditt lösenord har återställts, du kan nu logga in.');
 
         return new RedirectResponse(route('auth.login.index'));
     }

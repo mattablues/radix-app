@@ -119,7 +119,7 @@ class PasswordForgotController extends AbstractController
             $this->authService->trackFailedIpAttempt($ip);
         }
 
-        $this->request->session()->setFlashMessage('Ett e-postmeddelande med återställningsinformation har skickats till din e-postadress.', 'enlightenment');
+        $this->request->session()->setFlashMessage('Ett e-postmeddelande med återställningsinformation har skickats till din e-postadress.');
 
         return new RedirectResponse(route('auth.login.index'));
     }
