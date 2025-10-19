@@ -18,11 +18,11 @@
              x-bind:class="sidebarOpen ? 'left-0' : 'left-[-300px]'">
         <div class="container-base py-4">
           <nav class="space-y-1 text-sm">
-            <a href="{{ route('home.index') }}" class="block py-1.5 rounded hover:bg-gray-50 text-gray-700">Hem</a>
+            <a href="{{ route('home.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-50 text-gray-700">Hem</a>
 
             <hr class="my-2 border-gray-200" />
-            <a href="{{ route('contact.index') }}" class="block py-1.5 rounded hover:bg-gray-50 text-gray-700">Kontakta oss</a>
-            <a href="{{ route('about.index') }}" class="block py-1.5 rounded hover:bg-gray-50 text-gray-700">Om oss</a>
+            <a href="{{ route('contact.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-50 text-gray-700">Kontakta oss</a>
+            <a href="{{ route('about.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-50 text-gray-700">Om oss</a>
           </nav>
         </div>
       </aside>
