@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\Role;
 use Radix\Database\ORM\Model;
 
 /**
@@ -157,12 +158,67 @@ class User extends Model
         return $status?->isOnline() ?? false;
     }
 
-    public function hasRole(string $role): bool
+    // Rollen som enum
+    public function roleEnum(): ?Role
     {
-        try {
-            return $this->fetchGuardedAttribute('role') === $role;
-        } catch (\InvalidArgumentException $e) {
-            return false;
+        // Läs direkt från attribut om det finns där (t.ex. efter setRole i minnet)
+        if (isset($this->attributes['role']) && is_string($this->attributes['role'])) {
+            return Role::tryFrom($this->attributes['role']);
         }
+
+        try {
+            $value = $this->fetchGuardedAttribute('role');
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
+        return is_string($value) ? Role::tryFrom($value) : null;
+    }
+
+    // Sätt roll via enum eller sträng
+    public function setRole(Role|string $role): void
+    {
+        $enum = $role instanceof Role ? $role : Role::tryFromName($role);
+        if (!$enum) {
+            throw new \InvalidArgumentException('Ogiltig roll: ' . $role);
+        }
+        $this->attributes['role'] = $enum->value;
+    }
+
+    // Exakt match
+    public function hasRole(Role|string $role): bool
+    {
+        $target = $role instanceof Role ? $role : Role::tryFromName($role);
+        $current = $this->roleEnum();
+        return $target !== null && $current?->value === $target->value;
+    }
+
+    // Miniminivå (om du vill ha hierarki; t.ex. admin >= user)
+    public function hasAtLeast(Role|string $role): bool
+    {
+        $target = $role instanceof Role ? $role : Role::tryFromName($role);
+        $current = $this->roleEnum();
+        return $target !== null && $current !== null && $current->level() >= $target->level();
+    }
+
+    // Någon av flera roller
+    public function hasAnyRole(Role|string ...$roles): bool
+    {
+        foreach ($roles as $r) {
+            if ($this->hasRole($r)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Syntaktiskt socker
+    public function isAdmin(): bool
+    {
+        return $this->hasRole(Role::Admin);
+    }
+
+    public function isUser(): bool
+    {
+        return $this->hasRole(Role::User);
     }
 }
