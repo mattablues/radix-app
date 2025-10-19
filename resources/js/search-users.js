@@ -1,7 +1,12 @@
 import Search from './search';
 
 export default class SearchUsers extends Search {
-    async performSearch(term) {
+    constructor(searchInputId, mainContentSelector, token) {
+        super(searchInputId, mainContentSelector, token);
+        this.meta = { term: '', total: 0, per_page: 2, current_page: 1, last_page: 0 };
+    }
+
+    async performSearch(term, page = 1) {
         try {
             this.showLoading();
 
@@ -14,7 +19,7 @@ export default class SearchUsers extends Search {
                 body: JSON.stringify({
                     search: {
                         term: term,
-                        current_page: 1
+                        current_page: page
                     }
                 })
             });
@@ -25,6 +30,7 @@ export default class SearchUsers extends Search {
 
             const responseJson = await response.json();
             this.results = responseJson.body.data || [];
+            this.meta = responseJson.body.meta || this.meta;
             this.renderResults();
 
         } catch (error) {
@@ -66,6 +72,11 @@ export default class SearchUsers extends Search {
                 });
 
                 this.resultContainer.appendChild(ul);
+
+                // Paginering i dropdown (enkel: föregående/nästa)
+                const pager = this.renderPager();
+                if (pager) this.resultContainer.appendChild(pager);
+
             } else {
                 this.resultContainer.innerHTML = `<p class="p-3 text-gray-500">Inga resultat hittades.</p>`;
             }
@@ -74,7 +85,7 @@ export default class SearchUsers extends Search {
             return;
         }
 
-        // Fallback: rendera i mainContent (som tidigare)
+        // Fallback: rendera i mainContent
         if (this.mainContent) {
             let resultContainer = this.mainContent.querySelector('.result-container');
             if (!resultContainer) {
@@ -108,6 +119,9 @@ export default class SearchUsers extends Search {
                 });
 
                 resultContainer.appendChild(ul);
+
+                const pager = this.renderPager();
+                if (pager) resultContainer.appendChild(pager);
 
             } else {
                 resultContainer.innerHTML = `<p class="text-gray-500">Inga resultat hittades.</p>`;
