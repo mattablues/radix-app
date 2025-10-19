@@ -11,6 +11,7 @@ export default class Search {
         this.init();
     }
 
+
     init() {
         if (this.searchInput) {
             this.searchInput.addEventListener('input', this.debounce(async (e) => {
@@ -59,7 +60,6 @@ export default class Search {
             this.showDropdown();
             return;
         }
-        // ... existing code ...
         let loadingIndicator = this.mainContent.querySelector('.loading-indicator');
         if (!loadingIndicator) {
             loadingIndicator = document.createElement('p');
@@ -72,7 +72,6 @@ export default class Search {
 
     hideLoading() {
         if (this.resultContainer) return; // inget separat loading-element i dropdown
-        // ... existing code ...
         const loadingIndicator = this.mainContent.querySelector('.loading-indicator');
         if (loadingIndicator) {
             loadingIndicator.style.display = 'none';
@@ -90,7 +89,6 @@ export default class Search {
     }
 
     debounce(func, wait) {
-        // ... existing code ...
         let timeout;
         return function (...args) {
             clearTimeout(timeout);
@@ -103,10 +101,13 @@ export default class Search {
         if (!last_page || last_page <= 1) return null;
 
         const wrapper = document.createElement('div');
-        wrapper.className = 'flex items-center justify-between px-3 py-2';
-
-        // Hindra att klick i pager bubblar upp och triggar "klick utanför"
+        wrapper.className = 'flex flex-col gap-2 px-3 py-2';
+        // Hindra att klick i pager stänger dropdown
         wrapper.addEventListener('click', (e) => e.stopPropagation());
+
+        // Rad 1: info
+        const topRow = document.createElement('div');
+        topRow.className = 'flex items-center justify-between gap-3';
 
         const info = document.createElement('div');
         const start = (current_page - 1) * per_page + 1;
@@ -114,17 +115,21 @@ export default class Search {
         info.className = 'text-xs text-gray-600 font-semibold';
         info.textContent = `Visar ${start}–${end} av ${total}`;
 
-        const controls = document.createElement('div');
-        controls.className = 'flex items-center gap-2';
+        topRow.appendChild(info);
 
-        const makeBtn = (label, disabled, targetPage) => {
+        // Rad 2: pager-knappar + sidnummer
+        const bottomRow = document.createElement('div');
+        bottomRow.className = 'flex items-center justify-center gap-1.5';
+
+        const makeBtn = (label, disabled, targetPage, title) => {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = `px-2 py-1 text-xs rounded border ${disabled ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`;
             btn.textContent = label;
+            if (title) btn.title = title;
             if (!disabled) {
                 btn.addEventListener('click', (e) => {
-                    e.stopPropagation(); // säkerställ att klick inte stänger dropdown
+                    e.stopPropagation();
                     const t = termOverride ?? term ?? this.searchInput?.value?.trim() ?? '';
                     this.performSearch(t, targetPage).then(() => this.showDropdown());
                 });
@@ -132,13 +137,64 @@ export default class Search {
             return btn;
         };
 
-        controls.appendChild(makeBtn('Första', current_page <= 1, 1));
-        controls.appendChild(makeBtn('Föregående', current_page <= 1, current_page - 1));
-        controls.appendChild(makeBtn('Nästa', current_page >= last_page, current_page + 1));
-        controls.appendChild(makeBtn('Sista', current_page >= last_page, last_page));
+        // Sidnummer (kompakt intervall)
+        const createPageButtons = () => {
+            const frag = document.createDocumentFragment();
 
-        wrapper.appendChild(info);
-        wrapper.appendChild(controls);
+            const addPage = (p, isActive = false, isEllipsis = false) => {
+                const el = document.createElement('button');
+                el.type = 'button';
+                if (isEllipsis) {
+                    el.className = 'px-2 py-1 text-xs text-gray-400';
+                    el.textContent = '…';
+                    el.disabled = true;
+                    frag.appendChild(el);
+                    return;
+                }
+                el.className = `px-2 py-1 text-xs rounded border ${isActive ? 'bg-blue-600 text-white border-blue-600' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`;
+                el.textContent = String(p);
+                if (!isActive) {
+                    el.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const t = termOverride ?? term ?? this.searchInput?.value?.trim() ?? '';
+                        this.performSearch(t, p).then(() => this.showDropdown());
+                    });
+                } else {
+                    el.setAttribute('aria-current', 'page');
+                }
+                frag.appendChild(el);
+            };
+
+            const windowSize = 2;
+            const pages = [];
+            if (last_page <= 7) {
+                for (let p = 1; p <= last_page; p++) pages.push(p);
+            } else {
+                const startRange = Math.max(2, current_page - windowSize);
+                const endRange = Math.min(last_page - 1, current_page + windowSize);
+                pages.push(1);
+                if (startRange > 2) pages.push('ellipsis-left');
+                for (let p = startRange; p <= endRange; p++) pages.push(p);
+                if (endRange < last_page - 1) pages.push('ellipsis-right');
+                pages.push(last_page);
+            }
+
+            pages.forEach(p => {
+                if (p === 'ellipsis-left' || p === 'ellipsis-right') addPage(null, false, true);
+                else addPage(p, p === current_page, false);
+            });
+
+            return frag;
+        };
+
+        bottomRow.appendChild(makeBtn('Första', current_page <= 1, 1, 'Gå till första sidan'));
+        bottomRow.appendChild(makeBtn('Föregående', current_page <= 1, current_page - 1, 'Föregående sida'));
+        bottomRow.appendChild(createPageButtons());
+        bottomRow.appendChild(makeBtn('Nästa', current_page >= last_page, current_page + 1, 'Nästa sida'));
+        bottomRow.appendChild(makeBtn('Sista', current_page >= last_page, last_page, 'Gå till sista sidan'));
+
+        wrapper.appendChild(topRow);
+        wrapper.appendChild(bottomRow);
         return wrapper;
     }
 }
