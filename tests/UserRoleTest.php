@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Radix\Tests;
 
-use App\Enums\Role;
 use App\Models\User;
 use PDO;
 use PHPUnit\Framework\TestCase;
 use Radix\Container\ApplicationContainer;
 use Radix\Container\Container;
+use Radix\Enums\Role;
 
 class UserRoleTest extends TestCase
 {
@@ -132,7 +132,7 @@ class UserRoleTest extends TestCase
         $this->assertFalse($user->isUser());
 
         // Ändra med enum
-        $user->setRole(\App\Enums\Role::User);
+        $user->setRole(\Radix\Enums\Role::User);
         $this->assertTrue($user->isUser(), 'Objektet i minnet ska spegla ändringen direkt.');
         $this->assertTrue($user->save(), 'Save ska lyckas och uppdatera DB.');
 

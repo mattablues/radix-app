@@ -8,6 +8,7 @@ use App\Events\UserRegisteredEvent;
 use App\Models\Status;
 use App\Models\User;
 use Radix\Controller\AbstractController;
+use Radix\Enums\Role;
 use Radix\EventDispatcher\EventDispatcher;
 use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
@@ -24,9 +25,7 @@ class UserController extends AbstractController
     {
         $page = $this->request->get['page'] ?? 1;
 
-        $users = User::with('status')->paginate(1, (int)$page);
-
-        //dd($users);
+        $users = User::with('status')->paginate(10, (int)$page);
 
         return $this->view('admin.user.index', ['users' => $users]);
     }
@@ -240,5 +239,38 @@ class UserController extends AbstractController
         );
 
         return new RedirectResponse(route('admin.user.index'));
+    }
+
+    public function role(string $id): Response
+    {
+        $this->before();
+
+        $roleInput = $this->request->post['role'] ?? null;
+        $roleEnum = Role::tryFromName((string)$roleInput);
+
+        if (!$roleEnum) {
+            $this->request->session()->setFlashMessage("Något blev fel, prova igen", 'error');
+
+            return new RedirectResponse(route('user.show', ['id' => $id]));
+        }
+
+        $user = User::find($id);
+
+        if (!$user || $user->isAdmin()) {
+            $this->request->session()->setFlashMessage('Du kan inte ändra en admin.', 'error');
+            return new RedirectResponse(route('admin.user.index'));
+        }
+
+        if (!$user) {
+            $this->request->session()->setFlashMessage('Användare saknas', 'error');
+            return new RedirectResponse(route('user.show', ['id' => $user->id]));
+        }
+
+        $user->setRole($roleEnum); // använder din setter som validerar
+        $user->save();
+
+        $this->request->session()->setFlashMessage("$user->first_name $user->last_name har tilldelats behörighet $roleInput");
+
+        return new RedirectResponse(route('user.show', ['id' => $user->id]));
     }
 }

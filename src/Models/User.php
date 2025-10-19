@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\Role;
 use Radix\Database\ORM\Model;
+use Radix\Enums\Role;
 
 /**
  * @property int $id

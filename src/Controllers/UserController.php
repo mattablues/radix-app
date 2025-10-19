@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Models\User;
 use App\Services\UploadService;
 use Radix\Controller\AbstractController;
+use Radix\Enums\Role;
 use Radix\Http\Exception\NotAuthorizedException;
 use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
@@ -23,13 +24,16 @@ class UserController extends AbstractController
     public function show(string $id): Response
     {
         $authUser = User::find($this->request->session()->get(Session::AUTH_KEY));
-        if (!$authUser || !$authUser->hasRole('admin')) {
+
+        if (!$authUser || !$authUser->hasAtLeast('moderator')) {
             $user = User::with('status')->where('id', '=', $id)->first();
         } else {
             $user = User::with('status')->withSoftDeletes()->where('id', '=', $id)->first();
         }
 
-        return $this->view('user.show', ['user' => $user]);
+        $roles = Role::cases();
+
+        return $this->view('user.show', ['user' => $user, 'roles' => $roles]);
     }
 
     public function edit(): Response
@@ -139,7 +143,7 @@ class UserController extends AbstractController
 
         $user = User::find($this->request->session()->get(Session::AUTH_KEY));
 
-        if ($user && $user->hasRole('admin')) {
+        if ($user && $user->isAdmin()) {
             throw new NotAuthorizedException('You are not authorized to close this account.');
         }
 
@@ -160,7 +164,7 @@ class UserController extends AbstractController
 
         $user = User::find($this->request->session()->get(Session::AUTH_KEY));
 
-        if ($user && $user->hasRole('admin')) {
+        if ($user && $user->isAdmin()) {
             throw new NotAuthorizedException('You are not authorized to delete this user.');
         }
 

@@ -8,10 +8,6 @@ $router->get('/', [
     \App\Controllers\HomeController::class, 'index'
 ])->name('home.index');
 
-$router->get('/sidebar', [
-    \App\Controllers\HomeController::class, 'sidebar'
-])->name('home.sidebar');
-
 $router->get('/contact', [
     \App\Controllers\ContactController::class, 'index'
 ])->name('contact.index');
@@ -127,7 +123,9 @@ $router->group(['path' => '/admin', 'middleware' => ['auth', 'role.exact.admin']
         \App\Controllers\Admin\UserController::class, 'store'
     ])->name('admin.user.store');
 
-
+    $router->post('/users/{id:[\d]+}/role', [
+        \App\Controllers\Admin\UserController::class, 'role'
+    ])->name('admin.user.role');
 });
 
 $router->group(['path' => '/admin', 'middleware' => ['auth', 'role.min.moderator']], function () use ($router) {
