@@ -24,7 +24,7 @@ class UserController extends AbstractController
     {
         $page = $this->request->get['page'] ?? 1;
 
-        $users = User::with('status')->paginate(10, (int)$page);
+        $users = User::with('status')->paginate(1, (int)$page);
 
         //dd($users);
 
