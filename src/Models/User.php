@@ -217,6 +217,21 @@ class User extends Model
         return $this->hasRole(Role::Admin);
     }
 
+    public function isModerator(): bool
+    {
+        return $this->hasRole(Role::Moderator);
+    }
+
+    public function isEditor(): bool
+    {
+        return $this->hasRole(Role::Editor);
+    }
+
+    public function isSupport(): bool
+    {
+        return $this->hasRole(Role::Support);
+    }
+
     public function isUser(): bool
     {
         return $this->hasRole(Role::User);

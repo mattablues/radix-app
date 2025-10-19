@@ -221,4 +221,114 @@ class UserRoleTest extends TestCase
         $user = $this->makeUser('user');
         $user->setRole('superadmin');
     }
+
+    public function testRoleLevels(): void
+    {
+        $this->assertSame(10, Role::User->level());
+        $this->assertSame(20, Role::Support->level());
+        $this->assertSame(30, Role::Editor->level());
+        $this->assertSame(40, Role::Moderator->level());
+        $this->assertSame(50, Role::Admin->level());
+    }
+
+    public function testHasRoleForNewRoles(): void
+    {
+        $user = $this->makeUser('editor');
+        $this->assertTrue($user->hasRole('editor'));
+        $this->assertFalse($user->hasRole('support'));
+        $this->assertFalse($user->hasRole('moderator'));
+        $this->assertFalse($user->hasRole('admin'));
+
+        $user2 = $this->makeUser('support');
+        $this->assertTrue($user2->hasRole(Role::Support));
+        $this->assertFalse($user2->hasRole(Role::Editor));
+    }
+
+    public function testHasAnyRoleForNewRoles(): void
+    {
+        $u = $this->makeUser('support');
+        $this->assertTrue($u->hasAnyRole('guest', 'support', 'editor'));
+        $this->assertTrue($u->hasAnyRole(Role::Support, 'editor'));
+        $this->assertFalse($u->hasAnyRole('guest', 'editor', 'moderator'));
+    }
+
+    public function testHasAtLeastHierarchyExpanded(): void
+    {
+        $user = $this->makeUser('user');
+        $support = $this->makeUser('support');
+        $editor = $this->makeUser('editor');
+        $moderator = $this->makeUser('moderator');
+        $admin = $this->makeUser('admin');
+
+        // user
+        $this->assertTrue($user->hasAtLeast('user'));
+        $this->assertFalse($user->hasAtLeast('support'));
+        $this->assertFalse($user->hasAtLeast('editor'));
+        $this->assertFalse($user->hasAtLeast('moderator'));
+        $this->assertFalse($user->hasAtLeast('admin'));
+
+        // support
+        $this->assertTrue($support->hasAtLeast('user'));
+        $this->assertTrue($support->hasAtLeast('support'));
+        $this->assertFalse($support->hasAtLeast('editor'));
+        $this->assertFalse($support->hasAtLeast('moderator'));
+        $this->assertFalse($support->hasAtLeast('admin'));
+
+        // editor
+        $this->assertTrue($editor->hasAtLeast('user'));
+        $this->assertTrue($editor->hasAtLeast('support'));
+        $this->assertTrue($editor->hasAtLeast('editor'));
+        $this->assertFalse($editor->hasAtLeast('moderator'));
+        $this->assertFalse($editor->hasAtLeast('admin'));
+
+        // moderator
+        $this->assertTrue($moderator->hasAtLeast('user'));
+        $this->assertTrue($moderator->hasAtLeast('support'));
+        $this->assertTrue($moderator->hasAtLeast('editor'));
+        $this->assertTrue($moderator->hasAtLeast('moderator'));
+        $this->assertFalse($moderator->hasAtLeast('admin'));
+
+        // admin
+        $this->assertTrue($admin->hasAtLeast('user'));
+        $this->assertTrue($admin->hasAtLeast('support'));
+        $this->assertTrue($admin->hasAtLeast('editor'));
+        $this->assertTrue($admin->hasAtLeast('moderator'));
+        $this->assertTrue($admin->hasAtLeast('admin'));
+    }
+
+    public function testIsHelpersForNewRoles(): void
+    {
+        $support = $this->makeUser('support');
+        $editor = $this->makeUser('editor');
+        $moderator = $this->makeUser('moderator');
+
+        // Om du lägger till helpers i User: isSupport(), isEditor(), isModerator()
+        $this->assertTrue($editor->isEditor());
+        $this->assertFalse($editor->isAdmin());
+        $this->assertFalse($editor->isUser());
+
+        // Dessa assertioner kräver att isSupport() och isModerator() finns
+        if (method_exists($support, 'isSupport')) {
+            $this->assertTrue($support->isSupport());
+            $this->assertFalse($support->isEditor());
+        }
+        if (method_exists($moderator, 'isModerator')) {
+            $this->assertTrue($moderator->isModerator());
+            $this->assertFalse($moderator->isAdmin());
+        }
+    }
+
+    public function testSetRolePersistenceForEachNewRole(): void
+    {
+        $user = $this->makeUser('user');
+
+        foreach (['support', 'editor', 'moderator', 'admin', 'user'] as $role) {
+            $user->setRole($role);
+            $this->assertTrue($user->save());
+
+            $reloaded = \App\Models\User::find($user->getAttribute('id'));
+            $this->assertNotNull($reloaded);
+            $this->assertTrue($reloaded->hasRole($role), "Reloaded user ska ha rollen {$role}");
+        }
+    }
 }

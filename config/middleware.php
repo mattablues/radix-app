@@ -8,4 +8,8 @@ return [
     'admin' => \App\Middlewares\Admin::class,
     'private' => \App\Middlewares\PrivateApp::class,
     'location' => \App\Middlewares\Location::class,
+    'role.exact.admin' => \App\Middlewares\RequireAdmin::class,
+    'role.min.moderator' => \App\Middlewares\RequireModeratorOrHigher::class,
+    'role.min.editor' => \App\Middlewares\RequireEditorOrHigher::class,
+    'role.min.support' => \App\Middlewares\RequireSupportOrHigher::class,
 ];

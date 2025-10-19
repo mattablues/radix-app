@@ -15,7 +15,7 @@ return new class {
             $table->string('email');
             $table->string('password');
             $table->string('avatar', options: ['default' => '/images/graphics/avatar.png']);
-            $table->enum('role', ['user', 'admin'], ['default' => 'user']);
+            $table->enum('role', ['user', 'support', 'editor', 'moderator', 'admin'], ['default' => 'user']);
             $table->timestamps();
             $table->softDeletes();
             $table->index(['id', 'role']);

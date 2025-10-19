@@ -118,11 +118,7 @@ $router->group(['middleware' => ['auth']], function () use ($router) {
     ])->name('auth.logout.index');
 });
 
-$router->group(['path' => '/admin', 'middleware' => ['auth', 'admin']], function () use ($router) {
-    $router->get('/users', [
-        \App\Controllers\Admin\UserController::class, 'index'
-    ])->name('admin.user.index');
-
+$router->group(['path' => '/admin', 'middleware' => ['auth', 'role.exact.admin']], function () use ($router) {
     $router->get('/users/create-user', [
         \App\Controllers\Admin\UserController::class, 'create'
     ])->name('admin.user.create');
@@ -130,6 +126,14 @@ $router->group(['path' => '/admin', 'middleware' => ['auth', 'admin']], function
     $router->post('/users/create-user', [
         \App\Controllers\Admin\UserController::class, 'store'
     ])->name('admin.user.store');
+
+
+});
+
+$router->group(['path' => '/admin', 'middleware' => ['auth', 'role.min.moderator']], function () use ($router) {
+    $router->get('/users', [
+        \App\Controllers\Admin\UserController::class, 'index'
+    ])->name('admin.user.index');
 
     $router->post('/users/{id:[\d]+}/send-activation', [
         \App\Controllers\Admin\UserController::class, 'sendActivation'

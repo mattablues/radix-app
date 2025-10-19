@@ -119,7 +119,7 @@
             <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
               <a href="{{ route('user.edit') }}" class="w-full inline-block py-2 px-8">Redigera konto</a>
             </li>
-{% if($currentUser->hasRole('user')) : %}
+{% if(!$currentUser->isAdmin()) : %}
             <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
               <button class="w-full text-left inline-block py-2 px-8 cursor-pointer" x-on:click="openCloseModal = true">Stäng konto</button>
             </li>
@@ -129,7 +129,7 @@
 {% endif; %}
           </ul>
         </div>
-{% if($currentUser->hasRole('admin')) : %}
+{% if($currentUser->hasAtLeast('moderator')) : %}
         <hr class="my-4 text-gray-400">
         <div x-data="{ sidebarDropdown: false }">
           <div class="mt-2 px-4 flex items-center rounded-md transition-all duration-300 cursor-pointer hover:bg-blue-600">
@@ -165,9 +165,11 @@
             <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
               <a href="{{ route('admin.user.closed') }}" class="w-full inline-block py-2 px-8">Stängda konton</a>
             </li>
+{% if($currentUser->isAdmin) : %}
             <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
               <a href="{{ route('admin.user.create') }}" class="w-full inline-block py-2 px-8">Skapa nytt konton</a>
             </li>
+{% endif; %}
           </ul>
         </div>
 {% endif; %}
