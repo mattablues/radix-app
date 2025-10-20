@@ -68,7 +68,7 @@
     </div>
   </header>
 
-  <div class="sidebar h-screen fixed top-0 lg:left-0 py-13 px-2 w-[300px] left-[-300px] transition-all duration-200 overflow-y-auto text-center bg-gray-900 shadow hide-scrollbar z-40"
+  <div class="sidebar h-screen fixed top-0 lg:left-0 py-13 px-2 w-[260px] left-[-260px] transition-all duration-200 overflow-y-auto text-center bg-gray-900 shadow hide-scrollbar z-40"
     :class="openSidebar ? 'left-[0]' : ''"
   >
     <div class="text-gray-100">
@@ -81,7 +81,7 @@
             <path d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z" />
           </svg>
 
-          <span class="w-full text-left text-[15px] ml-1.5 text-gray-200">
+          <span class="w-full text-left text-sm ml-1.5 text-gray-200">
             <a href="{{ route('dashboard.index') }}" class="w-full inline-block px-2.5 py-3" >Startsida</a>
           </span>
         </div>
@@ -93,7 +93,7 @@
             </svg>
 
             <div class="w-full flex justify-between items-center" x-on:click="sidebarDropdown = !sidebarDropdown">
-              <span class="text-[15px] ml-4 py-3 text-gray-200">Konto</span>
+              <span class="text-sm ml-4 py-3 text-gray-200">Konto</span>
               <span class="text-sm rotate-180" id="arrow">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6"
                   :class="sidebarDropdown ? 'transition-all rotate-180 duration-300 ease-out' : 'transition-all rotate-0 duration-300 ease-out'"
@@ -138,7 +138,7 @@
             </svg>
 
             <div class="w-full flex justify-between items-center" x-on:click="sidebarDropdown = !sidebarDropdown">
-              <span class="text-[15px] ml-4 py-3 text-gray-200">Administration</span>
+              <span class="text-sm ml-4 py-3 text-gray-200">Administration</span>
               <span class="text-sm rotate-180" id="arrow">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6"
                 :class="sidebarDropdown ? 'transition-all rotate-180 duration-300 ease-out' : 'transition-all rotate-0 duration-300 ease-out'"
@@ -179,7 +179,7 @@
               <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 0 0 6 5.25v13.5a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5V15a.75.75 0 0 1 1.5 0v3.75a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V5.25a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3V9A.75.75 0 0 1 15 9V5.25a1.5 1.5 0 0 0-1.5-1.5h-6Zm10.72 4.72a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H9a.75.75 0 0 1 0-1.5h10.94l-1.72-1.72a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
             </svg>
 
-            <form action="{{ route('auth.logout.index') }}" method="post" class="w-full text-[15px] ml-4 text-gray-200">
+            <form action="{{ route('auth.logout.index') }}" method="post" class="w-full text-sm ml-4 text-gray-200">
               {{ csrf_field()|raw }}
               <button class="w-full py-3 text-left cursor-pointer">Logout</button>
             </form>
@@ -192,7 +192,7 @@
     {% include "components/modal-close.ratio.php" %}
     {% include "components/modal-delete.ratio.php" %}
   <main
-    class="xl:max-w-[1140px] lg:ml-[300px] pt-4 px-3 md-px-5 lg:px-7 pb-2 min-h-[calc(100vh-108px)]"
+    class="xl:max-w-[1140px] lg:ml-[260px] pt-4 px-3 md-px-5 lg:px-7 pb-2 min-h-[calc(100vh-108px)]"
     x-on:click="if (openSidebar) openSidebar = false"
   >
     {% include "components/flash-box.ratio.php" %}
