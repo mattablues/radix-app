@@ -54,7 +54,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
               </svg>
               <label for="{% yield searchId %}" class="sr-only">Sök</label>
-              <input class="text-[15px] ml-4 w-full md:w-[320px] bg-transparent border-none py-0 px-0 focus:ring-0 text-gray-100 placeholder:text-gray-300"
+              <input class="text-[15px] ml-4 w-full md:w-[280px] bg-transparent border-none py-0 px-0 focus:ring-0 text-gray-100 placeholder:text-gray-300"
                      id="{% yield searchId %}" placeholder="Sök..." autocomplete="off">
             </div>
 
