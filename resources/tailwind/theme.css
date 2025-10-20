@@ -9,7 +9,9 @@
   --aside-right-w: 300px;  /* default höger i both */
   --container-max: 1200px;
   --footer-h: 50px;
-
+  --sidebar-w: 260px;
+  --sidebar-w-neg: calc(var(--sidebar-w) * -1);
+  --sidebar-aside-w: 220px;
 
   /* Spacing (exempel) */
   --space-6: 1.5rem; /* motsv. tailwind top-6 */

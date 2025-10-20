@@ -68,8 +68,8 @@
     </div>
   </header>
 
-  <div class="sidebar h-screen fixed top-0 lg:left-0 py-13 px-2 w-[260px] left-[-260px] transition-all duration-200 overflow-y-auto text-center bg-gray-900 shadow hide-scrollbar z-40"
-    :class="openSidebar ? 'left-[0]' : ''"
+  <div class="sidebar h-screen fixed top-0 lg:left-0 py-13 px-2 w-[var(--sidebar-w)] transition-all duration-200 overflow-y-auto text-center bg-gray-900 shadow hide-scrollbar z-40"
+    :class="openSidebar ? 'left-[0]' : 'left-[var(--sidebar-w-neg)]'"
   >
     <div class="text-gray-100">
       <hr class="my-2 text-gray-600">
@@ -192,7 +192,7 @@
     {% include "components/modal-close.ratio.php" %}
     {% include "components/modal-delete.ratio.php" %}
   <main
-    class="xl:max-w-[1140px] lg:ml-[260px] pt-4 px-3 md-px-5 lg:px-7 pb-2 min-h-[calc(100vh-108px)]"
+    class="xl:max-w-[1140px] lg:ml-[var(--sidebar-w)] pt-4 px-3 md-px-5 lg:px-7 pb-2 min-h-[calc(100vh-108px)]"
     x-on:click="if (openSidebar) openSidebar = false"
   >
     {% include "components/flash-box.ratio.php" %}
