@@ -256,14 +256,14 @@ class UserController extends AbstractController
 
         $user = User::find($id);
 
-        if (!$user || $user->isAdmin()) {
-            $this->request->session()->setFlashMessage('Du kan inte ändra en admin.', 'error');
-            return new RedirectResponse(route('admin.user.index'));
-        }
-
         if (!$user) {
             $this->request->session()->setFlashMessage('Användare saknas', 'error');
             return new RedirectResponse(route('user.show', ['id' => $user->id]));
+        }
+
+        if ($user->isAdmin()) {
+            $this->request->session()->setFlashMessage('Du kan inte ändra en admin.', 'error');
+            return new RedirectResponse(route('admin.user.index'));
         }
 
         $user->setRole($roleEnum); // använder din setter som validerar
