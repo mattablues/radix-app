@@ -5,7 +5,7 @@
 {% block body %}
     <section>
       <div class="container-centered layout-aside-both [--aside-left-w:250px] [--aside-right-w:250px]">
-        <aside class="area-aside-left sticky-top lg:py-5">
+        <aside class="area-aside-left sticky-top pt-5 lg:py-5">
           <div class="lg:mb-4 width-[250px]">
             <ul class="flex flex-col gap-3">
               <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
@@ -33,7 +33,7 @@
           <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Amet cupiditate ea eos esse expedita fugiat impedit, iusto laboriosam possimus quas, reprehenderit similique soluta temporibus vero voluptatibus! Delectus dolorem earum eius, est fuga hic impedit ipsa ipsam iste mollitia quas quasi quo quod quos reiciendis repellendus tempore? Aspernatur cum cupiditate deleniti, dignissimos dolorum eius nisi numquam quibusdam rerum, unde ut veritatis? Aperiam atque autem commodi consectetur distinctio, eum harum quasi quisquam reprehenderit repudiandae saepe similique tempore!</p>
         </div>
 
-        <aside class="area-aside-right sticky-top lg:py-5">
+        <aside class="area-aside-right sticky-top pb-5 lg:py-5">
           <div class="lg:mb-4 width-[250px] py-3 lg:py-0">
             <ul class="flex flex-col gap-3">
               <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">

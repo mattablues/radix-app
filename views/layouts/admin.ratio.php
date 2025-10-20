@@ -165,7 +165,7 @@
             <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
               <a href="{{ route('admin.user.closed') }}" class="w-full inline-block py-2 px-8">Stängda konton</a>
             </li>
-{% if($currentUser->isAdmin) : %}
+{% if($currentUser->isAdmin()) : %}
             <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
               <a href="{{ route('admin.user.create') }}" class="w-full inline-block py-2 px-8">Skapa nytt konton</a>
             </li>

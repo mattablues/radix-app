@@ -4,7 +4,7 @@
 {% block body %}
     <section>
       <div class="container-centered layout-aside-both [--aside-left-w:250px] [--aside-right-w:250px]">
-        <aside class="area-aside-left sticky-top lg:py-5">
+        <aside class="area-aside-left sticky-top pt-5 lg:py-5">
           <div class="lg:mb-4 width-[250px]">
             <ul class="flex flex-col gap-3">
               <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
@@ -75,7 +75,7 @@
           </form>
         </div>
 
-        <aside class="area-aside-right sticky-top lg:py-5">
+        <aside class="area-aside-right sticky-top pb-5 lg:py-5">
           <div class="lg:mb-4 width-[250px] py-3 lg:py-0">
             <ul class="flex flex-col gap-3">
               <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">

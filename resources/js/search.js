@@ -112,7 +112,7 @@ export default class Search {
         const info = document.createElement('div');
         const start = (current_page - 1) * per_page + 1;
         const end = Math.min(current_page * per_page, total);
-        info.className = 'text-xs text-gray-600 font-semibold';
+        info.className = 'text-xs text-gray-600 font-bold';
         info.textContent = `Visar ${start}–${end} av ${total}`;
 
         topRow.appendChild(info);
