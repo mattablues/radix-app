@@ -9,10 +9,12 @@
       <p class="text-gray-700 text-sm">Namn: {{ $user->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</p>
       <p class="text-gray-700 text-sm">E-post: {{ $user->getAttribute('email') }}</p>
       {% if($currentUser->hasAtLeast('moderator')) : %}
-      <p class="text-gray-700 text-sm">Status: {{ $user->getRelation('status')->translateStatus($user->getRelation('status')->getAttribute('status')) }}</p>
+      <p class="text-gray-700 text-sm">kontostatus: <span class="inline-block text-xs font-semibold py-0.5 px-1.5 rounded {{ $user->getRelation('status')->getAttribute('status') }}">{{ $user->getRelation('status')->translateStatus($user->getRelation('status')->getAttribute('status')) }}</span></p>
       {% endif; %}
       {% if($user->getRelation('status')->getAttribute('active_at')) : %}
       <p class="text-gray-700 text-sm">Senast aktiv: {{ $datetime->frame($user->getRelation('status')->getAttribute('active_at')) }}</p>
+      {% else : %}
+      <p class="text-gray-700 text-sm">Senast aktiv: aldrig</p>
       {% endif; %}
       {% if($currentUser->isAdmin() && !$user->isAdmin()) : %}
       <div class="mt-6">
@@ -23,7 +25,7 @@
         <button
           type="button"
           x-on:click="openRoleModal = true"
-          class="text-xs font-semibold bg-blue-600 text-white py-0.5 px-1.5 rounded cursor-pointer hover:bg-blue-700 transition-colors duration-300"
+          class="text-sm font-semibold bg-blue-600 text-white py-0.5 px-2 rounded cursor-pointer hover:bg-blue-700 transition-colors duration-300"
         >
           Ändra behörighet
         </button>
