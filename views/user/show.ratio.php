@@ -6,7 +6,7 @@
     <section x-data="{ openRoleModal: false, selectedRole: '{{ $user->fetchGuardedAttribute('role') }}' }">
       <h1 class="text-3xl mb-8">Konto</h1>
 {% if($user) : %}
-      <div class="w-full md:max-w-1/2 flex justify-between border border-gray-200 rounded px-5 py-3">
+      <div class="w-full md:max-w-[600px] flex justify-between border border-gray-200 rounded px-5 py-3">
         <ul>
           <li class="flex items-start gap-2 my-1">
             <span class="shrink-0 inline-block w-28 text-sm font-semibold text-gray-700">Namn:</span>
