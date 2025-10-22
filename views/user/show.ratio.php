@@ -95,7 +95,7 @@
                 {% foreach ($roles as $roleCase): %}
                   {% if($roleCase->value !== 'admin') : %}
                   <option value="{{ $roleCase->value }}">{{ $roleCase->value }}</option>
-                {% endif; %}
+                  {% endif; %}
                 {% endforeach; %}
                 </select>
               </div>
