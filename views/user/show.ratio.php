@@ -6,18 +6,18 @@
     <section x-data="{ openRoleModal: false, selectedRole: '{{ $user->fetchGuardedAttribute('role') }}' }">
       <h1 class="text-3xl mb-8">Konto</h1>
 {% if($user) : %}
-      <div class="w-full md:max-w-[600px] flex justify-between border border-gray-200 rounded px-5 py-3">
+      <div class="w-full md:max-w-[600px] flex justify-between border border-gray-200 rounded px-3 sm:px-5 py-3">
         <ul>
-          <li class="flex items-start gap-2 my-1">
-            <span class="shrink-0 inline-block w-28 text-sm font-semibold text-gray-700">Namn:</span>
+          <li class="flex items-start gap-1 sm:gap-2 my-1">
+            <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">Namn:</span>
             <span class="inline-block text-sm text-gray-700">{{ $user->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</span>
           </li>
-          <li class="flex items-start gap-2 my-1">
-            <span class="shrink-0 inline-block w-28 text-sm font-semibold text-gray-700">E-post:</span>
+          <li class="flex items-start gap-1 sm:gap-2 my-1">
+            <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">E-post:</span>
             <span class="inline-block text-sm text-gray-700">{{ $user->getAttribute('email') }}</span>
           </li>
-          <li class="flex items-start gap-2 my-1">
-            <span class="shrink-0 inline-block w-28 text-sm font-semibold text-gray-700">Senast aktiv:</span>
+          <li class="flex items-start gap-1 sm:gap-2 my-1">
+            <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">Senast aktiv:</span>
           {% if($user->getRelation('status')->getAttribute('active_at')) : %}
             <span class="inline-block text-sm text-gray-700">
               {{ $datetime->frame($user->getRelation('status')->getAttribute('active_at')) }}
@@ -26,21 +26,21 @@
             <span class="inline-block text-sm text-gray-700">aldrig</span>
           {% endif; %}
           </li>
-          <li class="flex items-start gap-2 my-1">
+          <li class="flex items-start gap-1 sm:gap-2 my-1">
           {% if($currentUser->hasAtLeast('moderator')) : %}
-            <span class="shrink-0 inline-block w-28 text-sm font-semibold text-gray-700">Kontostatus:</span>
+            <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">Kontostatus:</span>
             <span class="inline-block text-xs font-semibold py-0.5 px-1.5 rounded {{ $user->getRelation('status')->getAttribute('status') }}">{{ $user->getRelation('status')->translateStatus($user->getRelation('status')->getAttribute('status')) }}</span>
           {% endif; %}
           </li>
           {% if($currentUser->isAdmin() && !$user->isAdmin()) : %}
-          <li class="flex items-start gap-2 my-1">
-            <span class="shrink-0 inline-block w-28 text-sm font-semibold text-gray-700">Behörighet:</span>
+          <li class="flex items-start gap-1 sm:gap-2 my-1">
+            <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">Behörighet:</span>
             <span class="inline-block text-xs font-semibold bg-gray-100 text-gray-800 py-0.5 px-1.5 rounded">{{ $user->fetchGuardedAttribute('role') }}</span>
           </li>
           {% endif; %}
         </ul>
         <div class="flex flex-col items-center justify-between gap-2 mb-1">
-          <img src="{{ versioned_file($user->getAttribute('avatar'), '/images/graphics/avatar.png') }}" alt="Avatar {{ $user->getAttribute('first_name') }} {{ $user->getAttribute('last_name') }}" class="w-[70px] h-[70px] rounded-full object-cover">
+          <img src="{{ versioned_file($user->getAttribute('avatar'), '/images/graphics/avatar.png') }}" alt="Avatar {{ $user->getAttribute('first_name') }} {{ $user->getAttribute('last_name') }}" class="w-[50px] md:w-[70px] h-[50px] md:h-[70px] rounded-full object-cover">
 {% if($currentUser->isAdmin() && !$user->isAdmin()) : %}
           <button
               type="button"
