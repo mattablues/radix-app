@@ -1,7 +1,6 @@
 {% extends "layouts/main.ratio.php" %}
-{% block title %}Home index{% endblock %}
+{% block title %}{{ getenv('APP_NAME') ?: 'Hem' }}{% endblock %}
 {% block pageId %}home{% endblock %}
-{% block pageClass %}home{% endblock %}
 {% block body %}
     <section class="py-6 bg-gray-100 h-[calc(100vh-60px)]">
       <div class="flex justify-center items-center h-full">

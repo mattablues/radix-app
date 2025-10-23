@@ -1,10 +1,10 @@
 {% extends "layouts/auth.ratio.php" %}
-{% block title %}Glömt lösenord{% endblock %}
-{% block pageId %}password-reset{% endblock %}
+{% block title %}Glömt lösenord?{% endblock %}
+{% block pageId %}password-forgot{% endblock %}
 {% block body %}
     <form action="{{ route('auth.password-forgot.create') }}" method="post" class="w-full bg-white mx-3 max-w-md py-6 px-6 rounded-lg shadow-md">
       <header class="flex justify-between items-center mb-3.5">
-        <h1 class="text-2xl">Glömt lösenord</h1>
+        <h1 class="text-2xl">Glömt lösenord?</h1>
         <a href="{{ route('home.index') }}">
           <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-10">
         </a>

@@ -1,6 +1,6 @@
 {% extends "layouts/admin.ratio.php" %}
-{% block title %}Admin user index{% endblock %}
-{% block pageId %}admin-user{% endblock %}
+{% block title %}Stängda konton{% endblock %}
+{% block pageId %}user-closed{% endblock %}
 {% block searchId %}search-deleted-users{% endblock %}
 {% block body %}
     <section x-data="{ openClosedModal: null, selectedUser: { id: null, email: '' } }">

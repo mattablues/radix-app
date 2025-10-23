@@ -1,6 +1,6 @@
 {% extends "layouts/admin.ratio.php" %}
-{% block title %}Admin user index{% endblock %}
-{% block pageId %}admin-user{% endblock %}
+{% block title %}Konton{% endblock %}
+{% block pageId %}users{% endblock %}
 {% block searchId %}search-users{% endblock %}
 {% block body %}
     <section x-data="{ openBlockModal: null, selectedUser: { id: null, email: '' } }">

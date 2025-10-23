@@ -1,6 +1,6 @@
 {% extends "layouts/admin.ratio.php" %}
-{% block title %}User show{% endblock %}
-{% block pageId %}show{% endblock %}
+{% block title %}Konto{% endblock %}
+{% block pageId %}show-user{% endblock %}
 {% block searchId %}search-users{% endblock %}
 {% block body %}
     <section x-data="{ openRoleModal: false, selectedRole: '{{ $user->fetchGuardedAttribute('role') }}' }">

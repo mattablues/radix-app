@@ -1,5 +1,5 @@
 {% extends "layouts/admin.ratio.php" %}
-{% block title %}Edit{% endblock %}
+{% block title %}Redigera konto{% endblock %}
 {% block pageId %}home{% endblock %}
 {% block searchId %}search-users{% endblock %}
 {% block body %}

@@ -1,6 +1,6 @@
 {% extends "layouts/auth.ratio.php" %}
-{% block title %}Login index{% endblock %}
-{% block pageId %}login{% endblock %}
+{% block title %}Återställ lösenord{% endblock %}
+{% block pageId %}password-reset{% endblock %}
 {% block body %}
     <form action="{{ route('auth.password-reset.create', ['token' => $token]) }}" method="post" class="w-full bg-white mx-3 max-w-md py-6 px-6 rounded-lg shadow-md">
       <header class="flex justify-between items-center mb-3.5">

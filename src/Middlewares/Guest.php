@@ -19,7 +19,7 @@ class Guest implements MiddlewareInterface
 
             $request->session()->setFlashMessage('Sidan kan inte visas när du är inloggad!', 'warning');
 
-            return new RedirectResponse(route('user.index'));
+            return new RedirectResponse(route('dashboard.index'));
         }
 
         return $next->handle($request);

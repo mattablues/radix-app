@@ -1,7 +1,6 @@
 {% extends "layouts/main.ratio.php" %}
-{% block title %}About index{% endblock %}
+{% block title %}Om oss{% endblock %}
 {% block pageId %}about{% endblock %}
-{% block pageClass %}about{% endblock %}
 {% block body %}
     <section>
       <div class="container-centered layout-aside-both [--aside-left-w:250px] [--aside-right-w:250px]">
@@ -25,7 +24,7 @@
         </aside>
 
         <div class="area-content">
-          <h1 class="text-3xl font-semibold my-6">About</h1>
+          <h1 class="text-3xl font-semibold my-6">Om oss</h1>
 
           <h2 class="text-2xl font-semibold mb-4">Lorem ipsum</h2>
           <p class="mb-3">Lorem ipsum dolor sit amet, consectetur adipisicing elit. At, cupiditate delectus eaque eligendi enim pariatur quia! Dolorem facilis ipsum magni officia provident ratione similique! Aliquid atque cupiditate delectus deserunt doloremque impedit inventore iste iure nobis, non pariatur quasi qui velit voluptatem voluptatibus! Eligendi, incidunt ipsum! Cum nemo porro quasi quia!</p>

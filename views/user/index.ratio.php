@@ -1,6 +1,6 @@
 {% extends "layouts/admin.ratio.php" %}
-{% block title %}Home index{% endblock %}
-{% block pageId %}home{% endblock %}
+{% block title %}Visa konto{% endblock %}
+{% block pageId %}user{% endblock %}
 {% block searchId %}search-users{% endblock %}
 {% block body %}
     <section>

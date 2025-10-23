@@ -1,6 +1,6 @@
 {% extends "layouts/admin.ratio.php" %}
-{% block title %}Registrering{% endblock %}
-{% block pageId %}register{% endblock %}
+{% block title %}Skapa nytt konto{% endblock %}
+{% block pageId %}create-user{% endblock %}
 {% block searchId %}search-users{% endblock %}
 {% block body %}
     <section>

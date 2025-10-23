@@ -32,7 +32,7 @@
           {% if(getenv('APP_PRIVATE') === '0') : %}
           <a href="{{ route('auth.register.index') }}" class="text-sm text-blue-600 hover:text-blue-800 transition-all duration-300  text-left">Registrering</a>
           {% endif; %}
-          <a href="{{ route('auth.password-forgot.index') }}" class="text-sm text-blue-600 hover:text-blue-800 transition-all duration-300  text-left">Återställ lösenord?</a>
+          <a href="{{ route('auth.password-forgot.index') }}" class="text-sm text-blue-600 hover:text-blue-800 transition-all duration-300  text-left">Glömt lösenord?</a>
         </div>
       {% if (error($errors, 'form-error')) : %}
         <span class="block left-1 right-1 absolute top-16 text-xs text-red-600 leading-3.5">{{ error($errors, 'form-error') }}</span>
