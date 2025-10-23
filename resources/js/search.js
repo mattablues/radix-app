@@ -121,49 +121,65 @@ export default class Search {
         const bottomRow = document.createElement('div');
         bottomRow.className = 'flex items-center justify-center gap-1.5';
 
-        const makeBtn = (label, disabled, targetPage, title) => {
+        const baseBtnCls = 'h-6 min-w-6 px-1.5 py-0.5 text-xs rounded border flex items-center justify-center';
+        const activeCls = 'text-blue-600 border-blue-200 hover:bg-blue-50';
+        const disabledCls = 'text-gray-300 border-gray-200 cursor-not-allowed';
+
+        // SVG-ikoner
+        const iconSize = 14; // matcha ungefär text-xs-höjd
+        const chevronsLeft = `<svg class="pointer-events-none" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>`;
+        const chevronLeft = `<svg class="pointer-events-none" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>`;
+        const chevronRight = `<svg class="pointer-events-none" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+        const chevronsRight = `<svg class="pointer-events-none" width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>`;
+
+        const makeIconBtn = (svg, disabled, targetPage, title) => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = `px-2 py-1 text-xs rounded border ${disabled ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`;
-            btn.textContent = label;
+            btn.className = `${baseBtnCls} ${disabled ? disabledCls : activeCls}`;
+            btn.innerHTML = svg;
             if (title) btn.title = title;
+            btn.setAttribute('aria-label', title || 'Navigera');
+            // Se till att ikonen inte växer
+            btn.style.lineHeight = '1';
             if (!disabled) {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const t = termOverride ?? term ?? this.searchInput?.value?.trim() ?? '';
                     this.performSearch(t, targetPage).then(() => this.showDropdown());
                 });
+            } else {
+                btn.disabled = true;
             }
             return btn;
+        };
+
+        const makePageBtn = (p, isActive = false, isEllipsis = false) => {
+            const el = document.createElement('button');
+            el.type = 'button';
+            if (isEllipsis) {
+                el.className = `${baseBtnCls} text-gray-400 border-gray-200`;
+                el.textContent = '…';
+                el.disabled = true;
+                return el;
+            }
+            el.className = `${baseBtnCls} ${isActive ? 'bg-blue-600 text-white border-blue-600' : activeCls}`;
+            el.textContent = String(p);
+            el.style.lineHeight = '1';
+            if (!isActive) {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const t = termOverride ?? term ?? this.searchInput?.value?.trim() ?? '';
+                    this.performSearch(t, p).then(() => this.showDropdown());
+                });
+            } else {
+                el.setAttribute('aria-current', 'page');
+            }
+            return el;
         };
 
         // Sidnummer (kompakt intervall)
         const createPageButtons = () => {
             const frag = document.createDocumentFragment();
-
-            const addPage = (p, isActive = false, isEllipsis = false) => {
-                const el = document.createElement('button');
-                el.type = 'button';
-                if (isEllipsis) {
-                    el.className = 'px-2 py-1 text-xs text-gray-400';
-                    el.textContent = '…';
-                    el.disabled = true;
-                    frag.appendChild(el);
-                    return;
-                }
-                el.className = `px-2 py-1 text-xs rounded border ${isActive ? 'bg-blue-600 text-white border-blue-600' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`;
-                el.textContent = String(p);
-                if (!isActive) {
-                    el.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const t = termOverride ?? term ?? this.searchInput?.value?.trim() ?? '';
-                        this.performSearch(t, p).then(() => this.showDropdown());
-                    });
-                } else {
-                    el.setAttribute('aria-current', 'page');
-                }
-                frag.appendChild(el);
-            };
 
             const windowSize = 2;
             const pages = [];
@@ -180,18 +196,22 @@ export default class Search {
             }
 
             pages.forEach(p => {
-                if (p === 'ellipsis-left' || p === 'ellipsis-right') addPage(null, false, true);
-                else addPage(p, p === current_page, false);
+                if (p === 'ellipsis-left' || p === 'ellipsis-right') {
+                    frag.appendChild(makePageBtn(null, false, true));
+                } else {
+                    frag.appendChild(makePageBtn(p, p === current_page, false));
+                }
             });
 
             return frag;
         };
 
-        bottomRow.appendChild(makeBtn('Första', current_page <= 1, 1, 'Gå till första sidan'));
-        bottomRow.appendChild(makeBtn('Föregående', current_page <= 1, current_page - 1, 'Föregående sida'));
+        // Ikonknappar
+        bottomRow.appendChild(makeIconBtn(chevronsLeft, current_page <= 1, 1, 'Gå till första sidan'));
+        bottomRow.appendChild(makeIconBtn(chevronLeft, current_page <= 1, current_page - 1, 'Föregående sida'));
         bottomRow.appendChild(createPageButtons());
-        bottomRow.appendChild(makeBtn('Nästa', current_page >= last_page, current_page + 1, 'Nästa sida'));
-        bottomRow.appendChild(makeBtn('Sista', current_page >= last_page, last_page, 'Gå till sista sidan'));
+        bottomRow.appendChild(makeIconBtn(chevronRight, current_page >= last_page, current_page + 1, 'Nästa sida'));
+        bottomRow.appendChild(makeIconBtn(chevronsRight, current_page >= last_page, last_page, 'Gå till sista sidan'));
 
         wrapper.appendChild(topRow);
         wrapper.appendChild(bottomRow);
