@@ -21,7 +21,7 @@ class SearchController extends ApiController
         // Hämta och sanitera sökparametrar från request
         $term = $this->request->post['search']['term'] ?? '';
         $currentPage = (int)($this->request->post['search']['current_page'] ?? 1);
-        $perPage = (int)($this->request->post['search']['per_page'] ?? 1);
+        $perPage = (int)($this->request->post['search']['per_page'] ?? 10);
 
         // Kontrollera om söktermen är tom, och returnera tomma resultat om så är fallet
         if (empty($term)) {
