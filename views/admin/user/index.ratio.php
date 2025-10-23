@@ -99,7 +99,10 @@
       </div>
       <!-- End Modal -->
 {% if($users['pagination']['total'] > $users['pagination']['per_page']) : %}
-      <p class="mb-10 text-right text-xs font-bold pr-1">sida {{ $users['pagination']['current_page'] }} av {{ calculate_total_pages($users['pagination']['total'], $users['pagination']['per_page']) }}</p>
+      <div class="mb-10 py-1 flex justify-between items-center">
+        <span class="block text-xs font-bold pl-2">totalt {{ $users['pagination']['total'] }} konton</span>
+        <span class="block text-xs font-bold pr-2">sida {{ $users['pagination']['current_page'] }} av {{ calculate_total_pages($users['pagination']['total'], $users['pagination']['per_page']) }}</span>
+      </div>
       {{ paginate_links($users['pagination'], 'admin.user.index', 2)|raw }}
 {% endif; %}
 {% else : %}
