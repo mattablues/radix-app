@@ -93,3 +93,29 @@
 .search-result-item {
   @apply py-2;
 }
+
+/* Hjälpklasser bundna till variablerna (så du kan återanvända och byta färger centralt) */
+.pager-base {
+  background-color: var(--pagination-bg);
+  color: var(--pagination-text);
+  border-color: var(--pagination-border);
+}
+
+.pager-hover:hover {
+  background-color: var(--pagination-hover-bg);
+}
+
+.pager-active {
+  background-color: var(--pagination-active-bg);
+  color: var(--pagination-active-text);
+  border-color: var(--pagination-active-border);
+}
+
+.pager-disabled {
+  color: var(--pagination-disabled-text);
+  border-color: var(--pagination-disabled-border);
+}
+
+.pager-ellipsis {
+  color: var(--pagination-ellipsis-text);
+}
