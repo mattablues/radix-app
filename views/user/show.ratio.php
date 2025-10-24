@@ -17,6 +17,10 @@
             <span class="inline-block text-sm text-gray-700">{{ $user->getAttribute('email') }}</span>
           </li>
           <li class="flex items-start gap-1 sm:gap-2 my-1">
+            <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">Skapat:</span>
+            <span class="inline-block text-sm text-gray-700">{{ $user->getAttribute('created_at') }}</span>
+          </li>
+          <li class="flex items-start gap-1 sm:gap-2 my-1">
             <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">Senast aktiv:</span>
           {% if($user->getRelation('status')->getAttribute('active_at')) : %}
             <span class="inline-block text-sm text-gray-700">
@@ -40,7 +44,10 @@
           {% endif; %}
         </ul>
         <div class="flex flex-col items-center justify-between gap-2 mb-1">
-          <img src="{{ versioned_file($user->getAttribute('avatar'), '/images/graphics/avatar.png') }}" alt="Avatar {{ $user->getAttribute('first_name') }} {{ $user->getAttribute('last_name') }}" class="w-[50px] md:w-[70px] h-[50px] md:h-[70px] rounded-full object-cover">
+          <figure class="text-center">
+            <img src="{{ versioned_file($user->getAttribute('avatar'), '/images/graphics/avatar.png') }}" alt="Avatar {{ $user->getAttribute('first_name') }} {{ $user->getAttribute('last_name') }}" class="w-[50px] sm:w-[80px] h-[50px] sm:h-[80px] rounded-full object-cover">
+            <figcaption class="text-xs text-gray-700 font-semibold">Avatar</figcaption>
+          </figure>
 {% if($currentUser->isAdmin() && !$user->isAdmin()) : %}
           <button
               type="button"
@@ -95,7 +102,7 @@
                 {% foreach ($roles as $roleCase): %}
                   {% if($roleCase->value !== 'admin') : %}
                   <option value="{{ $roleCase->value }}">{{ $roleCase->value }}</option>
-                  {% endif; %}
+                {% endif; %}
                 {% endforeach; %}
                 </select>
               </div>
