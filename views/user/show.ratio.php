@@ -114,7 +114,7 @@
       </div>
       {% endif; %}
 {% else : %}
-      <p>User not found</p>
+      <p>Konto hittades inte.</p>
 {% endif; %}
     </section>
 {% endblock %}
