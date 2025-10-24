@@ -16,6 +16,37 @@ use Radix\Database\ORM\Relationships\BelongsToMany;
 
 class RelationshipsTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        \Radix\Container\ApplicationContainer::reset();
+        $container = new \Radix\Container\Container();
+
+        $pdo = new \PDO('sqlite::memory:');
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
+        // Minimal users-tabell för testet
+        $pdo->exec("
+            CREATE TABLE users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                first_name TEXT NOT NULL,
+                last_name TEXT NOT NULL,
+                email TEXT NOT NULL UNIQUE,
+                password TEXT,
+                avatar TEXT NOT NULL DEFAULT '/images/graphics/avatar.png',
+                role TEXT NOT NULL DEFAULT 'user',
+                created_at TEXT NULL,
+                updated_at TEXT NULL,
+                deleted_at TEXT NULL
+            );
+        ");
+
+        // Registrera i containern
+        $container->addShared(\PDO::class, fn() => $pdo);
+        $container->add('Psr\Container\ContainerInterface', fn() => $container);
+        \Radix\Container\ApplicationContainer::set($container);
+    }
 
    protected function tearDown(): void
    {
@@ -588,5 +619,54 @@ class RelationshipsTest extends TestCase
 
         // Kontrollera att attributen stämmer överens
         $this->assertEquals('John', $result->getAttribute('first_name'));
+    }
+
+    public function testHydrateFromDatabaseIncludesTimestampsSkipsGuarded(): void
+    {
+        $row = [
+            'id' => 42,
+            'first_name' => 'Mats',
+            'last_name' => 'Åkebrand',
+            'email' => 'mats@example.com',
+            'avatar' => '/images/user/42/avatar.jpg',
+            'password' => 'hashed', // guarded
+            'role' => 'admin',      // guarded
+            'deleted_at' => null,   // guarded
+            'created_at' => '2025-01-01 10:00:00',
+            'updated_at' => '2025-01-02 11:00:00',
+        ];
+
+        $u = new User();
+        $u->hydrateFromDatabase($row)->markAsExisting();
+
+        // timestamps ska vara läsbara
+        $this->assertSame('2025-01-01 10:00:00', $u->getAttribute('created_at'));
+        $this->assertSame('2025-01-02 11:00:00', $u->getAttribute('updated_at'));
+
+        // guarded ska inte vara hydrerade in i attributes
+        $this->assertNull($u->getAttribute('password'));
+        $this->assertNull($u->getAttribute('role'));
+        $this->assertNull($u->getAttribute('deleted_at'));
+
+        // övriga vanliga fält finns
+        $this->assertSame(42, $u->getAttribute('id'));
+        $this->assertSame('Mats', $u->getAttribute('first_name'));
+        $this->assertSame('Åkebrand', $u->getAttribute('last_name'));
+        $this->assertSame('mats@example.com', $u->getAttribute('email'));
+        $this->assertSame('/images/user/42/avatar.jpg', $u->getAttribute('avatar'));
+    }
+
+    public function testFillDoesNotMassAssignTimestamps(): void
+    {
+        $u = new User();
+        $u->fill([
+            'first_name' => 'Clara',
+            'created_at' => '2000-01-01 00:00:00',
+            'updated_at' => '2000-01-02 00:00:00',
+        ]);
+
+        $this->assertSame('Clara', $u->getAttribute('first_name'));
+        $this->assertNull($u->getAttribute('created_at'));
+        $this->assertNull($u->getAttribute('updated_at'));
     }
 }

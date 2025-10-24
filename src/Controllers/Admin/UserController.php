@@ -27,6 +27,8 @@ class UserController extends AbstractController
 
         $users = User::with('status')->paginate(10, (int)$page);
 
+        dd($users);
+
         return $this->view('admin.user.index', ['users' => $users]);
     }
 
