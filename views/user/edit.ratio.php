@@ -4,7 +4,7 @@
 {% block searchId %}search-users{% endblock %}
 {% block body %}
     <section>
-      <h1 class="text-3xl mb-8">Redigera konto</h1>
+      <h1 class="text-3xl font-semibold mb-8">Redigera konto</h1>
 
       <form action="{{ route('user.update') }}" method="post" enctype="multipart/form-data" class="w-full bg-white max-w-xl">
          {{ csrf_field()|raw }}

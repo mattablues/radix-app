@@ -4,7 +4,7 @@
 {% block searchId %}search-users{% endblock %}
 {% block body %}
     <section x-data="{ openRoleModal: false, selectedRole: '{{ $user ? $user->fetchGuardedAttribute('role') : null }}' }">
-      <h1 class="text-3xl mb-8">Konto</h1>
+      <h1 class="text-3xl font-semibold mb-8">Konto</h1>
 {% if($user) : %}
       <div class="w-full md:max-w-[600px] flex justify-between border border-gray-200 rounded px-3 sm:px-5 py-3">
         <ul>

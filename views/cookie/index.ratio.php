@@ -4,7 +4,7 @@
 {% block body %}
     <section class="py-6">
       <div class="container-centered-sm">
-        <h1 class="text-3xl font-semibold mb-8">Cookies</h1>
+        <h1 class="text-3xl font-semibold mb-6">Cookies</h1>
 
         <article class="mb-5">
           <h3 class="text-xl font-semibold mb-2">Vad använder vi cookies till?</h3>

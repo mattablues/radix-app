@@ -4,7 +4,7 @@
 {% block searchId %}search-deleted-users{% endblock %}
 {% block body %}
     <section x-data="{ openClosedModal: null, selectedUser: { id: null, email: '' } }">
-      <h1 class="text-3xl mb-8">Stängda konton</h1>
+      <h1 class="text-3xl font-semibold mb-8">Stängda konton</h1>
 {% if($users['data']) : %}
       <table class="w-full">
         <thead>
