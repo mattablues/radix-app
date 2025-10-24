@@ -6,56 +6,48 @@
     <section x-data="{ openRoleModal: false, selectedRole: '{{ $user ? $user->fetchGuardedAttribute('role') : null }}' }">
       <h1 class="text-3xl font-semibold mb-8">Konto</h1>
 {% if($user) : %}
-      <div class="w-full md:max-w-[600px] flex justify-between border border-gray-200 rounded px-3 sm:px-5 py-3">
-        <ul>
-          <li class="flex items-start gap-1 sm:gap-2 my-1">
-            <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">Namn:</span>
-            <span class="inline-block text-sm text-gray-700">{{ $user->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</span>
-          </li>
-          <li class="flex items-start gap-1 sm:gap-2 my-1">
-            <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">E-post:</span>
-            <span class="inline-block text-sm text-gray-700">{{ $user->getAttribute('email') }}</span>
-          </li>
-          <li class="flex items-start gap-1 sm:gap-2 my-1">
-            <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">Skapat:</span>
-            <span class="inline-block text-sm text-gray-700">{{ $user->getAttribute('created_at') }}</span>
-          </li>
-          <li class="flex items-start gap-1 sm:gap-2 my-1">
-            <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">Senast aktiv:</span>
-          {% if($user->getRelation('status')->getAttribute('active_at')) : %}
-            <span class="inline-block text-sm text-gray-700">
+      <h3 class="text-[20px] font-semibold mb-3">Kontoinformation</h3>
+
+      <div class="w-full md:max-w-[600px]">
+        <div class="flex justify-between border border-gray-200 rounded-md">
+          <dl class="px-4 py-2 flex-1 bg-gray-50">
+            <dt class="text-sm font-medium text-gray-500">Namn</dt>
+            <dd class="text-sm text-gray-900 mb-1">{{ $user->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</dd>
+            <dt class="text-sm font-medium text-gray-500">E-post</dt>
+            <dd class="text-sm text-gray-900 mb-1">{{ $user->getAttribute('email') }}</dd>
+            <dt class="text-sm font-medium text-gray-500">Senast aktiv</dt>
+            <dd class="text-sm text-gray-900 mb-1">
+            {% if($user->getRelation('status')->getAttribute('active_at')) : %}
               {{ $datetime->frame($user->getRelation('status')->getAttribute('active_at')) }}
-            </span>
-          {% else : %}
-            <span class="inline-block text-sm text-gray-700">aldrig</span>
+            {% else : %}
+              aldrig
           {% endif; %}
-          </li>
-          <li class="flex items-start gap-1 sm:gap-2 my-1">
-          {% if($currentUser->hasAtLeast('moderator')) : %}
-            <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">Kontostatus:</span>
-            <span class="inline-block text-xs font-semibold py-0.5 px-1.5 rounded {{ $user->getRelation('status')->getAttribute('status') }}">{{ $user->getRelation('status')->translateStatus($user->getRelation('status')->getAttribute('status')) }}</span>
-          </li>
-          <li class="flex items-start gap-1 sm:gap-2 my-1">
-            <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">Behörighet:</span>
-            <span class="inline-block text-xs font-semibold bg-gray-100 text-gray-800 py-0.5 px-1.5 rounded">{{ $user->fetchGuardedAttribute('role') }}</span>
-          </li>
-          {% endif; %}
-        </ul>
-        <div class="flex flex-col items-center justify-between gap-2 mb-1">
-          <figure class="text-center">
-            <img src="{{ versioned_file($user->getAttribute('avatar'), '/images/graphics/avatar.png') }}" alt="Avatar {{ $user->getAttribute('first_name') }} {{ $user->getAttribute('last_name') }}" class="w-[50px] sm:w-[80px] h-[50px] sm:h-[80px] rounded-full object-cover">
+            </dd>
+            <dt class="text-sm font-medium text-gray-500">Skapad</dt>
+            <dd class="text-sm text-gray-900 mb-1">{{ $user->getAttribute('created_at') }}</dd>
+            {% if($currentUser->hasAtLeast('moderator')) : %}
+            <dt class="text-sm font-medium text-gray-500">Kontostatus</dt>
+            <dd class="inline-block text-xs font-semibold px-1.5 rounded {{ $user->getRelation('status')->getAttribute('status') }} mb-1">{{ $user->getRelation('status')->translateStatus($user->getRelation('status')->getAttribute('status')) }}</dd>
+            <dt class="text-sm font-medium text-gray-500">Behörighet</dt>
+            <dd class="inline-block text-xs font-semibold px-1.5 bg-gray-700 text-white rounded">{{ $user->fetchGuardedAttribute('role') }}</dd>
+            {% endif; %}
+          </dl>
+          <figure class="flex flex-col items-center justify-center w-[140px] md:w-[200px]">
+            <img src="{{ $currentUser->getAttribute('avatar') }}" alt="Avatar" class="w-[100px] sm:w-[140px] h-[100px] sm:h-[140px] rounded-full object-cover">
             <figcaption class="text-xs text-gray-700 font-semibold">Avatar</figcaption>
           </figure>
-{% if($currentUser->isAdmin() && !$user->isAdmin()) : %}
-          <button
-              type="button"
-              x-on:click="openRoleModal = true"
-              class="text-xs font-semibold bg-blue-600 text-white py-0.5 px-1.5 rounded cursor-pointer hover:bg-blue-700 transition-colors duration-300"
-            >
-              ändra behörighet
-            </button>
-{% endif; %}
         </div>
+        {% if($currentUser->isAdmin() && !$user->isAdmin()) : %}
+        <div class="flex gap-3 justify-end mt-2 px-1">
+          <button
+            type="button"
+            x-on:click="openRoleModal = true"
+            class="text-sm self-start block border border-transparent bg-blue-500 px-3 py-0.5 text-white hover:bg-blue-600 transition-colors duration-300 rounded-md cursor-pointer"
+          >
+              Ändra behörighet
+          </button>
+        </div>
+        {% endif; %}
       </div>
       {% if($currentUser->isAdmin() && !$user->isAdmin()) : %}
       <div
