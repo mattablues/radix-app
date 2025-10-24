@@ -34,9 +34,7 @@
           {% if($currentUser->hasAtLeast('moderator')) : %}
             <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">Kontostatus:</span>
             <span class="inline-block text-xs font-semibold py-0.5 px-1.5 rounded {{ $user->getRelation('status')->getAttribute('status') }}">{{ $user->getRelation('status')->translateStatus($user->getRelation('status')->getAttribute('status')) }}</span>
-          {% endif; %}
           </li>
-          {% if($currentUser->isAdmin() && !$user->isAdmin()) : %}
           <li class="flex items-start gap-1 sm:gap-2 my-1">
             <span class="shrink-0 inline-block w-24 md:w-28 text-sm font-semibold text-gray-700">Behörighet:</span>
             <span class="inline-block text-xs font-semibold bg-gray-100 text-gray-800 py-0.5 px-1.5 rounded">{{ $user->fetchGuardedAttribute('role') }}</span>
