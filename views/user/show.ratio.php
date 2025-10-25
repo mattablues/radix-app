@@ -29,9 +29,9 @@
               {% endif; %}
               </dd>
             {% if($currentUser->hasAtLeast('moderator')) : %}
-              <dt class="text-sm font-medium text-gray-500"">Kontostatus</dt>
+              <dt class="text-sm font-medium text-gray-500">Kontostatus</dt>
               <dd class="text-sm text-gray-900 mb-1 text-{{ $user->getRelation('status')->getAttribute('status') }} mb-1">{{ $user->getRelation('status')->translateStatus($user->getRelation('status')->getAttribute('status')) }}</dd>
-              <dt class="text-sm font-medium text-gray-500"">Behörighet</dt>
+              <dt class="text-sm font-medium text-gray-500">Behörighet</dt>
               <dd class="text-sm text-gray-900 mb-1">{{ $user->fetchGuardedAttribute('role') }}</dd>
             {% endif; %}
             </dl>
