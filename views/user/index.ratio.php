@@ -23,7 +23,7 @@
             <dd class="text-sm text-gray-900">{{ $currentUser->getAttribute('updated_at') }}</dd>
           </dl>
           <figure class="flex flex-col items-center justify-center w-[140px] md:w-[200px]">
-            <img src="{{ $currentUser->getAttribute('avatar') }}" alt="Avatar" class="w-[100px] sm:w-[140px] h-[100px] sm:h-[140px] rounded-full object-cover">
+            <img src="{{ versioned_file($currentUser->getAttribute('avatar')) }}" alt="Avatar" class="w-[100px] sm:w-[140px] h-[100px] sm:h-[140px] rounded-full object-cover">
             <figcaption class="text-xs text-gray-700 font-semibold">Avatar</figcaption>
           </figure>
         </div>
