@@ -20,9 +20,9 @@
               <dd class="text-sm text-gray-900 mb-1">{{ $currentUser->fetchGuardedAttribute('role') }}</dd>
             </dl>
             <dl>
-              <dt class="text-sm font-medium text-gray-500">Skapad</dt>
+              <dt class="text-sm font-medium text-gray-500">Skapat</dt>
               <dd class="text-sm text-gray-900 mb-1">{{ $currentUser->getAttribute('created_at') }}</dd>
-              <dt class="text-sm font-medium text-gray-500">Uppdaterad</dt>
+              <dt class="text-sm font-medium text-gray-500">Uppdaterat</dt>
               <dd class="text-sm text-gray-900">{{ $currentUser->getAttribute('updated_at') }}</dd>
             </dl>
           </div>
