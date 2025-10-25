@@ -2,24 +2,49 @@
   @apply bg-green-600/70 text-white;
 }
 
+.text-activated {
+  @apply text-green-600/70;
+}
+
 .activate {
   @apply bg-orange-400/70 text-white;
 }
 
+.text-activate {
+  @apply text-orange-400/70;
+}
+
+
 .blocked {
   @apply bg-red-600/70 text-white;
+}
+
+.text-blocked {
+  @apply text-red-600/70;
 }
 
 .closed {
   @apply bg-gray-600/70 text-white;
 }
 
+.text-closed {
+  @apply text-gray-600/70;
+}
+
 .offline {
   @apply bg-gray-200/70 text-gray-400;
 }
 
+.text-offline {
+  @apply text-gray-200/70;
+}
+
 .online {
   @apply bg-green-600/70 text-white;
+}
+
+.text-online {
+  @apply text-green-600/70;
 }
 
 .container-base {

@@ -8,37 +8,41 @@
 {% if($user) : %}
       <h3 class="text-[20px] font-semibold mb-3">Kontoinformation</h3>
 
-      <div class="w-full md:max-w-[600px]">
-        <div class="flex justify-between border border-gray-200 rounded-md">
-          <dl class="px-4 py-2 flex-1 bg-gray-50">
-            <dt class="text-sm font-medium text-gray-500">Namn</dt>
-            <dd class="text-sm text-gray-900 mb-1">{{ $user->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</dd>
-            <dt class="text-sm font-medium text-gray-500">E-post</dt>
-            <dd class="text-sm text-gray-900 mb-1">{{ $user->getAttribute('email') }}</dd>
-            <dt class="text-sm font-medium text-gray-500">Senast aktiv</dt>
-            <dd class="text-sm text-gray-900 mb-1">
-            {% if($user->getRelation('status')->getAttribute('active_at')) : %}
-              {{ $datetime->frame($user->getRelation('status')->getAttribute('active_at')) }}
-            {% else : %}
-              aldrig
-          {% endif; %}
-            </dd>
-            <dt class="text-sm font-medium text-gray-500">Skapad</dt>
-            <dd class="text-sm text-gray-900 mb-1">{{ $user->getAttribute('created_at') }}</dd>
+      <div class="w-full sm:max-w-[600px]">
+        <div class="flex justify-between gap-3  border border-gray-200 rounded-md">
+          <div class="sm:flex-1 flex flex-col sm:flex-row sm:gap-14 p-3 sm:px-5">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500">Namn</dt>
+              <dd class="text-sm text-gray-900 mb-1">{{ $user->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</dd>
+              <dt class="text-sm font-medium text-gray-500">E-post</dt>
+              <dd class="text-sm text-gray-900 mb-1">{{ $user->getAttribute('email') }}</dd>
+              <dt class="text-sm font-medium text-gray-500">Skapad</dt>
+              <dd class="text-sm text-gray-900 mb-1">{{ $user->getAttribute('created_at') }}</dd>
+            </dl>
+            <dl>
+              <dt class="text-sm font-medium text-gray-500">Senast aktiv</dt>
+              <dd class="text-sm text-gray-900 mb-1">
+              {% if($user->getRelation('status')->getAttribute('active_at')) : %}
+                {{ $datetime->frame($user->getRelation('status')->getAttribute('active_at')) }}
+              {% else : %}
+                aldrig
+              {% endif; %}
+              </dd>
             {% if($currentUser->hasAtLeast('moderator')) : %}
-            <dt class="text-sm font-medium text-gray-500">Kontostatus</dt>
-            <dd class="inline-block text-xs font-semibold px-1.5 rounded {{ $user->getRelation('status')->getAttribute('status') }} mb-1">{{ $user->getRelation('status')->translateStatus($user->getRelation('status')->getAttribute('status')) }}</dd>
-            <dt class="text-sm font-medium text-gray-500">Behörighet</dt>
-            <dd class="inline-block text-xs font-semibold px-1.5 bg-gray-700 text-white rounded">{{ $user->fetchGuardedAttribute('role') }}</dd>
+              <dt class="text-sm font-medium text-gray-500"">Kontostatus</dt>
+              <dd class="text-sm text-gray-900 mb-1 text-{{ $user->getRelation('status')->getAttribute('status') }} mb-1">{{ $user->getRelation('status')->translateStatus($user->getRelation('status')->getAttribute('status')) }}</dd>
+              <dt class="text-sm font-medium text-gray-500"">Behörighet</dt>
+              <dd class="text-sm text-gray-900 mb-1">{{ $user->fetchGuardedAttribute('role') }}</dd>
             {% endif; %}
-          </dl>
-          <figure class="flex flex-col items-center justify-center w-[140px] md:w-[200px]">
-            <img src="{{ versioned_file($user->getAttribute('avatar'))" alt="Avatar" class="w-[100px] sm:w-[140px] h-[100px] sm:h-[140px] rounded-full object-cover">
+            </dl>
+          </div>
+          <figure class="flex flex-col items-center justify-center px-3 sm:px-5">
+            <img src="{{ versioned_file($user->getAttribute('avatar')) }}" alt="Avatar" class="w-[90px] h-[90px] sm:w-[110px] sm:h-[110px] rounded-full object-cover">
             <figcaption class="text-xs text-gray-700 font-semibold">Avatar</figcaption>
           </figure>
         </div>
         {% if($currentUser->isAdmin() && !$user->isAdmin()) : %}
-        <div class="flex gap-3 justify-end mt-2 px-1">
+        <div class="flex gap-3 justify-end mt-2">
           <button
             type="button"
             x-on:click="openRoleModal = true"
