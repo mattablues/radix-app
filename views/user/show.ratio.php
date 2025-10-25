@@ -42,7 +42,7 @@
           </figure>
         </div>
         {% if($currentUser->isAdmin() && !$user->isAdmin()) : %}
-        <div class="flex gap-3 justify-end mt-2">
+        <div class="flex gap-3 justify-end px-3 sm:px-5 mt-2">
           <button
             type="button"
             x-on:click="openRoleModal = true"
@@ -102,10 +102,10 @@
               </div>
 
               <div class="mt-3 flex justify-end space-x-2">
-                <button type="button" x-on:click="openRoleModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-800/20 bg-transparent px-3 py-0.5 text-gray-800 hover:bg-gray-800/5 transition-colors duration-300">
+                <button type="button" x-on:click="openRoleModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-800/20 bg-transparent px-3 py-0.5 text-gray-800 hover:bg-gray-800/5 transition-colors duration-300 cursor-pointer">
                   Avbryt
                 </button>
-                <button type="submit" x-on:click="openRoleModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-blue-600 px-3 py-0.5 text-white hover:bg-blue-700 transition-colors duration-300">
+                <button type="submit" x-on:click="openRoleModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-blue-600 px-3 py-0.5 text-white hover:bg-blue-700 transition-colors duration-300 cursor-pointer">
                   Spara
                 </button>
               </div>
