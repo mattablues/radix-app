@@ -51,14 +51,14 @@
           {% endif %}
         </div>
 
-        <div class="relative mb-2">
+        <div class="relative mb-4">
           <label for="password-confirmation" class="block text-sm text-slate-600 mb-1.5 ml-1">Repetera lösenord</label>
           <input type="password" name="password_confirmation" id="password-confirmation" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 focus:ring-indigo-500 transition duration-300 ease-in">
           {% if (error($errors, 'password_confirmation')) : %}
           <span class="block right-1 absolute -bottom-4 text-xs text-red-600">{{ error($errors, 'password_confirmation') }}</span>
           {% endif %}
         </div>
-        <div class="relative mt-6 mb-8">
+        <div class="relative mb-8">
           <div class="flex gap-2 items-center">
             <button class="text-sm whitespace-nowrap py-2 px-3 border border-blue-600 bg-blue-600 hover:bg-blue-700  transition-all duration-300 text-white rounded-lg cursor-pointer">Spara</button>
             <a href="{{ route('user.index') }}" class="text-sm hitespace-nowrap py-2 px-3 bg-transparent text-gray-800  border border-gray-800/20 hover:bg-gray-800/5 transition-colors duration-300 rounded-lg">Avbryt</a>

@@ -56,7 +56,7 @@
               {% endif %}
             </div>
 
-            <div class="relative mb-1">
+            <div class="relative mb-3">
               <label for="message" class="block text-sm text-slate-600 mb-1 ml-1">Meddelande</label>
               <textarea name="message" id="message" cols="30" rows="10" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 focus:ring-indigo-500 transition duration-300 ease-in">{{ old('message') }}</textarea>
               {% if (error($errors, 'message')) : %}
@@ -64,7 +64,7 @@
               {% endif %}
             </div>
 
-            <div class="relative mt-3 mb-8">
+            <div class="relative mb-8">
               <div class="flex gap-2 items-center">
                 <button class="text-sm whitespace-nowrap py-2 px-3 border border-blue-600 bg-blue-600 hover:bg-blue-700  transition-all duration-300 text-white rounded-lg cursor-pointer">Skicka</button>
                 {% if (error($errors, 'form-error')) : %}
