@@ -60,8 +60,8 @@
         </div>
         <div class="relative mt-6 mb-8">
           <div class="flex gap-2 items-center">
-            <button class="whitespace-nowrap py-1.5 px-3 border border-blue-600 bg-blue-600 hover:bg-blue-700  transition-all duration-300 text-white rounded-lg cursor-pointer">Spara</button>
-            <a href="{{ route('user.index') }}" class="whitespace-nowrap py-1.5 px-3 bg-transparent text-gray-800  border border-gray-800/20 hover:bg-gray-800/5 transition-colors duration-300 rounded-lg">Avbryt</a>
+            <button class="text-sm whitespace-nowrap py-2 px-3 border border-blue-600 bg-blue-600 hover:bg-blue-700  transition-all duration-300 text-white rounded-lg cursor-pointer">Spara</button>
+            <a href="{{ route('user.index') }}" class="text-sm hitespace-nowrap py-2 px-3 bg-transparent text-gray-800  border border-gray-800/20 hover:bg-gray-800/5 transition-colors duration-300 rounded-lg">Avbryt</a>
           </div>
         </div>
       </form>

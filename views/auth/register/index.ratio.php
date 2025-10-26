@@ -52,7 +52,7 @@
       </div>
 
       <div class="relative mt-6 mb-2">
-        <button class="w-full whitespace-nowrap py-1.5 px-3 border border-blue-600 bg-blue-600 hover:bg-blue-700 hover:border-blue-700  transition-all duration-300 text-white rounded-lg cursor-pointer">Register</button>
+        <button class="text-sm w-full whitespace-nowrap py-2 px-3 border border-blue-600 bg-blue-600 hover:bg-blue-700 hover:border-blue-700  transition-all duration-300 text-white rounded-lg cursor-pointer">Registrera</button>
         <div class="flex justify-end gap-2 items-center mt-1 mr-1.5">
           <a href="{{ route('auth.login.index') }}" class="text-sm text-blue-600 hover:text-blue-800 transition-all duration-300  text-left">Logga in</a>
         </div>
