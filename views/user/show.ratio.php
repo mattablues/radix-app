@@ -72,25 +72,27 @@
         >
           <div
             x-on:click.stop
-            class="relative min-w-80 max-w-xl rounded-xl bg-white p-6 shadow-lg"
+            class="relative min-w-80 max-w-xl rounded-xl bg-white px-4 py-4 shadow-lg"
           >
-            <h2 class="flex items-center gap-1.5 text-gray-800 mb-2" :id="$id('modal-title')">
-              <span class="text-2xl text-gray-700">Ändra behörighet</span>
+            <h2 class="text-2xl text-gray-700 px-2" :id="$id('modal-title')">
+              Ändra behörighet
             </h2>
 
-            <p class="mt-3 mb-4 text-[15px] text-gray-700 max-w-sm">
+            <hr class="my-2 border-gray-200" />
+
+            <p class="mb-2 px-2 text-sm text-gray-700 max-w-sm pb-1">
               Välj en ny behörighet för kontot <strong>{{ $user->getAttribute('email') }}</strong>.
             </p>
 
             <form action="{{ route('admin.user.role', ['id' => $user->getAttribute('id')]) }}" method="post" class="mt-3">
               {{ csrf_field()|raw }}
-              <div class="mb-4">
-                <label for="role" class="block text-sm text-gray-700 mb-1">Behörighet</label>
+              <div class="mb-4 px-2">
+                <label for="role" class="block text-sm text-slate-600 mb-1.5 ml-1 sr-only">Behörighet</label>
                 <select
                   id="role"
                   name="role"
                   x-model="selectedRole"
-                  class="block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="block w-full rounded border border-gray-300 px-3 py-1 text-sm focus:outline-none focus:border-indigo-500 focus:ring-0 focus:ring-indigo-500 transition duration-300 ease-in"
                   required
                 >
                 {% foreach ($roles as $roleCase): %}
@@ -101,12 +103,14 @@
                 </select>
               </div>
 
+              <hr class="my-2 border-gray-200" />
+
               <div class="mt-3 flex justify-end space-x-2">
-                <button type="button" x-on:click="openRoleModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-800/20 bg-transparent px-3 py-0.5 text-gray-800 hover:bg-gray-800/5 transition-colors duration-300 cursor-pointer">
-                  Avbryt
-                </button>
-                <button type="submit" x-on:click="openRoleModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-blue-600 px-3 py-0.5 text-white hover:bg-blue-700 transition-colors duration-300 cursor-pointer">
+                <button type="submit" x-on:click="openRoleModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-blue-600 text-sm px-3 py-1 text-white hover:bg-blue-700 transition-colors duration-300 cursor-pointer">
                   Spara
+                </button>
+                <button type="button" x-on:click="openRoleModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-800/20 bg-transparent text-sm px-3 py-1 text-gray-800 hover:bg-gray-800/5 transition-colors duration-300 cursor-pointer">
+                  Avbryt
                 </button>
               </div>
             </form>

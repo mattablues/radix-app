@@ -33,10 +33,6 @@
         </div>
         <div class="flex gap-2 justify-end px-3 sm:px-5 mt-2">
           <a href="{{ route('user.edit') }}" class="text-sm border border-transparent bg-blue-500 px-3 py-0.5 text-white hover:bg-blue-600 transition-colors duration-300 rounded-md cursor-pointer">Redigera</a>
-          {% if(!$currentUser->isAdmin()) : %}
-          <button class="text-sm border border-transparent bg-red-500 px-3 py-0.5 text-white hover:bg-red-600 transition-colors duration-300 rounded-md cursor-pointer" x-on:click="openCloseModal = true">Stäng</button>
-          <button class="text-sm border border-transparent bg-red-500 px-3 py-0.5 text-white hover:bg-red-600 transition-colors duration-300 rounded-md cursor-pointer" x-on:click="openDeleteModal = true">Radera</button>
-          {% endif; %}
         </div>
       </div>
     </section>

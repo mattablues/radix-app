@@ -74,23 +74,28 @@
         >
           <div
             x-on:click.stop
-            class="relative min-w-80 max-w-xl rounded-xl bg-white p-6 shadow-lg"
+            class="relative min-w-80 max-w-xl rounded-xl bg-white px-4 py-4 shadow-lg"
           >
-            <h2 class="flex items-center gap-1.5 text-gray-800 mb-2" :id="$id('modal-title')">
-              <span class="text-2xl text-gray-700">Blockera konto</span>
+            <h2 class="text-2xl text-gray-700 px-2" :id="$id('modal-title')">
+              Blockera konto
             </h2>
 
-            <p class="mt-3 mb-2 text-[15px] text-gray-700 max-w-sm">
+            <hr class="my-2 border-gray-200" />
+
+            <p class="mb-2 px-2 text-sm text-gray-700 max-w-sm pt-1">
               Detta kommer att blockera kontot <strong x-text="selectedUser.email"></strong>.
             </p>
-            <p class="mt-3 mb-4 text-[14px] text-gray-700 max-w-sm">Är du säker på att du vill fortsätta?</p>
 
-            <form x-bind:action="'{{ route('admin.user.block', ['id' => '__ID__']) }}?page={{ $users['pagination']['current_page'] }}'.replace('__ID__', selectedUser.id)" method="post" class="mt-3 flex justify-end space-x-2">
+            <p class="mb-2 px-2 text-sm font-medium text-gray-700 max-w-sm pb-1">Är du säker på att du vill fortsätta?</p>
+
+            <hr class="my-2 border-gray-200" />
+
+            <form x-bind:action="'{{ route('admin.user.block', ['id' => '__ID__']) }}?page={{ $users['pagination']['current_page'] }}'.replace('__ID__', selectedUser.id)" method="post" class="mt-3 flex justify-end px-2 space-x-2">
               {{ csrf_field()|raw }}
-              <button type="button" x-on:click="openBlockModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-800/20 bg-transparent px-3 py-0.5 text-gray-800 hover:bg-gray-800/5 transition-colors duration-300">
+              <button type="button" x-on:click="openBlockModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-800/20 bg-transparent text-sm px-3 py-1 text-gray-800 hover:bg-gray-800/5 transition-colors duration-300">
                 Avbryt
               </button>
-              <button type="submit" x-on:click="openBlockModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-red-500 px-3 py-0.5 text-white hover:bg-red-600 transition-colors duration-300">
+              <button type="submit" x-on:click="openBlockModal = false" class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-red-500 text-sm px-3 py-1 text-white hover:bg-red-600 transition-colors duration-300">
                 Blockera
               </button>
             </form>
