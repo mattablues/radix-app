@@ -25,7 +25,7 @@
           {% endif %}
         </div>
 
-        <div class="relative mb-2">
+        <div class="relative mb-4">
           <label for="email" class="block text-sm text-slate-600 mb-1.5 ml-1">E-postadress</label>
           <input type="text" name="email" id="email" value="{{ old('email') }}" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 focus:ring-indigo-500 transition duration-300 ease-in">
           {% if (error($errors, 'email')) : %}
@@ -33,7 +33,7 @@
           {% endif %}
         </div>
 
-        <div class="relative mt-6 mb-8">
+        <div class="relative mb-8">
           <div class="flex gap-2 items-center">
             <button class="whitespace-nowrap py-1.5 px-3 border border-blue-600 bg-blue-600 hover:bg-blue-700  transition-all duration-300 text-white rounded-lg cursor-pointer">Spara</button>
             <a href="{{ route('admin.user.index') }}" class="whitespace-nowrap py-1.5 px-3 bg-transparent text-gray-800  border border-gray-800/20 hover:bg-gray-800/5 transition-colors duration-300 rounded-lg">Avbryt</a>

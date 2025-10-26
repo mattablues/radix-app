@@ -104,6 +104,7 @@
             </div>
           </div>
           <ul
+            x-cloak
             x-show="sidebarDropdown"
             x-transition:enter="transition-all duration-200 ease-out"
             x-transition:enter-start="-translate-y-5 opacity-0"
@@ -150,6 +151,7 @@
           </div>
 
           <ul
+            x-cloak
             x-show="sidebarDropdown"
             x-transition:enter="transition-all duration-200 ease-out"
             x-transition:enter-start="-translate-y-5 opacity-0"
