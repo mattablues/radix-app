@@ -6,7 +6,7 @@
         <section x-data="{ openBlockModal: null, selectedUser: { id: null, email: '' } }">
           <div class="flex items-start justify-between gap-4 mb-6">
             <h1 class="text-3xl font-semibold">Konton</h1>
-            <div class="text-xs text-gray-600 hidden md:block mt-2">
+            <div class="text-xs text-gray-600 font-medium hidden md:block mt-3">
               {{ $users['pagination']['total'] ?? 0 }} totalt
             </div>
           </div>
@@ -125,7 +125,7 @@
           <!-- End Modal -->
 {% if($users['pagination']['total'] > $users['pagination']['per_page']) : %}
           <div class="flex flex-wrap items-center justify-between gap-3 mt-4">
-            <span class="block text-xs font-medium text-gray-600">Totalt {{ $users['pagination']['total'] }} konton</span>
+            <span class="block text-xs font-medium text-gray-600">{{ $users['pagination']['total'] }} totalt</span>
             <span class="block text-xs font-medium text-gray-600">Sida {{ $users['pagination']['current_page'] }} av {{ calculate_total_pages($users['pagination']['total'], $users['pagination']['per_page']) }}</span>
           </div>
           <div class="mt-2">

@@ -6,13 +6,13 @@
             <section>
               <h1 class="text-3xl font-semibold mb-8">Redigera konto</h1>
 
-              <form action="{{ route('user.update') }}" method="post" enctype="multipart/form-data" class="w-full max-w-2xl">
+              <form action="{{ route('user.update') }}" method="post" enctype="multipart/form-data" class="w-full max-w-3xl">
                  {{ csrf_field()|raw }}
 
                 <div class="overflow-hidden rounded-xl border border-gray-200 bg-white/70 backdrop-blur-sm p-4 sm:p-6">
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="relative">
-                      <label for="firstname" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5">Förnamn</label>
+                      <label for="firstname" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5 ml-1">Förnamn</label>
                       <input
                         type="text"
                         name="first_name"
@@ -26,7 +26,7 @@
                     </div>
 
                     <div class="relative">
-                      <label for="lastname" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5">Efternamn</label>
+                      <label for="lastname" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5 ml-1">Efternamn</label>
                       <input
                         type="text"
                         name="last_name"
@@ -40,7 +40,7 @@
                     </div>
 
                     <div class="relative sm:col-span-2">
-                      <label for="email" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5">E-postadress</label>
+                      <label for="email" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5 ml-1">E-postadress</label>
                       <input
                         type="text"
                         name="email"
@@ -56,7 +56,7 @@
                     <!-- Återställd filuppladdning enligt tidigare lösning, med justerad höjd -->
                     <div class="relative sm:col-span-2">
                       <div class="form-upload-btn">
-                        <label for="avatar" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5">Avatar</label>
+                        <label for="avatar" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5 ml-1">Avatar</label>
                         <input
                           type="file"
                           name="avatar"
@@ -71,7 +71,7 @@
                     </div>
 
                     <div class="relative">
-                      <label for="password" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5">Lösenord</label>
+                      <label for="password" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5 ml-1">Lösenord</label>
                       <input
                         type="password"
                         name="password"
@@ -84,7 +84,7 @@
                     </div>
 
                     <div class="relative">
-                      <label for="password-confirmation" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5">Repetera lösenord</label>
+                      <label for="password-confirmation" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5 ml-1">Repetera lösenord</label>
                       <input
                         type="password"
                         name="password_confirmation"

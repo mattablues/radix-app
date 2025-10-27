@@ -3,7 +3,7 @@
 }
 
 .text-activated {
-  @apply text-green-600/70;
+  @apply text-green-600/80;
 }
 
 .activate {
@@ -11,7 +11,7 @@
 }
 
 .text-activate {
-  @apply text-orange-400/70;
+  @apply text-orange-400/80;
 }
 
 
@@ -20,7 +20,7 @@
 }
 
 .text-blocked {
-  @apply text-red-600/70;
+  @apply text-red-600/80;
 }
 
 .closed {
@@ -28,7 +28,7 @@
 }
 
 .text-closed {
-  @apply text-gray-600/70;
+  @apply text-gray-600/80;
 }
 
 .offline {
@@ -36,7 +36,7 @@
 }
 
 .text-offline {
-  @apply text-gray-200/70;
+  @apply text-gray-200/80;
 }
 
 .online {
@@ -44,7 +44,7 @@
 }
 
 .text-online {
-  @apply text-green-600/70;
+  @apply text-green-600/80;
 }
 
 .container-base {

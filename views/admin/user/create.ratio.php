@@ -12,7 +12,7 @@
             <div class="overflow-hidden rounded-xl border border-gray-200 bg-white/70 backdrop-blur-sm p-4 sm:p-6">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="relative">
-                  <label for="firstname" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5">Förnamn</label>
+                  <label for="firstname" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5 ml-1">Förnamn</label>
                   <input
                     type="text"
                     name="first_name"
@@ -26,7 +26,7 @@
                 </div>
 
                 <div class="relative">
-                  <label for="lastname" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5">Efternamn</label>
+                  <label for="lastname" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5 ml-1">Efternamn</label>
                   <input
                     type="text"
                     name="last_name"
@@ -40,7 +40,7 @@
                 </div>
 
                 <div class="relative sm:col-span-2">
-                  <label for="email" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5">E-postadress</label>
+                  <label for="email" class="block text-xs uppercase tracking-wide text-gray-600 mb-1.5 ml-1">E-postadress</label>
                   <input
                     type="text"
                     name="email"
