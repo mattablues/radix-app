@@ -83,8 +83,8 @@ class ContactController extends AbstractController
         $this->eventDispatcher->dispatch(new ContactFormEvent(
             email: $data['email'],
             message: $data['message'],
-            firstName: $data['first_name'],
-            lastName: $data['last_name'],
+            firstName: human_name($data['first_name']),
+            lastName: human_name($data['last_name']),
         ));
 
         // Om valideringen passerar, ta bort honeypot-id:t

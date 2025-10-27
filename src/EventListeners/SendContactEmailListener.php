@@ -23,6 +23,7 @@ readonly class SendContactEmailListener
                     'heading' => 'Message from contact form',
                     'body'  => $event->message,
                     'name' => $event->firstName . ' ' . $event->lastName,
+                    'email' => $event->email,
                 ], // Template-data
                 'from' => getenv('MAIL_EMAIL'), // Statisk avsändaradress (din server kräver detta)
                 'from_name' => 'Support Team', // Text för avsändare

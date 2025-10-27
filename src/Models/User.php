@@ -49,28 +49,26 @@ class User extends Model
     // Hantera första bokstaven som stor bokstav för förnamn
     public function setFirstNameAttribute(string $value): void
     {
-        $this->attributes['first_name'] = mb_ucfirst(mb_strtolower(trim($value)));
+        $this->attributes['first_name'] = human_name($value);
     }
 
     // Hantera första bokstaven som stor bokstav för efternamn
     public function setLastNameAttribute(string $value): void
     {
-        $this->attributes['last_name'] = mb_ucfirst(mb_strtolower(trim($value)));
+        $this->attributes['last_name'] = human_name($value);
     }
 
-    // Accessor för att hämta förnamnet i rätt format (om ytterligare hantering behövs vid hämtning)
+    // Accessor för att hämta förnamnet i rätt format (kan vara identitet om settern redan normaliserar)
     public function getFirstNameAttribute(?string $value): ?string
     {
-        return $value ? mb_ucfirst(mb_strtolower($value)) : null;
+        return $value ?? null;
     }
 
-
-        // Accessor för att hämta efternamnet i rätt format
+    // Accessor för att hämta efternamnet i rätt format
     public function getLastNameAttribute(?string $value): ?string
     {
-        return $value ? mb_ucfirst(mb_strtolower($value)) : null;
+        return $value ?? null;
     }
-
 
     // Hantera e-postlagring i små bokstäver
     public function setEmailAttribute(string $value): void
