@@ -21,7 +21,7 @@
                         class="w-full text-sm border-gray-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 transition"
                       >
                       {% if (error($errors, 'first_name')) : %}
-                      <span class="block absolute right-1 -bottom-4 text-xs text-red-600">{{ error($errors, 'first_name') }}</span>
+                      <span class="block absolute right-1 -bottom-4 text-xxs text-red-600">{{ error($errors, 'first_name') }}</span>
                       {% endif %}
                     </div>
 
@@ -35,7 +35,7 @@
                         class="w-full text-sm border-gray-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 transition"
                       >
                       {% if (error($errors, 'last_name')) : %}
-                      <span class="block absolute right-1 -bottom-4 text-xs text-red-600">{{ error($errors, 'last_name') }}</span>
+                      <span class="block absolute right-1 -bottom-4 text-xxs text-red-600">{{ error($errors, 'last_name') }}</span>
                       {% endif %}
                     </div>
 
@@ -49,7 +49,7 @@
                         class="w-full text-sm border-gray-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 transition"
                       >
                       {% if (error($errors, 'email')) : %}
-                      <span class="block absolute right-1 -bottom-4 text-xs text-red-600">{{ error($errors, 'email') }}</span>
+                      <span class="block absolute right-1 -bottom-4 text-xxs text-red-600">{{ error($errors, 'email') }}</span>
                       {% endif %}
                     </div>
 
@@ -66,7 +66,7 @@
                         >
                       </div>
                       {% if (error($errors, 'avatar')) : %}
-                      <span class="block absolute right-1 -bottom-4 text-xs text-red-600">{{ error($errors, 'avatar') }}</span>
+                      <span class="block absolute right-1 -bottom-4 text-xxs text-red-600">{{ error($errors, 'avatar') }}</span>
                       {% endif %}
                     </div>
 
@@ -79,7 +79,7 @@
                         class="w-full text-sm border-gray-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 transition"
                       >
                       {% if (error($errors, 'password')) : %}
-                      <span class="block absolute right-1 -bottom-4 text-xs text-red-600">{{ error($errors, 'password') }}</span>
+                      <span class="block absolute right-1 -bottom-4 text-xxs text-red-600">{{ error($errors, 'password') }}</span>
                       {% endif %}
                     </div>
 
@@ -92,7 +92,7 @@
                         class="w-full text-sm border-gray-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 transition"
                       >
                       {% if (error($errors, 'password_confirmation')) : %}
-                      <span class="block absolute right-1 -bottom-4 text-xs text-red-600">{{ error($errors, 'password_confirmation') }}</span>
+                      <span class="block absolute right-1 -bottom-4 text-xxs text-red-600">{{ error($errors, 'password_confirmation') }}</span>
                       {% endif %}
                     </div>
                   </div>

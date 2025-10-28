@@ -12,6 +12,10 @@
   --sidebar-w: 260px;
   --sidebar-w-neg: calc(var(--sidebar-w) * -1);
   --sidebar-aside-w: 220px;
+  /* 11px */
+  --text-xxs: 0.6875rem;
+  /* följ samma ratio-syntax: line-height i rem/px-termer som kvot */
+  --text-xxs--line-height: calc(16 / 11); /* ≈1.2727 om du vill ha ~14px radavstånd */
 
   /* Spacing (exempel) */
   --space-6: 1.5rem; /* motsv. tailwind top-6 */

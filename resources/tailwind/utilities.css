@@ -14,6 +14,11 @@
     display: none !important;
   }
 
+  .text-xxs {
+    font-size: var(--text-xxs);
+    line-height: var(--text-xxs--line-height);
+  }
+
   /* Responsiv sticky: av på små skärmar, på från lg */
   .sticky-top {
     position: static;

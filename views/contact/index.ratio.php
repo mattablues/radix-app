@@ -35,7 +35,7 @@
                 <label for="first-name" class="block text-sm text-slate-600 mb-1.5 ml-1">Förnamn</label>
                 <input type="text" name="first_name" id="first-name" value="{{ old('first_name') }}" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 focus:ring-indigo-500 transition duration-300 ease-in">
                 {% if (error($errors, 'first_name')) : %}
-                <span class="block right-1 absolute -bottom-4 text-xs text-red-600">{{ error($errors, 'first_name') }}</span>
+                <span class="block right-1 absolute -bottom-4 text-xxs text-red-600">{{ error($errors, 'first_name') }}</span>
                 {% endif %}
               </div>
 
@@ -43,7 +43,7 @@
                 <label for="last-name" class="block text-sm text-slate-600 mb-1.5 ml-1">Efternamn</label>
                 <input type="text" name="last_name" id="last-name" value="{{ old('last_name') }}" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 focus:ring-indigo-500 transition duration-300 ease-in">
                 {% if (error($errors, 'last_name')) : %}
-                <span class="block right-1 absolute -bottom-4 text-xs text-red-600">{{ error($errors, 'last_name') }}</span>
+                <span class="block right-1 absolute -bottom-4 text-xxs text-red-600">{{ error($errors, 'last_name') }}</span>
                 {% endif %}
               </div>
             </div>
@@ -52,7 +52,7 @@
               <label for="email" class="block text-sm text-slate-600 mb-1.5 ml-1">E-postadress</label>
               <input type="text" name="email" id="email" value="{{ old('email') }}" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 focus:ring-indigo-500 transition duration-300 ease-in">
               {% if (error($errors, 'email')) : %}
-              <span class="block right-1 absolute -bottom-4 text-xs text-red-600">{{ error($errors, 'email') }}</span>
+              <span class="block right-1 absolute -bottom-4 text-xxs text-red-600">{{ error($errors, 'email') }}</span>
               {% endif %}
             </div>
 
@@ -60,7 +60,7 @@
               <label for="message" class="block text-sm text-slate-600 mb-1 ml-1">Meddelande</label>
               <textarea name="message" id="message" cols="30" rows="10" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 focus:ring-indigo-500 transition duration-300 ease-in">{{ old('message') }}</textarea>
               {% if (error($errors, 'message')) : %}
-              <span class="block right-1 absolute -bottom-2.5 text-xs text-red-600">{{ error($errors, 'message') }}</span>
+              <span class="block right-1 absolute -bottom-2.5 text-xxs text-red-600">{{ error($errors, 'message') }}</span>
               {% endif %}
             </div>
 
@@ -68,7 +68,7 @@
               <div class="flex gap-2 items-center">
                 <button class="text-sm whitespace-nowrap py-2 px-3 border border-blue-600 bg-blue-600 hover:bg-blue-700  transition-all duration-300 text-white rounded-lg cursor-pointer">Skicka</button>
                 {% if (error($errors, 'form-error')) : %}
-                <span class="block left-1 right-1 absolute top-12 text-xs text-red-600 leading-3.5">{{ error($errors, 'form-error') }}</span>
+                <span class="block left-1 right-1 absolute top-12 text-xxs text-red-600 leading-3.5">{{ error($errors, 'form-error') }}</span>
                 {% endif %}
               </div>
             </div>
