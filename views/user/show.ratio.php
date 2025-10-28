@@ -8,7 +8,7 @@
 {% if($user) : %}
           <h3 class="text-[20px] font-semibold mb-3">Kontoinformation</h3>
 
-          <div class="w-full max-w-3xl">
+          <div class="w-full max-w-2xl">
             <div class="flex flex-col sm:flex-row items-stretch gap-4 border border-gray-200 rounded-xl bg-white/70 backdrop-blur-sm">
               <figure class="flex items-center justify-center rounded-t-xl sm:rounded-t-none sm:rounded-l-xl sm:justify-start p-4 bg-gray-50">
                 <div class="relative">

@@ -6,7 +6,7 @@
             <section>
               <h1 class="text-3xl font-semibold mb-8">Redigera konto</h1>
 
-              <form action="{{ route('user.update') }}" method="post" enctype="multipart/form-data" class="w-full max-w-3xl">
+              <form action="{{ route('user.update') }}" method="post" enctype="multipart/form-data" class="w-full max-w-2xl">
                  {{ csrf_field()|raw }}
 
                 <div class="overflow-hidden rounded-xl border border-gray-200 bg-white/70 backdrop-blur-sm p-4 sm:p-6">
