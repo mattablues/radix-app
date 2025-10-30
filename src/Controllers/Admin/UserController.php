@@ -96,9 +96,12 @@ class UserController extends AbstractController
 
         // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
+            firstName: $data['first_name'],
+            lastName: $data['last_name'],
             email: $data['email'],
             activationLink: $activationLink,
             password: $password,
+            context: 'admin'
         ));
 
         // Ställ in flash-meddelande och omdirigera
@@ -139,8 +142,11 @@ class UserController extends AbstractController
 
         // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
+            firstName: $user->first_name,
+            lastName: $user->last_name,
             email: $user->email,
-            activationLink: $activationLink
+            activationLink: $activationLink,
+            context: 'resend'
         ));
 
         // Ställ in flash-meddelande och omdirigera
@@ -230,8 +236,11 @@ class UserController extends AbstractController
 
         // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
+            firstName: $user->first_name,
+            lastName: $user->last_name,
             email: $user->email,
-            activationLink: $activationLink
+            activationLink: $activationLink,
+            context: 'resend'
         ));
 
         $this->request->session()->setFlashMessage(

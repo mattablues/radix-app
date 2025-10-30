@@ -103,6 +103,8 @@ class PasswordForgotController extends AbstractController
 
                 // Skicka e-postmeddelande
                 $this->eventDispatcher->dispatch(new UserPasswordEvent(
+                    firstName: $user->first_name,
+                    lastName: $user->last_name,
                     email: $data['email'],
                     resetLink: $resetLink
                 ));
@@ -118,6 +120,8 @@ class PasswordForgotController extends AbstractController
             $this->authService->trackFailedAttempt($email);
             $this->authService->trackFailedIpAttempt($ip);
         }
+
+        $this->request->session()->remove('old');
 
         $this->request->session()->setFlashMessage('Ett e-postmeddelande med återställningsinformation har skickats till din e-postadress.');
 

@@ -234,4 +234,17 @@ class User extends Model
     {
         return $this->hasRole(Role::User);
     }
+
+//    public function vote(): \Radix\Database\ORM\Relationships\HasManyThrough
+//    {
+//        // Category -> Subject(category_id=id) -> Vote(subject_id=subjects.id)
+//        return $this->hasManyThrough(
+//            Vote::class,      // related
+//            Subject::class,   // through
+//            'category_id',    // firstKey on subjects referencing categories.id
+//            'subject_id',     // secondKey on votes referencing subjects.id
+//            'id',             // localKey on categories
+//            'id'              // secondLocal on subjects
+//        );
+//    }
 }

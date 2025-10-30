@@ -118,8 +118,11 @@ class RegisterController extends AbstractController
 
         // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
+            firstName: $data['first_name'],
+            lastName: $data['last_name'],
             email: $data['email'],
-            activationLink: $activationLink
+            activationLink: $activationLink,
+            context: 'user'
         ));
 
         // Ställ in flash-meddelande och omdirigera

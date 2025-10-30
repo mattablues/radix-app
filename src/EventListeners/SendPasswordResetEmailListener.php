@@ -22,6 +22,8 @@ readonly class SendPasswordResetEmailListener
                 'data' => [
                     'title' => 'Återställ lösenord',
                     'body' => 'Här kommer din återställningslänk.',
+                    'firstName' => $event->firstName,
+                    'lastName' => $event->lastName,
                     'url' => $event->resetLink,
                 ],
                 'reply_to' => $event->email,
