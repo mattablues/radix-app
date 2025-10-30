@@ -9,6 +9,7 @@ use App\Models\Status;
 use App\Models\User;
 use Radix\Controller\AbstractController;
 use Radix\Enums\Role;
+use Radix\Enums\UserActivationContext;
 use Radix\EventDispatcher\EventDispatcher;
 use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
@@ -96,12 +97,12 @@ class UserController extends AbstractController
 
         // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
+            email: $data['email'],
             firstName: $data['first_name'],
             lastName: $data['last_name'],
-            email: $data['email'],
             activationLink: $activationLink,
             password: $password,
-            context: 'admin'
+            context: UserActivationContext::Admin,
         ));
 
         // Ställ in flash-meddelande och omdirigera
@@ -142,11 +143,11 @@ class UserController extends AbstractController
 
         // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
+            email: $user->email,
             firstName: $user->first_name,
             lastName: $user->last_name,
-            email: $user->email,
             activationLink: $activationLink,
-            context: 'resend'
+            context: UserActivationContext::Resend,
         ));
 
         // Ställ in flash-meddelande och omdirigera

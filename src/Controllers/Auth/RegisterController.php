@@ -8,6 +8,7 @@ use App\Events\UserRegisteredEvent;
 use App\Models\Status;
 use App\Models\User;
 use Radix\Controller\AbstractController;
+use Radix\Enums\UserActivationContext;
 use Radix\EventDispatcher\EventDispatcher;
 use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
@@ -118,11 +119,11 @@ class RegisterController extends AbstractController
 
         // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
+            email: $data['email'],
             firstName: $data['first_name'],
             lastName: $data['last_name'],
-            email: $data['email'],
             activationLink: $activationLink,
-            context: 'user'
+            context: UserActivationContext::User,
         ));
 
         // Ställ in flash-meddelande och omdirigera
