@@ -842,4 +842,285 @@ class RelationshipsTest extends TestCase
         $this->assertStringContainsString('WHERE t.`category_id` = `categories`.`id`', $sql);
         $this->assertStringContainsString("AND r.`status` = 'approved'", $sql);
     }
+
+    public function testWithCountWhereSupportsHasMany(): void
+    {
+        $conn = $this->createMock(\Radix\Database\Connection::class);
+        $conn->method('fetchAll')->willReturn([]);
+
+        $parent = new class extends \Radix\Database\ORM\Model {
+            protected string $table = 'posts';
+            protected array $fillable = ['id', 'title'];
+            private ?\Radix\Database\Connection $c = null;
+            public function setConn($c): void
+            { $this->c = $c; }
+            protected function getConnection(): \Radix\Database\Connection { return $this->c ?? parent::getConnection(); }
+
+            public function comments(): \Radix\Database\ORM\Relationships\HasMany
+            {
+                $comment = new class extends \Radix\Database\ORM\Model {
+                    protected string $table = 'comments';
+                    protected array $fillable = ['id','post_id','status'];
+                };
+                return new \Radix\Database\ORM\Relationships\HasMany(
+                    $this->getConnection(),
+                    get_class($comment),
+                    'post_id',
+                    'id'
+                );
+            }
+        };
+        $parent->setConn($conn);
+
+        $sql = (new \Radix\Database\QueryBuilder\QueryBuilder())
+            ->setConnection($conn)
+            ->setModelClass(get_class($parent))
+            ->from('posts')
+            ->withCountWhere('comments', 'status', 'approved', 'comments_approved')
+            ->toSql();
+
+        $this->assertStringContainsString('FROM `posts`', $sql);
+        $this->assertStringContainsString('SELECT COUNT(*) FROM `comments`', $sql);
+        $this->assertStringContainsString('`comments`.`post_id` = `posts`.`id`', $sql);
+        $this->assertStringContainsString("`comments`.`status` = 'approved'", $sql);
+    }
+
+    public function testWithCountWhereSupportsBelongsToMany(): void
+    {
+        $conn = $this->createMock(\Radix\Database\Connection::class);
+        $conn->method('fetchAll')->willReturn([]);
+
+        $parent = new class extends \Radix\Database\ORM\Model {
+            protected string $table = 'roles';
+            protected array $fillable = ['id', 'name'];
+            private ?\Radix\Database\Connection $c = null;
+            public function setConn($c): void
+            { $this->c = $c; }
+            protected function getConnection(): \Radix\Database\Connection { return $this->c ?? parent::getConnection(); }
+
+            public function users(): \Radix\Database\ORM\Relationships\BelongsToMany
+            {
+                return new \Radix\Database\ORM\Relationships\BelongsToMany(
+                    $this->getConnection(),
+                    \App\Models\User::class,
+                    'role_user',
+                    'role_id',
+                    'user_id',
+                    'id'
+                );
+            }
+        };
+        $parent->setConn($conn);
+
+        $sql = (new \Radix\Database\QueryBuilder\QueryBuilder())
+            ->setConnection($conn)
+            ->setModelClass(get_class($parent))
+            ->from('roles')
+            ->withCountWhere('users', 'status', 'active', 'users_active')
+            ->toSql();
+
+        $this->assertStringContainsString('FROM `roles`', $sql);
+        $this->assertStringContainsString('FROM `role_user` AS pivot', $sql);
+        $this->assertStringContainsString('INNER JOIN `users` AS related', $sql);
+        $this->assertStringContainsString('pivot.`role_id` = `roles`.`id`', $sql);
+        $this->assertStringContainsString("related.`status` = 'active'", $sql);
+    }
+
+    public function testWithCountWhereSupportsBelongsTo(): void
+    {
+        $conn = $this->createMock(\Radix\Database\Connection::class);
+        $conn->method('fetchAll')->willReturn([]);
+
+        $child = new class extends \Radix\Database\ORM\Model {
+            protected string $table = 'statuses';
+            protected array $fillable = ['id','user_id','state'];
+            private ?\Radix\Database\Connection $c = null;
+            public function setConn($c): void
+            { $this->c = $c; }
+            protected function getConnection(): \Radix\Database\Connection { return $this->c ?? parent::getConnection(); }
+
+            public function user(): \Radix\Database\ORM\Relationships\BelongsTo
+            {
+                $user = new class extends \Radix\Database\ORM\Model {
+                    protected string $table = 'users';
+                    protected array $fillable = ['id','name','role'];
+                };
+                return new \Radix\Database\ORM\Relationships\BelongsTo(
+                    $this->getConnection(),
+                    $user->getTable(),
+                    'user_id',
+                    'id',
+                    $this
+                );
+            }
+        };
+        $child->setConn($conn);
+
+        $sql = (new \Radix\Database\QueryBuilder\QueryBuilder())
+            ->setConnection($conn)
+            ->setModelClass(get_class($child))
+            ->from('statuses')
+            ->withCountWhere('user', 'role', 'admin', 'user_admin')
+            ->toSql();
+
+        $this->assertStringContainsString('FROM `statuses`', $sql);
+        $this->assertStringContainsString('FROM `users`', $sql);
+        $this->assertStringContainsString('`users`.`id` = `statuses`.`user_id`', $sql);
+        $this->assertStringContainsString("`users`.`role` = 'admin'", $sql);
+    }
+
+    public function testModelLoadLoadsRelations(): void
+    {
+        $rows = [
+            ['id' => 1, 'post_id' => 10, 'status' => 'published'],
+            ['id' => 2, 'post_id' => 10, 'status' => 'draft'],
+        ];
+
+        $conn = $this->createMock(\Radix\Database\Connection::class);
+        $conn->method('fetchAll')->willReturn($rows);
+
+        // Parent-modell med hasMany relation "comments"
+        $post = new class extends \Radix\Database\ORM\Model {
+            protected string $table = 'posts';
+            protected array $fillable = ['id', 'title'];
+            private ?\Radix\Database\Connection $c = null;
+            public function setConn($c): void
+            { $this->c = $c; }
+            protected function getConnection(): \Radix\Database\Connection { return $this->c ?? parent::getConnection(); }
+
+            public function comments(): \Radix\Database\ORM\Relationships\HasMany
+            {
+                $comment = new class extends \Radix\Database\ORM\Model {
+                    protected string $table = 'comments';
+                    protected array $fillable = ['id','post_id','status'];
+                };
+                $rel = new \Radix\Database\ORM\Relationships\HasMany(
+                    $this->getConnection(),
+                    get_class($comment),
+                    'post_id',
+                    'id'
+                );
+                $rel->setParent($this);
+                return $rel;
+            }
+        };
+
+        $post->setConn($conn);
+        $post->forceFill(['id' => 10]);
+
+        // Ladda enkel relation
+        $post->load('comments');
+        $loaded = $post->getRelation('comments');
+
+        $this->assertIsArray($loaded);
+        $this->assertCount(2, $loaded);
+        $this->assertSame('published', $loaded[0]->getAttribute('status'));
+
+        // Ladda flera (idempotent)
+        $post->load(['comments']);
+        $this->assertIsArray($post->getRelation('comments'));
+    }
+
+    public function testModelLoadMissingSkipsAlreadyLoaded(): void
+    {
+        $rowsInitial = [
+            ['id' => 1, 'post_id' => 10, 'status' => 'published'],
+        ];
+        $rowsSecond = [
+            ['id' => 2, 'post_id' => 10, 'status' => 'draft'],
+        ];
+
+        $conn = $this->createMock(\Radix\Database\Connection::class);
+        // Första anropet returnerar initiala rader, andra anropet skulle returnera andra rader
+        $conn->method('fetchAll')->willReturnOnConsecutiveCalls($rowsInitial, $rowsSecond);
+
+        $post = new class extends \Radix\Database\ORM\Model {
+            protected string $table = 'posts';
+            protected array $fillable = ['id', 'title'];
+            private ?\Radix\Database\Connection $c = null;
+            public function setConn($c): void
+            { $this->c = $c; }
+            protected function getConnection(): \Radix\Database\Connection { return $this->c ?? parent::getConnection(); }
+
+            public function comments(): \Radix\Database\ORM\Relationships\HasMany
+            {
+                $comment = new class extends \Radix\Database\ORM\Model {
+                    protected string $table = 'comments';
+                    protected array $fillable = ['id','post_id','status'];
+                };
+                $rel = new \Radix\Database\ORM\Relationships\HasMany(
+                    $this->getConnection(),
+                    get_class($comment),
+                    'post_id',
+                    'id'
+                );
+                $rel->setParent($this);
+                return $rel;
+            }
+        };
+
+        $post->setConn($conn);
+        $post->forceFill(['id' => 10]);
+
+        // Ladda en gång
+        $post->load('comments');
+        $loadedFirst = $post->getRelation('comments');
+        $this->assertCount(1, $loadedFirst);
+
+        // loadMissing ska inte ladda om "comments" (ska ignorera andra fetchAll-resultatet)
+        $post->loadMissing('comments');
+        $loadedAfter = $post->getRelation('comments');
+        $this->assertCount(1, $loadedAfter);
+        $this->assertSame($loadedFirst[0]->getAttribute('status'), $loadedAfter[0]->getAttribute('status'));
+    }
+
+    public function testModelLoadWithConstraintClosure(): void
+    {
+        // Vi verifierar att load() inte kraschar när constraint passar en QueryBuilder
+        // och att relationen sätts. Vi behöver inte validera exakt SQL här.
+        $rows = [
+            ['id' => 1, 'post_id' => 10, 'status' => 'published'],
+        ];
+        $conn = $this->createMock(\Radix\Database\Connection::class);
+        $conn->method('fetchAll')->willReturn($rows);
+
+        $post = new class extends \Radix\Database\ORM\Model {
+            protected string $table = 'posts';
+            protected array $fillable = ['id'];
+            private ?\Radix\Database\Connection $c = null;
+            public function setConn($c): void
+            { $this->c = $c; }
+            protected function getConnection(): \Radix\Database\Connection { return $this->c ?? parent::getConnection(); }
+
+            public function comments(): \Radix\Database\ORM\Relationships\HasMany
+            {
+                $comment = new class extends \Radix\Database\ORM\Model {
+                    protected string $table = 'comments';
+                    protected array $fillable = ['id','post_id','status'];
+                };
+                $rel = new \Radix\Database\ORM\Relationships\HasMany(
+                    $this->getConnection(),
+                    get_class($comment),
+                    'post_id',
+                    'id'
+                );
+                $rel->setParent($this);
+                return $rel;
+            }
+        };
+
+        $post->setConn($conn);
+        $post->forceFill(['id' => 10]);
+
+        $post->load([
+            'comments' => function (\Radix\Database\QueryBuilder\QueryBuilder $q) {
+                $q->where('status', '=', 'published')->orderBy('id', 'DESC');
+            }
+        ]);
+
+        $loaded = $post->getRelation('comments');
+        $this->assertIsArray($loaded);
+        $this->assertCount(1, $loaded);
+        $this->assertSame('published', $loaded[0]->getAttribute('status'));
+    }
 }

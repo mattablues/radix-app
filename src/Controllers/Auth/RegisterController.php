@@ -52,11 +52,16 @@ class RegisterController extends AbstractController
             'password' => 'required|min:8|max:15',
             'password_confirmation' => 'required|confirmed:password',
             $expectedHoneypotId => 'honeypot', // Dynamisk validering
+            // If multiple honeypot fields are used, you can use the following code to validate them:
+            //'honeypot'    => 'honeypot_dynamic',
         ]);
 
         // Om validering misslyckas
         if (!$validator->validate()) {
             $this->request->session()->set('old', $data);
+
+            // If multiple honeypot fields are used, you can use the following code to generate a new honeypot ID:
+//          $newHoneypotId = $validator->regenerateHoneypotId(fn () => generate_honeypot_id());
 
             $newHoneypotId = generate_honeypot_id();
             $this->request->session()->set('honeypot_id', $newHoneypotId);
