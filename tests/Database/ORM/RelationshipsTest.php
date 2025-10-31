@@ -13,6 +13,7 @@ use Radix\Database\ORM\Relationships\HasMany;
 use Radix\Database\ORM\Relationships\HasOne;
 use Radix\Database\ORM\Relationships\BelongsTo;
 use Radix\Database\ORM\Relationships\BelongsToMany;
+use Radix\Database\ORM\Relationships\HasOneThrough;
 
 class RelationshipsTest extends TestCase
 {
@@ -668,5 +669,177 @@ class RelationshipsTest extends TestCase
         $this->assertSame('Clara', $u->getAttribute('first_name'));
         $this->assertNull($u->getAttribute('created_at'));
         $this->assertNull($u->getAttribute('updated_at'));
+    }
+
+    public function testHasOneThroughFirstReturnsSingleRelatedRecord(): void
+    {
+        // Simulerad rad från relaterad tabell (votes)
+        $expectedRow = ['id' => 7, 'subject_id' => 3, 'points' => 42];
+
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchOne')->willReturn($expectedRow);
+
+        // Parent: categories (utan ctor-argument)
+        $category = new class extends Model {
+            protected string $table = 'categories';
+            protected array $fillable = ['id', 'name'];
+            private ?Connection $conn = null;
+
+            public function setTestConnection(Connection $c): void { $this->conn = $c; }
+            protected function getConnection(): Connection
+            {
+                return $this->conn ?? parent::getConnection();
+            }
+        };
+        $category->forceFill(['id' => 1]);
+
+        // Through: subjects
+        $subjectClass = new class extends Model {
+            protected string $table = 'subjects';
+            protected array $fillable = ['id', 'category_id', 'name'];
+        };
+
+        // Related: votes
+        $voteClass = new class extends Model {
+            protected string $table = 'votes';
+            protected array $fillable = ['id', 'subject_id', 'points'];
+        };
+
+        // Koppla test-connection till parent
+        $category->setTestConnection($connection);
+
+        $rel = new HasOneThrough(
+            $connection,
+            get_class($voteClass),     // related
+            get_class($subjectClass),  // through
+            'category_id',             // subjects.category_id
+            'subject_id',              // votes.subject_id
+            'id',                      // categories.id
+            'id'                       // subjects.id
+        );
+        $rel->setParent($category);
+
+        $result = $rel->first();
+
+        $this->assertNotNull($result);
+        $this->assertEquals(7, $result->getAttribute('id'));
+        $this->assertEquals(3, $result->getAttribute('subject_id'));
+        $this->assertEquals(42, $result->getAttribute('points'));
+    }
+
+    public function testQueryBuilderAggregateAndCountWithHasOneThrough(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchAll')->willReturn([]); // vi behöver bara SQL
+
+        // Parentmodell med relation topVote() som HasOneThrough
+        $parent = new class extends Model {
+            protected string $table = 'categories';
+            protected array $fillable = ['id', 'name'];
+            private ?Connection $conn = null;
+
+            public function setTestConnection(Connection $c): void { $this->conn = $c; }
+            protected function getConnection(): Connection
+            {
+                return $this->conn ?? parent::getConnection();
+            }
+
+            public function topVote(): HasOneThrough
+            {
+                $through = new class extends Model {
+                    protected string $table = 'subjects';
+                    protected array $fillable = ['id', 'category_id'];
+                };
+                $related = new class extends Model {
+                    protected string $table = 'votes';
+                    protected array $fillable = ['id', 'subject_id', 'points'];
+                };
+
+                return (new HasOneThrough(
+                    $this->getConnection(),
+                    get_class($related),
+                    get_class($through),
+                    'category_id', // subjects.category_id
+                    'subject_id',  // votes.subject_id
+                    'id',          // categories.id
+                    'id'           // subjects.id
+                ))->setParent($this);
+            }
+        };
+        // Sätt connection via en instans (QueryBuilder kommer instansiera utan args)
+        $parent->setTestConnection($connection);
+
+        $qb = (new \Radix\Database\QueryBuilder\QueryBuilder())
+            ->setConnection($connection)
+            ->setModelClass(get_class($parent))
+            ->from('categories')
+            ->withAggregate('topVote', 'points', 'MAX', 'topVote_max')
+            ->withCount('topVote');
+
+        $sql = $qb->toSql();
+
+        // Kontrollera att subqueries för både aggregat och count byggs korrekt
+        $this->assertStringContainsString('FROM `categories`', $sql);
+        $this->assertStringContainsString('SELECT MAX(`r`.`points`)', $sql);
+        $this->assertStringContainsString('FROM `votes` AS r INNER JOIN `subjects` AS t ON t.`id` = r.`subject_id`', $sql);
+        $this->assertStringContainsString('WHERE t.`category_id` = `categories`.`id`', $sql);
+        $this->assertStringContainsString('SELECT COUNT(*)', $sql);
+    }
+
+    public function testWithCountWhereSupportsHasOneThrough(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchAll')->willReturn([]); // endast SQL-verifiering
+
+        // Parent-modell utan ctor-argument + relation topVote()
+        $parent = new class extends Model {
+            protected string $table = 'categories';
+            protected array $fillable = ['id', 'name'];
+            private ?Connection $conn = null;
+
+            public function setTestConnection(Connection $c): void { $this->conn = $c; }
+            protected function getConnection(): Connection
+            {
+                return $this->conn ?? parent::getConnection();
+            }
+
+            public function topVote(): HasOneThrough
+            {
+                $through = new class extends Model {
+                    protected string $table = 'subjects';
+                    protected array $fillable = ['id', 'category_id'];
+                };
+                $related = new class extends Model {
+                    protected string $table = 'votes';
+                    protected array $fillable = ['id', 'subject_id', 'points', 'status'];
+                };
+
+                return (new HasOneThrough(
+                    $this->getConnection(),
+                    get_class($related),
+                    get_class($through),
+                    'category_id', // subjects.category_id
+                    'subject_id',  // votes.subject_id
+                    'id',          // categories.id
+                    'id'           // subjects.id
+                ))->setParent($this);
+            }
+        };
+        $parent->setTestConnection($connection);
+
+        $qb = (new \Radix\Database\QueryBuilder\QueryBuilder())
+            ->setConnection($connection)
+            ->setModelClass(get_class($parent))
+            ->from('categories')
+            ->withCountWhere('topVote', 'status', 'approved', 'topVote_approved');
+
+        $sql = $qb->toSql();
+
+        // SQL ska innehålla subquery med JOIN subjects -> votes och filter på r.status = 'approved'
+        $this->assertStringContainsString('FROM `categories`', $sql);
+        $this->assertStringContainsString('SELECT COUNT(*)', $sql);
+        $this->assertStringContainsString('FROM `votes` AS r INNER JOIN `subjects` AS t ON t.`id` = r.`subject_id`', $sql);
+        $this->assertStringContainsString('WHERE t.`category_id` = `categories`.`id`', $sql);
+        $this->assertStringContainsString("AND r.`status` = 'approved'", $sql);
     }
 }
