@@ -1231,7 +1231,7 @@ class RelationshipsTest extends TestCase
         $this->assertSame('Unknown', $u->getAttribute('first_name'));
         $this->assertFalse($u->isExisting());
     }
-// ... existing code ...
+
     public function testModelLoadRespectsWithDefaultForHasOne(): void
     {
         $connection = $this->createMock(Connection::class);
