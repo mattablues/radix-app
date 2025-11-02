@@ -84,7 +84,9 @@ class PasswordForgotController extends AbstractController
         $user = User::where('email', '=', $email)->first();
 
         if ($user) {
-            $status = $user->status()->first();
+            $user->loadMissing('status');
+
+            $status = $user->getRelation('status');
 
             if ($status && $status->getAttribute('status') === 'activated') {
                 $token = new Token();

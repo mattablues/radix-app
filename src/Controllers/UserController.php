@@ -147,7 +147,10 @@ class UserController extends AbstractController
             throw new NotAuthorizedException('You are not authorized to close this account.');
         }
 
-        $status = $user->status()->first();
+        $user->loadMissing('status');
+
+        $status = $user->getRelation('status');
+
         $status->fill(['status' => 'closed', 'active' => 'offline']);
         $status->save();
 

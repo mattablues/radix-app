@@ -60,7 +60,9 @@ class PasswordResetController extends AbstractController
             return new RedirectResponse(route('auth.password-forgot.index'));
         }
 
-        $user = $status->user()->first();
+        $status->loadMissing('user');
+
+        $user = $status->getRelation('user');
 
         if (!$user) {
             $this->request->session()->setFlashMessage('Något gick fel. Försök igen senare.','error');
