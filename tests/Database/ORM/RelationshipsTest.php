@@ -477,14 +477,15 @@ class RelationshipsTest extends TestCase
         $connection->method('fetchOne')
             ->willReturn($expectedResult);
 
-        $parentModel = $this->createMock(\App\Models\Status::class); // Mocka Status-modellen
+        $parentModel = $this->createMock(\App\Models\Status::class);
+        $parentModel->method('getAttribute')->willReturnMap([ ['user_id', 5] ]);
 
         $belongsTo = new BelongsTo(
             $connection,
-            \App\Models\User::class,
-            'user_id',
-            '5',
-            $parentModel // Lägg till mocken som den saknade parametern
+            \App\Models\User::class, // eller 'users' om din resolveModelClass hanterar tabell
+            'user_id',               // foreignKey kolumn på child
+            'id',                    // ownerKey kolumn på parent (users.id)
+            $parentModel
         );
 
 
@@ -1122,5 +1123,193 @@ class RelationshipsTest extends TestCase
         $this->assertIsArray($loaded);
         $this->assertCount(1, $loaded);
         $this->assertSame('published', $loaded[0]->getAttribute('status'));
+    }
+
+    public function testHasOneWithDefaultReturnsEmptyModelWhenMissing(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchOne')->willReturn(null); // inget resultat
+
+        // Parent-modell
+        $user = new class extends Model {
+            protected string $table = 'users';
+            protected array $fillable = ['id', 'first_name'];
+            private ?Connection $conn = null;
+            public function setConn(Connection $c): void { $this->conn = $c; }
+            protected function getConnection(): Connection { return $this->conn ?? parent::getConnection(); }
+
+            public function profile(): HasOne
+            {
+                $profile = new class extends Model {
+                    protected string $table = 'profiles';
+                    protected array $fillable = ['id','user_id','avatar'];
+                };
+
+                $rel = new HasOne($this->getConnection(), get_class($profile), 'user_id', 'id');
+                $rel->setParent($this);
+                return $rel;
+            }
+        };
+        $user->setConn($connection);
+        $user->forceFill(['id' => 10]);
+
+        $result = $user->profile()->withDefault()->first();
+
+        $this->assertInstanceOf(Model::class, $result);
+        $this->assertFalse($result->isExisting(), 'Default-modell ska markeras som ny (isExisting=false)');
+    }
+
+    public function testHasOneWithDefaultArrayAttributes(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchOne')->willReturn(null);
+
+        $user = new class extends Model {
+            protected string $table = 'users';
+            protected array $fillable = ['id'];
+            private ?Connection $c = null;
+            public function setConn(Connection $c): void { $this->c = $c; }
+            protected function getConnection(): Connection { return $this->c ?? parent::getConnection(); }
+
+            public function profile(): HasOne
+            {
+                $profile = new class extends Model {
+                    protected string $table = 'profiles';
+                    protected array $fillable = ['avatar'];
+                };
+                $rel = new HasOne($this->getConnection(), get_class($profile), 'user_id', 'id');
+                $rel->setParent($this);
+                return $rel;
+            }
+        };
+        $user->setConn($connection);
+        $user->forceFill(['id' => 15]);
+
+        $result = $user->profile()->withDefault(['avatar' => '/img/default.png'])->first();
+
+        $this->assertInstanceOf(Model::class, $result);
+        $this->assertSame('/img/default.png', $result->getAttribute('avatar'));
+        $this->assertFalse($result->isExisting());
+    }
+
+    public function testBelongsToWithDefaultCallable(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchOne')->willReturn(null); // inget parent-resultat
+
+        // Child-modell med belongsTo user()
+        $status = new class extends Model {
+            protected string $table = 'statuses';
+            protected array $fillable = ['id','user_id'];
+            private ?Connection $c = null;
+            public function setConn(Connection $c): void { $this->c = $c; }
+            protected function getConnection(): Connection { return $this->c ?? parent::getConnection(); }
+
+            public function user(): BelongsTo
+            {
+                $user = new class extends Model {
+                    protected string $table = 'users';
+                    protected array $fillable = ['id','first_name'];
+                };
+                return new BelongsTo(
+                    $this->getConnection(),
+                    $user->getTable(),
+                    'user_id',
+                    'id',
+                    $this
+                );
+            }
+        };
+        $status->setConn($connection);
+        $status->forceFill(['user_id' => 999]);
+
+        $u = $status->user()->withDefault(function (Model $m) {
+            $m->forceFill(['first_name' => 'Unknown']);
+        })->first();
+
+        $this->assertInstanceOf(Model::class, $u);
+        $this->assertSame('Unknown', $u->getAttribute('first_name'));
+        $this->assertFalse($u->isExisting());
+    }
+// ... existing code ...
+    public function testModelLoadRespectsWithDefaultForHasOne(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchOne')->willReturn(null);
+
+        $parent = new class extends Model {
+            protected string $table = 'users';
+            protected array $fillable = ['id'];
+            private ?Connection $c = null;
+            public function setConn(Connection $c): void { $this->c = $c; }
+            protected function getConnection(): Connection { return $this->c ?? parent::getConnection(); }
+
+            public function profile(): HasOne
+            {
+                $profile = new class extends Model {
+                    protected string $table = 'profiles';
+                    protected array $fillable = ['avatar'];
+                };
+                $rel = new HasOne($this->getConnection(), get_class($profile), 'user_id', 'id');
+                $rel->setParent($this);
+                return $rel;
+            }
+        };
+        $parent->setConn($connection);
+        $parent->forceFill(['id' => 77]);
+
+        $parent->load([
+            'profile' => function ($rel) {
+                // relation-objekt (HasOne)
+                $rel->withDefault(['avatar' => '/img/default.png']);
+            }
+        ]);
+
+        $profile = $parent->getRelation('profile');
+        $this->assertInstanceOf(Model::class, $profile);
+        $this->assertSame('/img/default.png', $profile->getAttribute('avatar'));
+        $this->assertFalse($profile->isExisting());
+    }
+
+    public function testModelLoadMissingRespectsWithDefaultForBelongsTo(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchOne')->willReturn(null);
+
+        $child = new class extends Model {
+            protected string $table = 'statuses';
+            protected array $fillable = ['id','user_id'];
+            private ?Connection $c = null;
+            public function setConn(Connection $c): void { $this->c = $c; }
+            protected function getConnection(): Connection { return $this->c ?? parent::getConnection(); }
+
+            public function user(): BelongsTo
+            {
+                $user = new class extends Model {
+                    protected string $table = 'users';
+                    protected array $fillable = ['first_name'];
+                };
+                return new BelongsTo(
+                    $this->getConnection(),
+                    $user->getTable(),
+                    'user_id',
+                    'id',
+                    $this
+                );
+            }
+        };
+        $child->setConn($connection);
+        $child->forceFill(['user_id' => 5]);
+
+        $child->loadMissing([
+            'user' => function ($rel) {
+                $rel->withDefault(['first_name' => 'N/A']);
+            }
+        ]);
+
+        $user = $child->getRelation('user');
+        $this->assertInstanceOf(Model::class, $user);
+        $this->assertSame('N/A', $user->getAttribute('first_name'));
+        $this->assertFalse($user->isExisting());
     }
 }

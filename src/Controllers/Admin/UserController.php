@@ -85,6 +85,7 @@ class UserController extends AbstractController
 
         // Skapa och fyll statusobjekt
         $status = new Status();
+
         $status->fill([
             'activation' => $token->hashHmac(),
         ]);
@@ -130,7 +131,9 @@ class UserController extends AbstractController
         $token = new Token();
         $tokenValue = $token->value();
 
-        $status = $user->status()->first();
+        $user->loadMissing('status');
+
+        $status = $user->getRelation('status');
 
         $status->fill([
             'activation' => $token->hashHmac(),
@@ -174,7 +177,9 @@ class UserController extends AbstractController
             return new RedirectResponse(route('admin.user.index'));
         }
 
-        $status = $user->status()->first();
+        $user->loadMissing('status');
+
+        $status = $user->getRelation('status');
 
         $status->fill([
             'status' => 'blocked',
@@ -224,7 +229,9 @@ class UserController extends AbstractController
         $token = new Token();
         $tokenValue = $token->value();
 
-        $status = $user->status()->first();
+        $user->loadMissing('status');
+
+        $status = $user->getRelation('status');
 
         $status->fill([
             'activation' => $token->hashHmac(),
@@ -237,11 +244,11 @@ class UserController extends AbstractController
 
         // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
+            email: $user->email,
             firstName: $user->first_name,
             lastName: $user->last_name,
-            email: $user->email,
             activationLink: $activationLink,
-            context: 'resend'
+            context: UserActivationContext::Resend
         ));
 
         $this->request->session()->setFlashMessage(
