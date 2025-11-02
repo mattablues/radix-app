@@ -135,18 +135,11 @@ class WithEagerConstraintsTest extends TestCase
             ->from('users')
             ->setModelClass(get_class($User))
             ->with([
-                'posts' => function ($rel) {
-                    // Ingen QB att modifiera här – vi verifierar istället att vi kan
-                    // applicera constraints genom att filtrera efter eager loading i testet.
+                'posts' => function (\Radix\Database\QueryBuilder\QueryBuilder $q) {
+                    $q->where('status', '=', 'published')->orderBy('id', 'ASC');
                 }
             ])
             ->get();
-
-        // Filtrera i testet för att simulera constrainten (status=published)
-        foreach ($users as $u) {
-            $posts = $u->getRelation('posts') ?? [];
-            $u->setRelation('posts', array_values(array_filter($posts, fn($p) => $p->getAttribute('status') === 'published')));
-        }
 
         $this->assertCount(2, $users);
         $alice = $users[0];
@@ -168,17 +161,11 @@ class WithEagerConstraintsTest extends TestCase
             ->from('users')
             ->setModelClass(get_class($User))
             ->with([
-                'roles' => function ($rel) {
-                    // Samma strategi: filtrera i testet
+                'roles' => function (\Radix\Database\QueryBuilder\QueryBuilder $q) {
+                    $q->where('status', '=', 'active')->orderBy('id', 'ASC');
                 }
             ])
             ->get();
-
-        // Filtrera roller till status=active
-        foreach ($users as $u) {
-            $roles = $u->getRelation('roles') ?? [];
-            $u->setRelation('roles', array_values(array_filter($roles, fn($r) => $r->getAttribute('status') === 'active')));
-        }
 
         $alice = $users[0];
         $this->assertCount(1, $alice->getRelation('roles'));
@@ -197,22 +184,14 @@ class WithEagerConstraintsTest extends TestCase
             ->from('users')
             ->setModelClass(get_class($User))
             ->with([
-                'posts' => function ($rel) {},
-                'roles' => function ($rel) {},
+                'posts' => function (\Radix\Database\QueryBuilder\QueryBuilder $q) {
+                    $q->where('status', '=', 'published');
+                },
+                'roles' => function (\Radix\Database\QueryBuilder\QueryBuilder $q) {
+                    $q->where('status', '=', 'active');
+                },
             ])
             ->get();
-
-        // Applicera båda constraints i testet:
-        foreach ($users as $u) {
-            $u->setRelation(
-                'posts',
-                array_values(array_filter($u->getRelation('posts') ?? [], fn($p) => $p->getAttribute('status') === 'published'))
-            );
-            $u->setRelation(
-                'roles',
-                array_values(array_filter($u->getRelation('roles') ?? [], fn($r) => $r->getAttribute('status') === 'active'))
-            );
-        }
 
         $this->assertCount(2, $users);
         $this->assertCount(1, $users[0]->getRelation('posts'));
