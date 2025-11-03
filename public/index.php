@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-/** @var $router */
-/** @var $container */
-/** @var $middleware*/
+/** @var \Radix\Routing\Router $router */
+/** @var \Psr\Container\ContainerInterface $container */
+/** @var array<callable> $middleware */
 
 define('ROOT_PATH', dirname(__DIR__));
 
