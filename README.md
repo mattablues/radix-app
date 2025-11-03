@@ -10,6 +10,7 @@
 - [Instans-API](#instans-api)
 - [Query Builder – metodsignaturer](#query-builder--metodsignaturer)
 - [Relationer – signaturer](#relationer--signaturer)
+  - [Through-relationer](#through-relationer)
   - [Many-to-many (om stöd finns för pivot-helpers)](#many-to-many-om-st%C3%B6d-finns-f%C3%B6r-pivot-helpers)
 - [Scopes](#scopes)
 - [Paginering](#paginering)
@@ -124,6 +125,26 @@ Exempel:
 
 php
 belongsTo(User::class, 'user_id', 'id'); } } // Eager $user = User::with('status')->find(123); // Lazy on demand $user->loadMissing('status'); $status = $user->getRelation('status'); $status->fill(['active' => 'offline'])->save();
+
+### Through-relationer
+- `hasOneThrough(Related::class, Through::class, string $firstKey, string $secondKey, ?string $localKey = null, ?string $secondLocal = 'id')`
+- `hasManyThrough(Related::class, Through::class, string $firstKey, string $secondKey, ?string $localKey = null, ?string $secondLocal = 'id')`
+
+Förklaring:
+- firstKey: Nyckeln på “through”-modellen som pekar till den lokala modellen.
+- secondKey: Nyckeln på “related”-modellen som pekar till “through”-modellen.
+- localKey: Den lokala modellens nyckel (default: modellens primaryKey).
+- secondLocal: Primärnyckel på “through”-modellen (default: 'id').
+
+Exempel hasOneThrough:
+
+php
+Profile -> Avatar (User har ett Avatar via Profile) class User extends Model { public function avatar() { return $this->hasOneThrough( Avatar::class, // related Profile::class, // through 'user_id', // firstKey: profiles.user_id -> users.id 'profile_id', // secondKey: avatars.profile_id -> profiles.id 'id', // localKey: users.id (valfritt, default primaryKey) 'id' // secondLocal: profiles.id (valfritt, default 'id') ); } }
+
+Exempel hasManyThrough:
+
+php
+User -> Post (Country har många Post via User) class Country extends Model { public function posts() { return $this->hasManyThrough( Post::class, // related User::class, // through 'country_id', // firstKey: users.country_id -> countries.id 'user_id', // secondKey: posts.user_id -> users.id 'id', // localKey: countries.id (valfritt) 'id' // secondLocal: users.id (valfritt) ); } }
 
 ### Many-to-many (om stöd finns för pivot-helpers)
 - `attach(int|array $ids): void`
