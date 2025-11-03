@@ -18,6 +18,8 @@ use Radix\Enums\Role;
  * @property string $created_at
  * @property string $updated_at
  * @property string $deleted_at
+ * @property-read \App\Models\Status|null $status
+ * @property-read \App\Models\Token|null $token
  */
 class User extends Model
 {
@@ -85,7 +87,8 @@ class User extends Model
     /**
      * Relation till Status.
      *
-     * @return \Radix\Database\ORM\Relationships\HasOne<\App\Models\Status>
+     * @return \Radix\Database\ORM\Relationships\HasOne
+     * @phpstan-return \Radix\Database\ORM\Relationships\HasOne
      */
     public function status(): \Radix\Database\ORM\Relationships\HasOne
     {
@@ -93,9 +96,10 @@ class User extends Model
     }
 
     /**
-     * Relation till Status.
+     * Relation till Token.
      *
-     * @return \Radix\Database\ORM\Relationships\HasOne<\App\Models\Token>
+     * @return \Radix\Database\ORM\Relationships\HasOne
+     * @phpstan-return \Radix\Database\ORM\Relationships\HasOne
      */
     public function token():  \Radix\Database\ORM\Relationships\HasOne
     {
@@ -104,11 +108,11 @@ class User extends Model
 
     public function setOnline(): self
     {
-        // Försök använda relationen om den är laddad
+        /** @var \App\Models\Status|null $status */
         $status = $this->status;
 
         if (!$status instanceof Status) {
-            // Om relationen inte är laddad, ladda den från databasen
+            /** @var \App\Models\Status|null $status */
             $status = $this->status()->first();
         }
 
@@ -124,11 +128,11 @@ class User extends Model
 
     public function setOffline(): self
     {
-        // Försök använda relationen om den är laddad
+        /** @var \App\Models\Status|null $status */
         $status = $this->status;
 
         if (!$status instanceof Status) {
-            // Om relationen inte är laddad, ladda den från databasen
+            /** @var \App\Models\Status|null $status */
             $status = $this->status()->first();
         }
 
@@ -144,11 +148,11 @@ class User extends Model
 
     public function isOnline(): bool
     {
-        // Försök använda relationen direkt
+        /** @var \App\Models\Status|null $status */
         $status = $this->status;
 
         if (!$status instanceof Status) {
-            // Om det inte är laddat, ladda det från databasen
+            /** @var \App\Models\Status|null $status */
             $status = $this->status()->first();
         }
 

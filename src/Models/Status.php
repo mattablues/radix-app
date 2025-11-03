@@ -33,7 +33,7 @@ class Status extends Model
     public function goOnline(): self
     {
         $this->active = 'online';
-        $this->active_at = time();
+        $this->active_at = (string)time();
         $this->save();
 
         return $this;
@@ -49,7 +49,7 @@ class Status extends Model
         $this->active = 'offline';
 
         // Använd rå Unix-tid istället för formaterat värde
-        $this->active_at = $this->getRawActiveAt() ?: time();
+        $this->active_at = $this->getRawActiveAt() ?: (string)time();
         $this->save();
 
         return $this;

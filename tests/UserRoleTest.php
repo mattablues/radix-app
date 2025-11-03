@@ -302,20 +302,16 @@ class UserRoleTest extends TestCase
         $editor = $this->makeUser('editor');
         $moderator = $this->makeUser('moderator');
 
-        // Om du lägger till helpers i User: isSupport(), isEditor(), isModerator()
+        // Helpers i User: isSupport(), isEditor(), isModerator()
         $this->assertTrue($editor->isEditor());
         $this->assertFalse($editor->isAdmin());
         $this->assertFalse($editor->isUser());
 
-        // Dessa assertioner kräver att isSupport() och isModerator() finns
-        if (method_exists($support, 'isSupport')) {
-            $this->assertTrue($support->isSupport());
-            $this->assertFalse($support->isEditor());
-        }
-        if (method_exists($moderator, 'isModerator')) {
-            $this->assertTrue($moderator->isModerator());
-            $this->assertFalse($moderator->isAdmin());
-        }
+        // Direkt assertions (metoderna finns i User)
+        $this->assertTrue($support->isSupport());
+        $this->assertFalse($support->isEditor());
+        $this->assertTrue($moderator->isModerator());
+        $this->assertFalse($moderator->isAdmin());
     }
 
     public function testSetRolePersistenceForEachNewRole(): void
@@ -328,7 +324,7 @@ class UserRoleTest extends TestCase
 
             $reloaded = \App\Models\User::find($user->getAttribute('id'));
             $this->assertNotNull($reloaded);
-            $this->assertTrue($reloaded->hasRole($role), "Reloaded user ska ha rollen {$role}");
+            $this->assertTrue($reloaded->hasRole($role), "Reloaded user ska ha rollen $role");
         }
     }
 }

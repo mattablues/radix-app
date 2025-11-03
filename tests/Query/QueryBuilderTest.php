@@ -438,7 +438,9 @@ class QueryBuilderTest extends TestCase
         $query = (new QueryBuilder())
             ->setConnection($this->connection)
             ->select(['id', 'name'])->from('users');
-        $query->union(123); // Ogiltig typ
+        /** @var mixed $invalid */
+        $invalid = 123; // avsiktligt fel typ
+        $query->union($invalid);
     }
 
     public function testUnionWithoutBindings(): void

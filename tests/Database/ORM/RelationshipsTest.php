@@ -57,23 +57,23 @@ class RelationshipsTest extends TestCase
        $user->setGuarded(['password', 'role']);
    }
 
-   public function testPasswordAttribute(): void
-   {
-       $user = new User();
-       $user->fill([
-           'first_name' => 'Mats',
-           'last_name' => 'Åkebrand',
-           'email' => 'malle@akebrands.se',
-       ]);
+        public function testPasswordAttribute(): void
+        {
+            $user = new User();
+            $user->fill([
+                'first_name' => 'Mats',
+                'last_name' => 'Åkebrand',
+                'email' => 'malle@akebrands.se',
+            ]);
 
-       // Testa att sätta lösenord
-       $user->password = 'korvar65';
+            // Testa att sätta lösenord
+            $user->password = 'korvar65';
 
-       $this->assertNotNull($user->password);
+            $this->assertNotNull($user->password);
 
-       // Kontrollera om password finns i attributlistan
-       $this->assertArrayHasKey('password', $user->attributes);
-   }
+            // Kontrollera om password finns i attributlistan (använd publik API)
+            $this->assertArrayHasKey('password', $user->getAttributes());
+        }
 
     public function testGuardedOverridesFillable(): void
     {
@@ -306,7 +306,6 @@ class RelationshipsTest extends TestCase
         $this->assertTrue($model->isExisting());
     }
 
-
     public function testHasManyReturnsRelatedRecords(): void
     {
         // Förvänta oss att dessa värden returneras från databasen
@@ -319,21 +318,14 @@ class RelationshipsTest extends TestCase
         $connection = $this->createMock(Connection::class);
         $connection->method('fetchAll')->willReturn($expectedResults);
 
-        // Simulera dataelement till HasMany
+        // Simulera dataelement till HasMany utan att röra skyddade egenskaper
         $results = array_map(function ($record) {
-            $mock = $this->getMockBuilder(Model::class)
-                ->onlyMethods(['getAttribute']) // Använd onlyMethods eftersom metoden finns i klassen
-                ->getMock();
-
-            // Kopiera data till attribut
-            $mock->attributes = $record;
-
-            // Konfigurera mockens getAttribute-metod
-            $mock->method('getAttribute')->willReturnCallback(
-                fn($key) => $record[$key] ?? null
-            );
-
-            return $mock;
+            $m = new class extends Model {
+                protected string $table = 'comments';
+                protected array $fillable = ['id', 'post_id', 'content'];
+            };
+            $m->forceFill($record);
+            return $m;
         }, $expectedResults);
 
         // Validera antal resultat
@@ -398,72 +390,37 @@ class RelationshipsTest extends TestCase
         $connectionMock = $this->createMock(Connection::class);
         $connectionMock->method('fetchAll')->willReturn($expectedResults);
 
-        // Dynamisk modell för inlägg
+        // Parent-modell med injicerad connection
         $post = new class($connectionMock) extends Model {
             protected string $table = 'posts';
-            protected array $fillable = ['id', 'title', 'content'];
+            protected array $fillable = ['id', 'title'];
+            private Connection $conn;
+            public function __construct(Connection $c) { $this->conn = $c; parent::__construct([]); }
+            protected function getConnection(): Connection { return $this->conn; }
 
-            private ?Connection $mockedConnection;
-
-            public function __construct(Connection $connection = null)
+            // Relaterad modellklass utan ctor-krav (HasMany instansierar den med new $class())
+            public function comments(): HasMany
             {
-                $this->mockedConnection = $connection ?? $this->createDefaultConnection();
-                parent::__construct([]);
-            }
-
-            protected function getConnection(): Connection
-            {
-                return $this->mockedConnection;
-            }
-
-            /**
-             * Skapar en standard-anslutning om ingen anslutning skickas.
-             */
-            private function createDefaultConnection(): Connection
-            {
-                $pdo = new \PDO('sqlite::memory:');
-                $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-
-                return new Connection($pdo);
+                $comment = new class extends Model {
+                    protected string $table = 'comments';
+                    protected array $fillable = ['id','post_id','content'];
+                };
+                $rel = new HasMany(
+                    $this->getConnection(),
+                    get_class($comment),
+                    'post_id',
+                    'id'
+                );
+                $rel->setParent($this);
+                return $rel;
             }
         };
 
-        $post->setAttribute('id', '10');
+        $post->forceFill(['id' => 10]);
 
-        // Dynamisk klass för kommentarer
-        $mockedCommentClass = new class($connectionMock) extends Model {
-            protected string $table = 'comments';
-            protected array $fillable = ['id', 'post_id', 'content'];
+        // Hämta relaterade kommentarer
+        $comments = $post->comments()->get();
 
-            private ?Connection $mockedConnection;
-
-            public function __construct(Connection $connection = null)
-            {
-                $this->mockedConnection = $connection ?? $this->createDefaultConnection();
-                parent::__construct([]);
-            }
-
-            protected function getConnection(): Connection
-            {
-                return $this->mockedConnection;
-            }
-
-            /**
-             * Skapar en standard-anslutning om ingen anslutning skickas.
-             */
-            private function createDefaultConnection(): Connection
-            {
-                $pdo = new \PDO('sqlite::memory:');
-                $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-
-                return new Connection($pdo);
-            }
-        };
-
-        // Skapa relaterade kommentarer med hasMany
-        $comments = $post->hasMany(get_class($mockedCommentClass), 'post_id', 'id')->get();
-
-        // Validera resultaten
         $this->assertCount(2, $comments);
         $this->assertInstanceOf(Model::class, $comments[0]);
         $this->assertEquals('First comment', $comments[0]->getAttribute('content'));

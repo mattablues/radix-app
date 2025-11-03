@@ -200,11 +200,10 @@ class AuthService
             return 'Ditt konto är stängt.';
         }
 
-        $statusRelation = $user->status();
-        $statusModel = $statusRelation->first();
-        $userStatus = $statusModel?->status;
+        /** @var \App\Models\Status|null $status */
+        $status = $user->getRelation('status') ?? $user->status()->first();
+        $userStatus = $status?->status;
 
-        // Returnera statusbaserade meddelanden
         return match ($userStatus) {
             null => 'Konto saknar status.',
             'activate' => 'Ditt konto är inte aktiverat.',

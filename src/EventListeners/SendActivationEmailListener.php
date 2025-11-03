@@ -21,7 +21,7 @@ readonly class SendActivationEmailListener
         };
 
         $bodySuffix = $event->password
-            ? ", sen kan du logga in med din e-postadress: {$event->email} och lösenord: {$event->password}"
+            ? ", sen kan du logga in med din e-postadress: $event->email och lösenord: $event->password"
             : '.';
 
         $this->mailManager->send(
@@ -35,7 +35,7 @@ readonly class SendActivationEmailListener
                     'firstName' => $event->firstName,
                     'lastName' => $event->lastName,
                     'introText' => $introText,
-                    'body' => "Du måste aktivera ditt konto, klicka på följande aktiveringslänk{$bodySuffix}",
+                    'body' => "Du måste aktivera ditt konto, klicka på följande aktiveringslänk$bodySuffix",
                     'url' => $event->activationLink,
                 ],
                 'reply_to' => getenv('MAIL_EMAIL'),

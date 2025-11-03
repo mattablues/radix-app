@@ -58,7 +58,7 @@ class GeoLocatorTest extends TestCase
         $location = $geoLocator->getLocation('8.8.8.8');
 
         // Verifiera att data är en array och innehåller nyckeln country
-        $this->assertIsArray($location);
+        $this->assertNotEmpty($location);
         $this->assertArrayHasKey('country', $location);
         $this->assertEquals('United States', $location['country']);
     }

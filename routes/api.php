@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-/** @var $router \Radix\Routing\Router */
+/** @var \Radix\Routing\Router $router */
 
 // API-rutter med versionering
 $router->group(['path' => '/api/v1'], function (\Radix\Routing\Router $router) {

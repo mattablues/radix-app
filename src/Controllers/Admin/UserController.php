@@ -122,7 +122,7 @@ class UserController extends AbstractController
 
         if (!$user) {
             $this->request->session()->setFlashMessage(
-                "Användare med email $user->email kunde inte hittas."
+                "Användare kunde inte hittas."
             );
 
             return new RedirectResponse(route('admin.user.index'));
@@ -171,7 +171,7 @@ class UserController extends AbstractController
 
         if (!$user) {
             $this->request->session()->setFlashMessage(
-                "Användare med id $user->id kunde inte hittas."
+                "Användare kunde inte hittas."
             );
 
             return new RedirectResponse(route('admin.user.index'));
@@ -218,7 +218,7 @@ class UserController extends AbstractController
             $currentPage = $this->request->get['page'] ?? 1;
 
             $this->request->session()->setFlashMessage(
-                "Användare med id $user->id kunde inte hittas."
+                "Användare kunde inte hittas."
             );
 
             return new RedirectResponse(route('admin.user.closed'). '?page=' . $currentPage);
@@ -275,7 +275,7 @@ class UserController extends AbstractController
 
         if (!$user) {
             $this->request->session()->setFlashMessage('Användare saknas', 'error');
-            return new RedirectResponse(route('user.show', ['id' => $user->id]));
+            return new RedirectResponse(route('user.show', ['id' => $id]));
         }
 
         if ($user->isAdmin()) {
