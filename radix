@@ -15,7 +15,8 @@ if (!$container instanceof Psr\Container\ContainerInterface) {
 }
 
 // Skapa ConsoleApplication och injicera containern
-$app = new ConsoleApplication($container);
+//$app = new ConsoleApplication($container);
+$app = new ConsoleApplication();
 
 // Dynamiskt registrera alla kommandon från DI-container
 foreach ($container->get(Radix\Console\CommandsRegistry::class)->getCommands() as $name => $commandClass) {
