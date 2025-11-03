@@ -13,7 +13,8 @@
     "prefix:css": "postcss public/css/app.css --use autoprefixer -o public/css/app.css",
     "compress:css": "npx tailwindcss -o public/css/app.css --minify",
     "compress:js": "uglifyjs public/js/app.js -o public/js/app.js --compress",
-    "start:build": "npm-run-all compress:js prefix:css compress:css"
+    "start:build": "npm-run-all compress:js prefix:css compress:css",
+    "toc": "doctoc README.md --maxlevel 3"
   },
   "author": "Mats Åkebrand",
   "license": "MIT",
