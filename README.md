@@ -19,6 +19,7 @@
   - [Soft deletes](#soft-deletes)
   - [Eager loading och aggregat](#eager-loading-och-aggregat)
   - [Debugging](#debugging)
+- [Traits-översikt](#traits-%C3%B6versikt)
 - [Design: Bindnings-buckets](#design-bindnings-buckets)
 - [Säkerhet och validering](#s%C3%A4kerhet-och-validering)
 - [Testning](#testning)
@@ -68,6 +69,7 @@ php sub = User::query()->select(['id'])->from('payments')->where('amount','>',10
 ### Joins
 
 php User::query()->from('users') ->join('profiles', 'users.id', '=', 'profiles.user_id') ->leftJoin('orders', 'users.id', '=', 'orders.user_id') ->rightJoin('roles', 'users.role_id', '=', 'roles.id') ->fullJoin('addresses', 'users.id', '=', 'addresses.user_id') ->joinRaw('INNER JOIN `teams` ON `teams`.`id` = `users`.`team_id` AND `teams`.`active` = ?', [1]);
+
 sub = User::query()->select(['id','user_id'])->from('orders')->where('status','=','completed'); User::query()->from('users')->joinSub(sub, 'completed_orders', 'users.id', '=', 'completed_orders.user_id');
 
 ### Group/Having/Order
@@ -77,43 +79,83 @@ php User::query()->from('users') ->groupBy('role') ->having('total', '>', 10) //
 ### Union
 
 php q1 = User::query()->select(['id','name'])->from('users')->where('status','=','active');q2 = User::query()->select(['id','name'])->from('archived_users')->where('status','=','active');
+
 q1->union(q2); // UNION q1->unionAll(q2); // UNION ALL
 
 ### Pagination och sök
 
 php // Klassisk pagination result = User::query() ->where('status','=','active') ->paginate(perPage: 10, currentPage: 2); //result['data'], $result['pagination']
+
 // Sök (LIKE i flera kolumner + pagination) search = User::query() ->search('ma', ['first_name','last_name','email'], perPage: 10, currentPage: 1); //search['data'], $search['search']
+
 // Enkel pagination utan total $simple = User::query()->simplePaginate(10, 1);
 
 ### Snabba hämtningar
 
 php // Första värdet i första raden (eller null) $email = User::query()->where('id','=',1)->value('email');
+
 // Lista/assoc av kolumn emails = User::query()->pluck('email');emailsById = User::query()->pluck('email', 'id');
 
 ### Mutationer
 
 php // Insert User::query()->from('users')->insert([ 'name' => 'John Doe', 'email' => 'john@example.com', ])->execute();
+
 // Update (mutation-bucket före WHERE-bucket i bindningar) User::query()->from('users')->where('id','=',1) ->update(['name' => 'Jane Doe', 'email' => 'jane@example.com']) ->execute();
+
 // Delete (kräver WHERE) User::query()->from('users')->where('id','=',1)->delete()->execute();
+
 // Insert or ignore User::query()->from('users')->insertOrIgnore(['email'=>'dup@example.com'])->execute();
+
 // Upsert (SQLite-stil ON CONFLICT) User::query()->from('users') ->upsert(['email' => 'a@example.com', 'name' => 'A'], uniqueBy: ['email']) ->execute();
 
 ### Soft deletes
 
 php // Default (om modellen använder soft deletes): filtrerar bort deleted_at != null User::query()->whereNull('deleted_at');
+
 // Visa även soft-deletade User::query()->withSoftDeletes();
-// Endast soft-deletade User::query()->onlyTrashed(); // alias till getOnlySoftDeleted()
+
+// Endast soft-deletade (alias) User::query()->onlyTrashed(); // alias till getOnlySoftDeleted()
+
 // Endast icke soft-deletade (explicit) User::query()->withoutTrashed();
 
 ### Eager loading och aggregat
 
 php // Eager load User::query()->with(['profile', 'posts']);
+
 // Med constraints User::query()->with(['posts' => function (\Radix\Database\QueryBuilder\QueryBuilder q) {q->where('published', '=', 1); }]);
+
 // withCount / withSum / withAvg / withMin / withMax / withAggregate User::query()->withCount('posts')->withSum('posts','views','posts_views');
 
 ### Debugging
 
 php q = User::query()->where('name','LIKE','%John%');sql = q->toSql(); // SELECT ... WHERE `name` LIKE ?bindings = $q->getBindings(); // ['%John%'] // debugSql() interpolerar bindningar till läsbar sträng (endast utveckling)
+
+## Traits-översikt
+Följande traits i QueryBuilder (framework/src/Database/QueryBuilder/Concerns) modulariserar funktionaliteten:
+- Bindings: hanterar bindnings-buckets och ordning.
+- BuildsWhere: where/orWhere/whereIn/Between/Null/Raw/Column/Exists m.fl.
+- Joins: join/left/right/full/joinSub/joinRaw.
+- Ordering: orderBy/orderByRaw.
+- CompilesSelect: select/selectRaw/selectSub/distinct/compile av SELECT.
+- CompilesMutations: insert/update/delete/upsert/insertOrIgnore.
+- Unions: union/unionAll.
+- Pagination: paginate/simplePaginate/search.
+- SoftDeletes: withSoftDeletes/onlyTrashed/withoutTrashed.
+- EagerLoad: with() och hydrering av relationer.
+- WithCount: withCount och relaterade hjälpare.
+- WithAggregate: withSum/withAvg/withMin/withMax/withAggregate.
+- WithCtes: stöd för CTE/with/rekursiva CTE och deras bindningar.
+- Windows: fönsterfunktioner/OVER().
+- Wrapping: quoting av kolumner, alias och raw-hjälpmedel.
+- Functions: aggregerande och skalära SQL-funktioner samt helpers (inkl. value/pluck helpers).
+- Locks: frågelåsning där databasen stöds.
+- Transactions: transaktionella helpers (begin/commit/rollback).
+- CaseExpressions: CASE WHEN/THEN/ELSE helpers.
+- InsertSelect: INSERT INTO ... SELECT ...
+- JsonFunctions: JSON-funktioner (där drivrutin stöds).
+- GroupingSets: GROUPING SETS / CUBE / ROLLUP (där db stöds).
+
+Observera: Inte alla funktioner kanske stöds av varje databasdialekt; använd dialektens capability där relevant.
 
 ## Design: Bindnings-buckets
 - Bindningar hanteras i separata buckets: select, join, where, having, order, union, mutation.
