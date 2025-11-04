@@ -1197,4 +1197,70 @@ class QueryBuilderTest extends TestCase
         );
         $this->assertEquals(['%@example.com', 'inactive'], $q->getBindings());
     }
+
+    public function testCaseWhenSelectAndOrderByCase(): void
+    {
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->select([])
+            ->caseWhen([
+                ['cond' => '`role` = ?', 'bindings' => ['admin'], 'then' => "'A'"],
+                ['cond' => '`role` = ?', 'bindings' => ['editor'], 'then' => "'B'"],
+            ], "'Z'", 'rnk')
+            ->orderByCase('role', ['admin' => 1, 'editor' => 2, 'user' => 3], '9', 'ASC');
+
+        $sql = $q->toSql();
+        $this->assertStringContainsString("SELECT CASE WHEN (`role` = ?) THEN 'A' WHEN (`role` = ?) THEN 'B' ELSE 'Z' END AS `rnk` FROM `users`", $sql);
+        $this->assertStringContainsString("ORDER BY CASE `role` WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 ELSE '9' END ASC", $sql);
+        $this->assertEquals(['admin','editor','admin','editor','user'], $q->getBindings());
+    }
+
+    public function testInsertSelect(): void
+    {
+        $sel = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->select(['id', 'email'])
+            ->from('users')
+            ->where('status', '=', 'active');
+
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->insertSelect('newsletter', ['user_id', 'email'], $sel);
+
+        $this->assertEquals(
+            'INSERT INTO `newsletter` (`user_id`, `email`) SELECT `id`, `email` FROM `users` WHERE `status` = ?',
+            $q->toSql()
+        );
+        $this->assertEquals(['active'], $q->getBindings());
+    }
+
+    public function testJsonExtractAndWhereJsonContains(): void
+    {
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('products')
+            ->select([])
+            ->jsonExtract('meta', '$.brand', 'brand')
+            ->whereJsonContains('tags', 'sale');
+
+        $sql = $q->toSql();
+        $this->assertStringContainsString('SELECT JSON_EXTRACT(`meta`, ?) AS `brand` FROM `products`', $sql);
+        $this->assertStringContainsString('WHERE `tags` JSON_CONTAINS ?', $sql);
+        $this->assertEquals(['$.brand', json_encode('sale', JSON_UNESCAPED_UNICODE)], $q->getBindings());
+    }
+
+    public function testRollupGroupBy(): void
+    {
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('orders')
+            ->select(['customer_id', 'COUNT(*) AS cnt'])
+            ->rollup(['customer_id']);
+
+        $this->assertEquals(
+            'SELECT `customer_id`, COUNT(*) AS `cnt` FROM `orders` GROUP BY `customer_id` WITH ROLLUP',
+            $q->toSql()
+        );
+    }
 }
