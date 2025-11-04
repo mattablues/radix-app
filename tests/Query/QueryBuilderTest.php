@@ -1006,4 +1006,195 @@ class QueryBuilderTest extends TestCase
             $q2->toSql()
         );
     }
+
+    public function testWithCteSimpleSelect(): void
+    {
+        $sub = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->select(['id', 'name'])
+            ->from('users')
+            ->where('status', '=', 'active');
+
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('active_users') // huvuddelen ska läsa från CTE-alias
+            ->withCte('active_users', $sub)
+            ->select(['name'])
+            ->orderBy('name');
+
+        $this->assertEquals(
+            'WITH `active_users` AS (SELECT `id`, `name` FROM `users` WHERE `status` = ?) SELECT `name` FROM `active_users` ORDER BY `name` ASC',
+            $q->toSql()
+        );
+        $this->assertEquals(['active'], $q->getBindings());
+    }
+// ... existing code ...
+    public function testWithCteMultiple(): void
+    {
+        $totals = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->select(['user_id', 'SUM(amount) AS total'])
+            ->from('payments')
+            ->groupBy('user_id');
+
+        $users = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->select(['id', 'email'])
+            ->from('users');
+
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->withCte('totals', $totals)
+            ->withCte('u', $users)
+            ->from('u')
+            ->select(['u.email', 'totals.total'])
+            ->join('totals', 'u.id', '=', 'totals.user_id');
+
+            $this->assertEquals(
+                'WITH `totals` AS (SELECT `user_id`, SUM(amount) AS `total` FROM `payments` GROUP BY `user_id`), `u` AS (SELECT `id`, `email` FROM `users`) SELECT `u`.`email`, `totals`.`total` FROM `u` INNER JOIN `totals` ON `u`.`id` = `totals`.`user_id`',
+                $q->toSql()
+            );
+        $this->assertEquals([], $q->getBindings());
+    }
+// ... existing code ...
+    public function testWithRecursiveCte(): void
+    {
+        $anchor = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->select(['id', 'parent_id', 'name', '0 AS depth'])
+            ->from('categories')
+            ->where('id', '=', 123);
+
+        $recursive = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->select(['c.id', 'c.parent_id', 'c.name', 'p.depth + 1'])
+            ->from('categories AS c')
+            ->join('parents AS p', 'p.id', '=', 'c.parent_id');
+
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->withRecursive('parents', $anchor, $recursive, ['id', 'parent_id', 'name', 'depth'])
+            ->from('parents')
+            ->select(['id', 'name', 'depth'])
+            ->orderBy('depth');
+
+        $expected = 'WITH RECURSIVE `parents` (`id`, `parent_id`, `name`, `depth`) AS (SELECT `id`, `parent_id`, `name`, 0 AS `depth` FROM `categories` WHERE `id` = ? UNION ALL SELECT `c`.`id`, `c`.`parent_id`, `c`.`name`, p.depth + 1 FROM `categories` AS `c` INNER JOIN parents AS p ON `p`.`id` = `c`.`parent_id`) SELECT `id`, `name`, `depth` FROM `parents` ORDER BY `depth` ASC';
+        $this->assertEquals($expected, $q->toSql());
+        $this->assertEquals([123], $q->getBindings());
+    }
+// ... existing code ...
+    public function testSelectForUpdate(): void
+    {
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->where('id', '=', 1)
+            ->forUpdate();
+
+        $this->assertEquals(
+            'SELECT * FROM `users` WHERE `id` = ? FOR UPDATE',
+            $q->toSql()
+        );
+        $this->assertEquals([1], $q->getBindings());
+    }
+// ... existing code ...
+    public function testSelectLockInShareModeWithLimit(): void
+    {
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->select(['name'])
+            ->from('users')
+            ->where('status', '=', 'active')
+            ->orderBy('name')
+            ->limit(10)
+            ->lockInShareMode();
+
+        $this->assertEquals(
+            'SELECT `name` FROM `users` WHERE `status` = ? ORDER BY `name` ASC LIMIT 10 LOCK IN SHARE MODE',
+            $q->toSql()
+        );
+        $this->assertEquals(['active'], $q->getBindings());
+    }
+
+    public function testRowNumberWindow(): void
+    {
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('posts')
+            ->select([]) // säkerställ att '*' inte används
+            ->rowNumber('row_num', [], [['created_at', 'DESC']]);
+
+        $this->assertEquals(
+            'SELECT ROW_NUMBER() OVER (ORDER BY `created_at` DESC) AS `row_num` FROM `posts`',
+            $q->toSql()
+        );
+    }
+
+    public function testRankPartitionedWindow(): void
+    {
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('scores')
+            ->select(['user_id'])
+            ->rank('r', ['user_id'], [['score', 'DESC']]);
+
+        $this->assertEquals(
+            'SELECT `user_id`, RANK() OVER (PARTITION BY `user_id` ORDER BY `score` DESC) AS `r` FROM `scores`',
+            $q->toSql()
+        );
+    }
+
+    public function testSumOverRunningTotal(): void
+    {
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('payments')
+            ->select(['user_id', 'created_at'])
+            ->sumOver('amount', 'running_total', ['user_id'], [['created_at', 'ASC']]);
+
+        $this->assertEquals(
+            'SELECT `user_id`, `created_at`, SUM(`amount`) OVER (PARTITION BY `user_id` ORDER BY `created_at` ASC) AS `running_total` FROM `payments`',
+            $q->toSql()
+        );
+    }
+
+    public function testWindowRaw(): void
+    {
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('leaderboard')
+            ->select(['id'])
+            ->windowRaw('NTILE(4) OVER (ORDER BY `score` DESC)', 'quart');
+
+        $this->assertEquals(
+            'SELECT `id`, NTILE(4) OVER (ORDER BY `score` DESC) AS `quart` FROM `leaderboard`',
+            $q->toSql()
+        );
+    }
+
+    public function testCteWithUpdateMutation(): void
+    {
+        $cte = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->select(['id'])
+            ->from('users')
+            ->where('email', 'LIKE', '%@example.com');
+
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->withCte('to_fix', $cte)
+            ->where('id', 'IN', (new QueryBuilder())
+                ->setConnection($this->connection)
+                ->select(['id'])
+                ->from('to_fix')
+            )
+            ->update(['status' => 'inactive']);
+
+        $this->assertEquals(
+            'WITH `to_fix` AS (SELECT `id` FROM `users` WHERE `email` LIKE ?) UPDATE `users` SET `status` = ? WHERE `id` IN (SELECT `id` FROM `to_fix`)',
+            $q->toSql()
+        );
+        $this->assertEquals(['%@example.com', 'inactive'], $q->getBindings());
+    }
 }
