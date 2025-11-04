@@ -1028,7 +1028,7 @@ class QueryBuilderTest extends TestCase
         );
         $this->assertEquals(['active'], $q->getBindings());
     }
-// ... existing code ...
+
     public function testWithCteMultiple(): void
     {
         $totals = (new QueryBuilder())
@@ -1056,7 +1056,7 @@ class QueryBuilderTest extends TestCase
             );
         $this->assertEquals([], $q->getBindings());
     }
-// ... existing code ...
+
     public function testWithRecursiveCte(): void
     {
         $anchor = (new QueryBuilder())
@@ -1082,7 +1082,7 @@ class QueryBuilderTest extends TestCase
         $this->assertEquals($expected, $q->toSql());
         $this->assertEquals([123], $q->getBindings());
     }
-// ... existing code ...
+
     public function testSelectForUpdate(): void
     {
         $q = (new QueryBuilder())
@@ -1097,7 +1097,7 @@ class QueryBuilderTest extends TestCase
         );
         $this->assertEquals([1], $q->getBindings());
     }
-// ... existing code ...
+
     public function testSelectLockInShareModeWithLimit(): void
     {
         $q = (new QueryBuilder())
