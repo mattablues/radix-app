@@ -1,215 +1,139 @@
 # Radix ORM
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<!-- doctoc will insert TOC here -->
 
-
-- [Innehåll](#inneh%C3%A5ll)
 - [Installation](#installation)
-- [Modellbas](#modellbas)
-- [Statisk API på modeller](#statisk-api-p%C3%A5-modeller)
-- [Instans-API](#instans-api)
-- [Query Builder – metodsignaturer](#query-builder--metodsignaturer)
-- [Relationer – signaturer](#relationer--signaturer)
-  - [Through-relationer](#through-relationer)
-  - [Many-to-many (om stöd finns för pivot-helpers)](#many-to-many-om-st%C3%B6d-finns-f%C3%B6r-pivot-helpers)
-- [Scopes](#scopes)
-- [Paginering](#paginering)
-- [Massassignering](#massassignering)
-- [Soft deletes](#soft-deletes)
-- [Transaktioner](#transaktioner)
-- [Vanliga recept](#vanliga-recept)
-- [Felhantering](#felhantering)
-- [Bästa praxis](#b%C3%A4sta-praxis)
+- [Snabbstart](#snabbstart)
+- [API-översikt](#api-%C3%B6versikt)
+  - [Select och alias](#select-och-alias)
+  - [From](#from)
+  - [Where/Filter](#wherefilter)
+  - [Subqueries (WHERE EXISTS/IN)](#subqueries-where-existsin)
+  - [Joins](#joins)
+  - [Group/Having/Order](#grouphavingorder)
+  - [Union](#union)
+  - [Pagination och sök](#pagination-och-s%C3%B6k)
+  - [Snabba hämtningar](#snabba-h%C3%A4mtningar)
+  - [Mutationer](#mutationer)
+  - [Soft deletes](#soft-deletes)
+  - [Eager loading och aggregat](#eager-loading-och-aggregat)
+  - [Debugging](#debugging)
+- [Design: Bindnings-buckets](#design-bindnings-buckets)
+- [Säkerhet och validering](#s%C3%A4kerhet-och-validering)
+- [Testning](#testning)
+- [Vanliga frågor](#vanliga-fr%C3%A5gor)
+- [Licens](#licens)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-Active Record–inspirerad ORM under namespace `Radix\Database\ORM`:
-- Modeller som ärver `Radix\Database\ORM\Model`
-- Kedjebar query-API
-- Relationer (hasOne, hasMany, belongsTo, belongsToMany)
-- Eager/lazy loading
-- Paginering
-- Soft deletes och restore
-- Massassignering via `fill()`
-
-## Innehåll
-- [Installation](#installation)
-- [Modellbas](#modellbas)
-- [Statisk API på modeller](#statisk-api-på-modeller)
-- [Instans-API](#instans-api)
-- [Query Builder – metodsignaturer](#query-builder--metodsignaturer)
-- [Relationer – signaturer](#relationer--signaturer)
-  - [Many-to-many (om stöd finns för pivot-helpers)](#many-to-many-om-stöd-finns-för-pivot-helpers)
-- [Scopes](#scopes)
-- [Paginering](#paginering)
-- [Massassignering](#massassignering)
-- [Soft deletes](#soft-deletes)
-- [Transaktioner](#transaktioner)
-- [Vanliga recept](#vanliga-recept)
-- [Felhantering](#felhantering)
-- [Bästa praxis](#bästa-praxis)
+Radix ORM erbjuder en lättvikts QueryBuilder med säkra bindnings-buckets och enkel modell-hydrering. Stöd för WHERE/JOINS/UNION/AGGREGAT, pagination/sök, soft deletes, eager loading och mutationer (insert/update/delete/upsert).
 
 ## Installation
-- PHP 8.3+
-- Konfigurera databas i `.env` och config
-- Autoload via Composer
+- Kräver PHP 8.3+, PDO (MySQL/SQLite m.fl.)
+- Installera dependencies via Composer och konfigurera databaskoppling i app-container/DatabaseManager.
+- Kör migrationer via ditt migrationssystem.
 
-## Modellbas
-- Ärvt från `Radix\Database\ORM\Model`
-- Relationer under `Radix\Database\ORM\Relationships`
+## Snabbstart
 
-php
-hasOne(Status::class, 'user_id', 'id'); } }
+php use App\Models\User;
+// Hämta användare $users = User::query() ->select(['id','name']) ->where('status', '=', 'active') ->orderBy('name') ->limit(10)->offset(0) ->get();
+// Enskilt värde $email = User::query()->where('id', '=', 1)->value('email');
+// Lista/assoc-lista emails = User::query()->where('status','=','active')->pluck('email');emailsById = User::query()->pluck('email', 'id');
 
-## Statisk API på modeller
-- `find(string|int $id, bool $withTrashed = false): ?static`
-- `with(string|array $relations): static|Builder`
-- `where(string $column, mixed $operatorOrValue, mixed $value = null): Builder`
-- `orderBy(string $column, string $direction = 'asc'): Builder`
-- `first(): ?static`
-- `get(): array<static>`
-- `paginate(int $perPage, int $page): Paginator|array`
-- `getOnlySoftDeleted(): Builder`
+## API-översikt
+- Alla metoder returnerar samma builderinstans (chainable).
+- toSql() returnerar SQL med placeholders.
+- getBindings() returnerar bindningar i rätt ordning.
+- get() hydratiserar till Model-exemplar.
 
-Exempel:
+### Select och alias
 
-php
-paginate(10, 1); // Filtrering $latest = User::where('email', 'like', '%@example.com%') ->orderBy('id', 'desc') ->paginate(15, 1); // Endast soft-deleted $closed = User::getOnlySoftDeleted()->paginate(10, 1);
+php User::query()->select(['id','users.name','users.name AS user_name']); User::query()->selectRaw('COUNT(id) AS total');
 
-## Instans-API
-- `fill(array $attributes): static`
-- `save(): bool`
-- `delete(): bool`  (soft delete om modellen stöder det)
-- `restore(): bool`
-- `loadMissing(string|array $relations): void`
-- `getRelation(string $name): mixed`
+sub = User::query()->select(['COUNT(*) as c'])->from('orders')->where('orders.user_id','=',10); User::query()->from('users')->selectSub(sub, 'order_count');
 
-Exempel:
+### From
 
-php
-fill([ 'first_name' => 'Ada', 'last_name' => 'Lovelace', 'email' => 'ada@example.com', ]); $user->password = 'hemligt'; // explicit utanför fill() $user->save(); // Lazy load om saknas $user->loadMissing('status'); $status = $user->getRelation('status'); $status->fill(['status' => 'activate'])->save(); // Soft delete + restore $user->delete(); $u = User::find($user->id, true); $u?->restore();
+php User::query()->from('users AS u'); User::query()->fromRaw('(SELECT * FROM users WHERE active = 1) AS u');
 
-## Query Builder – metodsignaturer
-- `select(array|string $columns): Builder`
-- `where(string $column, mixed $operatorOrValue, mixed $value = null): Builder`
-- `orWhere(string $column, mixed $operatorOrValue, mixed $value = null): Builder`
-- `whereIn(string $column, array $values): Builder`
-- `whereNull(string $column): Builder`
-- `whereNotNull(string $column): Builder`
-- `whereColumn(string $left, string $operator, string $right): Builder`
-- `orderBy(string $column, string $direction = 'asc'): Builder`
-- `limit(int $limit): Builder`
-- `offset(int $offset): Builder`
-- `first(): ?Model`
-- `get(): array<Model>`
-- `count(): int`
-- `max(string $column): mixed`
-- `exists(): bool`
-- `insert(array $rowsOrRow): bool`
-- `update(array $attributes): int`
-- `delete(): int`
-- `paginate(int $perPage, int $page): Paginator|array`
+### Where/Filter
 
-Exempel:
+php $q = User::query()->from('users') ->where('status', '=', 'active') ->orWhere('role', '=', 'moderator') ->whereIn('id', [1,2,3]) ->whereNotIn('role', ['admin','editor']) ->whereBetween('age', [18,30]) ->whereNotBetween('score', [50,80]) ->whereColumn('users.country_id', '=', 'countries.id') ->whereNull('deleted_at') ->whereNotNull('joined_at') ->whereRaw('(`first_name` LIKE ? OR `last_name` LIKE ?)', ['%ma%','%ma%']) ->whereLike('email', '%@example.com');
 
-php
-whereIn('role', ['editor', 'author']) ->whereNull('deleted_at') ->orderBy('id', 'desc') ->select(['id','first_name','email']) ->limit(10) ->get(); $total = User::where('status', 'draft')->count(); $maxId = User::max('id'); $exists = User::where('email', 'john@example.com')->exists();
+### Subqueries (WHERE EXISTS/IN)
 
-## Relationer – signaturer
-- `hasOne(Related::class, string $foreignKey, string $localKey = 'id')`
-- `hasMany(Related::class, string $foreignKey, string $localKey = 'id')`
-- `belongsTo(Related::class, string $foreignKey, string $ownerKey = 'id')`
-- `belongsToMany(Related::class, string $pivotTable, string $foreignKey, string $relatedKey)`
+php sub = User::query()->select(['id'])->from('payments')->where('amount','>',100); User::query()->from('users')->whereExists(sub); User::query()->from('users')->where('id', 'IN', $sub);
 
-Exempel:
+### Joins
 
-php
-belongsTo(User::class, 'user_id', 'id'); } } // Eager $user = User::with('status')->find(123); // Lazy on demand $user->loadMissing('status'); $status = $user->getRelation('status'); $status->fill(['active' => 'offline'])->save();
+php User::query()->from('users') ->join('profiles', 'users.id', '=', 'profiles.user_id') ->leftJoin('orders', 'users.id', '=', 'orders.user_id') ->rightJoin('roles', 'users.role_id', '=', 'roles.id') ->fullJoin('addresses', 'users.id', '=', 'addresses.user_id') ->joinRaw('INNER JOIN `teams` ON `teams`.`id` = `users`.`team_id` AND `teams`.`active` = ?', [1]);
+sub = User::query()->select(['id','user_id'])->from('orders')->where('status','=','completed'); User::query()->from('users')->joinSub(sub, 'completed_orders', 'users.id', '=', 'completed_orders.user_id');
 
-### Through-relationer
-- `hasOneThrough(Related::class, Through::class, string $firstKey, string $secondKey, ?string $localKey = null, ?string $secondLocal = 'id')`
-- `hasManyThrough(Related::class, Through::class, string $firstKey, string $secondKey, ?string $localKey = null, ?string $secondLocal = 'id')`
+### Group/Having/Order
 
-Förklaring:
-- firstKey: Nyckeln på “through”-modellen som pekar till den lokala modellen.
-- secondKey: Nyckeln på “related”-modellen som pekar till “through”-modellen.
-- localKey: Den lokala modellens nyckel (default: modellens primaryKey).
-- secondLocal: Primärnyckel på “through”-modellen (default: 'id').
+php User::query()->from('users') ->groupBy('role') ->having('total', '>', 10) // om du har "COUNT(_) AS total" i select ->havingRaw('COUNT(_) > ?', [5]) ->orderBy('name', 'ASC') ->orderByRaw('FIELD(role, "admin","editor","user")');
 
-Exempel hasOneThrough:
+### Union
 
-php
-Profile -> Avatar (User har ett Avatar via Profile) class User extends Model { public function avatar() { return $this->hasOneThrough( Avatar::class, // related Profile::class, // through 'user_id', // firstKey: profiles.user_id -> users.id 'profile_id', // secondKey: avatars.profile_id -> profiles.id 'id', // localKey: users.id (valfritt, default primaryKey) 'id' // secondLocal: profiles.id (valfritt, default 'id') ); } }
+php q1 = User::query()->select(['id','name'])->from('users')->where('status','=','active');q2 = User::query()->select(['id','name'])->from('archived_users')->where('status','=','active');
+q1->union(q2); // UNION q1->unionAll(q2); // UNION ALL
 
-Exempel hasManyThrough:
+### Pagination och sök
 
-php
-User -> Post (Country har många Post via User) class Country extends Model { public function posts() { return $this->hasManyThrough( Post::class, // related User::class, // through 'country_id', // firstKey: users.country_id -> countries.id 'user_id', // secondKey: posts.user_id -> users.id 'id', // localKey: countries.id (valfritt) 'id' // secondLocal: users.id (valfritt) ); } }
+php // Klassisk pagination result = User::query() ->where('status','=','active') ->paginate(perPage: 10, currentPage: 2); //result['data'], $result['pagination']
+// Sök (LIKE i flera kolumner + pagination) search = User::query() ->search('ma', ['first_name','last_name','email'], perPage: 10, currentPage: 1); //search['data'], $search['search']
+// Enkel pagination utan total $simple = User::query()->simplePaginate(10, 1);
 
-### Many-to-many (om stöd finns för pivot-helpers)
-- `attach(int|array $ids): void`
-- `detach(int|array $ids = null): void`
-- `sync(array $ids): void`
+### Snabba hämtningar
 
-php
-belongsToMany(Role::class, 'role_user', 'user_id', 'role_id'); } } $user = User::find(1); $user->roles()->sync([2,3]); $user->roles()->attach(4); $user->roles()->detach(2);
+php // Första värdet i första raden (eller null) $email = User::query()->where('id','=',1)->value('email');
+// Lista/assoc av kolumn emails = User::query()->pluck('email');emailsById = User::query()->pluck('email', 'id');
 
-## Scopes
-Konvention: `scopeXxx(Builder $q, ...$args)` → anropas som `Model::xxx(...$args)`.
+### Mutationer
 
-php
-where('status', 'published'); } } $latest = Post::published() ->orderBy('published_at','desc') ->limit(5) ->get();
+php // Insert User::query()->from('users')->insert([ 'name' => 'John Doe', 'email' => 'john@example.com', ])->execute();
+// Update (mutation-bucket före WHERE-bucket i bindningar) User::query()->from('users')->where('id','=',1) ->update(['name' => 'Jane Doe', 'email' => 'jane@example.com']) ->execute();
+// Delete (kräver WHERE) User::query()->from('users')->where('id','=',1)->delete()->execute();
+// Insert or ignore User::query()->from('users')->insertOrIgnore(['email'=>'dup@example.com'])->execute();
+// Upsert (SQLite-stil ON CONFLICT) User::query()->from('users') ->upsert(['email' => 'a@example.com', 'name' => 'A'], uniqueBy: ['email']) ->execute();
 
-## Paginering
+### Soft deletes
 
-php
-paginate(10, $page); // Paginator returnerar items + metadata (exakt struktur beror på implementation)
+php // Default (om modellen använder soft deletes): filtrerar bort deleted_at != null User::query()->whereNull('deleted_at');
+// Visa även soft-deletade User::query()->withSoftDeletes();
+// Endast soft-deletade User::query()->onlyTrashed(); // alias till getOnlySoftDeleted()
+// Endast icke soft-deletade (explicit) User::query()->withoutTrashed();
 
+### Eager loading och aggregat
 
-## Massassignering
-- Definiera `protected array $fillable` på modellen
-- `fill(array $attributes)` följer `$fillable`
-- Övriga fält sätts explicit som egenskaper
+php // Eager load User::query()->with(['profile', 'posts']);
+// Med constraints User::query()->with(['posts' => function (\Radix\Database\QueryBuilder\QueryBuilder q) {q->where('published', '=', 1); }]);
+// withCount / withSum / withAvg / withMin / withMax / withAggregate User::query()->withCount('posts')->withSum('posts','views','posts_views');
 
-php
-fill(['first_name' => 'Eve', 'email' => 'eve@ex.com']); $user->password = 'nytt'; $user->save();
+### Debugging
 
-## Soft deletes
-- `getOnlySoftDeleted(): Builder`
-- `find($id, true)`: inkludera soft-deleted
-- `restore(): bool`
-- `delete(): bool`
+php q = User::query()->where('name','LIKE','%John%');sql = q->toSql(); // SELECT ... WHERE `name` LIKE ?bindings = $q->getBindings(); // ['%John%'] // debugSql() interpolerar bindningar till läsbar sträng (endast utveckling)
 
-php
-paginate(10, 1); $user = User::find(5, true); $user?->restore();
+## Design: Bindnings-buckets
+- Bindningar hanteras i separata buckets: select, join, where, having, order, union, mutation.
+- compileAllBindings() körs i toSql()/compileMutationSql() för att platta ihop bindningar i rätt ordning:
+  - mutation (SET/VALUES) först (viktigt för UPDATE), därefter select/join/where/having/order/union.
+- Fördel: inga krockar när SQL byggs i flera steg (t.ex. subqueries, joinRaw, havingRaw).
 
-## Transaktioner
-Använd din databasmanager/connection-klass enligt projektets konfiguration.
+## Säkerhet och validering
+- where() validerar operatorer.
+- delete() utan WHERE kastar RuntimeException.
+- wrapColumn/alias säkrar quoting; använd selectRaw/whereRaw/havingRaw/joinRaw med medföljande bindningar när du behöver fri SQL.
 
-## Vanliga recept
-Update-or-create (om stöd finns):
+## Testning
+- PHPUnit: kör vendor/bin/phpunit.
+- PHPStan: kör vendor/bin/phpstan analyse.
+- Samtliga core-tester för QueryBuilder ska passera (inkl. de nya för whereNotIn/between/exists/column/orderByRaw/havingRaw/rightJoin/joinRaw/unionAll/selectSub/value/pluck/soft-delete-aliaser).
 
-php
-first() ?->fill(['name' => 'Alice'])->save(); // Alternativt: egen helper updateOrCreate($filters, $values) om implementerat
+## Vanliga frågor
+- Varför ser jag backticks runt alias (AS `alias`)? Builder wrappar alias konsekvent för att undvika krockar med reserverade ord. Testa mot DB-dialekten – MySQL/SQLite accepterar detta.
+- Hur undviker jag state-läckage i pagination/sök? Buildern klonas för COUNT, men WHERE och dess bindningar behålls. Vi återanvänder inte original-instanser för COUNT:s select/order/limit/offset.
 
-Batch insert:
-
-php
-'A', 'email' => 'a@ex.com'], ['first_name' => 'B', 'email' => 'b@ex.com'], ]);
-
-Exists/subquery:
-
-php
-from('posts')->whereColumn('posts.user_id', 'users.id'); })->get();
-
-## Felhantering
-- `find()` och `first()` kan returnera `null`
-- Kontrollera relationer eller använd `loadMissing()`
-- Hantera `save()/delete()`-returvärden där det är kritiskt
-- Använd transaktioner för konsistens
-
-## Bästa praxis
-- Ange `$table` och `$primaryKey` om de avviker
-- Lista tillåtna fält i `$fillable`
-- Använd `with()` för att undvika N+1
-- Håll validering/service-logik utanför modellen
+## Licens
+MIT (eller den licens du använder för projektet).

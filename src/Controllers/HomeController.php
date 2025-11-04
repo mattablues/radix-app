@@ -26,9 +26,9 @@ class HomeController extends AbstractController
 //        $country = $geoLocator->get('country', '85.228.5.49'); // För valfri IP
 //        echo "Land för 85.228.5.49: $country";
 
-        $search = User::search('ma', ['first_name', 'last_name', 'email']);
-
-        dd($search);
+//        $search = User::search('ma', ['first_name', 'last_name', 'email']);
+//
+//        dd($search);
 
         return $this->view('home.index');
     }

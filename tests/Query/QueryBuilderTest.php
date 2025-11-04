@@ -840,4 +840,170 @@ class QueryBuilderTest extends TestCase
             'QueryBuilder ska korrekt hantera bindningar med flera villkor.'
         );
     }
+
+    public function testWhereNotInBetweenColumnExists(): void
+    {
+        $sub = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->select(['id'])
+            ->from('payments')
+            ->where('amount', '>', 100);
+
+        $query = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->whereNotIn('role', ['admin', 'editor'])
+            ->whereBetween('age', [18, 30])
+            ->whereNotBetween('score', [50, 80])
+            ->whereColumn('users.country_id', '=', 'countries.id')
+            ->whereExists($sub);
+
+        $this->assertEquals(
+            'SELECT * FROM `users` WHERE `role` NOT IN (?, ?) AND `age` BETWEEN ? AND ? AND `score` NOT BETWEEN ? AND ? AND `users`.`country_id` = `countries`.`id` AND EXISTS (SELECT `id` FROM `payments` WHERE `amount` > ?)',
+            $query->toSql()
+        );
+        $this->assertEquals(
+            ['admin', 'editor', 18, 30, 50, 80, 100],
+            $query->getBindings()
+        );
+    }
+
+    public function testWhereRaw(): void
+    {
+        $query = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->whereRaw('(`first_name` LIKE ? OR `last_name` LIKE ?)', ['%ma%', '%ma%']);
+
+        $this->assertEquals(
+            'SELECT * FROM `users` WHERE ((`first_name` LIKE ? OR `last_name` LIKE ?))',
+            $query->toSql()
+        );
+        $this->assertEquals(['%ma%', '%ma%'], $query->getBindings());
+    }
+
+    public function testOrderByRawAndHavingRaw(): void
+    {
+        $query = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->select(['role', 'COUNT(*) AS total'])
+            ->from('users')
+            ->groupBy('role')
+            ->havingRaw('COUNT(*) > ?', [5])
+            ->orderByRaw('FIELD(role, "admin","editor","user")');
+
+        $this->assertEquals(
+            'SELECT `role`, COUNT(*) AS `total` FROM `users` GROUP BY `role` HAVING COUNT(*) > ? ORDER BY FIELD(role, "admin","editor","user")',
+            $query->toSql()
+        );
+        $this->assertEquals([5], $query->getBindings());
+    }
+
+    public function testRightJoinAndJoinRaw(): void
+    {
+        $query = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->rightJoin('profiles', 'users.id', '=', 'profiles.user_id')
+            ->joinRaw('INNER JOIN `roles` ON `roles`.`id` = `users`.`role_id` AND `roles`.`name` = ?', ['admin']);
+
+        $this->assertEquals(
+            'SELECT * FROM `users` RIGHT JOIN `profiles` ON `users`.`id` = `profiles`.`user_id` INNER JOIN `roles` ON `roles`.`id` = `users`.`role_id` AND `roles`.`name` = ?',
+            $query->toSql()
+        );
+        $this->assertEquals(['admin'], $query->getBindings());
+    }
+
+    public function testUnionAllWrapper(): void
+    {
+        $q1 = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->select(['id'])
+            ->from('users')
+            ->where('status', '=', 'active');
+
+        $q2 = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->select(['id'])
+            ->from('archived_users')
+            ->where('status', '=', 'active');
+
+        $union = $q1->unionAll($q2);
+
+        $this->assertEquals(
+            'SELECT `id` FROM `users` WHERE `status` = ? UNION ALL SELECT `id` FROM `archived_users` WHERE `status` = ?',
+            $union->toSql()
+        );
+        $this->assertEquals(['active', 'active'], $union->getBindings());
+    }
+
+    public function testSelectSub(): void
+    {
+        $sub = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->select(['COUNT(*) as c'])
+            ->from('orders')
+            ->where('orders.user_id', '=', 10);
+
+        $query = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->selectSub($sub, 'order_count');
+
+        $this->assertEquals(
+            'SELECT (SELECT COUNT(*) AS `c` FROM `orders` WHERE `orders`.`user_id` = ?) AS `order_count` FROM `users`',
+            $query->toSql()
+        );
+        $this->assertEquals([10], $query->getBindings());
+    }
+
+    public function testValueAndPluck(): void
+    {
+        // value(): vi kontrollerar endast genererad SQL före fetch, via debugSql-logik är svår utan stub.
+        $qValue = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->where('id', '=', 1);
+        // Bygg SQL för value (select+limit)
+        $qValue->select(['email'])->limit(1);
+        $this->assertEquals(
+            'SELECT `email` FROM `users` WHERE `id` = ? LIMIT 1',
+            $qValue->toSql()
+        );
+        $this->assertEquals([1], $qValue->getBindings());
+
+        $qPluck = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->where('status', '=', 'active')
+            ->select(['email']);
+        $this->assertEquals(
+            'SELECT `email` FROM `users` WHERE `status` = ?',
+            $qPluck->toSql()
+        );
+        $this->assertEquals(['active'], $qPluck->getBindings());
+    }
+
+    public function testOnlyAndWithoutTrashed(): void
+    {
+        $q1 = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->onlyTrashed();
+
+        $this->assertEquals(
+            'SELECT * FROM `users` WHERE `deleted_at` IS NOT NULL',
+            $q1->toSql()
+        );
+
+        $q2 = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->withoutTrashed();
+
+        $this->assertEquals(
+            'SELECT * FROM `users` WHERE `deleted_at` IS NULL',
+            $q2->toSql()
+        );
+    }
 }
