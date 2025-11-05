@@ -43,6 +43,9 @@
         "ext-exif": "*",
         "ext-ctype": "*",
         "ext-openssl": "*",
-        "ext-fileinfo": "*"
+        "ext-fileinfo": "*",
+        "ext-iconv": "*",
+        "ext-simplexml": "*",
+        "ext-libxml": "*"
     }
 }
