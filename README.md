@@ -1,4 +1,4 @@
-# Radix System with ORM
+# Radix System med ORM
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <!-- doctoc will insert TOC here -->
@@ -28,7 +28,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-Radix ORM erbjuder en lättvikts QueryBuilder med säkra bindnings-buckets och enkel modell-hydrering. Stöd för WHERE/JOINS/UNION/AGGREGAT, pagination/sök, soft deletes, eager loading och mutationer (insert/update/delete/upsert).
+Radix System med ORM erbjuder en lättvikts QueryBuilder med säkra bindnings-buckets och enkel modell-hydrering. Stöd för WHERE/JOINS/UNION/AGGREGAT, pagination/sök, soft deletes, eager loading och mutationer (insert/update/delete/upsert).
 
 ## Installation
 - Kräver PHP 8.3+, PDO (MySQL/SQLite m.fl.)
