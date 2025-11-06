@@ -51,8 +51,8 @@
                     <td data-cell="åtgärd" class="px-3 py-2.5 text-sm">
                       <div class="flex flex-wrap items-center gap-2">
 {% if($user->isAdmin()) : %}
-                        <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-1 px-2 rounded">Aktivering</span>
-                        <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-1 px-2 rounded">Blockera</span>
+                        <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-1 px-2 rounded cursor-not-allowed">Aktivering</span>
+                        <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-1 px-2 rounded cursor-not-allowed">Blockera</span>
 {% else : %}
                         <form action="{{ route('admin.user.send-activation', ['id' => $user->getAttribute('id')]) }}?page={{ $users['pagination']['current_page'] }}" method="post">
                           {{ csrf_field()|raw }}
@@ -69,7 +69,7 @@
                           Blockera
                         </button>
 {% else : %}
-                        <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-1 px-2 rounded">Blockera</span>
+                        <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-1 px-2 rounded cursor-not-allowed">Blockera</span>
 {% endif; %}
 {% endif; %}
                       </div>
