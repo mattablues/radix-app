@@ -42,7 +42,13 @@ class SearchController extends ApiController
         $results = User::with('status')->search($term, ['first_name', 'last_name', 'email'], $perPage, $currentPage);
 
         // Formatera resultaten som JSON
-        $data = array_map(fn($user) => $user->toArray(), $results['data']);
+        $data = array_map(function ($user) {
+            $arr = $user->toArray();
+            // Anta att $arr['avatar'] är relativ sökväg under public/
+            $path = isset($arr['avatar']) && $arr['avatar'] ? $arr['avatar'] : '/images/graphics/avatar.png';
+            $arr['avatar_url'] = versioned_file($path);
+            return $arr;
+        }, $results['data']);
 
         return $this->json([
             'success' => true,
@@ -83,7 +89,13 @@ class SearchController extends ApiController
         $results = User::with('status')->getOnlySoftDeleted()->search($term, ['first_name', 'last_name', 'email'], $perPage, $currentPage);
 
         // Formatera resultaten som JSON
-        $data = array_map(fn($user) => $user->toArray(), $results['data']);
+        $data = array_map(function ($user) {
+            $arr = $user->toArray();
+            // Anta att $arr['avatar'] är relativ sökväg under public/
+            $path = isset($arr['avatar']) && $arr['avatar'] ? $arr['avatar'] : '/images/graphics/avatar.png';
+            $arr['avatar_url'] = versioned_file($path);
+            return $arr;
+        }, $results['data']);
 
         return $this->json([
             'success' => true,
