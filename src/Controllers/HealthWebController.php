@@ -11,6 +11,13 @@ final class HealthWebController extends AbstractController
 {
     public function index(): Response
     {
-        return $this->view('health.index');
+        $service = new \App\Services\HealthCheckService();
+        $checks = $service->run();
+        $ok = (bool)($checks['_ok'] ?? false);
+
+        return $this->view('health.index', [
+            'checks' => $checks,
+            'ok' => $ok,
+        ]);
     }
 }

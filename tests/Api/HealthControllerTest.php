@@ -23,6 +23,13 @@ final class HealthControllerTest extends TestCase
         parent::setUp();
         ApplicationContainer::reset();
 
+        $projectRoot = dirname(__DIR__, 2);
+        if (!defined('ROOT_PATH')) {
+            define('ROOT_PATH', $projectRoot);
+        }
+        putenv('CACHE_PATH=' . $projectRoot . '/cache/views');
+
+
         $container = new Container();
 
         // Nödvändiga beroenden
@@ -47,6 +54,26 @@ final class HealthControllerTest extends TestCase
         $container->add(\Radix\Database\DatabaseManager::class, fn() => $dbManager);
 
         ApplicationContainer::set($container);
+    }
+
+    protected function tearDown(): void
+    {
+        // Ta bort cache/health-katalogen
+        $healthDir = rtrim((string) (defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__, 2)), '/\\') . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'health';
+        if (is_dir($healthDir)) {
+            foreach (scandir($healthDir) as $file) {
+                if ($file === '.' || $file === '..') {
+                    continue;
+                }
+                $path = $healthDir . DIRECTORY_SEPARATOR . $file;
+                if (is_file($path)) {
+                    @unlink($path);
+                }
+            }
+            @rmdir($healthDir);
+        }
+
+        parent::tearDown();
     }
 
     public function testHealthReturnsOkJsonAndHeaders(): void

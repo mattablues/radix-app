@@ -10,40 +10,17 @@
       <div class="p-4 rounded border">
         <h2 class="text-xl font-semibold mb-2">Runtime</h2>
         <ul class="space-y-1">
-          <li><strong>PHP:</strong> {{ phpversion()|raw }}</li>
-          <li><strong>Time:</strong> {{ date('c')|raw }}</li>
+          <li><strong>PHP:</strong> {{ $checks['php']|raw }}</li>
+          <li><strong>Time:</strong> {{ $checks['time']|raw }}</li>
           <li><strong>Environment:</strong> {{ getenv('APP_ENV') ?: 'production' }}</li>
         </ul>
       </div>
 
       <div class="p-4 rounded border">
         <h2 class="text-xl font-semibold mb-2">Kontroller</h2>
-        <?php
-        $okDb = true;
-        $okFs = true;
-        try {
-            if (function_exists('app')) {
-                $dbm = app(\Radix\Database\DatabaseManager::class);
-                $conn = $dbm->connection();
-                $conn->execute('SELECT 1');
-            }
-        } catch (\Throwable $e) {
-            $okDb = false;
-        }
-
-        try {
-            $dir = rtrim(defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__, 2), '/\\') . '/cache/health';
-            if (!is_dir($dir)) @mkdir($dir, 0755, true);
-            $probe = $dir . '/probe_web.txt';
-            if (@file_put_contents($probe, (string) time()) === false) throw new \RuntimeException('fs fail');
-            @unlink($probe);
-        } catch (\Throwable $e) {
-            $okFs = false;
-        }
-        ?>
         <ul class="space-y-1">
-          <li><strong>DB:</strong> {{ isset($okDb) && $okDb ? 'ok' : 'fail' }}</li>
-          <li><strong>FS:</strong> {{ isset($okFs) && $okFs ? 'ok' : 'fail' }}</li>
+          <li><strong>DB:</strong> {{ (isset($checks['db']) && $checks['db'] === 'ok') ? 'ok' : 'fail' }}</li>
+          <li><strong>FS:</strong> {{ (isset($checks['fs']) && $checks['fs'] === 'ok') ? 'ok' : 'fail' }}</li>
         </ul>
       </div>
     </div>

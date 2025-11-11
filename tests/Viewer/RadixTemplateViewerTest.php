@@ -23,12 +23,15 @@ class RadixTemplateViewerTest extends TestCase
         $this->tempViewsPath = $this->tempRootPath . 'views/';
 
         $this->createDirectoryIfNotExists($this->tempViewsPath);
-        $this->createDirectoryIfNotExists($this->tempViewsPath . '/components'); // Komponentspecifik katalog
+        $this->createDirectoryIfNotExists($this->tempViewsPath . '/components');
 
         // Definiera ROOT_PATH om ej definierad
         if (!defined('ROOT_PATH')) {
             define('ROOT_PATH', $this->tempRootPath);
         }
+
+        // Rikta CACHE_PATH till testets temporära cachekatalog
+        putenv('CACHE_PATH=' . $this->tempRootPath . 'cache/views');
 
         $this->viewer = new RadixTemplateViewer($this->tempViewsPath);
         $this->viewer->enableDebugMode(false);
