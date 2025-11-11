@@ -8,6 +8,10 @@ $router->get('/', [
     \App\Controllers\HomeController::class, 'index'
 ])->name('home.index');
 
+$router->get('/health', [
+    \App\Controllers\HealthWebController::class, 'index'
+])->name('web.health.index');
+
 $router->get('/contact', [
     \App\Controllers\ContactController::class, 'index'
 ])->name('contact.index');

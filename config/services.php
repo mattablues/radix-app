@@ -33,6 +33,7 @@ foreach ($configFiles as $file) {
 
 // Registrera den sammanslagna konfigurationen i containern
 $container->add('config', new Config($configData));
+$container->add(\Radix\Support\FileCache::class, fn() => new \Radix\Support\FileCache());
 
 $container->addShared(\Radix\Database\Connection::class, function () use ($container) {
     /** @var Radix\Config\Config $config */
