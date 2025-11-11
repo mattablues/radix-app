@@ -6,6 +6,14 @@ namespace App\Services;
 
 final class HealthCheckService
 {
+    private \Radix\Support\Logger $logger;
+
+    public function __construct(?\Radix\Support\Logger $logger = null)
+    {
+        // Tillåt DI, fall back om ej satt
+        $this->logger = $logger ?? new \Radix\Support\Logger('health');
+    }
+
     public function run(): array
     {
         $ok = true;
@@ -14,7 +22,7 @@ final class HealthCheckService
             'time' => date('c'),
         ];
 
-        $this->log('[health] start php=' . $checks['php'] . ' time=' . $checks['time']);
+        $this->log('start php={php} time={time}', ['php' => $checks['php'], 'time' => $checks['time']]);
 
         // DB
         try {
@@ -23,15 +31,15 @@ final class HealthCheckService
                 $conn = $dbm->connection();
                 $conn->execute('SELECT 1');
                 $checks['db'] = 'ok';
-                $this->log('[health] db=ok');
+                $this->log('db=ok');
             } else {
                 $checks['db'] = 'skipped';
-                $this->log('[health] db=skipped (no app())');
+                $this->log('db=skipped (no app())');
             }
         } catch (\Throwable $e) {
             $ok = false;
             $checks['db'] = 'fail: ' . $e->getMessage();
-            $this->log('[health] db=fail msg=' . $e->getMessage());
+            $this->logError('db=fail msg={msg}', ['msg' => $e->getMessage()]);
         }
 
         // FS
@@ -40,7 +48,7 @@ final class HealthCheckService
             $dir = rtrim($root, '/\\') . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'health';
             if (!is_dir($dir)) {
                 @mkdir($dir, 0755, true);
-                $this->log('[health] created_dir ' . $dir);
+                $this->log('created_dir {dir}', ['dir' => $dir]);
             }
             $probe = $dir . DIRECTORY_SEPARATOR . 'probe.txt';
             if (@file_put_contents($probe, (string) time()) === false) {
@@ -48,19 +56,24 @@ final class HealthCheckService
             }
             @unlink($probe);
             $checks['fs'] = 'ok';
-            $this->log('[health] fs=ok dir=' . $dir);
+            $this->log('fs=ok dir={dir}', ['dir' => $dir]);
         } catch (\Throwable $e) {
             $ok = false;
             $checks['fs'] = 'fail: ' . $e->getMessage();
-            $this->log('[health] fs=fail msg=' . $e->getMessage());
+            $this->logError('fs=fail msg={msg}', ['msg' => $e->getMessage()]);
         }
 
         $checks['_ok'] = $ok;
         return $checks;
     }
 
-    private function log(string $msg): void
+    private function log(string $msg, array $ctx = []): void
     {
-        error_log($msg);
+        $this->logger->info($msg, $ctx);
+    }
+
+    private function logError(string $msg, array $ctx = []): void
+    {
+        $this->logger->error($msg, $ctx);
     }
 }

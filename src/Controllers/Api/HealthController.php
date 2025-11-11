@@ -9,12 +9,15 @@ use Radix\Http\JsonResponse;
 
 final class HealthController extends ApiController
 {
+    public function __construct(private readonly \App\Services\HealthCheckService $health)
+    {
+    }
+
     public function index(): JsonResponse
     {
         $start = microtime(true);
 
-        $service = new \App\Services\HealthCheckService();
-        $checks = $service->run();
+        $checks = $this->health->run();
         $ok = (bool)($checks['_ok'] ?? false);
         unset($checks['_ok']);
 
@@ -24,7 +27,7 @@ final class HealthController extends ApiController
         $res->setBody(json_encode(['ok' => $ok, 'checks' => $checks], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
         $ms = (int) round((microtime(true) - $start) * 1000);
-        error_log('[health] done status=' . ($ok ? 200 : 500) . ' duration_ms=' . $ms);
+        // valfri loggning här via logger i HealthCheckService
 
         return $res;
     }

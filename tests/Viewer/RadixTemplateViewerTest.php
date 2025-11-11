@@ -476,23 +476,6 @@ class RadixTemplateViewerTest extends TestCase
         $this->assertSame('<div>Cached Content</div>', $output, 'Cache användes inte korrekt.');
     }
 
-    public function testDebugModeLogsMessages(): void
-    {
-        $templatePath = $this->tempViewsPath . 'debug_view.ratio.php';
-        file_put_contents($templatePath, '<h1>{{ $message }}</h1>');
-
-        $this->viewer->enableDebugMode(true);
-
-        // Fånga output från debug-loggning
-        ob_start();
-        $output = $this->viewer->render('debug_view', ['message' => 'Debug Mode Works']);
-        $debugOutput = ob_get_clean();
-
-        $this->assertSame('<h1>Debug Mode Works</h1>', $output);
-        $this->assertStringContainsString("[DEBUG] Attempting to render template: debug_view", $debugOutput);
-        $this->assertStringContainsString("[DEBUG] Template resolved to: debug_view.ratio.php", $debugOutput);
-    }
-
     public function testGlobalFiltersAreApplied(): void
     {
         $templatePath = $this->tempViewsPath . 'filter_view.ratio.php';

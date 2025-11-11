@@ -9,10 +9,13 @@ use Radix\Http\Response;
 
 final class HealthWebController extends AbstractController
 {
+    public function __construct(private readonly \App\Services\HealthCheckService $health)
+    {
+    }
+
     public function index(): Response
     {
-        $service = new \App\Services\HealthCheckService();
-        $checks = $service->run();
+        $checks = $this->health->run();
         $ok = (bool)($checks['_ok'] ?? false);
 
         return $this->view('health.index', [

@@ -18,3 +18,4 @@ phpunit.xml.bak
 # PhpStorm-specifika filer
 .idea/
 cache/
+storage/
