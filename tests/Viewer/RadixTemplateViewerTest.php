@@ -606,12 +606,60 @@ class RadixTemplateViewerTest extends TestCase
         $this->assertSame($expectedOutput, $output, '[DEBUG] Rendering av <x-card> är felaktig.');
     }
 
+    public function testEvaluateTemplateThrowsRuntimeExceptionWithClearMessage(): void
+    {
+        $templatePath = $this->tempViewsPath . 'broken.ratio.php';
+        file_put_contents($templatePath, '<h1>{{ $message }}</h1><?php throw new \Exception("Boom"); ?>');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Template evaluation failed: Boom');
+
+        $this->viewer->render('broken', ['message' => 'Hello']);
+    }
+
+    public function testMissingComponentThrowsClearRuntimeException(): void
+    {
+        $templatePath = $this->tempViewsPath . 'uses_missing_component.ratio.php';
+        file_put_contents($templatePath, '<x-nonexistent>Content</x-nonexistent>');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Komponent fil saknas:');
+
+        $this->viewer->render('uses_missing_component');
+    }
+
+    public function testCacheDisabledInDevelopmentEnv(): void
+    {
+        // Ställ om APP_ENV till development och säkerställ att cache inte används
+        $originalEnv = getenv('APP_ENV');
+        putenv('APP_ENV=development');
+
+        $template = $this->tempViewsPath . 'nocache.ratio.php';
+        file_put_contents($template, 'Value: {{ $val }}');
+
+        $out1 = $this->viewer->render('nocache', ['val' => 'A']);
+        $this->assertSame('Value: A', $out1);
+
+        // Ändra template-innehåll – om cache är avstängd ska vi få nytt resultat direkt
+        file_put_contents($template, 'Value: {{ $val }}-X');
+
+        $out2 = $this->viewer->render('nocache', ['val' => 'B']);
+        $this->assertSame('Value: B-X', $out2);
+
+        // Återställ APP_ENV
+        if ($originalEnv === false) {
+            putenv('APP_ENV');
+        } else {
+            putenv('APP_ENV=' . $originalEnv);
+        }
+    }
+
     private function createDirectoryIfNotExists(string $path): void
     {
         if (!is_dir($path)) {
-            $result = @mkdir($path, 0755, true); // Lägg till suppress-logg
-            if (!$result && !is_dir($path)) {
-                throw new \RuntimeException(sprintf('Misslyckades med att skapa katalog: %s', $path));
+            $ok = @mkdir($path, 0755, true);
+            if (!$ok && !is_dir($path)) {
+                throw new \RuntimeException('Kunde inte skapa katalog: ' . $path);
             }
         }
     }
@@ -621,19 +669,18 @@ class RadixTemplateViewerTest extends TestCase
         if (!is_dir($dir)) {
             return;
         }
-
         foreach (scandir($dir) as $file) {
-            if ($file !== '.' && $file !== '..') {
-                $filePath = $dir . DIRECTORY_SEPARATOR . $file;
-                if (is_dir($filePath)) {
-                    $this->deleteDirectory($filePath);
-                } else {
-                    unlink($filePath);
-                }
+            if ($file === '.' || $file === '..') {
+                continue;
+            }
+            $p = $dir . DIRECTORY_SEPARATOR . $file;
+            if (is_dir($p)) {
+                $this->deleteDirectory($p);
+            } else {
+                @unlink($p);
             }
         }
-
-        rmdir($dir);
+        @rmdir($dir);
     }
 
     private function normalizeOutput(string $output): string
