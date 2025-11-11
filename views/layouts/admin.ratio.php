@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="{{ versioned_file('/css/app.css') }}">
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/public/icons/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
   <link rel="manifest" href="/icons/site.webmanifest">
 </head>
 <body x-data="{ openSidebar: false, openCloseModal: false, openDeleteModal: false }" id="{% yield pageId %}" class="relative min-h-screen {% yield pageClass %}">
@@ -172,6 +172,43 @@
               <a href="{{ route('admin.user.create') }}" class="w-full inline-block py-2 px-8">Skapa nytt konton</a>
             </li>
 {% endif; %}
+          </ul>
+        </div>
+
+        <div x-data="{ sidebarDropdown: false }">
+          <div class="mt-2 px-4 flex items-center rounded-md transition-all duration-300 cursor-pointer hover:bg-blue-600">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+              <path fill-rule="evenodd" d="M12 6.75a5.25 5.25 0 0 1 6.775-5.025.75.75 0 0 1 .313 1.248l-3.32 3.319c.063.475.276.934.641 1.299.365.365.824.578 1.3.64l3.318-3.319a.75.75 0 0 1 1.248.313 5.25 5.25 0 0 1-5.472 6.756c-1.018-.086-1.87.1-2.309.634L7.344 21.3A3.298 3.298 0 1 1 2.7 16.657l8.684-7.151c.533-.44.72-1.291.634-2.309A5.342 5.342 0 0 1 12 6.75ZM4.117 19.125a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Z" clip-rule="evenodd" />
+              <path d="m10.076 8.64-2.201-2.2V4.874a.75.75 0 0 0-.364-.643l-3.75-2.25a.75.75 0 0 0-.916.113l-.75.75a.75.75 0 0 0-.113.916l2.25 3.75a.75.75 0 0 0 .643.364h1.564l2.062 2.062 1.575-1.297Z" />
+              <path fill-rule="evenodd" d="m12.556 17.329 4.183 4.182a3.375 3.375 0 0 0 4.773-4.773l-3.306-3.305a6.803 6.803 0 0 1-1.53.043c-.394-.034-.682-.006-.867.042a.589.589 0 0 0-.167.063l-3.086 3.748Zm3.414-1.36a.75.75 0 0 1 1.06 0l1.875 1.876a.75.75 0 1 1-1.06 1.06L15.97 17.03a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+            </svg>
+
+            <div class="w-full flex justify-between items-center" x-on:click="sidebarDropdown = !sidebarDropdown">
+              <span class="text-sm ml-4 py-3 text-gray-200">System</span>
+              <span class="text-sm rotate-180" id="arrow">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6"
+                :class="sidebarDropdown ? 'transition-all rotate-180 duration-300 ease-out' : 'transition-all rotate-0 duration-300 ease-out'"
+                >
+                  <path fill-rule="evenodd" d="M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" />
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <ul
+            x-cloak
+            x-show="sidebarDropdown"
+            x-transition:enter="transition-all duration-200 ease-out"
+            x-transition:enter-start="-translate-y-5 opacity-0"
+            x-transition:enter-end="translate-y-0 opacity-100"
+            x-transition:leave="transition-all duration-200 ease-in"
+            x-transition:leave-start="translate-y-0 opacity-100"
+            x-transition:leave-end="-translate-y-5 opacity-0"
+            class="leading-7 text-left text-sm font-thin mt-2 w-4/5 mx-auto border-l-1 border-gray-700"
+          >
+            <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
+              <a href="{{ route('admin.health.index') }}" class="w-full inline-block py-2 px-8">Status</a>
+            </li>
           </ul>
         </div>
 {% endif; %}

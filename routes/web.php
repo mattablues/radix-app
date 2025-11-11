@@ -8,10 +8,6 @@ $router->get('/', [
     \App\Controllers\HomeController::class, 'index'
 ])->name('home.index');
 
-$router->get('/health', [
-    \App\Controllers\HealthWebController::class, 'index'
-])->name('web.health.index');
-
 $router->get('/contact', [
     \App\Controllers\ContactController::class, 'index'
 ])->name('contact.index');
@@ -152,4 +148,8 @@ $router->group(['path' => '/admin', 'middleware' => ['auth', 'role.min.moderator
     $router->post('/users/{id:[\d]+}/restore', [
         \App\Controllers\Admin\UserController::class, 'restore'
     ])->name('admin.user.restore');
+
+    $router->get('/health', [
+        \App\Controllers\Admin\HealthWebController::class, 'index'
+    ])->name('admin.health.index');
 });
