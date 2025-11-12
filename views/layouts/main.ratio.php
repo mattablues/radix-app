@@ -11,7 +11,7 @@
   <link rel="manifest" href="/icons/site.webmanifest">
 </head>
 <body id="{% yield pageId %}" class="flex flex-col min-h-screen {% yield pageClass %}">
-  <header class="sticky top-0 z-50 w-full bg-white shadow-sm [--header-h:60px]">
+  <header class="sticky top-0 z-50 w-full bg-white shadow-xs [--header-h:60px]">
     {% yield headerContainer %}
     <div class="container-centered h-15 flex items-center justify-between">
     {% include "layouts/partials/header-inner.ratio.php" %}
