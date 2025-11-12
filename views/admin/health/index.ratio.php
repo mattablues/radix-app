@@ -1,6 +1,7 @@
 {% extends "layouts/admin.ratio.php" %}
 {% block title %}Health{% endblock %}
 {% block pageId %}health{% endblock %}
+{% block searchId %}search-users{% endblock %}
 {% block body %}
       <section class="py-8">
         <h1 class="text-3xl font-semibold mb-8">Systemstatus</h1>
