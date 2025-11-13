@@ -9,6 +9,8 @@ class UploadService
 {
     /**
      * Hanterar uppladdning och bearbetning av en bild
+     *
+     * @param array<string, mixed> $file
      */
     public function uploadImage(array $file, string $uploadDirectory, ?callable $processImageCallback = null, ?string $fileName = null): string
     {
@@ -54,6 +56,8 @@ class UploadService
 
     /**
      * Ladda upp och bearbeta en användaravatar
+     *
+     * @param array<string, mixed> $file
      */
     public function uploadAvatar(array $file, string $uploadDirectory): string
     {
@@ -68,7 +72,9 @@ class UploadService
     }
 
     /**
-     * Ladda upp och bearbeta en bannerbild
+     * Hanterar uppladdning och bearbetning av en bild
+     *
+     * @param array<string, mixed> $file
      */
     public function uploadBanner(array $file, string $uploadDirectory): string
     {
@@ -84,6 +90,8 @@ class UploadService
 
     /**
      * Ladda upp och bearbeta en produktbild
+     *
+     * @param array<string, mixed> $file
      */
     public function uploadProductImage(array $file, string $uploadDirectory): string
     {

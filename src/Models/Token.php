@@ -22,6 +22,7 @@ class Token extends Model
     public bool $timestamps = true; // Använd timestamps (created_at, updated_at)
 
     // Tillåtna fält för mass assignment
+    /** @var array<string> */
     protected array $fillable = ['id', 'user_id', 'value', 'description', 'expires_at'];
 
     /**
@@ -88,6 +89,8 @@ class Token extends Model
 
     /**
      * Skapa en mer användarvänlig representation.
+     *
+     * @return array<string, int|string|null>
      */
     public function toArray(): array
     {

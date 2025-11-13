@@ -13,6 +13,9 @@ use Radix\ServiceProvider\ServiceProviderInterface;
 
 class EventServiceProvider implements ServiceProviderInterface
 {
+    /**
+     * @var array<class-string, array<int, class-string>>
+     */
     private array $listen = [
         ResponseEvent::class => [
             CorsListener::class,

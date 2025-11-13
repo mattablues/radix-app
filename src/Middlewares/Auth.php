@@ -12,6 +12,7 @@ use Radix\Http\RequestHandlerInterface;
 use Radix\Http\Response;
 use Radix\Middleware\MiddlewareInterface;
 use App\Models\User;
+use Radix\Session\SessionInterface;
 
 readonly class Auth implements MiddlewareInterface
 {
@@ -47,7 +48,7 @@ readonly class Auth implements MiddlewareInterface
     /**
      * Hantera användarens session-livscykel för att markera online/inaktiv status.
      */
-    private function handleUserSessionLifecycle($session): void
+    private function handleUserSessionLifecycle(SessionInterface $session): void
     {
         $userId = $session->get(\Radix\Session\Session::AUTH_KEY);
 

@@ -80,6 +80,9 @@ final class LoggerTest extends TestCase
         $this->assertFileDoesNotExist($oldFile, 'Old log should be deleted by retention');
     }
 
+    /**
+     * @param array<int, string> $files
+     */
     private function anyExisting(array $files): bool
     {
         foreach ($files as $f) {

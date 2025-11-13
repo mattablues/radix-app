@@ -14,6 +14,9 @@ final class HealthCheckService
         $this->logger = $logger ?? new \Radix\Support\Logger('health');
     }
 
+    /**
+     * @return array<string, string|bool>
+     */
     public function run(): array
     {
         $ok = true;
@@ -67,11 +70,17 @@ final class HealthCheckService
         return $checks;
     }
 
+    /**
+     * @param array<string, mixed> $ctx
+     */
     private function log(string $msg, array $ctx = []): void
     {
         $this->logger->info($msg, $ctx);
     }
 
+    /**
+     * @param array<string, mixed> $ctx
+     */
     private function logError(string $msg, array $ctx = []): void
     {
         $this->logger->error($msg, $ctx);

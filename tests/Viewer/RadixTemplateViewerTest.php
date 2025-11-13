@@ -332,7 +332,7 @@ public function testCacheInvalidation(): void
     }
 
     // tests/Feature/ViewTest.php
-    public function testAlpineSyntaxIsRenderedCorrectly()
+    public function testAlpineSyntaxIsRenderedCorrectly(): void
     {
         // Simulera rendering av vyn
         $templatePath = $this->tempViewsPath . 'example.ratio.php';
@@ -408,7 +408,7 @@ public function testCacheInvalidation(): void
         $this->assertSame('<html><h1>Hello!</h1></html>', $output);
     }
 
-    public function testSlotsWorkWithAlpineSyntax()
+    public function testSlotsWorkWithAlpineSyntax(): void
     {
         // Skapa en temporär komponent med Alpine.js och slot
         $componentPath = "{$this->tempViewsPath}components/alert.ratio.php";

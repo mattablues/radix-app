@@ -12,6 +12,9 @@ use Radix\Http\RequestHandlerInterface;
 
 final class IpAllowlistTest extends TestCase
 {
+    /**
+     * @param array<string, mixed> $server
+     */
     private function runMiddleware(array $server, ?string $allowlist = null, ?string $appEnv = null): Response
     {
         // Sätt miljövariabler för testfall

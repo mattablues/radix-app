@@ -24,7 +24,7 @@ class Status extends Model
     protected string $table = 'status'; // Dynamiskt genererat tabellnamn
     protected string $primaryKey = 'id'; // Standard primärnyckel
     public bool $timestamps = true;
-
+    /** @var array<string> */
     protected array $fillable = ['id', 'user_id', 'password_reset', 'reset_expires_at', 'activation', 'status', 'active', 'active_at']; // Tillåtna fält
 
     /**
@@ -75,13 +75,13 @@ class Status extends Model
         return $this->attributes['active_at'] ?? null;
     }
 
-    public function getActiveAtAttribute($value): ?string
+    public function getActiveAtAttribute(null|int $value): ?string
     {
         // Om värdet är null, returnera null, annars formatera som läsbart datum
         return $value ? date('Y-m-d H:i:s', (int) $value) : null;
     }
 
-    public function setActiveAtAttribute($value): void
+    public function setActiveAtAttribute(null|int|float|string $value): void
     {
         if (is_null($value)) {
             $this->attributes['active_at'] = null;

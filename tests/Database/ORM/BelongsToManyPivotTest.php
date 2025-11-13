@@ -55,6 +55,7 @@ class BelongsToManyPivotTest extends TestCase
     {
         return new class extends Model {
             protected string $table = 'users';
+            /** @var array<string> */
             protected array $fillable = ['id', 'first_name', 'status'];
         };
     }
@@ -63,6 +64,7 @@ class BelongsToManyPivotTest extends TestCase
     {
         return new class extends Model {
             protected string $table = 'roles';
+            /** @var array<string> */
             protected array $fillable = ['id', 'name'];
         };
     }

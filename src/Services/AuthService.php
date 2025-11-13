@@ -151,6 +151,9 @@ class AuthService
         return $this->session->get($blockedUntilKey);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function login(array $data): ?User
     {
         $email = $data['email'];

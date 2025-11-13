@@ -22,7 +22,7 @@ class QueryBuilderTest extends TestCase
         $this->connection = new Connection($pdo);
     }
 
-    public function testNestedWhere()
+    public function testNestedWhere(): void
     {
         $query = (new QueryBuilder())
             ->from('users')
@@ -1362,6 +1362,7 @@ class QueryBuilderTest extends TestCase
         // Minimal modellklass för hydrering
         $model = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'users';
+            /** @var array<string> */
             protected array $fillable = ['id', 'name'];
         };
 
@@ -1395,6 +1396,7 @@ class QueryBuilderTest extends TestCase
         // Minimal modellklass för hydrering
         $model = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'users';
+            /** @var array<string> */
             protected array $fillable = ['id', 'name'];
         };
 
@@ -1432,6 +1434,7 @@ class QueryBuilderTest extends TestCase
 
         $model = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'users';
+            /** @var array<string> */
             protected array $fillable = ['id', 'name'];
         };
 
@@ -1469,6 +1472,7 @@ class QueryBuilderTest extends TestCase
 
         $model = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'users';
+            /** @var array<string> */
             protected array $fillable = ['id', 'name'];
         };
 

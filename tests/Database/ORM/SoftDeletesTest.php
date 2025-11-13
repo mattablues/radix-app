@@ -62,6 +62,7 @@ class SoftDeletesTest extends TestCase
         $post = new class extends Model {
             protected string $table = 'posts';
             protected bool $softDeletes = true;
+            /** @var array<string, mixed> */
             protected array $attributes = ['id' => 1, 'title' => 'Test Post', 'deleted_at' => null];
         };
 

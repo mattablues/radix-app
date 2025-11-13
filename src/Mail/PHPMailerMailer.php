@@ -45,6 +45,9 @@ class PHPMailerMailer implements MailerInterface
         $this->fromName = $mailConfig['from'];  // Ex. No Reply
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function send(string $to, string $subject, string $body, array $options = []): bool
     {
         try {
