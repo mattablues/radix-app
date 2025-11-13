@@ -15,19 +15,41 @@ final class HealthController extends ApiController
 
     public function index(): JsonResponse
     {
+        $env = getenv('APP_ENV') ?: 'production';
+
+        $requireTokenEnv = getenv('HEALTH_REQUIRE_TOKEN');
+        $requireToken = match ($requireTokenEnv) {
+            '1', 'true', 'on' => true,
+            '0', 'false', 'off' => false,
+            default => !in_array($env, ['local', 'development'], true),
+        };
+
+        if ($requireToken) {
+            $this->validateRequest();
+        }
+
         $start = microtime(true);
 
         $checks = $this->health->run();
         $ok = (bool)($checks['_ok'] ?? false);
         unset($checks['_ok']);
 
+        if ($env === 'production') {
+            $checks = [
+                'db' => isset($checks['db']) ? ($checks['db'] === 'ok' ? 'ok' : 'fail') : 'unknown',
+                'fs' => isset($checks['fs']) ? ($checks['fs'] === 'ok' ? 'ok' : 'fail') : 'unknown',
+            ];
+        }
+
         $res = new JsonResponse();
         $res->setStatusCode($ok ? 200 : 500);
         $res->setHeader('Content-Type', 'application/json; charset=utf-8');
-        $res->setBody(json_encode(['ok' => $ok, 'checks' => $checks], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $res->setHeader('Cache-Control', 'no-store, must-revalidate, max-age=0');
+        $res->setHeader('Pragma', 'no-cache');
+        $res->setHeader('Expires', '0');
 
-        $ms = (int) round((microtime(true) - $start) * 1000);
-        // valfri loggning här via logger i HealthCheckService
+        // Låt CorsListener styra CORS (dev på, prod av via CORS_ENABLED)
+        $res->setBody(json_encode(['ok' => $ok, 'checks' => $checks], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
         return $res;
     }

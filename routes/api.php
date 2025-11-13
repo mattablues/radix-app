@@ -33,7 +33,7 @@ $router->group(['path' => '/api/v1', 'middleware' => ['request.id']], function (
        ->name('api.search.deleted-users');
 
     $router->get('/health', [\App\Controllers\Api\HealthController::class, 'index'])
-        ->name('api.health.index');
+        ->name('api.health.index')->middleware(['ip.allowlist']);
 
     // Preflight (OPTIONS mappas till GET i Dispatcher): returnera 204 endast om originalmetoden var OPTIONS
     $router->get('/{any:.*}', function () {
@@ -50,4 +50,3 @@ $router->group(['path' => '/api/v1', 'middleware' => ['request.id']], function (
         return $response;
     })->name('api.preflight');
 });
-

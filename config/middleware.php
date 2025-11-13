@@ -9,6 +9,7 @@ return [
     'private' => \App\Middlewares\PrivateApp::class,
     'location' => \App\Middlewares\Location::class,
     'request.id' => \App\Middlewares\RequestId::class,
+    'ip.allowlist' => \App\Middlewares\IpAllowlist::class,
     'role.exact.admin' => \App\Middlewares\RequireAdmin::class,
     'role.min.moderator' => \App\Middlewares\RequireModeratorOrHigher::class,
     'role.min.editor' => \App\Middlewares\RequireEditorOrHigher::class,

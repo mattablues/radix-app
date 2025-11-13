@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd" bootstrap="vendor/autoload.php" colors="true" stopOnFailure="false" cacheDirectory=".phpunit.cache">
-  <!-- Konfiguration för testmiljö -->
   <testsuites>
     <testsuite name="Project Test Suite">
-      <!-- Ange sökvägen till dina tester här -->
       <directory>tests</directory>
     </testsuite>
   </testsuites>
-  <!-- PHP-konfiguration -->
+
   <php>
     <ini name="error_reporting" value="-1"/>
     <ini name="display_errors" value="1"/>
-    <env name="APP_ENV" value="test"/>
+
+    <!-- Testmiljö -->
+    <env name="APP_ENV" value="testing"/>
+    <!-- Stäng av tokenkrav för health i tester -->
+    <env name="HEALTH_REQUIRE_TOKEN" value="0"/>
+    <!-- Om du vill ha CORS aktiv i tester, annars ta bort raden -->
+    <env name="CORS_ENABLED" value="0"/>
+
+    <!-- Alternativt (om du vill testa med token i stället för att stänga av) -->
+    <!--
+    <env name="APP_ENV" value="testing"/>
+    <env name="HEALTH_REQUIRE_TOKEN" value="1"/>
+    <env name="API_TOKEN" value="test-token"/>
+    -->
   </php>
-  <!-- Kodtäckning -->
+
   <source>
     <include>
       <directory>src</directory>

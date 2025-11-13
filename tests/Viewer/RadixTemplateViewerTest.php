@@ -272,58 +272,56 @@ class RadixTemplateViewerTest extends TestCase
         );
     }
 
-    public function testCacheInvalidation(): void
-    {
-        // Steg 1: Simulera cache-lagring
-        $mockTemplateName = 'invalidate_test.template';
-        $templatePath = $this->tempViewsPath . 'invalidate_test/template.ratio.php';
+public function testCacheInvalidation(): void
+        {
+            // Tvinga cache-läge
+            $originalEnv = getenv('APP_ENV');
+            putenv('APP_ENV=production');
 
-        // Skapa mappen för invalidate_test om den inte finns
-        $this->createDirectoryIfNotExists(dirname($templatePath));
-        file_put_contents($templatePath, 'Hello {{ $name }}');
+            // Steg 1: Simulera cache-lagring
+            $templatePath = $this->tempViewsPath . 'invalidate_test/template.ratio.php';
+            $this->createDirectoryIfNotExists(dirname($templatePath));
+            file_put_contents($templatePath, 'Hello {{ $name }}');
 
-        // Reflektion för att komma åt den privata metoden resolveTemplatePath
-        $reflection = new \ReflectionClass($this->viewer);
-        $resolveTemplatePath = $reflection->getMethod('resolveTemplatePath');
-        $resolveTemplatePath->setAccessible(true);
+            $reflection = new \ReflectionClass($this->viewer);
+            $resolveTemplatePath = $reflection->getMethod('resolveTemplatePath');
+            $resolveTemplatePath->setAccessible(true);
+            $generateCacheKey = $reflection->getMethod('generateCacheKey');
+            $generateCacheKey->setAccessible(true);
 
-        // Reflektion för att komma åt den privata metoden generateCacheKey
-        $generateCacheKey = $reflection->getMethod('generateCacheKey');
-        $generateCacheKey->setAccessible(true);
+            // Pekar cache till tempRootPath/cache/views/
+            $cachePathProperty = $reflection->getProperty('cachePath');
+            $cachePathProperty->setAccessible(true);
+            $adjustedCachePath = $this->tempRootPath . 'cache/views/';
+            $cachePathProperty->setValue($this->viewer, $adjustedCachePath);
+            $this->createDirectoryIfNotExists($adjustedCachePath);
 
-        // Justera cachePath för att inkludera "cache/views/"
-        $cachePathProperty = $reflection->getProperty('cachePath');
-        $cachePathProperty->setAccessible(true);
-        $adjustedCachePath = $this->tempRootPath . 'cache/views/';
-        $cachePathProperty->setValue($this->viewer, $adjustedCachePath);
+            $resolvedTemplatePath = $resolveTemplatePath->invoke($this->viewer, 'invalidate_test/template');
+            $data = ['name' => 'InitialName'];
+            $cacheKey = $generateCacheKey->invoke($this->viewer, $resolvedTemplatePath, $data);
+            $cachedFile = "{$adjustedCachePath}{$cacheKey}.php";
 
-        // Skapa cache-mappen om den inte finns
-        $this->createDirectoryIfNotExists($adjustedCachePath);
+            // Rendera → cache ska skapas
+            $this->viewer->render('invalidate_test/template', $data);
+            $this->assertFileExists($cachedFile, "DEBUG: Cache file not created at expected path: {$cachedFile}");
 
-        // Generera den fullständiga sökvägen med hjälp av reflektionen
-        $resolvedTemplatePath = $resolveTemplatePath->invoke($this->viewer, 'invalidate_test/template');
-        $data = ['name' => 'InitialName'];
+            // Steg 2: Invalidera cachen
+            $this->viewer->invalidateCache('invalidate_test/template', $data);
+            $this->assertFileDoesNotExist($cachedFile, "DEBUG: Cache file was not deleted at path: {$cachedFile}");
 
-        // Anropa generateCacheKey med reflektion
-        $cacheKey = $generateCacheKey->invoke($this->viewer, $resolvedTemplatePath, $data);
-        $cachedFile = "{$adjustedCachePath}{$cacheKey}.php";
+            // Steg 3: Rendera om (med uppdaterad data)
+            file_put_contents($templatePath, 'Hello {{ $name }}'); // säkerställ att template finns kvar
+            $updatedData = ['name' => 'UpdatedName'];
+            $output = $this->viewer->render('invalidate_test/template', $updatedData);
+            $this->assertSame('Hello UpdatedName', $output);
 
-        // Rendera template och säkerställ att cachen skapas
-        $this->viewer->render('invalidate_test/template', $data);
-        $this->assertFileExists($cachedFile, "DEBUG: Cache file not created at expected path: {$cachedFile}");
-
-        // Steg 2: Invalidera cachen
-        $this->viewer->invalidateCache('invalidate_test/template', $data);
-        $this->assertFileDoesNotExist($cachedFile, "DEBUG: Cache file was not deleted at path: {$cachedFile}");
-
-        // Steg 3: Rendera om (med uppdaterad data)
-        $updatedData = ['name' => 'UpdatedName'];
-        $output = $this->viewer->render('invalidate_test/template', $updatedData);
-
-        // Kontrollera att rätt data renderas
-        $this->assertNotSame('Hello InitialName', $output);
-        $this->assertSame('Hello UpdatedName', $output);
-    }
+            // Återställ APP_ENV
+            if ($originalEnv === false) {
+                putenv('APP_ENV');
+            } else {
+                putenv('APP_ENV=' . $originalEnv);
+            }
+        }
 
     public function testRenderThrowsExceptionIfTemplateNotFound(): void
     {
@@ -438,43 +436,54 @@ class RadixTemplateViewerTest extends TestCase
     }
 
     public function testCachedTemplateIsUsedIfAvailable(): void
-    {
-        // Steg 1: Skapa en korrekt temporär cache-katalog
-        $mockCacheDir = $this->tempRootPath . 'cache/views/';
-        if (!is_dir($mockCacheDir)) {
-            mkdir($mockCacheDir, 0755, true);
+        {
+            // Tvinga cache-läge
+            $originalEnv = getenv('APP_ENV');
+            putenv('APP_ENV=production');
+
+            $mockCacheDir = $this->tempRootPath . 'cache/views/';
+            if (!is_dir($mockCacheDir)) {
+                mkdir($mockCacheDir, 0755, true);
+            }
+
+            $reflection = new \ReflectionClass($this->viewer);
+            $cachePathProperty = $reflection->getProperty('cachePath');
+            $cachePathProperty->setAccessible(true);
+            $cachePathProperty->setValue($this->viewer, $mockCacheDir);
+
+            $resolveTemplatePath = $reflection->getMethod('resolveTemplatePath');
+            $resolveTemplatePath->setAccessible(true);
+
+            $generateCacheKey = $reflection->getMethod('generateCacheKey');
+            $generateCacheKey->setAccessible(true);
+
+            $mockTemplateName = 'test_template_key';
+
+            // Skapa en minimal template-fil som render() kan hitta
+            $resolvedTemplatePath = $resolveTemplatePath->invoke($this->viewer, $mockTemplateName);
+            $templateFullPath = $this->tempViewsPath . $resolvedTemplatePath;
+            if (!is_dir(dirname($templateFullPath))) {
+                mkdir(dirname($templateFullPath), 0755, true);
+            }
+            file_put_contents($templateFullPath, '<div>ORIGINAL</div>');
+
+            $data = [];
+            $mockCacheKey = $generateCacheKey->invoke($this->viewer, $resolvedTemplatePath, $data);
+            $mockCacheFile = $mockCacheDir . $mockCacheKey . '.php';
+
+            // Skapa cachefilen som ska användas
+            file_put_contents($mockCacheFile, '<div>Cached Content</div>');
+
+            $output = $this->viewer->render($mockTemplateName, $data);
+            $this->assertSame('<div>Cached Content</div>', $output, 'Cache användes inte korrekt.');
+
+            // Återställ APP_ENV
+            if ($originalEnv === false) {
+                putenv('APP_ENV');
+            } else {
+                putenv('APP_ENV=' . $originalEnv);
+            }
         }
-
-        // Reflektion för att komma åt property och metoder
-        $reflection = new \ReflectionClass($this->viewer);
-        $cachePathProperty = $reflection->getProperty('cachePath');
-        $cachePathProperty->setAccessible(true);
-
-        // Justera cache-sökvägen till rätt katalog
-        $cachePathProperty->setValue($this->viewer, $mockCacheDir);
-
-        $resolveTemplatePath = $reflection->getMethod('resolveTemplatePath');
-        $resolveTemplatePath->setAccessible(true);
-
-        $generateCacheKey = $reflection->getMethod('generateCacheKey');
-        $generateCacheKey->setAccessible(true);
-
-        // Steg 2: Generera cacheKey som i RadixTemplateViewer
-        $mockTemplateName = 'test_template_key';
-        $resolvedTemplatePath = $resolveTemplatePath->invoke($this->viewer, $mockTemplateName);
-        $data = []; // Tom test-data
-        $mockCacheKey = $generateCacheKey->invoke($this->viewer, $resolvedTemplatePath, $data);
-        $mockCacheFile = $mockCacheDir . $mockCacheKey . '.php';
-
-        // Steg 3: Skapa en mock-cache-fil
-        file_put_contents($mockCacheFile, '<div>Cached Content</div>');
-
-        // Steg 4: Kontrollera att cachen används genom att köra render
-        $output = $this->viewer->render($mockTemplateName, $data);
-
-        // Kontrollera att innehållet kommer från cache
-        $this->assertSame('<div>Cached Content</div>', $output, 'Cache användes inte korrekt.');
-    }
 
     public function testGlobalFiltersAreApplied(): void
     {
