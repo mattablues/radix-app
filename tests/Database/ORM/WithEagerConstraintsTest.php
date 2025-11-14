@@ -94,13 +94,13 @@ class WithEagerConstraintsTest extends TestCase
     {
         return new class extends Model {
             protected string $table = 'users';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id','name'];
             public function posts(): \Radix\Database\ORM\Relationships\HasMany
             {
                 $post = new class extends Model {
                     protected string $table = 'posts';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['id','user_id','title','status'];
                 };
                 $rel = new \Radix\Database\ORM\Relationships\HasMany(
@@ -118,7 +118,7 @@ class WithEagerConstraintsTest extends TestCase
                     $this->getConnection(),
                     (new class extends Model {
                         protected string $table = 'roles';
-                        /** @var array<string> */
+                        /** array<int, string> */
                         protected array $fillable = ['id','name','status'];
                     })::class,
                     'role_user',

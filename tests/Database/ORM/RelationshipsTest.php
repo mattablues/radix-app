@@ -322,7 +322,7 @@ class RelationshipsTest extends TestCase
         $results = array_map(function ($record) {
             $m = new class extends Model {
                 protected string $table = 'comments';
-                /** @var array<string> */
+                /** array<int, string> */
                 protected array $fillable = ['id', 'post_id', 'content'];
             };
             $m->forceFill($record);
@@ -357,7 +357,7 @@ class RelationshipsTest extends TestCase
         // Dynamisk modell för profilen
         $profileClass = new class extends Model {
             protected string $table = 'profiles';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id', 'user_id', 'profile'];
         };
 
@@ -395,7 +395,7 @@ class RelationshipsTest extends TestCase
         // Parent-modell med injicerad connection
         $post = new class($connectionMock) extends Model {
             protected string $table = 'posts';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id', 'title'];
             private Connection $conn;
             public function __construct(Connection $c) { $this->conn = $c; parent::__construct([]); }
@@ -406,7 +406,7 @@ class RelationshipsTest extends TestCase
             {
                 $comment = new class extends Model {
                     protected string $table = 'comments';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['id','post_id','content'];
                 };
                 $rel = new HasMany(
@@ -644,7 +644,7 @@ class RelationshipsTest extends TestCase
         // Parent: categories (utan ctor-argument)
         $category = new class extends Model {
             protected string $table = 'categories';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id', 'name'];
             private ?Connection $conn = null;
 
@@ -659,14 +659,14 @@ class RelationshipsTest extends TestCase
         // Through: subjects
         $subjectClass = new class extends Model {
             protected string $table = 'subjects';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id', 'category_id', 'name'];
         };
 
         // Related: votes
         $voteClass = new class extends Model {
             protected string $table = 'votes';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id', 'subject_id', 'points'];
         };
 
@@ -700,7 +700,7 @@ class RelationshipsTest extends TestCase
         // Parentmodell med relation topVote() som HasOneThrough
         $parent = new class extends Model {
             protected string $table = 'categories';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id', 'name'];
             private ?Connection $conn = null;
 
@@ -714,12 +714,12 @@ class RelationshipsTest extends TestCase
             {
                 $through = new class extends Model {
                     protected string $table = 'subjects';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['id', 'category_id'];
                 };
                 $related = new class extends Model {
                     protected string $table = 'votes';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['id', 'subject_id', 'points'];
                 };
 
@@ -762,7 +762,7 @@ class RelationshipsTest extends TestCase
         // Parent-modell utan ctor-argument + relation topVote()
         $parent = new class extends Model {
             protected string $table = 'categories';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id', 'name'];
             private ?Connection $conn = null;
 
@@ -776,12 +776,12 @@ class RelationshipsTest extends TestCase
             {
                 $through = new class extends Model {
                     protected string $table = 'subjects';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['id', 'category_id'];
                 };
                 $related = new class extends Model {
                     protected string $table = 'votes';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['id', 'subject_id', 'points', 'status'];
                 };
 
@@ -821,7 +821,7 @@ class RelationshipsTest extends TestCase
 
         $parent = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'posts';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id', 'title'];
             private ?\Radix\Database\Connection $c = null;
             public function setConn(\Radix\Database\Connection $c): void
@@ -832,7 +832,7 @@ class RelationshipsTest extends TestCase
             {
                 $comment = new class extends \Radix\Database\ORM\Model {
                     protected string $table = 'comments';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['id','post_id','status'];
                 };
                 return new \Radix\Database\ORM\Relationships\HasMany(
@@ -865,7 +865,7 @@ class RelationshipsTest extends TestCase
 
         $parent = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'roles';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id', 'name'];
             private ?\Radix\Database\Connection $c = null;
             public function setConn(\Radix\Database\Connection $c): void
@@ -907,7 +907,7 @@ class RelationshipsTest extends TestCase
 
         $child = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'statuses';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id','user_id','state'];
             private ?\Radix\Database\Connection $c = null;
             public function setConn(\Radix\Database\Connection $c): void
@@ -918,7 +918,7 @@ class RelationshipsTest extends TestCase
             {
                 $user = new class extends \Radix\Database\ORM\Model {
                     protected string $table = 'users';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['id','name','role'];
                 };
                 return new \Radix\Database\ORM\Relationships\BelongsTo(
@@ -958,7 +958,7 @@ class RelationshipsTest extends TestCase
         // Parent-modell med hasMany relation "comments"
         $post = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'posts';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id', 'title'];
             private ?\Radix\Database\Connection $c = null;
             public function setConn(\Radix\Database\Connection $c): void
@@ -969,7 +969,7 @@ class RelationshipsTest extends TestCase
             {
                 $comment = new class extends \Radix\Database\ORM\Model {
                     protected string $table = 'comments';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['id','post_id','status'];
                 };
                 $rel = new \Radix\Database\ORM\Relationships\HasMany(
@@ -1014,7 +1014,7 @@ class RelationshipsTest extends TestCase
 
         $post = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'posts';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id', 'title'];
             private ?\Radix\Database\Connection $c = null;
             public function setConn(\Radix\Database\Connection $c): void
@@ -1025,7 +1025,7 @@ class RelationshipsTest extends TestCase
             {
                 $comment = new class extends \Radix\Database\ORM\Model {
                     protected string $table = 'comments';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['id','post_id','status'];
                 };
                 $rel = new \Radix\Database\ORM\Relationships\HasMany(
@@ -1066,7 +1066,7 @@ class RelationshipsTest extends TestCase
 
         $post = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'posts';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id'];
             private ?\Radix\Database\Connection $c = null;
             public function setConn(\Radix\Database\Connection $c): void
@@ -1077,7 +1077,7 @@ class RelationshipsTest extends TestCase
             {
                 $comment = new class extends \Radix\Database\ORM\Model {
                     protected string $table = 'comments';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['id','post_id','status'];
                 };
                 $rel = new \Radix\Database\ORM\Relationships\HasMany(
@@ -1114,7 +1114,7 @@ class RelationshipsTest extends TestCase
         // Parent-modell
         $user = new class extends Model {
             protected string $table = 'users';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id', 'first_name'];
             private ?Connection $conn = null;
             public function setConn(Connection $c): void { $this->conn = $c; }
@@ -1124,7 +1124,7 @@ class RelationshipsTest extends TestCase
             {
                 $profile = new class extends Model {
                     protected string $table = 'profiles';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['id','user_id','avatar'];
                 };
 
@@ -1149,7 +1149,7 @@ class RelationshipsTest extends TestCase
 
         $user = new class extends Model {
             protected string $table = 'users';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id'];
             private ?Connection $c = null;
             public function setConn(Connection $c): void { $this->c = $c; }
@@ -1159,7 +1159,7 @@ class RelationshipsTest extends TestCase
             {
                 $profile = new class extends Model {
                     protected string $table = 'profiles';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['avatar'];
                 };
                 $rel = new HasOne($this->getConnection(), get_class($profile), 'user_id', 'id');
@@ -1185,7 +1185,7 @@ class RelationshipsTest extends TestCase
         // Child-modell med belongsTo user()
         $status = new class extends Model {
             protected string $table = 'statuses';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id','user_id'];
             private ?Connection $c = null;
             public function setConn(Connection $c): void { $this->c = $c; }
@@ -1195,7 +1195,7 @@ class RelationshipsTest extends TestCase
             {
                 $user = new class extends Model {
                     protected string $table = 'users';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['id','first_name'];
                 };
                 return new BelongsTo(
@@ -1226,7 +1226,7 @@ class RelationshipsTest extends TestCase
 
         $parent = new class extends Model {
             protected string $table = 'users';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id'];
             private ?Connection $c = null;
             public function setConn(Connection $c): void { $this->c = $c; }
@@ -1236,7 +1236,7 @@ class RelationshipsTest extends TestCase
             {
                 $profile = new class extends Model {
                     protected string $table = 'profiles';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['avatar'];
                 };
                 $rel = new HasOne($this->getConnection(), get_class($profile), 'user_id', 'id');
@@ -1267,7 +1267,7 @@ class RelationshipsTest extends TestCase
 
         $child = new class extends Model {
             protected string $table = 'statuses';
-            /** @var array<string> */
+            /** array<int, string> */
             protected array $fillable = ['id','user_id'];
             private ?Connection $c = null;
             public function setConn(Connection $c): void { $this->c = $c; }
@@ -1277,7 +1277,7 @@ class RelationshipsTest extends TestCase
             {
                 $user = new class extends Model {
                     protected string $table = 'users';
-                    /** @var array<string> */
+                    /** array<int, string> */
                     protected array $fillable = ['first_name'];
                 };
                 return new BelongsTo(

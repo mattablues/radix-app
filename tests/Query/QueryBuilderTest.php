@@ -1362,7 +1362,7 @@ class QueryBuilderTest extends TestCase
         // Minimal modellklass för hydrering
         $model = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'users';
-            /** @var array<string> */
+            /** @var array<int,string> */
             protected array $fillable = ['id', 'name'];
         };
 
@@ -1396,7 +1396,7 @@ class QueryBuilderTest extends TestCase
         // Minimal modellklass för hydrering
         $model = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'users';
-            /** @var array<string> */
+            /** @var array<int,string> */
             protected array $fillable = ['id', 'name'];
         };
 
@@ -1434,7 +1434,7 @@ class QueryBuilderTest extends TestCase
 
         $model = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'users';
-            /** @var array<string> */
+            /** @var array<int,string> */
             protected array $fillable = ['id', 'name'];
         };
 
@@ -1472,7 +1472,7 @@ class QueryBuilderTest extends TestCase
 
         $model = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'users';
-            /** @var array<string> */
+            /** @var array<int,string> */
             protected array $fillable = ['id', 'name'];
         };
 

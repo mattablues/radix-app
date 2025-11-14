@@ -1,7 +1,9 @@
 parameters:
     level: 6
     paths:
-        - framework/src/Database
+        - src
+        - framework/src
+        - tests
     reportUnmatchedIgnoredErrors: true
     inferPrivatePropertyTypeFromConstructor: true
     treatPhpDocTypesAsCertain: false
