@@ -10,7 +10,7 @@ use Radix\Database\ORM\Model;
  * @property int $id
  * @property int $user_id
  * @property string $value
- * @property string $description
+ * @property string|null $description
  * @property string|null $expires_at
  * @property string $created_at
  * @property string $updated_at

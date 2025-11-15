@@ -681,6 +681,13 @@ public function testCacheInvalidation(): void
     private function normalizeOutput(string $output): string
     {
         // Tar bort överflödiga radbrytningar och mellanslag mellan HTML-taggar
-        return preg_replace('/\s*(<[^>]+>)\s*/', '$1', trim($output));
+        $normalized = preg_replace('/\s*(<[^>]+>)\s*/', '$1', trim($output));
+
+        // preg_replace kan returnera null vid regex-fel, säkerställ alltid string
+        if ($normalized === null) {
+            return '';
+        }
+
+        return $normalized;
     }
 }

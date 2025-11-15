@@ -115,33 +115,35 @@ class UserControllerTest extends TestCase
         ');
     }
 
-    public function testGet(): void
-    {
-        // Förbered testdata för en användare
-        $this->connection->execute('
-            INSERT INTO users (first_name, last_name, email, password)
-            VALUES (:first_name, :last_name, :email, :password)
-        ', [
-            'first_name' => 'Test',
-            'last_name' => 'User',
-            'email' => 'test.user@example.com',
-            'password' => password_hash('password123', PASSWORD_BCRYPT),
-        ]);
+public function testGet(): void
+        {
+            // Förbered testdata för en användare
+            $this->connection->execute('
+                INSERT INTO users (first_name, last_name, email, password)
+                VALUES (:first_name, :last_name, :email, :password)
+            ', [
+                'first_name' => 'Test',
+                'last_name' => 'User',
+                'email' => 'test.user@example.com',
+                'password' => password_hash('password123', PASSWORD_BCRYPT),
+            ]);
 
-        // Hämta användarens ID (auto_increment)
-        $userId = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
-            'email' => 'test.user@example.com',
-        ])['id'];
+            // Hämta användarens ID (auto_increment)
+            /** @var array{id:int} $userRow */
+            $userRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
+                'email' => 'test.user@example.com',
+            ]);
+            $userId = $userRow['id'];
 
-        // Förbered tillhörande status för användaren
-        $this->connection->execute('
-            INSERT INTO status (user_id, status, active)
-            VALUES (:user_id, :status, :active)
-        ', [
-            'user_id' => $userId,
-            'status' => 'activate',
-            'active' => 'offline',
-        ]);
+            // Förbered tillhörande status för användaren
+            $this->connection->execute('
+                INSERT INTO status (user_id, status, active)
+                VALUES (:user_id, :status, :active)
+            ', [
+                'user_id' => $userId,
+                'status' => 'activate',
+                'active' => 'offline',
+            ]);
 
         // Förbered en giltig token för användaren
         $this->connection->execute('
@@ -198,9 +200,11 @@ class UserControllerTest extends TestCase
         ]);
 
         // Hämta användarens ID för att associera token med användaren
-        $userId = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
+        /** @var array{id:int} $adminRow */
+        $adminRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
             'email' => 'admin@example.com'
-        ])['id'];
+        ]);
+        $userId = $adminRow['id'];
 
         // Förbered en giltig token för användaren
         $this->connection->execute('
@@ -270,9 +274,11 @@ class UserControllerTest extends TestCase
         ]);
 
         // Hämta användarens ID
-        $userId = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
+        /** @var array{id:int} $patchRow */
+        $patchRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
             'email' => 'patch.user@example.com',
-        ])['id'];
+        ]);
+        $userId = $patchRow['id'];
 
         // Förbered tillhörande token för användaren
         $this->connection->execute('
@@ -320,9 +326,11 @@ class UserControllerTest extends TestCase
         $this->assertEquals('Patcheduser', $body['data']['last_name']); // Kontrollerar här
 
         // Kontrollera att datan har uppdaterats i databasen
+        /** @var array{first_name:string,last_name:string} $updatedUser */
         $updatedUser = $this->connection->fetchOne('SELECT * FROM users WHERE id = :id', [
             'id' => $userId,
         ]);
+
         $this->assertEquals('Updatedname', $updatedUser['first_name']); // Databasen visar "Updatedname"
         $this->assertEquals('Patcheduser', $updatedUser['last_name']);
     }
@@ -341,9 +349,11 @@ class UserControllerTest extends TestCase
         ]);
 
         // Hämta användarens ID
-        $userId = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
+        /** @var array{id:int} $putRow */
+        $putRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
             'email' => 'put.user@example.com',
-        ])['id'];
+        ]);
+        $userId = $putRow['id'];
 
         // Förbered tillhörande token för användaren
         $tokenValue = 'test-api-token';
@@ -396,6 +406,7 @@ class UserControllerTest extends TestCase
         $this->assertEquals('put.updated@example.com', $body['data']['email'], 'Felaktig e-postadress');
 
         // Hämta uppdaterad användare från databasen
+        /** @var array{first_name:string,last_name:string,email:string} $updatedUser */
         $updatedUser = $this->connection->fetchOne('SELECT * FROM users WHERE id = :id', [
             'id' => $userId,
         ]);
@@ -415,10 +426,10 @@ class UserControllerTest extends TestCase
         );
 
         // Bekräfta att lösenordet uppdaterades
+        /** @var array{password:string} $updatedUser */
         $updatedUser = $this->connection->fetchOne('SELECT * FROM users WHERE id = :id', ['id' => $userId]);
         $this->assertTrue(password_verify('newpassword123', $updatedUser['password']), 'Lösenordet matchar inte i databasen.');
     }
-
 
     public function testDelete(): void
     {
@@ -434,9 +445,11 @@ class UserControllerTest extends TestCase
         ]);
 
         // Hämta användarens ID
-        $userId = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
+        /** @var array{id:int} $deleteRow */
+        $deleteRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
             'email' => 'delete.user@example.com',
-        ])['id'];
+        ]);
+        $userId = $deleteRow['id'];
 
         // Skapa och associera en giltig token för användaren
         $tokenValue = 'test-api-token';
@@ -474,6 +487,7 @@ class UserControllerTest extends TestCase
         $this->assertEquals('Användaren har raderats (soft delete).', $body['message']);
 
         // Kontrollera att användaren är flaggad som soft deleted i databasen
+        /** @var array<string,mixed> $deletedUser */
         $deletedUser = $this->connection->fetchOne('SELECT * FROM users WHERE id = :id', [
             'id' => $userId,
         ]);

@@ -81,6 +81,10 @@ class UserController extends AbstractController
                 // Skapa en instans av UploadService
                 $uploadService = new UploadService();
 
+                if ($user === null) {
+                    throw new NotAuthorizedException('User not found.');
+                }
+
                 // Radera gammal avatar om det inte är standard-avatar
                 if ($user->avatar !== '/images/graphics/avatar.png') {
                     $oldAvatarPath = ROOT_PATH . $user->avatar;
@@ -109,6 +113,10 @@ class UserController extends AbstractController
 
         // Rensa session för gamla indata
         $this->request->session()->remove('old');
+
+        if ($user === null) {
+            throw new NotAuthorizedException('User not found.');
+        }
 
         // Uppdatera användardata i databasen
         $user->fill([
@@ -147,6 +155,10 @@ class UserController extends AbstractController
             throw new NotAuthorizedException('You are not authorized to close this account.');
         }
 
+        if ($user === null) {
+            throw new NotAuthorizedException('User not found.');
+        }
+
         $user->loadMissing('status');
 
         $status = $user->getRelation('status');
@@ -169,6 +181,10 @@ class UserController extends AbstractController
 
         if ($user && $user->isAdmin()) {
             throw new NotAuthorizedException('You are not authorized to delete this user.');
+        }
+
+        if ($user === null) {
+            throw new NotAuthorizedException('User not found.');
         }
 
         $userDirectory = ROOT_PATH . '/public/images/user/' . $user->id;
