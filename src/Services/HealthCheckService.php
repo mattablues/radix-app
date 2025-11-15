@@ -30,6 +30,7 @@ final class HealthCheckService
         // DB
         try {
             if (function_exists('app')) {
+                /** @var \Radix\Database\DatabaseManager $dbm */
                 $dbm = app(\Radix\Database\DatabaseManager::class);
                 $conn = $dbm->connection();
                 $conn->execute('SELECT 1');

@@ -19,13 +19,19 @@ class UploadService
             throw new \RuntimeException('Fel vid uppladdning av filen.');
         }
 
+        // Säkerställ att tmp_name är en sträng
+        $tmpName = $file['tmp_name'];
+        if (!is_string($tmpName) || $tmpName === '') {
+            throw new \RuntimeException('Ogiltigt tmp_name för uppladdad fil.');
+        }
+
         // Skapa uppladdningskatalog om den inte finns
         if (!is_dir($uploadDirectory)) {
             mkdir($uploadDirectory, 0755, true);
         }
 
         // Hämta MIME-typ
-        $mimeType = mime_content_type($file['tmp_name']);
+        $mimeType = mime_content_type($tmpName);
         $extension = match ($mimeType) {
             'image/jpeg' => 'jpg',
             'image/png' => 'png',
@@ -41,7 +47,9 @@ class UploadService
         $filePath = $uploadDirectory . $fileName;
 
         // Flytta till uppladdningsmappen
-        move_uploaded_file($file['tmp_name'], $filePath);
+        if (!move_uploaded_file($tmpName, $filePath)) {
+            throw new \RuntimeException('Misslyckades med att flytta uppladdad fil.');
+        }
 
         // Bearbeta bilden om en callback skickas med
         if ($processImageCallback) {

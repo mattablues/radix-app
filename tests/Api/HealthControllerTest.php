@@ -83,7 +83,13 @@ final class HealthControllerTest extends TestCase
             $r->get('/health', [\App\Controllers\Api\HealthController::class, 'index'])->name('api.health.index');
             $r->get('/{any:.*}', function () {
                 $resp = new Response();
-                if (strtoupper($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+
+                $method = $_SERVER['REQUEST_METHOD'] ?? '';
+                if (!is_string($method)) {
+                    $method = '';
+                }
+
+                if (strtoupper($method) === 'OPTIONS') {
                     $resp->setStatusCode(204);
                     return $resp;
                 }

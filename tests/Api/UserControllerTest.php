@@ -115,7 +115,7 @@ class UserControllerTest extends TestCase
         ');
     }
 
-public function testGet(): void
+    public function testGet(): void
         {
             // Förbered testdata för en användare
             $this->connection->execute('
@@ -176,6 +176,15 @@ public function testGet(): void
 
         // Kontrollera att svaret är korrekt
         $this->assertEquals(200, $response->getStatusCode());
+        /** @var array{
+         *     success: bool,
+         *     data: list<array{
+         *         first_name: string,
+         *         last_name: string,
+         *         status: array{status:string,active:string}
+         *     }>
+         * } $body
+         */
         $body = json_decode($response->getBody(), true);
 
         $this->assertTrue($body['success']);
@@ -247,6 +256,7 @@ public function testGet(): void
 
         // Verifiera att ett 201-svar returneras och att användaren sparades korrekt
         $this->assertEquals(201, $response->getStatusCode());
+         /** @var array{success:bool,data:array<string,mixed>} $body */
         $body = json_decode($response->getBody(), true);
 
         $this->assertTrue($body['success']);
@@ -319,6 +329,7 @@ public function testGet(): void
 
         // Kontrollera att svaret är korrekt
         $this->assertEquals(200, $response->getStatusCode());
+        /** @var array{success:bool,data:array<string,mixed>} $body */
         $body = json_decode($response->getBody(), true);
 
         $this->assertTrue($body['success']);
@@ -398,6 +409,7 @@ public function testGet(): void
 
         // Kontrollera API-svaret
         $this->assertEquals(200, $response->getStatusCode(), 'Statuskoden ska vara 200.');
+        /** @var array{success:bool,data:array<string,mixed>} $body */
         $body = json_decode($response->getBody(), true);
 
         $this->assertTrue($body['success'], 'API-svaret ska ha success: true.');
@@ -481,6 +493,7 @@ public function testGet(): void
 
         // Kontrollera att svaret är korrekt
         $this->assertEquals(200, $response->getStatusCode(), 'Statuskoden ska vara 200 vid en framgångsrik DELETE');
+        /** @var array{success:bool,message:string,data?:mixed} $body */
         $body = json_decode($response->getBody(), true);
 
         $this->assertTrue($body['success'], 'DELETE-anropet ska lyckas.');
