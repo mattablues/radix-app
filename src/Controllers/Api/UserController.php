@@ -16,15 +16,30 @@ class UserController extends ApiController
         $this->validateRequest(); // Kontrollera API-token för GET-anrop
 
         // Hämta användardata
-        $currentPage = (int)($this->request->get['page'] ?? 1);
-        $perPage = (int)($this->request->get['perPage'] ?? 10);
+        $pageRaw   = $this->request->get['page']    ?? 1;
+        $perPageRaw = $this->request->get['perPage'] ?? 10;
 
+        $currentPage = is_numeric($pageRaw) ? (int) $pageRaw : 1;
+        $perPage     = is_numeric($perPageRaw) ? (int) $perPageRaw : 10;
+
+        /** @var array{
+         *     data: list<\App\Models\User>,
+         *     pagination: array<string,mixed>
+         * } $results
+         */
         $results = User::with('status')
             ->paginate($perPage, $currentPage);
 
         return $this->json([
             'success' => true,
-            'data' => array_map(fn($user) => $user->toArray(), $results['data']),
+            'data' => array_map(
+                /**
+                 * @param \App\Models\User $user
+                 * @return array<string,mixed>
+                 */
+                fn(User $user): array => $user->toArray(),
+                $results['data']
+            ),
             'meta' => $results['pagination'],
         ]);
     }
@@ -40,14 +55,22 @@ class UserController extends ApiController
             'password_confirmation' => 'required|confirmed:password',
         ]);
 
+        $data = $this->request->post;
+
+        $firstName = is_string($data['first_name'] ?? null) ? $data['first_name'] : '';
+        $lastName  = is_string($data['last_name'] ?? null)  ? $data['last_name']  : '';
+        $email     = is_string($data['email'] ?? null)      ? $data['email']      : '';
+        /** @var non-empty-string $password */
+        $password  = is_string($data['password'] ?? null)   ? $data['password']   : '';
+
         // Skapa användare
         $user = new User();
         $user->fill([
-            'first_name' => $this->request->post['first_name'],
-            'last_name' => $this->request->post['last_name'],
-            'email' => $this->request->post['email'],
+            'first_name' => $firstName,
+            'last_name'  => $lastName,
+            'email'      => $email,
         ]);
-        $user->password = $this->request->post['password'];
+        $user->password = $password; // triggar setPasswordAttribute
         $user->save();
 
         $status = new Status();
@@ -81,9 +104,14 @@ class UserController extends ApiController
 
         $data = $this->request->filterFields($this->request->post, ['password']);
 
-       // Hantera lösenord
-        if (!empty($data['password'])) {
-            $user->password = $data['password'];
+        // Hantera lösenord
+        if (array_key_exists('password', $this->request->post)
+            && is_string($this->request->post['password'])
+            && $this->request->post['password'] !== ''
+        ) {
+            /** @var non-empty-string $password */
+            $password = $this->request->post['password'];
+            $user->password = $password;
         }
 
         $user->fill($data);
@@ -147,13 +175,20 @@ class UserController extends ApiController
             ], 404);
         }
 
-        // Steg 3: Säkerställ att `deleted_at` finns, annars hämta det
+        // Steg 3: Säkerställ att `deleted_at` finns, annars hämta det typ-säkert
         if (!array_key_exists('deleted_at', $user->getAttributes())) {
-            $user->deleted_at = $user->fetchGuardedAttribute('deleted_at');
+            $rawDeletedAt = $user->fetchGuardedAttribute('deleted_at');
+
+            if (!is_string($rawDeletedAt) && $rawDeletedAt !== null) {
+                $rawDeletedAt = null;
+            }
+
+            /** @var string|null $rawDeletedAt */
+            $user->deleted_at = $rawDeletedAt;
         }
 
         // Steg 4: Kontrollera om användaren redan är soft deleted
-        if ($user->deleted_at) {
+        if ($user->deleted_at !== null && $user->deleted_at !== '') {
             return $this->json([
                 'success' => false,
                 'errors' => ['user' => 'Användaren är redan soft deleted.']

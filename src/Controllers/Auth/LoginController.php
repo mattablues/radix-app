@@ -40,16 +40,28 @@ class LoginController extends AbstractController
             ]);
         }
 
-        $email = $data['email'];
+        // Säkerställ att email och password är strängar
+        $rawEmail = $data['email'] ?? null;
+        $rawPassword = $data['password'] ?? null;
+
+        if (!is_string($rawEmail) || $rawEmail === '' || !is_string($rawPassword) || $rawPassword === '') {
+            return $this->view('auth.login.index', [
+                'errors' => [
+                    'form-error' => ['Ogiltiga inloggningsuppgifter.'],
+                ],
+            ]);
+        }
+
+        $email = $rawEmail;
+        $password = $rawPassword;
 
         // Kontrollera om användaren är blockerad
         if ($this->authService->isBlocked($email)) {
             $blockedUntil = $this->authService->getBlockedUntil($email);
-            $remainingTime = $blockedUntil - time();
+            $remainingTime = $blockedUntil !== null ? $blockedUntil - time() : 0;
 
-            // Räkna ut minuter och sekunder kvar
-            $minutes = intdiv($remainingTime, 60);
-            $seconds = $remainingTime % 60;
+            $minutes = $remainingTime > 0 ? intdiv($remainingTime, 60) : 0;
+            $seconds = $remainingTime > 0 ? $remainingTime % 60 : 0;
 
             $errorMessage = "För många misslyckade försök. Försök igen om $minutes minuter och $seconds sekunder.";
 
@@ -60,7 +72,13 @@ class LoginController extends AbstractController
             ]);
         }
 
-        $user = $this->authService->login($data);
+        /** @var array{email:string,password:string} $loginData */
+        $loginData = [
+            'email' => $email,
+            'password' => $password,
+        ];
+
+        $user = $this->authService->login($loginData);
 
         // Kontrollera statusfel eller misslyckad inloggning
         $statusError = $this->authService->getStatusError($user);

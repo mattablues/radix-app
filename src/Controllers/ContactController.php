@@ -38,7 +38,7 @@ class ContactController extends AbstractController
         // Hämta det förväntade honeypot-id:t från sessionen
         $expectedHoneypotId = $this->request->session()->get('honeypot_id');
 
-        if (!$expectedHoneypotId) {
+        if (!is_string($expectedHoneypotId) || $expectedHoneypotId === '') {
             return new RedirectResponse(route('contact.index')); // Tillbaka till formuläret
         }
 
@@ -79,12 +79,17 @@ class ContactController extends AbstractController
             ]);
         }
 
+        $email = is_string($data['email'] ?? null) ? $data['email'] : '';
+        $message  = is_string($data['message'] ?? null) ? $data['message'] : '';
+        $firstName = is_string($data['first_name'] ?? null) ? $data['first_name'] : '';
+        $lastName  = is_string($data['last_name'] ?? null) ? $data['last_name'] : '';
+
         // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new ContactFormEvent(
-            email: $data['email'],
-            message: $data['message'],
-            firstName: human_name($data['first_name']),
-            lastName: human_name($data['last_name']),
+            email: $email,
+            message: $message,
+            firstName: human_name($firstName),
+            lastName: human_name($lastName),
         ));
 
         // Om valideringen passerar, ta bort honeypot-id:t

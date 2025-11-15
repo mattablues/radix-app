@@ -17,7 +17,7 @@ use Radix\Enums\Role;
  * @property string $role
  * @property string $created_at
  * @property string $updated_at
- * @property string $deleted_at
+ * @property string|null $deleted_at
  * @property-read \App\Models\Status|null $status
  * @property-read \App\Models\Token|null $token
  */

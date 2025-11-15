@@ -62,7 +62,16 @@ class PasswordResetController extends AbstractController
             ]);
         }
 
-        $token = new Token($data['token']);
+        $rawToken = $data['token'] ?? null;
+        if (!is_string($rawToken) || $rawToken === '') {
+            $this->request->session()->setFlashMessage(
+                'Återställningslänken är inte giltig, begär en ny.',
+                'error'
+            );
+            return new RedirectResponse(route('auth.password-forgot.index'));
+        }
+
+        $token = new Token($rawToken);
         $hashedToken = $token->hashHmac();
 
         $status = Status::where('password_reset', '=', $hashedToken)->first();
@@ -100,11 +109,15 @@ class PasswordResetController extends AbstractController
         }
 
         /** @var User $user */
-
         $status->fill(['password_reset' => null, 'reset_expires_at' => null]);
         $status->save();
 
-        $user->password = $data['password'];
+        if (isset($data['password']) && is_string($data['password']) && $data['password'] !== '') {
+            $password = $data['password']; // här vet PHPStan att det är string
+
+            $user->password = $password;
+        }
+
         $user->save();
 
         $this->request->session()->setFlashMessage('Ditt lösenord har återställts, du kan nu logga in.');
