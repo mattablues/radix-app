@@ -24,14 +24,16 @@ class UserController extends AbstractController
 
     public function show(string $id): Response
     {
-        $id = $this->request->session()->get(Session::AUTH_KEY);
+        // Hämta inloggad användare för att avgöra behörighet
+        $authId = $this->request->session()->get(Session::AUTH_KEY);
 
-        if (!is_int($id) && !is_string($id)) {
+        if (!is_int($authId) && !is_string($authId)) {
             throw new NotAuthorizedException('Invalid user id in session.');
         }
 
-        $authUser = User::find($id);
+        $authUser = User::find($authId);
 
+        // $id här är route-parametern: vilken användare vi vill visa
         if (!$authUser || !$authUser->hasAtLeast('moderator')) {
             $user = User::with('status')->where('id', '=', $id)->first();
         } else {
