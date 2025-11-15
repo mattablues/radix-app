@@ -72,8 +72,22 @@ class Status extends Model
     // Status.php
     public function getRawActiveAt(): ?int
     {
-        // Returnera UNIX-timestamp direkt från attributen
-        return $this->attributes['active_at'] ?? null;
+        $value = $this->attributes['active_at'] ?? null;
+
+        if ($value === null) {
+            return null;
+        }
+
+        // Normalisera till int, annars null
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return null;
     }
 
     public function getActiveAtAttribute(null|int $value): ?string

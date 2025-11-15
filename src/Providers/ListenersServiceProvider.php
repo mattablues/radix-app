@@ -16,6 +16,8 @@ readonly class ListenersServiceProvider implements ServiceProviderInterface
     public function register(): void
     {
         $dispatcher = $this->container->get(\Radix\EventDispatcher\EventDispatcher::class);
+        /** @var \Radix\EventDispatcher\EventDispatcher $dispatcher */
+
         $listeners = require ROOT_PATH . '/config/listeners.php';
 
         foreach ($listeners as $event => $handlers) {
@@ -27,6 +29,9 @@ readonly class ListenersServiceProvider implements ServiceProviderInterface
                     ), // Skapa med beroenden
                     default => throw new \RuntimeException("Invalid listener type: {$handler['type']}"),
                 };
+
+                assert(is_callable($listener));
+                /** @var callable $listener */
 
                 // Registrera lyssnaren hos dispatchern
                 $dispatcher->addListener(
@@ -43,8 +48,7 @@ readonly class ListenersServiceProvider implements ServiceProviderInterface
                                 $event->stopPropagation();
                             }
                         }
-                    },
-                    $handler['priority'] ?? 0 // Prioritera lyssnarens körordning
+                    }
                 );
             }
         }

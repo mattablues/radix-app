@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Middlewares;
 
 use App\Events\UserBlockedEvent;
+use App\Models\Status;
 use Radix\EventDispatcher\EventDispatcher;
 use Radix\Http\Exception\NotAuthorizedException;
 use Radix\Http\RedirectResponse;
@@ -32,15 +33,30 @@ readonly class Auth implements MiddlewareInterface
 
         // Hämta autentiserad användare
         $userId = $session->get(\Radix\Session\Session::AUTH_KEY);
+
+        if (!is_int($userId)) {
+            // Om AUTH_KEY inte är en int är sessionen korrupt/ogiltig: behandla som ej inloggad
+            $session->clear();
+            $session->destroy();
+            return new RedirectResponse(route('auth.login.index'));
+        }
+
+        /** @var int $userId */
         $user = User::with('status')->where('id', '=', $userId)->first();
 
-        if (!$user) {
+        if (!$user instanceof User) {
             throw new NotAuthorizedException('User not found.');
         }
 
         // Kontrollera om användaren är blockerad
-        /** @var User $user */
-        if ($user->getRelation('status')->isBlocked()) { // Kontrollera blockeringsstatus;
+        $status = $user->getRelation('status');
+
+        if (!$status instanceof Status) {
+            /** @var Status|null $status */
+            $status = $user->status()->first();
+        }
+
+        if ($status instanceof Status && $status->isBlocked()) { // Kontrollera blockeringsstatus;
             $this->eventDispatcher->dispatch(new UserBlockedEvent($userId));
         }
 
@@ -58,25 +74,31 @@ readonly class Auth implements MiddlewareInterface
     {
         $userId = $session->get(\Radix\Session\Session::AUTH_KEY);
 
-        if ($userId) {
-            $user = User::find($userId); // Hämta användaren
+        if (!is_int($userId)) {
+            // Ogiltigt userId => gör inget mer här
+            return;
+        }
 
-            if ($user) {
-                // Kontrollera timeout-inställningar
-                $timeout = 15 * 60; // 15 minuter
-                $lastLogin = $session->get('last_login', time());
+        /** @var int $userId */
+        $user = User::find($userId); // Hämta användaren
 
-                if (time() - $lastLogin > $timeout) {
-                    $user->setOffline();
-                    $session->clear();
-                    $session->destroy();
+        if ($user instanceof User) {
+            // Kontrollera timeout-inställningar
+            $timeout = 15 * 60; // 15 minuter
 
-                    redirect(route('auth.login.index')); // Omdirigera till inloggningssida
-                }
+            $rawLastLogin = $session->get('last_login', time());
+            $lastLogin = is_int($rawLastLogin) ? $rawLastLogin : time();
 
-                $session->set('last_login', time()); // Uppdatera för att fortsätta hålla sessionen aktiv
-                $user->setOnline();
+            if (time() - $lastLogin > $timeout) {
+                $user->setOffline();
+                $session->clear();
+                $session->destroy();
+
+                redirect(route('auth.login.index')); // Omdirigera till inloggningssida
             }
+
+            $session->set('last_login', time()); // Uppdatera för att fortsätta hålla sessionen aktiv
+            $user->setOnline();
         }
     }
 }

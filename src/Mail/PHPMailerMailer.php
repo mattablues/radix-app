@@ -25,24 +25,42 @@ class PHPMailerMailer implements MailerInterface
 
         // Hämta inställningarna från konfigurationen
         $mailConfig = $this->config->get('email');
+        if (!is_array($mailConfig)) {
+            throw new \UnexpectedValueException('Config "email" måste vara en array.');
+        }
+
+        /** @var array{
+         *     charset?: string,
+         *     host?: string,
+         *     auth?: bool,
+         *     username?: string,
+         *     password?: string,
+         *     secure?: string,
+         *     port?: int,
+         *     email?: string,
+         *     from?: string
+         * } $mailConfig
+         */
 
         $this->mailer->isSMTP();
 
-        if($this->config->get('email.debug') === '1') {
+        $debugValue = $this->config->get('email.debug');
+        $debugOn = $debugValue === '1' || $debugValue === 1 || $debugValue === true;
+        if ($debugOn) {
             $this->mailer->SMTPDebug = 2;
         }
 
-        $this->mailer->CharSet = $mailConfig['charset'];
-        $this->mailer->Host = $mailConfig['host'];
-        $this->mailer->SMTPAuth = $mailConfig['auth'];
-        $this->mailer->Username = $mailConfig['username'];
-        $this->mailer->Password = $mailConfig['password'];
-        $this->mailer->SMTPSecure = $mailConfig['secure'];
-        $this->mailer->Port = $mailConfig['port'];
+        $this->mailer->CharSet   = $mailConfig['charset']  ?? 'UTF-8';
+        $this->mailer->Host      = $mailConfig['host']     ?? 'localhost';
+        $this->mailer->SMTPAuth  = $mailConfig['auth']     ?? true;
+        $this->mailer->Username  = $mailConfig['username'] ?? '';
+        $this->mailer->Password  = $mailConfig['password'] ?? '';
+        $this->mailer->SMTPSecure = $mailConfig['secure']  ?? PHPMailer::ENCRYPTION_STARTTLS;
+        $this->mailer->Port      = $mailConfig['port']     ?? 587;
 
         // Definiera standard `From`-adress och namn från inställningarna
-        $this->fromEmail = $mailConfig['email']; // Ex. noreply@example.com
-        $this->fromName = $mailConfig['from'];  // Ex. No Reply
+        $this->fromEmail = $mailConfig['email'] ?? '';
+        $this->fromName  = $mailConfig['from']  ?? '';
     }
 
     /**
@@ -53,13 +71,18 @@ class PHPMailerMailer implements MailerInterface
         try {
             // Sätt `From` från standardvärden om inget skickas
             $fromEmail = $this->fromEmail;
-            $fromName = $this->fromName;
+            $fromName  = $this->fromName;
 
             // Kontrollera om `From` skickas med som alternativ och uppdatera
-            if (!empty($options['from']) && filter_var($options['from'], FILTER_VALIDATE_EMAIL)) {
+            if (
+                isset($options['from'])
+                && is_string($options['from'])
+                && filter_var($options['from'], FILTER_VALIDATE_EMAIL)
+            ) {
                 $fromEmail = $options['from'];
             }
-            if (!empty($options['from_name'])) {
+
+            if (isset($options['from_name']) && is_string($options['from_name']) && $options['from_name'] !== '') {
                 $fromName = $options['from_name'];
             }
 
@@ -73,16 +96,33 @@ class PHPMailerMailer implements MailerInterface
             $this->mailer->addAddress($to);
 
             // Lägg till Reply-To om det skickas
-            if (!empty($options['reply_to']) && filter_var($options['reply_to'], FILTER_VALIDATE_EMAIL)) {
+            if (
+                isset($options['reply_to'])
+                && is_string($options['reply_to'])
+                && filter_var($options['reply_to'], FILTER_VALIDATE_EMAIL)
+            ) {
                 $this->mailer->addReplyTo($options['reply_to']);
             }
 
-            $this->mailer->isHTML($options['is_html'] ?? true);
+            // is_html som ren bool
+            $isHtml = true;
+            if (array_key_exists('is_html', $options)) {
+                $isHtml = is_bool($options['is_html']) ? $options['is_html'] : (bool) $options['is_html'];
+            }
+
+            $this->mailer->isHTML($isHtml);
             $this->mailer->Subject = $subject;
 
             // Rendera template om det specificeras
-            if (!empty($options['template'])) {
-                $body = $this->templateViewer->render($options['template'], $options['data'] ?? []);
+            if (isset($options['template']) && is_string($options['template']) && $options['template'] !== '') {
+                $template = $options['template'];
+
+                $data = isset($options['data']) && is_array($options['data'])
+                    ? $options['data']
+                    : [];
+                /** @var array<string,mixed> $data */
+
+                $body = $this->templateViewer->render($template, $data);
             }
 
             $this->mailer->Body = $body;
@@ -94,4 +134,3 @@ class PHPMailerMailer implements MailerInterface
         }
     }
 }
-

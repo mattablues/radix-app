@@ -47,7 +47,17 @@ class User extends Model
 
     public function isPasswordValid(string $plainPassword): bool
     {
-        return isset($this->attributes['password']) && password_verify($plainPassword, $this->attributes['password']);
+        if (!isset($this->attributes['password'])) {
+            return false;
+        }
+
+        $hash = $this->attributes['password'];
+
+        if (!is_string($hash)) {
+            return false;
+        }
+
+        return password_verify($plainPassword, $hash);
     }
 
     // Hantera första bokstaven som stor bokstav för förnamn
