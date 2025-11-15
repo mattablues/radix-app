@@ -34,8 +34,12 @@ class EventServiceProvider implements ServiceProviderInterface
         foreach ($this->listen as $eventName => $listeners) {
             // loop over each listener
             foreach (array_unique($listeners) as $listener) {
+                $listenerInstance = new $listener();
+
+                assert(is_callable($listenerInstance));
+
                 // call eventDispatcher->addListener
-                $this->eventDispatcher->addListener($eventName, new $listener());
+                $this->eventDispatcher->addListener($eventName, $listenerInstance);
             }
         }
     }

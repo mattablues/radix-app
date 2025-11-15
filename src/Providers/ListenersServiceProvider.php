@@ -31,7 +31,10 @@ readonly class ListenersServiceProvider implements ServiceProviderInterface
                 // Registrera lyssnaren hos dispatchern
                 $dispatcher->addListener(
                     $event,
-                    static function ($event) use ($listener, $handler) {
+                    /**
+                     * @param object $event
+                     */
+                    static function (object $event) use ($listener, $handler): void {
                         $listener($event); // Kör lyssnaren
 
                         // Stoppa propagationen om specificerat

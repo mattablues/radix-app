@@ -49,7 +49,13 @@ final class HealthController extends ApiController
         $res->setHeader('Expires', '0');
 
         // Låt CorsListener styra CORS (dev på, prod av via CORS_ENABLED)
-        $res->setBody(json_encode(['ok' => $ok, 'checks' => $checks], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $body = json_encode(
+            ['ok' => $ok, 'checks' => $checks],
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+        );
+
+        // Låt CorsListener styra CORS (dev på, prod av via CORS_ENABLED)
+        $res->setBody($body);
 
         return $res;
     }

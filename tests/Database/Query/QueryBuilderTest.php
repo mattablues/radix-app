@@ -1286,10 +1286,17 @@ class QueryBuilderTest extends TestCase
         $mock->method('fetchAll')->willReturn([]);
         $mock->method('fetchOne')->willReturn(null);
 
+        // Minimal modellklass som uppfyller kraven (extends Model)
+        $model = new class extends \Radix\Database\ORM\Model {
+            protected string $table = 'users';
+            /** @var array<int,string> */
+            protected array $fillable = ['id'];
+        };
+
         $q = (new QueryBuilder())
             ->setConnection($mock)
             ->from('users')
-            ->setModelClass(\stdClass::class)
+            ->setModelClass(get_class($model))
             ->where('id', '=', -9999)
             ->limit(1);
 

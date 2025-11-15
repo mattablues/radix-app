@@ -15,7 +15,7 @@ use Radix\Database\ORM\Model;
  * @property string $activation
  * @property string $status
  * @property string $active
- * @property string $active_at
+ * @property string|null $active_at
  * @property string $updated_at
  * @property string $deleted_at
  */
@@ -33,7 +33,7 @@ class Status extends Model
     public function goOnline(): self
     {
         $this->active = 'online';
-        $this->active_at = (string)time();
+        $this->active_at = (string) time();
         $this->save();
 
         return $this;
@@ -49,7 +49,8 @@ class Status extends Model
         $this->active = 'offline';
 
         // Använd rå Unix-tid istället för formaterat värde
-        $this->active_at = $this->getRawActiveAt() ?: (string)time();
+        $rawActiveAt = $this->getRawActiveAt();
+        $this->active_at = (string) ($rawActiveAt !== null ? $rawActiveAt : time());
         $this->save();
 
         return $this;
@@ -79,7 +80,7 @@ class Status extends Model
     {
         // Om värdet är null, returnera null, annars formatera som läsbart datum
         return $value ? date('Y-m-d H:i:s', (int) $value) : null;
-    }
+        }
 
     public function setActiveAtAttribute(null|int|float|string $value): void
     {

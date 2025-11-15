@@ -153,6 +153,7 @@ class RegisterController extends AbstractController
             return new RedirectResponse(route('auth.login.index'));
         }
 
+        /** @var Status $status */
         $status->fill(['status' => 'activated', 'activation' => null]);
         $status->save();               // Spara modellen
 

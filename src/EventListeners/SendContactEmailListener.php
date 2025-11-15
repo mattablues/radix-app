@@ -13,8 +13,14 @@ readonly class SendContactEmailListener
 
     public function __invoke(ContactFormEvent $event): void
     {
+        $to = getenv('MAIL_EMAIL');
+
+        if ($to === false || $to === '') {
+            throw new \RuntimeException('MAIL_EMAIL env-variabeln är inte satt.');
+        }
+
         $this->mailManager->send(
-            getenv('MAIL_EMAIL'), // Mottagarens e-postadress
+            $to, // Mottagarens e-postadress
             'Förfrågan', // E-postämne
             '', // Tom body eftersom template används
             [

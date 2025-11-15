@@ -6,6 +6,7 @@ namespace App\Middlewares;
 
 use App\Events\UserBlockedEvent;
 use Radix\EventDispatcher\EventDispatcher;
+use Radix\Http\Exception\NotAuthorizedException;
 use Radix\Http\RedirectResponse;
 use Radix\Http\Request;
 use Radix\Http\RequestHandlerInterface;
@@ -33,9 +34,14 @@ readonly class Auth implements MiddlewareInterface
         $userId = $session->get(\Radix\Session\Session::AUTH_KEY);
         $user = User::with('status')->where('id', '=', $userId)->first();
 
+        if (!$user) {
+            throw new NotAuthorizedException('User not found.');
+        }
+
         // Kontrollera om användaren är blockerad
-        if ($user && $user->getRelation('status')->isBlocked()) { // Kontrollera blockeringsstatus;
-            $this->eventDispatcher->dispatch(new UserBlockedEvent($user->id));
+        /** @var User $user */
+        if ($user->getRelation('status')->isBlocked()) { // Kontrollera blockeringsstatus;
+            $this->eventDispatcher->dispatch(new UserBlockedEvent($userId));
         }
 
         // Uppdatera användarens status till "online" och kontrollera timeout

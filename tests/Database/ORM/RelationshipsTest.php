@@ -1101,9 +1101,13 @@ class RelationshipsTest extends TestCase
         ]);
 
         $loaded = $post->getRelation('comments');
-        $this->assertIsArray($loaded);
+
+
+        $this->assertInstanceOf(\Radix\Collection\Collection::class, $loaded);
         $this->assertCount(1, $loaded);
-        $this->assertSame('published', $loaded[0]->getAttribute('status'));
+        $first = $loaded->first();
+        $this->assertInstanceOf(\Radix\Database\ORM\Model::class, $first);
+        $this->assertSame('published', $first->getAttribute('status'));
     }
 
     public function testHasOneWithDefaultReturnsEmptyModelWhenMissing(): void

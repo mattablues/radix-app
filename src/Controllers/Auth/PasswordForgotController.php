@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers\Auth;
 
 use App\Events\UserPasswordEvent;
+use App\Models\Status;
 use App\Models\User;
 use App\Services\AuthService;
 use Radix\Controller\AbstractController;
@@ -84,10 +85,12 @@ class PasswordForgotController extends AbstractController
         $user = User::where('email', '=', $email)->first();
 
         if ($user) {
+            /** @var User $user */
             $user->loadMissing('status');
 
             $status = $user->getRelation('status');
 
+            /** @var Status $status */
             if ($status && $status->getAttribute('status') === 'activated') {
                 $token = new Token();
                 $tokenValue = $token->value();

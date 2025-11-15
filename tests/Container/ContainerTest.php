@@ -238,6 +238,10 @@ class ContainerTest extends TestCase
         });
 
         $service = $container->get('greeting.service');
+
+        // Narrowa typen för PHPStan
+        assert($service instanceof \stdClass);
+
         $this->assertSame('Hello, Radix!', $service->greeting);
     }
 

@@ -11,7 +11,7 @@ use Radix\Database\ORM\Model;
  * @property int $user_id
  * @property string $value
  * @property string $description
- * @property string $expires_at
+ * @property string|null $expires_at
  * @property string $created_at
  * @property string $updated_at
  */
@@ -62,7 +62,12 @@ class Token extends Model
 
         // Sätt utgångsdatum (om det anges)
         if (!is_null($validityDays)) {
-            $token->expires_at = date('Y-m-d H:i:s', strtotime("+$validityDays days"));
+            $timestamp = strtotime("+$validityDays days");
+            if ($timestamp === false) {
+                throw new \RuntimeException('Kunde inte beräkna utgångsdatum för token.');
+            }
+
+            $token->expires_at = date('Y-m-d H:i:s', $timestamp);
         }
 
         $token->save(); // Spara token i databasen

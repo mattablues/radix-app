@@ -183,7 +183,8 @@ class User extends Model
     {
         $enum = $role instanceof Role ? $role : Role::tryFromName($role);
         if (!$enum) {
-            throw new \InvalidArgumentException('Ogiltig roll: ' . $role);
+            $roleLabel = $role instanceof Role ? $role->name : (string) $role;
+            throw new \InvalidArgumentException('Ogiltig roll: ' . $roleLabel);
         }
         $this->attributes['role'] = $enum->value;
     }

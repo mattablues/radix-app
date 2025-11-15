@@ -17,7 +17,7 @@ class UserControllerTest extends TestCase
     private PDO $pdo;
 
     protected function setUp(): void
-    {
+        {
         parent::setUp();
 
         // Återställ containern före varje test
@@ -47,7 +47,10 @@ class UserControllerTest extends TestCase
         $this->setupDatabase();
 
         // Initiera anslutning och UserController
-        $this->connection = $container->get(Connection::class);
+        $connection = $container->get(Connection::class);
+        assert($connection instanceof Connection);
+        $this->connection = $connection;
+
         $this->controller = new UserController();
 
         // Skapa en testrequest med "Authorization"-header

@@ -163,13 +163,13 @@ class AuthService
         }
 
         // Uppdatera frågan för att inkludera soft-deleted användare
-        $user =  User::withSoftDeletes() // Aktivera soft-deletes
-                ->select(['id', 'first_name', 'last_name', 'email'])
-                ->where('email', '=', $email)
-                ->first(); // Hämta den faktiska användaren
+        $user = User::withSoftDeletes() // Aktivera soft-deletes
+            ->select(['id', 'first_name', 'last_name', 'email'])
+            ->where('email', '=', $email)
+            ->first(); // Hämta den faktiska användaren
 
-        // Kontrollera om användaren inte hittades
-        if (!$user) {
+        // Säkerställ att resultatet är en User-instans
+        if (!$user instanceof User) {
             $this->trackFailedAttempt($email);
             return null;
         }

@@ -17,14 +17,26 @@ class ImageTest extends TestCase
     {
         // Skapa en testbild
         $image = imagecreatetruecolor(800, 600);
-        imagefill($image, 0, 0, imagecolorallocate($image, 255, 0, 0)); // Röd färg
+
+        $color = imagecolorallocate($image, 255, 0, 0);
+        if ($color === false) {
+            $this->fail('Kunde inte allokera färg för testbilden.');
+        }
+
+        imagefill($image, 0, 0, $color); // Röd färg
         $this->testImagePath = __DIR__ . '/test_image.jpg';
         imagejpeg($image, $this->testImagePath);
         imagedestroy($image);
 
         // Skapa vattenmärkesbild
         $watermark = imagecreatetruecolor(100, 50);
-        imagefill($watermark, 0, 0, imagecolorallocate($watermark, 0, 0, 255)); // Blå färg
+
+        $wmColor = imagecolorallocate($watermark, 0, 0, 255);
+        if ($wmColor === false) {
+            $this->fail('Kunde inte allokera färg för vattenmärkesbilden.');
+        }
+
+        imagefill($watermark, 0, 0, $wmColor); // Blå färg
         $this->watermarkImagePath = __DIR__ . '/watermark_image.png';
         imagepng($watermark, $this->watermarkImagePath);
         imagedestroy($watermark);
@@ -40,7 +52,10 @@ class ImageTest extends TestCase
             unlink($this->watermarkImagePath);
         }
 
-        array_map('unlink', glob(__DIR__ . '/result_*'));
+        $files = glob(__DIR__ . '/result_*');
+        if ($files !== false) {
+            array_map('unlink', $files);
+        }
     }
 
     public function testRotateImage(): void
