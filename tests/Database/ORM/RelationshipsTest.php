@@ -991,6 +991,8 @@ class RelationshipsTest extends TestCase
         $loaded = $post->getRelation('comments');
 
         $this->assertIsArray($loaded);
+        /** @var list<\Radix\Database\ORM\Model> $loaded */
+        $loaded = $loaded;
         $this->assertCount(2, $loaded);
         $this->assertSame('published', $loaded[0]->getAttribute('status'));
 
@@ -1045,11 +1047,17 @@ class RelationshipsTest extends TestCase
         // Ladda en gång
         $post->load('comments');
         $loadedFirst = $post->getRelation('comments');
+        $this->assertIsArray($loadedFirst);
+        /** @var list<\Radix\Database\ORM\Model> $loadedFirst */
+        $loadedFirst = $loadedFirst;
         $this->assertCount(1, $loadedFirst);
 
         // loadMissing ska inte ladda om "comments" (ska ignorera andra fetchAll-resultatet)
         $post->loadMissing('comments');
         $loadedAfter = $post->getRelation('comments');
+        $this->assertIsArray($loadedAfter);
+        /** @var list<\Radix\Database\ORM\Model> $loadedAfter */
+        $loadedAfter = $loadedAfter;
         $this->assertCount(1, $loadedAfter);
         $this->assertSame($loadedFirst[0]->getAttribute('status'), $loadedAfter[0]->getAttribute('status'));
     }

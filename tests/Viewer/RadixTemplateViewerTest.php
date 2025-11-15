@@ -299,7 +299,13 @@ public function testCacheInvalidation(): void
             $resolvedTemplatePath = $resolveTemplatePath->invoke($this->viewer, 'invalidate_test/template');
             $data = ['name' => 'InitialName'];
             $cacheKey = $generateCacheKey->invoke($this->viewer, $resolvedTemplatePath, $data);
-            $cachedFile = "{$adjustedCachePath}{$cacheKey}.php";
+
+            if (!is_string($cacheKey)) {
+                $this->fail('cacheKey() must return string.');
+            }
+
+            /** @var string $cacheKey */
+            $cachedFile = "$adjustedCachePath{$cacheKey}.php";
 
             // Rendera → cache ska skapas
             $this->viewer->render('invalidate_test/template', $data);
@@ -461,7 +467,14 @@ public function testCacheInvalidation(): void
 
             // Skapa en minimal template-fil som render() kan hitta
             $resolvedTemplatePath = $resolveTemplatePath->invoke($this->viewer, $mockTemplateName);
+
+            if (!is_string($resolvedTemplatePath)) {
+                $this->fail('resolvedTemplatePath() must return string.');
+            }
+
+            /** @var string $resolvedTemplatePath */
             $templateFullPath = $this->tempViewsPath . $resolvedTemplatePath;
+
             if (!is_dir(dirname($templateFullPath))) {
                 mkdir(dirname($templateFullPath), 0755, true);
             }
@@ -469,6 +482,12 @@ public function testCacheInvalidation(): void
 
             $data = [];
             $mockCacheKey = $generateCacheKey->invoke($this->viewer, $resolvedTemplatePath, $data);
+
+            if (!is_string($mockCacheKey)) {
+                $this->fail('generateCacheKey() must return string.');
+            }
+
+            /** @var string $mockCacheKey */
             $mockCacheFile = $mockCacheDir . $mockCacheKey . '.php';
 
             // Skapa cachefilen som ska användas

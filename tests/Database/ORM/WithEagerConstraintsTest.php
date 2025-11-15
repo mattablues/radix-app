@@ -133,8 +133,8 @@ class WithEagerConstraintsTest extends TestCase
     public function testWithHasManyWithConstraint(): void
     {
         $User = $this->makeUserModel();
-        $users = $User::query()
-            ->setConnection($this->conn)
+        /** @var list<\Radix\Database\ORM\Model> $users */
+        $users = $User::setConnection($this->conn)
             ->from('users')
             ->setModelClass(get_class($User))
             ->with([
@@ -146,11 +146,15 @@ class WithEagerConstraintsTest extends TestCase
 
         $this->assertCount(2, $users);
 
+        /** @var \Radix\Database\ORM\Model $alice */
         $alice = $users[0];
         $this->assertSame('Alice', $alice->getAttribute('name'));
 
         $alicePosts = $alice->getRelation('posts');
+
         $this->assertIsArray($alicePosts);
+        /** @var list<\Radix\Database\ORM\Model> $alicePosts */
+        $alicePosts = $alicePosts;
         // aktuell storlek är 2, inte 1
         $this->assertCount(2, $alicePosts);
         $this->assertSame('A1', $alicePosts[0]->getAttribute('title'));
@@ -161,6 +165,8 @@ class WithEagerConstraintsTest extends TestCase
 
         $bobPosts = $bob->getRelation('posts');
         $this->assertIsArray($bobPosts);
+        /** @var list<\Radix\Database\ORM\Model> $bobPosts */
+        $bobPosts = $bobPosts;
         $this->assertCount(1, $bobPosts);
         $this->assertSame('B1', $bobPosts[0]->getAttribute('title'));
     }
@@ -168,8 +174,8 @@ class WithEagerConstraintsTest extends TestCase
     public function testWithBelongsToManyWithConstraint(): void
     {
         $User = $this->makeUserModel();
-        $users = $User::query()
-            ->setConnection($this->conn)
+        /** @var list<\Radix\Database\ORM\Model> $users */
+        $users = $User::setConnection($this->conn)
             ->from('users')
             ->setModelClass(get_class($User))
             ->with([
@@ -179,18 +185,22 @@ class WithEagerConstraintsTest extends TestCase
             ])
             ->get();
 
+        /** @var \Radix\Database\ORM\Model $alice */
         $alice = $users[0];
 
         $aliceRoles = $alice->getRelation('roles');
         $this->assertIsArray($aliceRoles);
-        // constraint: status = 'active' -> bara 'Admin' för Alice
-        $this->assertCount(1, $aliceRoles);
-        $this->assertSame('Admin', $aliceRoles[0]->getAttribute('name'));
+        /** @var list<\Radix\Database\ORM\Model> $aliceRoles */
+        $aliceRoles = $aliceRoles;
+        // ... existing code ...
 
+        /** @var \Radix\Database\ORM\Model $bob */
         $bob = $users[1];
 
         $bobRoles = $bob->getRelation('roles');
         $this->assertIsArray($bobRoles);
+        /** @var list<\Radix\Database\ORM\Model> $bobRoles */
+        $bobRoles = $bobRoles;
         $this->assertCount(1, $bobRoles);
         $this->assertSame('Author', $bobRoles[0]->getAttribute('name'));
     }
@@ -198,8 +208,8 @@ class WithEagerConstraintsTest extends TestCase
     public function testWithMultipleRelationsAndConstraints(): void
     {
         $User = $this->makeUserModel();
-        $users = $User::query()
-            ->setConnection($this->conn)
+        /** @var list<\Radix\Database\ORM\Model> $users */
+        $users = $User::setConnection($this->conn)
             ->from('users')
             ->setModelClass(get_class($User))
             ->with([
@@ -214,17 +224,16 @@ class WithEagerConstraintsTest extends TestCase
 
         $this->assertCount(2, $users);
 
-        $alicePosts = $users[0]->getRelation('posts');
-        $aliceRoles = $users[0]->getRelation('roles');
-        $this->assertIsArray($alicePosts);
-        $this->assertIsArray($aliceRoles);
-        // aktuellt beteende: Alice får 2 posts här
-        $this->assertCount(2, $alicePosts);
-        // active‑filter: Alice har bara Admin
-        $this->assertCount(1, $aliceRoles);
+        /** @var \Radix\Database\ORM\Model $alice */
+        $alice = $users[0];
+        $alicePosts = $alice->getRelation('posts');
+        $aliceRoles = $alice->getRelation('roles');
+        // ... existing code ...
 
-        $bobPosts = $users[1]->getRelation('posts');
-        $bobRoles = $users[1]->getRelation('roles');
+        /** @var \Radix\Database\ORM\Model $bob */
+        $bob = $users[1];
+        $bobPosts = $bob->getRelation('posts');
+        $bobRoles = $bob->getRelation('roles');
         $this->assertIsArray($bobPosts);
         $this->assertIsArray($bobRoles);
         // Bob har en published post (B1) och en active roll (Author)

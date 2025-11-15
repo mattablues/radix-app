@@ -440,6 +440,7 @@ class QueryBuilderTest extends TestCase
             ->select(['id', 'name'])->from('users');
         /** @var mixed $invalid */
         $invalid = 123; // avsiktligt fel typ
+        // @phpstan-ignore-next-line Avsiktligt fel typ för att testa TypeError
         $query->union($invalid);
     }
 

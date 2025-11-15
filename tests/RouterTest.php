@@ -24,9 +24,15 @@ class RouterTest extends TestCase
 
         $routes = $this->router->routes();
 
+        /** @var array{path:string,params:array<string,mixed>} $firstRoute */
+        $firstRoute = $routes[0];
+
+        /** @var array<string,mixed> $params */
+        $params = $firstRoute['params'];
+
         $this->assertCount(1, $routes);
-        $this->assertEquals('/test', $routes[0]['path']);
-        $this->assertEquals('GET', $routes[0]['params']['method']);
+        $this->assertEquals('/test', $firstRoute['path']);
+        $this->assertEquals('GET', $params['method']);
     }
 
     public function testCanMatchRoute(): void
