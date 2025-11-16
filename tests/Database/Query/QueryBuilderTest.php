@@ -1247,8 +1247,13 @@ class QueryBuilderTest extends TestCase
 
         $sql = $q->toSql();
         $this->assertStringContainsString('SELECT JSON_EXTRACT(`meta`, ?) AS `brand` FROM `products`', $sql);
-        $this->assertStringContainsString('WHERE `tags` JSON_CONTAINS ?', $sql);
-        $this->assertEquals(['$.brand', json_encode('sale', JSON_UNESCAPED_UNICODE)], $q->getBindings());
+        $this->assertStringContainsString('WHERE JSON_CONTAINS(`tags`, ?)', $sql);
+
+        // WHERE-bindningen ("sale") kommer före SELECT-bindningen ("$.brand")
+        $this->assertEquals(
+            [json_encode('sale', JSON_UNESCAPED_UNICODE), '$.brand'],
+            $q->getBindings()
+        );
     }
 
     public function testRollupGroupBy(): void
