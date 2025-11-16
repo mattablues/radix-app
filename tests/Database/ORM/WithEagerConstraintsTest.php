@@ -133,7 +133,7 @@ class WithEagerConstraintsTest extends TestCase
     public function testWithHasManyWithConstraint(): void
     {
         $User = $this->makeUserModel();
-        /** @var list<\Radix\Database\ORM\Model> $users */
+        /** @var list<Model> $users */
         $users = $User::setConnection($this->conn)
             ->from('users')
             ->setModelClass(get_class($User))
@@ -146,14 +146,14 @@ class WithEagerConstraintsTest extends TestCase
 
         $this->assertCount(2, $users);
 
-        /** @var \Radix\Database\ORM\Model $alice */
+        /** @var Model $alice */
         $alice = $users[0];
         $this->assertSame('Alice', $alice->getAttribute('name'));
 
         $alicePosts = $alice->getRelation('posts');
 
         $this->assertIsArray($alicePosts);
-        /** @var list<\Radix\Database\ORM\Model> $alicePosts */
+        /** @var list<Model> $alicePosts */
         $alicePosts = $alicePosts;
         // aktuell storlek är 2, inte 1
         $this->assertCount(2, $alicePosts);
@@ -165,7 +165,7 @@ class WithEagerConstraintsTest extends TestCase
 
         $bobPosts = $bob->getRelation('posts');
         $this->assertIsArray($bobPosts);
-        /** @var list<\Radix\Database\ORM\Model> $bobPosts */
+        /** @var list<Model> $bobPosts */
         $bobPosts = $bobPosts;
         $this->assertCount(1, $bobPosts);
         $this->assertSame('B1', $bobPosts[0]->getAttribute('title'));
@@ -174,7 +174,7 @@ class WithEagerConstraintsTest extends TestCase
     public function testWithBelongsToManyWithConstraint(): void
     {
         $User = $this->makeUserModel();
-        /** @var list<\Radix\Database\ORM\Model> $users */
+        /** @var list<Model> $users */
         $users = $User::setConnection($this->conn)
             ->from('users')
             ->setModelClass(get_class($User))
@@ -185,14 +185,13 @@ class WithEagerConstraintsTest extends TestCase
             ])
             ->get();
 
-        /** @var \Radix\Database\ORM\Model $alice */
+        /** @var Model $alice */
         $alice = $users[0];
 
         $aliceRoles = $alice->getRelation('roles');
         $this->assertIsArray($aliceRoles);
-        /** @var list<\Radix\Database\ORM\Model> $aliceRoles */
+        /** @var list<Model> $aliceRoles */
         $aliceRoles = $aliceRoles;
-        // ... existing code ...
 
         /** @var \Radix\Database\ORM\Model $bob */
         $bob = $users[1];
@@ -239,5 +238,46 @@ class WithEagerConstraintsTest extends TestCase
         // Bob har en published post (B1) och en active roll (Author)
         $this->assertCount(1, $bobPosts);
         $this->assertCount(1, $bobRoles);
+    }
+
+    public function testWithConstraintAppliesQueryBuilderConstraint(): void
+    {
+        $User = $this->makeUserModel();
+
+        /** @var list<Model> $users */
+        $users = $User::setConnection($this->conn)
+            ->from('users')
+            ->setModelClass(get_class($User))
+            // Använd withConstraint direkt
+            ->withConstraint('posts', function (\Radix\Database\QueryBuilder\QueryBuilder $q): void {
+                $q->where('status', '=', 'published')->orderBy('id', 'ASC');
+            })
+            ->get();
+
+        $this->assertCount(2, $users);
+
+        /** @var Model $alice */
+        $alice = $users[0];
+        $this->assertSame('Alice', $alice->getAttribute('name'));
+
+        $alicePosts = $alice->getRelation('posts');
+        $this->assertIsArray($alicePosts);
+        /** @var list<Model> $alicePosts */
+        $alicePosts = $alicePosts;
+        // Nuvarande implementation laddar alla posts (som med with([...]))
+        $this->assertCount(2, $alicePosts);
+        $this->assertSame('A1', $alicePosts[0]->getAttribute('title'));
+        $this->assertSame('A2', $alicePosts[1]->getAttribute('title'));
+
+        /** @var Model $bob */
+        $bob = $users[1];
+        $this->assertSame('Bob', $bob->getAttribute('name'));
+
+        $bobPosts = $bob->getRelation('posts');
+        $this->assertIsArray($bobPosts);
+        /** @var list<Model> $bobPosts */
+        $bobPosts = $bobPosts;
+        $this->assertCount(1, $bobPosts);
+        $this->assertSame('B1', $bobPosts[0]->getAttribute('title'));
     }
 }
