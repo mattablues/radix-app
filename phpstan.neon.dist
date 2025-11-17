@@ -1,9 +1,10 @@
 parameters:
     level: 10
     paths:
-        - src
+        - bootstrap
         - framework/src
         - framework/support
+        - src
         - tests
         - config
         - public
