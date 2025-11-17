@@ -3,9 +3,11 @@ parameters:
     paths:
         - src
         - framework/src
+        - framework/support
         - tests
         - config
         - public
+        - support
     reportUnmatchedIgnoredErrors: true
     inferPrivatePropertyTypeFromConstructor: true
     treatPhpDocTypesAsCertain: false
