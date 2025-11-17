@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Radix\Tests;
+namespace Radix\Tests\Support;
 
 use PHPUnit\Framework\TestCase;
 use Radix\Support\Validator;

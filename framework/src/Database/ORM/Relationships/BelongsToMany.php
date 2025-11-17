@@ -11,15 +11,16 @@ use Radix\Support\StringHelper;
 class BelongsToMany
 {
     private Connection $connection;
+    /** @var class-string<Model> */
     private string $relatedModelClass; // ändrat: spara klassnamn
     private string $pivotTable;
     private string $foreignPivotKey;
     private string $relatedPivotKey;
     private string $parentKeyName;
     private ?Model $parent = null;
-    private array $pivotColumns = []; // nya: extra kolumner att hämta från pivot
-    private ?\Radix\Database\QueryBuilder\QueryBuilder $builder = null; // ny: relationens QB
-
+    /** @var array<int, string> */
+    private array $pivotColumns = [];
+    private ?\Radix\Database\QueryBuilder\QueryBuilder $builder = null;
 
     public function __construct(
         Connection $connection,
@@ -30,7 +31,12 @@ class BelongsToMany
         string $parentKeyName
     ) {
         $this->connection = $connection;
-        $this->relatedModelClass = $this->resolveModelClass($relatedModel);
+        $resolved = $this->resolveModelClass($relatedModel);
+        if (!is_subclass_of($resolved, Model::class)) {
+            throw new \LogicException("BelongsToMany related model '$resolved' must extend " . Model::class . '.');
+        }
+        /** @var class-string<Model> $resolved */
+        $this->relatedModelClass = $resolved;
         $this->pivotTable = $pivotTable;
         $this->foreignPivotKey = $foreignPivotKey;
         $this->relatedPivotKey = $relatedPivotKey;
@@ -99,15 +105,26 @@ class BelongsToMany
         return $this;
     }
 
+    /**
+     * Hämta relaterade modeller.
+     *
+     * @return array<int, Model>
+     */
     public function get(): array
     {
         // 1) Om query()-builder finns (används av eager loading med closure), kör den
         if ($this->builder instanceof \Radix\Database\QueryBuilder\QueryBuilder) {
-            $models = $this->builder->get();
+            $modelsCollection = $this->builder->get(); // Collection<Model>
 
-            // Mappa pivot_* alias till relation 'pivot'
-            if (!empty($this->pivotColumns)) {
-                foreach ($models as $m) {
+            /** @var array<int, Model> $models */
+            $models = [];
+            foreach ($modelsCollection as $m) {
+                if (!$m instanceof Model) {
+                    throw new \LogicException('BelongsToMany::get() expected Collection<Model>.');
+                }
+
+                // Mappa pivot_* alias till relation 'pivot'
+                if (!empty($this->pivotColumns)) {
                     $pivotData = [];
                     foreach ($this->pivotColumns as $col) {
                         $alias = "pivot_$col";
@@ -116,19 +133,18 @@ class BelongsToMany
                             $pivotData[$col] = $val;
                         }
                     }
-                    if (!empty($pivotData) && method_exists($m, 'setRelation')) {
+                    if (!empty($pivotData)) {
                         $m->setRelation('pivot', $pivotData);
-                    } elseif (!empty($pivotData) && method_exists($m, 'setAttribute')) {
-                        $m->setAttribute('pivot', $pivotData);
                     }
                 }
+
+                $models[] = $m;
             }
 
             return $models;
         }
 
-        // 2) Fallback: manuell SQL (behåller din tidigare logik)
-        // Parent-flöde
+        // 2) Fallback: manuell SQL
         if ($this->parent !== null) {
             $parentValue = $this->parent->getAttribute($this->parentKeyName);
             if ($parentValue === null) {
@@ -157,9 +173,14 @@ class BelongsToMany
               ON related.id = pivot.`$this->relatedPivotKey`
             WHERE pivot.`$this->foreignPivotKey` = ?";
 
+        /** @var array<int, array<string, mixed>> $results */
         $results = $this->connection->fetchAll($query, [$parentValue]);
 
-        $models = array_map(fn($data) => $this->createModelInstance($data, $this->relatedModelClass), $results);
+        /** @var array<int, Model> $models */
+        $models = array_map(
+            fn(array $data): Model => $this->createModelInstance($data, $this->relatedModelClass),
+            $results
+        );
 
         // Injicera pivot-data på modellerna om withPivot använts
         if (!empty($this->pivotColumns)) {
@@ -171,10 +192,8 @@ class BelongsToMany
                         $pivotData[$col] = $results[$i][$key];
                     }
                 }
-                if (!empty($pivotData) && method_exists($model, 'setRelation')) {
+                if (!empty($pivotData)) {
                     $model->setRelation('pivot', $pivotData);
-                } elseif (!empty($pivotData) && method_exists($model, 'setAttribute')) {
-                    $model->setAttribute('pivot', $pivotData);
                 }
             }
         }
@@ -182,21 +201,30 @@ class BelongsToMany
         return $models;
     }
 
-    public function attach($ids, array $attributes = [], bool $ignoreDuplicates = true): void
+    /**
+     * Attach relaterade ids till pivot-tabellen.
+     *
+     * @param  int|string|array<int, int|array<string, mixed>>  $ids
+     *        - 5
+     *        - [1, 2, 3]
+     *        - [1 => ['extra' => 'x'], 2 => ['extra' => 'y']]
+     * @param  array<string, mixed>  $attributes
+     */
+    public function attach(int|string|array $ids, array $attributes = [], bool $ignoreDuplicates = true): void
     {
         $parentId = $this->requireParentId();
         $rows = $this->normalizeAttachInput($ids, $attributes);
 
         foreach ($rows as $relatedId => $attrs) {
             // Kolla om redan finns om vi vill ignorera dubletter
-            if ($ignoreDuplicates && $this->existsInPivot($parentId, (int)$relatedId)) {
+            if ($ignoreDuplicates && $this->existsInPivot($parentId, $relatedId)) {
                 // Uppdatera endast extra attribut om de skickats
                 if (!empty($attrs)) {
                     $set = implode(', ', array_map(fn($k) => "`$k` = ?", array_keys($attrs)));
                     $sql = "UPDATE `$this->pivotTable` SET $set WHERE `$this->foreignPivotKey` = ? AND `$this->relatedPivotKey` = ?";
                     $bindings = array_values($attrs);
                     $bindings[] = $parentId;
-                    $bindings[] = (int)$relatedId;
+                    $bindings[] = $relatedId;
                     $this->connection->execute($sql, $bindings);
                 }
                 continue;
@@ -205,7 +233,7 @@ class BelongsToMany
             // INSERT
             $payload = array_merge($attrs, [
                 $this->foreignPivotKey => $parentId,
-                $this->relatedPivotKey => (int)$relatedId,
+                $this->relatedPivotKey => $relatedId,
             ]);
 
             $columns = array_keys($payload);
@@ -216,7 +244,16 @@ class BelongsToMany
         }
     }
 
-    public function detach($ids = null): void
+    /**
+     * Detach relaterade ids från pivot-tabellen.
+     *
+     * @param  int|array<int, int|array<string, mixed>>|null  $ids
+     *        - null  => ta bort alla för parent
+     *        - 5     => ta bort en
+     *        - [1,2] => ta bort flera
+     *        - [1 => ['ignored']] är tillåtet för backcompat, värdena används inte
+     */
+    public function detach(array|int $ids = null): void
     {
         $parentId = $this->requireParentId();
 
@@ -241,6 +278,9 @@ class BelongsToMany
         $this->connection->execute($sql, array_merge([$parentId], $normalized));
     }
 
+    /**
+     * @param array<int, int|array<string, mixed>> $idsWithAttributes
+     */
     public function sync(array $idsWithAttributes, bool $detaching = true): void
     {
         $parentId = $this->requireParentId();
@@ -258,7 +298,6 @@ class BelongsToMany
 
         // Attach/Update
         foreach ($target as $relatedId => $attrs) {
-            $relatedId = (int)$relatedId;
             if (in_array($relatedId, $existing, true)) {
                 if (!empty($attrs)) {
                     $set = implode(', ', array_map(fn($k) => "`$k` = ?", array_keys($attrs)));
@@ -317,10 +356,22 @@ class BelongsToMany
         throw new \Exception("Model class '$classOrTable' not found. Expected '$singularClass'.");
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private function createModelInstance(array $data, string $classOrTable): Model
     {
         $modelClass = $this->resolveModelClass($classOrTable);
+
+        if (!is_subclass_of($modelClass, Model::class)) {
+            throw new \LogicException(
+                "BelongsToMany relation resolved model class '$modelClass' must extend " . Model::class . "."
+            );
+        }
+
+        /** @var class-string<Model> $modelClass */
         $model = new $modelClass();
+        /** @var Model $model */
         $model->hydrateFromDatabase($data);
         $model->markAsExisting();
 
@@ -338,41 +389,112 @@ class BelongsToMany
         if ($id === null) {
             throw new \RuntimeException('Parent-modellen saknar primärnyckel.');
         }
-        return (int)$id;
+
+        if (!is_int($id) && !is_string($id)) {
+            throw new \RuntimeException('Parent-id måste vara int eller string, fick: ' . get_debug_type($id));
+        }
+
+        return (int) $id;
     }
 
-    private function normalizeAttachInput($ids, array $attributes = []): array
+    /**
+     * @param int|string|array<int, int|array<string, mixed>> $ids
+     * @param array<string, mixed> $attributes
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeAttachInput(int|string|array $ids, array $attributes = []): array
     {
         if (!is_array($ids)) {
-            return [(int)$ids => $attributes];
+            // ids är int|string här enligt signaturen
+            return [$this->normalizeSingleId($ids) => $attributes];
         }
+
         // Lista: [1,2] -> [1=>attrs,2=>attrs]
         if (array_keys($ids) === range(0, count($ids) - 1)) {
             $out = [];
             foreach ($ids as $id) {
-                $out[(int)$id] = $attributes;
+                // enligt phpdoc: int|array<string,mixed>; vi accepterar bara int
+                if (!is_int($id)) {
+                    throw new \InvalidArgumentException(
+                        'BelongsToMany ids-list måste innehålla heltal, fick ' . get_debug_type($id)
+                    );
+                }
+                $out[$this->normalizeSingleId($id)] = $attributes;
             }
             return $out;
         }
-        // Assoc: [id => attrs]
+
+        // Assoc: [id => attrs] (id enligt phpdoc: int)
         $out = [];
         foreach ($ids as $k => $v) {
-            $out[(int)$k] = is_array($v) ? $v : $attributes;
+            if (!is_int($k)) {
+                throw new \InvalidArgumentException(
+                    'BelongsToMany ids-nycklar måste vara heltal, fick ' . get_debug_type($k)
+                );
+            }
+            $id = $this->normalizeSingleId($k);
+            $out[$id] = is_array($v) ? $v : $attributes;
         }
         return $out;
     }
 
-    private function existsInPivot(int $parentId, int $relatedId): bool
+   private function existsInPivot(int $parentId, int $relatedId): bool
     {
         $sql = "SELECT 1 FROM `$this->pivotTable` WHERE `$this->foreignPivotKey` = ? AND `$this->relatedPivotKey` = ? LIMIT 1";
         $row = $this->connection->fetchOne($sql, [$parentId, $relatedId]);
         return $row !== null;
     }
 
+     /**
+     * @return array<int, int>
+     */
     private function getExistingRelatedIds(int $parentId): array
     {
         $sql = "SELECT `$this->relatedPivotKey` AS rid FROM `$this->pivotTable` WHERE `$this->foreignPivotKey` = ?";
+        /** @var array<int, array<string, mixed>> $rows */
         $rows = $this->connection->fetchAll($sql, [$parentId]);
-        return array_map(fn($r) => (int)$r['rid'], $rows);
+
+        return array_map(
+            /**
+             * @param array<string, mixed> $r
+             */
+            function (array $r): int {
+                $rid = $r['rid'] ?? null;
+
+                if (is_int($rid)) {
+                    return $rid;
+                }
+                if (is_string($rid)) {
+                    $trimmed = trim($rid);
+                    if ($trimmed !== '' && ctype_digit($trimmed)) {
+                        return (int) $trimmed;
+                    }
+                }
+
+                throw new \RuntimeException(
+                    'BelongsToMany::getExistingRelatedIds(): ogiltig rid-typ: ' . get_debug_type($rid)
+                );
+            },
+            $rows
+        );
+    }
+
+    /**
+     * Normalisera ett enskilt id till int.
+     *
+     * @param int|string $id
+     */
+    private function normalizeSingleId(int|string $id): int
+    {
+        if (is_int($id)) {
+            return $id;
+        }
+
+        $trimmed = trim($id);
+        if ($trimmed === '' || !ctype_digit($trimmed)) {
+            throw new \InvalidArgumentException('BelongsToMany id måste vara ett heltal eller numerisk sträng, fick: ' . $id);
+        }
+
+        return (int) $trimmed;
     }
 }

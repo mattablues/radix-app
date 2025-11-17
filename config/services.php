@@ -33,6 +33,15 @@ foreach ($configFiles as $file) {
 
 // Registrera den sammanslagna konfigurationen i containern
 $container->add('config', new Config($configData));
+$container->add(\Radix\Support\FileCache::class, fn() => new \Radix\Support\FileCache());
+
+$container->addShared(\Radix\Support\Logger::class, fn() => new \Radix\Support\Logger('app'));
+
+$container->add(\App\Services\HealthCheckService::class, function () {
+    // injicera delad logger, eller skapa kanal-specifik
+    $logger = new \Radix\Support\Logger('health');
+    return new \App\Services\HealthCheckService($logger);
+});
 
 $container->addShared(\Radix\Database\Connection::class, function () use ($container) {
     /** @var Radix\Config\Config $config */

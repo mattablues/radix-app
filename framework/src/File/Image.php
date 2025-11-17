@@ -48,13 +48,34 @@ class Image
         $optimalWidth = $dimensions['optimalWidth'];
         $optimalHeight = $dimensions['optimalHeight'];
 
+        if ($optimalWidth <= 0 || $optimalHeight <= 0) {
+            throw new InvalidArgumentException(
+                sprintf('Ogiltiga bilddimensioner: %d x %d', $optimalWidth, $optimalHeight)
+            );
+        }
+
         $this->imageResized = imagecreatetruecolor($optimalWidth, $optimalHeight);
 
         $transparent = imagecolorallocatealpha($this->imageResized, 0, 0, 0, 127);
+        if ($transparent === false) {
+            throw new RuntimeException('Kunde inte allokera transparent färg för den ändrade bilden.');
+        }
+
         imagefill($this->imageResized, 0, 0, $transparent);
         imagesavealpha($this->imageResized, true);
 
-        if (!imagecopyresampled($this->imageResized, $this->image, 0, 0, 0, 0, $optimalWidth, $optimalHeight, $this->width, $this->height)) {
+        if (!imagecopyresampled(
+            $this->imageResized,
+            $this->image,
+            0,
+            0,
+            0,
+            0,
+            $optimalWidth,
+            $optimalHeight,
+            $this->width,
+            $this->height
+        )) {
             throw new RuntimeException('Misslyckades med att ändra storlek på bilden.');
         }
 
@@ -74,6 +95,10 @@ class Image
     public function saveImage(string $path, ?int $quality = null): void
     {
         $quality = $quality ?? $this->defaultQuality;
+
+        if (!$this->imageResized instanceof \GdImage) {
+            throw new RuntimeException('Ingen ändrad bild att spara. Anropa resizeImage() innan saveImage().');
+        }
 
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
@@ -137,6 +162,14 @@ class Image
         $this->imageResized = $baseImage;
     }
 
+    /**
+     * @return array{
+     *     width: int,
+     *     height: int,
+     *     resizedWidth: int|null,
+     *     resizedHeight: int|null
+     * }
+     */
     public function getImageInfo(): array
     {
         return [
@@ -183,13 +216,21 @@ class Image
             default => throw new InvalidArgumentException("Bildformat \"$mimeType\" stöds inte."),
         };
 
-        if (!$img instanceof \GdImage) {
+        if ($img === false) {
             throw new RuntimeException('Kunde inte öppna bilden.');
         }
 
         return $img;
     }
 
+    /**
+     * Beräkna mål-dimensioner baserat på valt alternativ.
+     *
+     * @return array{
+     *     optimalWidth: int,
+     *     optimalHeight: int
+     * }
+     */
     protected function getDimensions(int $newWidth, int $newHeight, string $option): array
     {
         return match ($option) {
@@ -213,6 +254,14 @@ class Image
         return (int)round($targetDimension * ($primaryDimension / $secondaryDimension));
     }
 
+    /**
+     * Beräkna optimal storlek med bibehållen aspect ratio.
+     *
+     * @return array{
+     *     optimalWidth: int,
+     *     optimalHeight: int
+     * }
+     */
     protected function getSizeByAuto(int $newWidth, int $newHeight): array
     {
         if ($this->width > $this->height) {
@@ -237,6 +286,14 @@ class Image
         ];
     }
 
+    /**
+     * Beräkna optimala beskärningsdimensioner.
+     *
+     * @return array{
+     *     optimalWidth: int,
+     *     optimalHeight: int
+     * }
+     */
     protected function getOptimalCrop(int $newWidth, int $newHeight): array
     {
         $widthRatio = $this->width / $newWidth;
@@ -251,12 +308,36 @@ class Image
 
     private function crop(int $optimalWidth, int $optimalHeight, int $newWidth, int $newHeight): void
     {
+        if ($newWidth <= 0 || $newHeight <= 0) {
+            throw new InvalidArgumentException(
+                sprintf('Ogiltiga beskärningsdimensioner: %d x %d', $newWidth, $newHeight)
+            );
+        }
+
         $cropStartX = (int)round(($optimalWidth - $newWidth) / 2);
         $cropStartY = (int)round(($optimalHeight - $newHeight) / 2);
 
         $crop = imagecreatetruecolor($newWidth, $newHeight);
+        if (!$crop instanceof \GdImage) {
+            throw new RuntimeException('Kunde inte skapa canvas för beskärd bild.');
+        }
 
-        if (!$crop || !imagecopyresampled($crop, $this->imageResized, 0, 0, $cropStartX, $cropStartY, $newWidth, $newHeight, $newWidth, $newHeight)) {
+        if (!$this->imageResized instanceof \GdImage) {
+            throw new RuntimeException('Ingen ändrad bild att beskära.');
+        }
+
+        if (!imagecopyresampled(
+            $crop,
+            $this->imageResized,
+            0,
+            0,
+            $cropStartX,
+            $cropStartY,
+            $newWidth,
+            $newHeight,
+            $newWidth,
+            $newHeight
+        )) {
             throw new RuntimeException('Misslyckades med att beskära bilden.');
         }
 

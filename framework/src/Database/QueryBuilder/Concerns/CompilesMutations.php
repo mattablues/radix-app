@@ -18,15 +18,31 @@ trait CompilesMutations
     protected function compileMutationSql(): string
     {
         if ($this->type === 'INSERT') {
-            $columns = implode(', ', array_map(fn($col) => $this->wrapColumn($col), $this->columns));
+            $columns = implode(
+                ', ',
+                array_map(
+                    function ($col): string {
+                        $name = $this->normalizeColumnName($col);
+                        return $this->wrapColumn($name);
+                    },
+                    $this->columns
+                )
+            );
             $placeholders = implode(', ', array_fill(0, count($this->columns), '?'));
             $this->compileAllBindings();
             return "INSERT INTO $this->table ($columns) VALUES ($placeholders)";
         }
 
         if ($this->type === 'UPDATE') {
-            $setClause = implode(', ',
-                array_map(fn($col) => "{$this->wrapColumn($col)} = ?", array_keys($this->columns))
+            $setClause = implode(
+                ', ',
+                array_map(
+                    function ($col): string {
+                        $name = $this->normalizeColumnName($col);
+                        return $this->wrapColumn($name) . ' = ?';
+                    },
+                    array_keys($this->columns)
+                )
             );
 
             $sql = "UPDATE $this->table SET $setClause";
@@ -53,7 +69,16 @@ trait CompilesMutations
         }
 
         if ($this->type === 'INSERT_IGNORE') {
-            $columns = implode(', ', array_map(fn($col) => $this->wrapColumn($col), $this->columns));
+            $columns = implode(
+                ', ',
+                array_map(
+                    function ($col): string {
+                        $name = $this->normalizeColumnName($col);
+                        return $this->wrapColumn($name);
+                    },
+                    $this->columns
+                )
+            );
             $placeholders = implode(', ', array_fill(0, count($this->columns), '?'));
             $this->compileAllBindings();
             return "INSERT OR IGNORE INTO $this->table ($columns) VALUES ($placeholders)";
@@ -63,17 +88,53 @@ trait CompilesMutations
             if (empty($this->upsertUnique)) {
                 throw new \RuntimeException('Upsert kräver unika kolumner.');
             }
-            $columns = implode(', ', array_map(fn($col) => $this->wrapColumn($col), $this->columns));
+
+            $columns = implode(
+                ', ',
+                array_map(
+                    function ($col): string {
+                        $name = $this->normalizeColumnName($col);
+                        return $this->wrapColumn($name);
+                    },
+                    $this->columns
+                )
+            );
             $placeholders = implode(', ', array_fill(0, count($this->columns), '?'));
-            $conflict = implode(', ', array_map(fn($col) => $this->wrapColumn($col), $this->upsertUnique));
+
+            $conflict = implode(
+                ', ',
+                array_map(
+                    function ($col): string {
+                        $name = $this->normalizeColumnName($col);
+                        return $this->wrapColumn($name);
+                    },
+                    $this->upsertUnique
+                )
+            );
+
             $updates = $this->upsertUpdate;
             if ($updates === null || $updates === []) {
-                $updates = array_combine($this->columns, array_fill(0, count($this->columns), null));
+                /** @var array<int,string> $columnNames */
+                $columnNames = array_values(array_map(
+                    function ($col): string {
+                        return $this->normalizeColumnName($col);
+                    },
+                    $this->columns
+                ));
+                $updates = array_combine($columnNames, array_fill(0, count($columnNames), null));
             }
-            $updateSql = implode(', ', array_map(
-                fn($col) => $this->wrapColumn($col) . ' = EXCLUDED.' . $this->wrapColumn($col),
-                array_keys($updates)
-            ));
+
+            $updateSql = implode(
+                ', ',
+                array_map(
+                    function ($col): string {
+                        $name = $this->normalizeColumnName($col);
+                        return $this->wrapColumn($name) . ' = EXCLUDED.' . $this->wrapColumn($name);
+                    },
+                    array_keys($updates)
+                )
+            );
+
             $this->compileAllBindings();
             return "INSERT INTO $this->table ($columns) VALUES ($placeholders) ON CONFLICT ($conflict) DO UPDATE SET $updateSql";
         }
@@ -81,6 +142,27 @@ trait CompilesMutations
         throw new \RuntimeException("Query type '$this->type' är inte implementerad.");
     }
 
+    /**
+     * Normalisera ett kolumnnamn till en sträng på ett typesäkert sätt.
+     */
+    private function normalizeColumnName(mixed $col): string
+    {
+        if (is_string($col)) {
+            return $col;
+        }
+
+        if ($col instanceof \Stringable) {
+            return (string) $col;
+        }
+
+        // Om du vill tillåta int som indexerade kolumner kan du göra t.ex. "col_$col",
+        // men i din kod används kolumner som faktiska namnssträngar.
+        throw new \RuntimeException('Ogiltigt kolumnnamn: ' . get_debug_type($col));
+    }
+
+    /**
+     * @param array<string, mixed> $data Data för INSERT (kolumn => värde)
+     */
     public function insert(array $data): self
     {
         if (empty($data)) {
@@ -94,6 +176,9 @@ trait CompilesMutations
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $data Data för UPDATE (kolumn => värde)
+     */
     public function update(array $data): self
     {
         $this->type = 'UPDATE';
@@ -114,6 +199,9 @@ trait CompilesMutations
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $data Data för INSERT OR IGNORE (kolumn => värde)
+     */
     public function insertOrIgnore(array $data): self
     {
         if (empty($data)) {
@@ -125,6 +213,11 @@ trait CompilesMutations
         return $this;
     }
 
+    /**
+     * @param array<string, mixed>     $data      Rad att upserta (kolumn => värde)
+     * @param array<int, string>       $uniqueBy  Kolumner/nycklar som definierar unikhet
+     * @param array<string, mixed>|null $update   Kolumner att uppdatera vid konflikt (null = alla kolumner)
+     */
     public function upsert(array $data, array $uniqueBy, ?array $update = null): self
     {
         if (empty($data) || empty($uniqueBy)) {

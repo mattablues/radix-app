@@ -8,10 +8,25 @@ class Definition
 {
     private mixed $concrete;
     private ?string $class = null;
+    /**
+     * @var array<int|string, mixed>
+     */
     private array $arguments = [];
+    /**
+     * @var array<int, array{0: string, 1: array<int, mixed>}>
+     */
     private array $calls = [];
+    /**
+     * @var array<string, mixed>
+     */
     private array $properties = [];
-    private mixed $factory = null;
+    /**
+     * @var array{class-string, string}|(callable(): mixed)|null
+     */
+    private $factory = null;
+    /**
+     * @var array<string, array<int, array<string, mixed>>>
+     */
     private array $tags = [];
     private bool $autowired = true;
     private bool $shared = true;
@@ -62,23 +77,66 @@ class Definition
         return $this->class;
     }
 
-    public function setFactory(callable|array $factory): Definition
+    /**
+     * @param array{class-string, string}|(callable(): mixed)|null $factory
+     */
+    public function setFactory($factory): self
     {
-        $this->factory = $factory;
+        if ($factory === null) {
+            $this->factory = null;
+            return $this;
+        }
 
-        return $this;
+        if (is_array($factory)) {
+            // Måste vara [class-string, method]
+            if (
+                count($factory) !== 2
+                || !is_string($factory[0])
+                || !is_string($factory[1])
+            ) {
+                throw new \InvalidArgumentException('Factory array must be [class-string, method].');
+            }
+
+            /** @var array{class-string, string} $factory */
+            $this->factory = $factory;
+
+            return $this;
+        }
+
+        if (is_callable($factory)) {
+            /** @var callable(): mixed $factoryCallable */
+            $factoryCallable = $factory;
+            $this->factory = $factoryCallable;
+
+            return $this;
+        }
+
+        throw new \InvalidArgumentException('Factory must be [class-string, method], callable, or null.');
     }
 
-    public function getFactory(): null|callable|array
+    /**
+     * @return array{class-string, string}|(callable(): mixed)|null
+     */
+    public function getFactory()
     {
         return $this->factory;
     }
 
+    /**
+     * Sätt alla egenskaper som ska injiceras på instansen.
+     *
+     * @param array<string, mixed> $properties
+     */
     public function setProperties(array $properties): void
     {
         $this->properties = $properties;
     }
 
+    /**
+     * Hämta alla egenskaper som ska sättas på instansen.
+     *
+     * @return array<string, mixed>
+     */
     public function getProperties(): array
     {
         return $this->properties;
@@ -107,7 +165,7 @@ class Definition
         return $this;
     }
 
-    public function setArgument(mixed $key, mixed $value): Definition
+    public function setArgument(int|string $key, mixed $value): Definition
     {
         $this->arguments[$key] = $value;
 
@@ -123,6 +181,11 @@ class Definition
         return $this->arguments[$index];
     }
 
+    /**
+     * Sätt alla argument för definitionen.
+     *
+     * @param array<int|string, mixed> $arguments
+     */
     public function setArguments(array $arguments): Definition
     {
         $this->arguments = $arguments;
@@ -130,11 +193,21 @@ class Definition
         return $this;
     }
 
+    /**
+     * Hämta alla registrerade argument för definitionen.
+     *
+     * @return array<int|string, mixed>
+     */
     public function getArguments(): array
     {
         return $this->arguments;
     }
 
+    /**
+     * Lägg till ett metodanrop som ska utföras på instansen efter skapande.
+     *
+     * @param array<int, mixed>|string $arguments
+     */
     public function addMethodCall(string $method, array|string $arguments): Definition
     {
         if (empty($method)) {
@@ -149,6 +222,11 @@ class Definition
         return $this;
     }
 
+    /**
+     * Sätt alla metodanrop som ska utföras på instansen.
+     *
+     * @param array<int, array{0: string, 1: array<int, mixed>}> $methods
+     */
     public function setMethodCalls(array $methods): Definition
     {
         $this->calls = [];
@@ -160,6 +238,11 @@ class Definition
         return $this;
     }
 
+    /**
+     * Hämta alla metodanrop som ska utföras på instansen.
+     *
+     * @return array<int, array{0: string, 1: array<int, mixed>}>
+     */
     public function getMethodCalls(): array
     {
         return $this->calls;
@@ -176,6 +259,11 @@ class Definition
         return false;
     }
 
+    /**
+     * Sätt alla taggar för denna definition.
+     *
+     * @param array<string, array<int, array<string, mixed>>> $tags
+     */
     public function setTags(array $tags): Definition
     {
         $this->tags = $tags;
@@ -183,16 +271,31 @@ class Definition
         return $this;
     }
 
+    /**
+     * Hämta alla taggar för denna definition.
+     *
+     * @return array<string, array<int, array<string, mixed>>>
+     */
     public function getTags(): array
     {
         return $this->tags;
     }
 
+    /**
+     * Hämta alla attribut-set för en given tagg.
+     *
+     * @return array<int, array<string, mixed>>
+     */
     public function getTag(string $name): array
     {
         return $this->tags[$name] ?? array();
     }
 
+    /**
+     * Lägg till en tagg på definitionen.
+     *
+     * @param array<string, mixed> $attributes
+     */
     public function addTag(string $name, array $attributes = []): Definition
     {
         if (empty($name)) {

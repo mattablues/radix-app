@@ -15,12 +15,22 @@ class MakeMigrationCommand extends BaseCommand
         $this->templatePath = $templatePath;
     }
 
+    /**
+     * Kör kommandot med givna argument.
+     *
+     * @param array<int, string> $args
+     */
     public function execute(array $args): void
     {
         $this->__invoke($args); // Anropa __invoke-logiken
 
     }
 
+    /**
+     * Gör objektet anropbart som ett kommando.
+     *
+     * @param array<int, string> $args
+     */
     public function __invoke(array $args): void
     {
         // Hantera hjälpinformation
@@ -74,6 +84,7 @@ class MakeMigrationCommand extends BaseCommand
         // Generera rätt tabellnamn
         $generatedTableName = ($operation === 'create') ? strtolower($tableName) : $tableName;
 
+        /** @var string $template */
         // Byt ut placeholders i stub-filen
         $content = str_replace(
             ['[TableName]', '[OperationType]'],

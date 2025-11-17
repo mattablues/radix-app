@@ -8,10 +8,13 @@ use InvalidArgumentException;
 
 class Validator
 {
+    /** @var array<string,mixed> */
     protected array $data;
+    /** @var array<string,string|array<int,string>> */
     protected array $rules;
+    /** @var array<string,array<int,string>> */
     protected array $errors = [];
-
+    /** @var array<string,string> */
     protected array $fieldTranslations = [
         'name' => 'namn',
         'first_name' => 'förnamn',
@@ -25,6 +28,10 @@ class Validator
         'description' => 'beskrivning',
     ];
 
+    /**
+     * @param array<string,mixed>                           $data
+     * @param array<string,string|array<int,string>>        $rules
+     */
     public function __construct(array $data, array $rules)
     {
         $this->data = $data;
@@ -56,6 +63,7 @@ class Validator
 
     /**
      * Hämta alla valideringsfel.
+     * @return array<string,array<int,string>>
      */
     public function errors(): array
     {
@@ -66,18 +74,38 @@ class Validator
     {
         $value = $this->data[$field] ?? null;
 
-        if ($includeValue && $value) {
-            $message = str_replace('{placeholder}', htmlspecialchars($value, ENT_QUOTES), $message);
+        if ($includeValue && $value !== null) {
+            if (is_scalar($value)) {
+                $valueString = (string) $value;
+            } else {
+                // För icke-skalära värden (array/objekt) visar vi inget konkret värde
+                $valueString = '';
+            }
+
+            $message = str_replace(
+                '{placeholder}',
+                htmlspecialchars($valueString, ENT_QUOTES),
+                $message
+            );
         }
 
         $this->errors[$field][] = $message;
     }
 
     // Hjälpmetod att generera nytt honeypot-id efter validering
+    /**
+     * @param callable():string $generator
+     */
     public function regenerateHoneypotId(callable $generator): string
     {
         $newId = $generator();
+
+        if (!is_string($newId)) {
+            throw new \RuntimeException('Honeypot ID generator must return a string.');
+        }
+
         $_SESSION['honeypot_id'] = $newId;
+
         return $newId;
     }
 
@@ -133,58 +161,62 @@ class Validator
     }
 
     protected function getErrorMessage(string $field, string $rule, mixed $parameter = null): string
-    {
+        {
         // Översätt huvudfältet
         $translatedField = $this->fieldTranslations[str_replace('hp_', 'honeypot', $field)] ?? $field;
 
+        // Normalisera parameter till sträng (för string-interpolation) eller null
+        $parameterString = null;
+        if ($parameter !== null) {
+            if (is_scalar($parameter)) {
+                $parameterString = (string) $parameter;
+            } else {
+                $parameterString = '';
+            }
+        }
+
         if ($rule === 'confirmed') {
             // Korrekt huvudfält för "_confirmation"-fält
-            $parameterField = $parameter ?? rtrim($field, '_confirmation');
+            $parameterField = $parameterString ?? rtrim($field, '_confirmation');
             $translatedParameter = $this->fieldTranslations[$parameterField] ?? $parameterField;
-
 
             return "Fältet $translatedField måste matcha fältet $translatedParameter.";
         }
 
-                // Hantering för "file_type" med tydligare meddelande
-//        if ($rule === 'file_type') {
-//            return "Fältet $translatedField måste vara av typen: $parameter.";
-//        }
-
-
         // Översätt parameterfältet, t.ex. password i regeln 'confirmed'
-        $translatedParameter = $parameter ? ($this->fieldTranslations[$parameter] ?? $parameter) : $parameter;
+        $translatedParameter = $parameterString !== null
+            ? ($this->fieldTranslations[$parameterString] ?? $parameterString)
+            : null;
 
         // Standardfelmeddelanden
         $messages = [
             'required' => "Fältet $translatedField är obligatoriskt.",
             'email' => "Fältet $translatedField måste vara en giltig e-postadress.",
-            'min' => "Fältet $translatedField måste vara minst $parameter tecken långt.",
-            'max' => "Fältet $translatedField får inte vara längre än $parameter tecken.",
+            'min' => "Fältet $translatedField måste vara minst $parameterString tecken långt.",
+            'max' => "Fältet $translatedField får inte vara längre än $parameterString tecken.",
             'numeric' => "Fältet $translatedField måste vara numeriskt.",
-            'integer' => "Fältet $translatedField måste vara ett giltigt heltal.", // Nytt meddelande
+            'integer' => "Fältet $translatedField måste vara ett giltigt heltal.",
             'alphanumeric' => "Fältet $translatedField får endast innehålla bokstäver och siffror.",
             'match' => "Fältet $translatedField måste matcha fältet $translatedParameter.",
             'honeypot' => "Spam.",
             'honeypot_dynamic' => "Spam.",
             'unique' => "Fältet $translatedField måste vara unikt, '{placeholder}' används redan.",
             'regex' => "Fältet $translatedField har ett ogiltigt format.",
-            'in' => "Fältet $translatedField måste vara ett av följande värden: $parameter.",
-            'not_in' => "Fältet $translatedField får inte vara ett av följande värden: $parameter.",
+            'in' => "Fältet $translatedField måste vara ett av följande värden: $parameterString.",
+            'not_in' => "Fältet $translatedField får inte vara ett av följande värden: $parameterString.",
             'boolean' => "Fältet $translatedField måste vara sant eller falskt.",
             'confirmed' => "Fältet $translatedField måste matcha fältet $translatedParameter.",
             'date' => "Fältet $translatedField måste vara ett giltigt datum.",
-            'date_format' => "Fältet $translatedField måste vara i formatet '$parameter'.",
-            'starts_with' => "Fältet $translatedField måste börja med ett av följande: $parameter.",
-            'ends_with' => "Fältet $translatedField måste sluta med ett av följande: $parameter.",
+            'date_format' => "Fältet $translatedField måste vara i formatet '$parameterString'.",
+            'starts_with' => "Fältet $translatedField måste börja med ett av följande: $parameterString.",
+            'ends_with' => "Fältet $translatedField måste sluta med ett av följande: $parameterString.",
             'ip' => "Fältet $translatedField måste vara en giltig IP-adress.",
             'url' => "Fältet $translatedField måste vara en giltig URL.",
-//            'required_with' => "Fältet $translatedField är obligatoriskt när $translatedParameter anges.",
             'required_with' => "Fältet $translatedField krävs när $translatedParameter anges.",
             'nullable' => "Fältet $translatedField får lämnas tomt, men om det anges måste det uppfylla valideringsreglerna.",
-            'string' => "Fältet $translatedField måste vara en giltig textsträng.", // Lägg till detta
-            'file_type' => "Fältet $translatedField måste vara av typen: $parameter.",
-            'file_size' => "Fältet $translatedField får inte överstiga $parameter MB.",
+            'string' => "Fältet $translatedField måste vara en giltig textsträng.",
+            'file_type' => "Fältet $translatedField måste vara av typen: $parameterString.",
+            'file_size' => "Fältet $translatedField får inte överstiga $parameterString MB.",
         ];
 
         $message = $messages[$rule] ?? "Fältet $translatedField uppfyller inte valideringsregeln '$rule'.";
@@ -192,7 +224,17 @@ class Validator
         // Om värdet finns, ersätt {placeholder} i felmeddelandet
         $value = $this->data[$field] ?? null;
         if (str_contains($message, '{placeholder}') && $value !== null) {
-            $message = str_replace('{placeholder}', htmlspecialchars((string)$value, ENT_QUOTES), $message);
+            if (is_scalar($value)) {
+                $valueString = (string) $value;
+            } else {
+                $valueString = '';
+            }
+
+            $message = str_replace(
+                '{placeholder}',
+                htmlspecialchars($valueString, ENT_QUOTES),
+                $message
+            );
         }
 
         return $message;
@@ -363,7 +405,14 @@ class Validator
             throw new InvalidArgumentException("Valideringsregeln 'regex' kräver ett regex-mönster.");
         }
 
-        return preg_match($parameter, (string) $value) === 1;
+        if (!is_scalar($value)) {
+            return false;
+        }
+
+        /** @var string $subject */
+        $subject = (string) $value;
+
+        return preg_match($parameter, $subject) === 1;
     }
 
     protected function validateIn(mixed $value, ?string $parameter = null): bool
@@ -377,7 +426,15 @@ class Validator
         }
 
         $allowedValues = explode(',', $parameter);
-        return in_array((string)$value, $allowedValues, true);
+
+        if (!is_scalar($value)) {
+            return false;
+        }
+
+        /** @var string $valueString */
+        $valueString = (string) $value;
+
+        return in_array($valueString, $allowedValues, true);
     }
 
     protected function validateHoneypot(mixed $value, ?string $parameter = null): bool
@@ -411,12 +468,31 @@ class Validator
         }
 
         $disallowedValues = explode(',', $parameter);
-        return !in_array((string)$value, $disallowedValues, true);
+
+        if (!is_scalar($value)) {
+            return true;
+        }
+
+        /** @var string $valueString */
+        $valueString = (string) $value;
+
+        return !in_array($valueString, $disallowedValues, true);
     }
 
     protected function validateBoolean(mixed $value, ?string $parameter = null): bool
     {
-        return is_bool($value) || in_array((string)$value, ['true', 'false', '1', '0'], true);
+        if (is_bool($value)) {
+            return true;
+        }
+
+        if (!is_scalar($value)) {
+            return false;
+        }
+
+        /** @var string $valueString */
+        $valueString = (string) $value;
+
+        return in_array($valueString, ['true', 'false', '1', '0'], true);
     }
     
     protected function validateDate(mixed $value, ?string $parameter = null): bool
@@ -425,25 +501,44 @@ class Validator
             return true;
         }
 
-        return strtotime((string)$value) !== false;
+        if (!is_scalar($value)) {
+            return false;
+        }
+
+        /** @var string $valueString */
+        $valueString = (string) $value;
+
+        return strtotime($valueString) !== false;
     }
 
-    protected function validateUnique(mixed $value, ?string $parameter = null): bool
+    protected function validateUnique(mixed $value, string $parameter): bool
     {
+        if ($parameter === '') {
+            throw new InvalidArgumentException("Valideringsregeln 'unique' kräver en parametersträng.");
+        }
+
         $parts = explode(',', $parameter);
         $modelClass = $parts[0] ?? null;
         $column = $parts[1] ?? null;
         $excludeId = isset($parts[2]) ? intval(explode('=', $parts[2])[1]) : null;
 
-        if (!$modelClass || !class_exists($modelClass)) {
+        if (!is_string($modelClass) || $modelClass === '' || !class_exists($modelClass)) {
             throw new InvalidArgumentException(
                 "Valideringsregeln 'unique' kräver en giltig modellklass. Kontrollera att '$modelClass' existerar."
             );
         }
 
-        if (!$column) {
+        if (!is_subclass_of($modelClass, \Radix\Database\ORM\Model::class)) {
+            throw new InvalidArgumentException(
+                "Valideringsregeln 'unique' kräver att modellen ärver " . \Radix\Database\ORM\Model::class . "."
+            );
+        }
+
+        if ($column === null || $column === '') {
             throw new InvalidArgumentException("Valideringsregeln 'unique' kräver att kolumn specificeras.");
         }
+
+        /** @var class-string<\Radix\Database\ORM\Model> $modelClass */
 
         // Bygg upp frågan och inkludera soft-deleted poster
         $query = $modelClass::query()->withSoftDeletes()->where($column, '=', $value);
@@ -465,9 +560,16 @@ class Validator
             throw new InvalidArgumentException("Valideringsregeln 'date_format' kräver ett datumformat.");
         }
 
-        $date = \DateTime::createFromFormat($parameter, (string)$value);
+        if (!is_scalar($value)) {
+            return false;
+        }
 
-        return $date && $date->format($parameter) === $value;
+        /** @var string $valueString */
+        $valueString = (string) $value;
+
+        $date = \DateTime::createFromFormat($parameter, $valueString);
+
+        return $date && $date->format($parameter) === $valueString;
     }
 
     protected function validateStartsWith(mixed $value, ?string $parameter = null): bool
@@ -480,10 +582,17 @@ class Validator
             throw new InvalidArgumentException("Valideringsregeln 'starts_with' kräver en lista med prefix.");
         }
 
+        if (!is_scalar($value)) {
+            return false;
+        }
+
+        /** @var string $valueString */
+        $valueString = (string) $value;
+
         $prefixes = explode(',', $parameter);
 
         foreach ($prefixes as $prefix) {
-            if (str_starts_with((string)$value, $prefix)) {
+            if (str_starts_with($valueString, $prefix)) {
                 return true;
             }
         }
@@ -501,10 +610,17 @@ class Validator
             throw new InvalidArgumentException("Valideringsregeln 'ends_with' kräver en lista med suffix.");
         }
 
+        if (!is_scalar($value)) {
+            return false;
+        }
+
+        /** @var string $valueString */
+        $valueString = (string) $value;
+
         $suffixes = explode(',', $parameter);
 
         foreach ($suffixes as $suffix) {
-            if (str_ends_with((string)$value, $suffix)) {
+            if (str_ends_with($valueString, $suffix)) {
                 return true;
             }
         }
@@ -512,8 +628,13 @@ class Validator
         return false;
     }
 
-    protected function validateConfirmed(mixed $value, ?string $parameter = null): bool
+    protected function validateConfirmed(mixed $value, string $parameter): bool
     {
+        // Extra säkerhet om någon skulle anropa felaktigt utanför applyRule
+        if ($parameter === '') {
+            throw new InvalidArgumentException("Valideringsregeln 'confirmed' kräver ett huvudfält.");
+        }
+
         // Matcha huvudfältet (t.ex. 'password') med '_confirmation'
         $confirmationField = "{$parameter}_confirmation";
 
@@ -551,17 +672,24 @@ class Validator
     protected function validateFileType(mixed $value, ?string $parameter = null): bool
     {
         // Ignorera validering om fältet är "nullable" och ingen fil skickades
-        if (isset($value['error']) && $value['error'] === UPLOAD_ERR_NO_FILE) {
+        if (is_array($value) && isset($value['error']) && $value['error'] === UPLOAD_ERR_NO_FILE) {
             return true; // Anses validerad om ingen fil skickades
         }
 
-        // Kontrollera om arrayen är korrekt
-        if (!is_array($value) || empty($value['type'])) {
+        // Kontrollera att vi har en fil-array med 'type'
+        if (!is_array($value) || !array_key_exists('type', $value)) {
             return false;
         }
 
-        // Kontrollera att parametern finns
-        if (!$parameter) {
+        $type = $value['type'];
+
+        // Säkerställ att type är en sträng
+        if (!is_string($type) || $type === '') {
+            return false;
+        }
+
+        // Kontrollera att parametern finns och inte är tom
+        if ($parameter === null || $parameter === '') {
             throw new InvalidArgumentException("Parameter krävs för 'file_type'-regeln.");
         }
 
@@ -569,13 +697,13 @@ class Validator
         $allowedTypes = array_map('trim', explode(',', strtolower($parameter)));
 
         // Kontrollera att filens MIME-typ är tillåten
-        return in_array(strtolower($value['type']), $allowedTypes, true);
+        return in_array(strtolower($type), $allowedTypes, true);
     }
 
     protected function validateFileSize(mixed $value, ?string $parameter = null): bool
     {
         // Ignorera validering om fältet är "nullable" och ingen fil skickades
-        if (isset($value['error']) && $value['error'] === UPLOAD_ERR_NO_FILE) {
+        if (is_array($value) && isset($value['error']) && $value['error'] === UPLOAD_ERR_NO_FILE) {
             return true; // Anses validerad om ingen fil skickades
         }
 
@@ -585,18 +713,18 @@ class Validator
         }
 
         // Kontrollera att parametern är en giltig siffra
-        if (!$parameter || !is_numeric($parameter)) {
+        if ($parameter === null || !is_numeric($parameter)) {
             throw new InvalidArgumentException("Parameter för 'file_size' måste vara en giltig siffra.");
         }
 
         // Max tillåtna filstorlek i bytes
-        $maxBytes = (int)$parameter * 1024 * 1024;
+        $maxBytes = (int) $parameter * 1024 * 1024;
 
         // Kontrollera om filens storlek ligger inom det tillåtna intervallet
         return $value['size'] <= $maxBytes;
     }
 
-    protected function getValueForDotNotation(string $field)
+    protected function getValueForDotNotation(string $field): mixed
     {
         // Om fältet inte innehåller en punkt (.), returnera direkt från `$this->data`
         if (!str_contains($field, '.')) {

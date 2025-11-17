@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Radix\Tests\Query;
+namespace Database\Query;
 
 use PHPUnit\Framework\TestCase;
 use Radix\Database\Connection;
@@ -22,12 +22,13 @@ class QueryBuilderTest extends TestCase
         $this->connection = new Connection($pdo);
     }
 
-    public function testNestedWhere()
+    public function testNestedWhere(): void
     {
         $query = (new QueryBuilder())
+            ->setConnection($this->connection)
             ->from('users')
             ->where('status', '=', 'active')
-            ->where(function ($q) {
+            ->where(function (QueryBuilder $q): void {
                 $q->where('age', '>=', 18)
                   ->where('country', '=', 'Sweden');
             })
@@ -440,6 +441,7 @@ class QueryBuilderTest extends TestCase
             ->select(['id', 'name'])->from('users');
         /** @var mixed $invalid */
         $invalid = 123; // avsiktligt fel typ
+        // @phpstan-ignore-next-line Avsiktligt fel typ för att testa TypeError
         $query->union($invalid);
     }
 
@@ -1246,8 +1248,13 @@ class QueryBuilderTest extends TestCase
 
         $sql = $q->toSql();
         $this->assertStringContainsString('SELECT JSON_EXTRACT(`meta`, ?) AS `brand` FROM `products`', $sql);
-        $this->assertStringContainsString('WHERE `tags` JSON_CONTAINS ?', $sql);
-        $this->assertEquals(['$.brand', json_encode('sale', JSON_UNESCAPED_UNICODE)], $q->getBindings());
+        $this->assertStringContainsString('WHERE JSON_CONTAINS(`tags`, ?)', $sql);
+
+        // WHERE-bindningen ("sale") kommer före SELECT-bindningen ("$.brand")
+        $this->assertEquals(
+            [json_encode('sale', JSON_UNESCAPED_UNICODE), '$.brand'],
+            $q->getBindings()
+        );
     }
 
     public function testRollupGroupBy(): void
@@ -1262,5 +1269,241 @@ class QueryBuilderTest extends TestCase
             'SELECT `customer_id`, COUNT(*) AS `cnt` FROM `orders` GROUP BY `customer_id` WITH ROLLUP',
             $q->toSql()
         );
+    }
+
+    public function testDoesntExist(): void
+    {
+        $mock = $this->createMock(Connection::class);
+        // exists() bygger en COUNT(1)-liknande SELECT 1; vi behöver bara returnera null för att simulera "inget resultat"
+        $mock->method('fetchOne')->willReturn(null);
+
+        $q = (new QueryBuilder())
+            ->setConnection($mock)
+            ->from('users')
+            ->where('id', '=', -9999);
+
+        $this->assertTrue($q->doesntExist());
+    }
+
+    public function testFirstOrFailThrows(): void
+    {
+        $mock = $this->createMock(Connection::class);
+        // first() gör en SELECT LIMIT 1 och använder fetchAll/fetchOne via dina lager.
+        // Mocka så att inga rader hittas.
+        $mock->method('fetchAll')->willReturn([]);
+        $mock->method('fetchOne')->willReturn(null);
+
+        // Minimal modellklass som uppfyller kraven (extends Model)
+        $model = new class extends \Radix\Database\ORM\Model {
+            protected string $table = 'users';
+            /** @var array<int,string> */
+            protected array $fillable = ['id'];
+        };
+
+        $q = (new QueryBuilder())
+            ->setConnection($mock)
+            ->from('users')
+            ->setModelClass(get_class($model))
+            ->where('id', '=', -9999)
+            ->limit(1);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('No records found for firstOrFail().');
+        $q->firstOrFail();
+    }
+
+    public function testWhenAndTap(): void
+    {
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->when(true, function (QueryBuilder $b) {
+                $b->where('active', '=', 1);
+            })
+            ->tap(function (QueryBuilder $b) {
+                $this->assertStringContainsString('users', $b->toSql());
+            });
+
+        $this->assertStringContainsString('`active` = ?', $q->toSql());
+    }
+
+    public function testOrderByDescLatestOldest(): void
+    {
+        $q1 = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->orderByDesc('created_at');
+        $this->assertStringContainsString('ORDER BY `created_at` DESC', $q1->toSql());
+
+        $q2 = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->latest();
+        $this->assertStringContainsString('ORDER BY `created_at` DESC', $q2->toSql());
+
+        $q3 = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->oldest();
+        $this->assertStringContainsString('ORDER BY `created_at` ASC', $q3->toSql());
+    }
+
+    public function testDebugSqlHelpers(): void
+    {
+        $q = (new QueryBuilder())
+            ->setConnection($this->connection)
+            ->from('users')
+            ->where('email', '=', 'john@example.com');
+
+        $paramSql = $q->debugSql();
+        $interpSql = $q->debugSqlInterpolated();
+
+        $this->assertSame('SELECT * FROM `users` WHERE `email` = ?', $paramSql);
+        $this->assertSame("SELECT * FROM `users` WHERE `email` = 'john@example.com'", $interpSql);
+    }
+
+    public function testSimplePaginate(): void
+    {
+        $mock = $this->createMock(Connection::class);
+
+        // Simulera tre rader (den tredje används bara för has_more)
+        $mock->method('fetchAll')->willReturn([
+            ['id' => 1, 'name' => 'A'],
+            ['id' => 2, 'name' => 'B'],
+            ['id' => 3, 'name' => 'C'],
+        ]);
+
+        // Minimal modellklass för hydrering
+        $model = new class extends \Radix\Database\ORM\Model {
+            protected string $table = 'users';
+            /** @var array<int,string> */
+            protected array $fillable = ['id', 'name'];
+        };
+
+        $q = (new QueryBuilder())
+            ->setConnection($mock)
+            ->from('users')
+            ->setModelClass(get_class($model));
+
+        $page = $q->simplePaginate(2, 1);
+
+        $this->assertArrayHasKey('data', $page);
+        $this->assertIsArray($page['data']);
+        $this->assertCount(2, $page['data']); // extra raden ska kapas
+        $this->assertArrayHasKey('pagination', $page);
+        $this->assertTrue($page['pagination']['has_more']);
+    }
+
+    public function testPaginateReturnsArrayData(): void
+    {
+        $mock = $this->createMock(Connection::class);
+
+        // COUNT(*) as total
+        $mock->method('fetchOne')->willReturn(['total' => 3]);
+
+        // Data-hämtning
+        $mock->method('fetchAll')->willReturn([
+            ['id' => 1, 'name' => 'A'],
+            ['id' => 2, 'name' => 'B'],
+        ]);
+
+        // Minimal modellklass för hydrering
+        $model = new class extends \Radix\Database\ORM\Model {
+            protected string $table = 'users';
+            /** @var array<int,string> */
+            protected array $fillable = ['id', 'name'];
+        };
+
+        $q = (new QueryBuilder())
+            ->setConnection($mock)
+            ->from('users')
+            ->setModelClass(get_class($model));
+
+        $page = $q->paginate(2, 1);
+
+        $this->assertArrayHasKey('data', $page);
+        $this->assertIsArray($page['data'], 'paginate() ska returnera data som array, ej Collection.');
+        $this->assertCount(2, $page['data']);
+        $this->assertArrayHasKey('pagination', $page);
+        $this->assertSame(3, $page['pagination']['total']);
+        $this->assertSame(2, $page['pagination']['per_page']);
+        $this->assertSame(1, $page['pagination']['current_page']);
+    }
+
+    public function testChunkIterates(): void
+    {
+        $mock = $this->createMock(Connection::class);
+
+        // Första chunk (size=2): returnera 2 rader
+        // Andra chunk: returnera 1 rad -> avsluta
+        $mock->method('fetchAll')->willReturnOnConsecutiveCalls(
+            [
+                ['id' => 1, 'name' => 'A'],
+                ['id' => 2, 'name' => 'B'],
+            ],
+            [
+                ['id' => 3, 'name' => 'C'],
+            ]
+        );
+
+        $model = new class extends \Radix\Database\ORM\Model {
+            protected string $table = 'users';
+            /** @var array<int,string> */
+            protected array $fillable = ['id', 'name'];
+        };
+
+        $q = (new QueryBuilder())
+            ->setConnection($mock)
+            ->from('users')
+            ->setModelClass(get_class($model))
+            ->orderBy('id'); // deterministisk ordning
+
+        $countCalls = 0;
+        $q->chunk(2, function (\Radix\Collection\Collection $chunk, int $page) use (&$countCalls) {
+            $this->assertGreaterThan(0, $chunk->count());
+            $this->assertSame($countCalls + 1, $page);
+            $countCalls++;
+        });
+
+        $this->assertSame(2, $countCalls);
+    }
+
+    public function testLazyYields(): void
+    {
+        $mock = $this->createMock(Connection::class);
+
+        // Simulera två batchar: första batchen 2 rader, andra batchen 1 rad, sedan tomt
+        $mock->method('fetchAll')->willReturnOnConsecutiveCalls(
+            [
+                ['id' => 1, 'name' => 'A'],
+                ['id' => 2, 'name' => 'B'],
+            ],
+            [
+                ['id' => 3, 'name' => 'C'],
+            ],
+            [] // tredje anropet stoppar generatorn
+        );
+
+        $model = new class extends \Radix\Database\ORM\Model {
+            protected string $table = 'users';
+            /** @var array<int,string> */
+            protected array $fillable = ['id', 'name'];
+        };
+
+        $q = (new QueryBuilder())
+            ->setConnection($mock)
+            ->from('users')
+            ->setModelClass(get_class($model))
+            ->orderBy('id');
+
+        $gen = $q->lazy(2);
+        $this->assertInstanceOf(\Generator::class, $gen);
+
+        $collected = [];
+        foreach ($gen as $m) {
+            $collected[] = $m->getAttribute('name');
+        }
+
+        $this->assertSame(['A','B','C'], $collected);
     }
 }

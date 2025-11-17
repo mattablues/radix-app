@@ -22,11 +22,14 @@ class AuthService
         $failedKey = $this->getFailedAttemptsKey($email);
         $blockedUntilKey = $this->getBlockedUntilKey($email);
 
-        $failedAttempts = $this->session->get($failedKey, 0);
-        $blockedUntil = $this->session->get($blockedUntilKey);
+        $failedAttemptsValue = $this->session->get($failedKey, 0);
+        $failedAttempts = is_int($failedAttemptsValue) ? $failedAttemptsValue : 0;
+
+        $blockedUntilValue = $this->session->get($blockedUntilKey);
+        $blockedUntil = is_int($blockedUntilValue) ? $blockedUntilValue : null;
 
         // Om användaren är blockerad tills ett visst datum
-        if ($blockedUntil && time() < $blockedUntil) {
+        if ($blockedUntil !== null && time() < $blockedUntil) {
             return true;
         }
 
@@ -45,7 +48,9 @@ class AuthService
     public function trackFailedAttempt(string $email): void
     {
         $failedKey = $this->getFailedAttemptsKey($email);
-        $failedAttempts = $this->session->get($failedKey, 0);
+        $value = $this->session->get($failedKey, 0);
+        $failedAttempts = is_int($value) ? $value : 0;
+
         $this->session->set($failedKey, $failedAttempts + 1);
     }
 
@@ -64,7 +69,13 @@ class AuthService
     public function getBlockedUntil(string $email): ?int
     {
         $blockedUntilKey = $this->getBlockedUntilKey($email);
-        return $this->session->get($blockedUntilKey);
+        $value = $this->session->get($blockedUntilKey);
+
+        if ($value === null) {
+            return null;
+        }
+
+        return is_int($value) ? $value : null;
     }
 
     // ---- Kontroll och hantering för lösenordsåterställning ----
@@ -73,10 +84,13 @@ class AuthService
         $failedKey = $this->getFailedResetAttemptsKey($email);
         $blockedUntilKey = $this->getBlockedResetUntilKey($email);
 
-        $failedAttempts = $this->session->get($failedKey, 0);
-        $blockedUntil = $this->session->get($blockedUntilKey);
+        $failedAttemptsValue = $this->session->get($failedKey, 0);
+        $failedAttempts = is_int($failedAttemptsValue) ? $failedAttemptsValue : 0;
 
-        if ($blockedUntil && time() < $blockedUntil) {
+        $blockedUntilValue = $this->session->get($blockedUntilKey);
+        $blockedUntil = is_int($blockedUntilValue) ? $blockedUntilValue : null;
+
+        if ($blockedUntil !== null && time() < $blockedUntil) {
             return true;
         }
 
@@ -93,7 +107,9 @@ class AuthService
     public function trackFailedPasswordResetAttempt(string $email): void
     {
         $failedKey = $this->getFailedResetAttemptsKey($email);
-        $failedAttempts = $this->session->get($failedKey, 0);
+        $value = $this->session->get($failedKey, 0);
+        $failedAttempts = is_int($value) ? $value : 0;
+
         $this->session->set($failedKey, $failedAttempts + 1);
     }
 
@@ -115,10 +131,13 @@ class AuthService
         $failedKey = $this->getFailedIpAttemptsKey($ip);
         $blockedUntilKey = $this->getBlockedIpUntilKey($ip);
 
-        $failedAttempts = $this->session->get($failedKey, 0);
-        $blockedUntil = $this->session->get($blockedUntilKey);
+        $failedAttemptsValue = $this->session->get($failedKey, 0);
+        $failedAttempts = is_int($failedAttemptsValue) ? $failedAttemptsValue : 0;
 
-        if ($blockedUntil && time() < $blockedUntil) {
+        $blockedUntilValue = $this->session->get($blockedUntilKey);
+        $blockedUntil = is_int($blockedUntilValue) ? $blockedUntilValue : null;
+
+        if ($blockedUntil !== null && time() < $blockedUntil) {
             return true;
         }
 
@@ -135,7 +154,9 @@ class AuthService
     public function trackFailedIpAttempt(string $ip): void
     {
         $failedKey = $this->getFailedIpAttemptsKey($ip);
-        $failedAttempts = $this->session->get($failedKey, 0);
+        $value = $this->session->get($failedKey, 0);
+        $failedAttempts = is_int($value) ? $value : 0;
+
         $this->session->set($failedKey, $failedAttempts + 1);
     }
 
@@ -148,9 +169,22 @@ class AuthService
     public function getBlockedIpUntil(string $ip): ?int
     {
         $blockedUntilKey = $this->getBlockedIpUntilKey($ip);
-        return $this->session->get($blockedUntilKey);
+        $value = $this->session->get($blockedUntilKey);
+
+        if ($value === null) {
+            return null;
+        }
+
+        // Säkerställ att vi bara returnerar int eller null
+        return is_int($value) ? $value : null;
     }
 
+    /**
+     * @param array{
+     *     email: string,
+     *     password: string
+     * } $data
+     */
     public function login(array $data): ?User
     {
         $email = $data['email'];
@@ -160,13 +194,13 @@ class AuthService
         }
 
         // Uppdatera frågan för att inkludera soft-deleted användare
-        $user =  User::withSoftDeletes() // Aktivera soft-deletes
-                ->select(['id', 'first_name', 'last_name', 'email'])
-                ->where('email', '=', $email)
-                ->first(); // Hämta den faktiska användaren
+        $user = User::withSoftDeletes() // Aktivera soft-deletes
+            ->select(['id', 'first_name', 'last_name', 'email'])
+            ->where('email', '=', $email)
+            ->first(); // Hämta den faktiska användaren
 
-        // Kontrollera om användaren inte hittades
-        if (!$user) {
+        // Säkerställ att resultatet är en User-instans
+        if (!$user instanceof User) {
             $this->trackFailedAttempt($email);
             return null;
         }

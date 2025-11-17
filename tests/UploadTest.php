@@ -23,7 +23,13 @@ class UploadTest extends TestCase
 
         // Skapa en mockad bildfil för att simulera en uppladdning
         $image = imagecreatetruecolor(100, 100);
-        imagefill($image, 0, 0, imagecolorallocate($image, 255, 0, 0)); // Röd bild
+
+        $color = imagecolorallocate($image, 255, 0, 0);
+        if ($color === false) {
+            $this->fail('Kunde inte allokera färg för testbilden.');
+        }
+
+        imagefill($image, 0, 0, $color); // Röd bild
         imagejpeg($image, $this->uploadDirectory . '/test_image.jpg');
         imagedestroy($image);
     }
@@ -32,9 +38,15 @@ class UploadTest extends TestCase
     {
         // Ta bort uppladdningsmappen och dess innehåll
         $files = glob($this->uploadDirectory . '/*');
+
+        if ($files === false) {
+            $files = [];
+        }
+
         foreach ($files as $file) {
             unlink($file);
         }
+
         rmdir($this->uploadDirectory);
     }
 

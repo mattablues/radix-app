@@ -24,9 +24,17 @@ class UserController extends AbstractController
 
     public function index(): Response
     {
-        $page = $this->request->get['page'] ?? 1;
+        $rawPage = $this->request->get['page'] ?? 1;
 
-        $users = User::with('status')->paginate(10, (int)$page);
+        if (!is_int($rawPage) && !is_string($rawPage)) {
+            // Fallback om någon skickar något knasigt
+            $rawPage = 1;
+        }
+
+        /** @var int|string $rawPage */
+        $page = (int) $rawPage;
+
+        $users = User::with('status')->paginate(10, $page);
 
         return $this->view('admin.user.index', ['users' => $users]);
     }
@@ -96,11 +104,15 @@ class UserController extends AbstractController
 
         $activationLink = getenv('APP_URL') . route('auth.register.activate', ['token' => $tokenValue]);
 
+        $firstName = is_string($data['first_name'] ?? null) ? $data['first_name'] : '';
+        $lastName  = is_string($data['last_name'] ?? null) ? $data['last_name'] : '';
+        $email  = is_string($data['email'] ?? null) ? $data['email'] : '';
+
         // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
-            email: $data['email'],
-            firstName: $data['first_name'],
-            lastName: $data['last_name'],
+            email: $email,
+            firstName: $firstName,
+            lastName: $lastName,
             activationLink: $activationLink,
             password: $password,
             context: UserActivationContext::Admin,
@@ -108,7 +120,7 @@ class UserController extends AbstractController
 
         // Ställ in flash-meddelande och omdirigera
         $this->request->session()->setFlashMessage(
-            "Konto har skapats för {$data['first_name']} {$data['last_name']} och aktiveringslänk skickad."
+            "Konto har skapats för $firstName $lastName och aktiveringslänk skickad."
         );
 
         return new RedirectResponse(route('admin.user.index'));
@@ -133,7 +145,12 @@ class UserController extends AbstractController
 
         $user->loadMissing('status');
 
+        /** @var Status|null $status */
         $status = $user->getRelation('status');
+
+        if (!$status instanceof Status) {
+            throw new \RuntimeException('Status relation is not loaded or invalid.');
+        }
 
         $status->fill([
             'activation' => $token->hashHmac(),
@@ -158,7 +175,15 @@ class UserController extends AbstractController
             "Aktiveringslänk skickad till $user->email."
         );
 
-        $currentPage = $this->request->get['page'] ?? 1;
+        $rawPage = $this->request->get['page'] ?? 1;
+
+        if (!is_int($rawPage) && !is_string($rawPage)) {
+            // Fallback om någon skickar något knasigt
+            $rawPage = 1;
+        }
+
+        /** @var int|string $rawPage */
+        $currentPage = (int) $rawPage;
 
         return new RedirectResponse(route('admin.user.index') . '?page=' . $currentPage);
     }
@@ -179,7 +204,12 @@ class UserController extends AbstractController
 
         $user->loadMissing('status');
 
+        /** @var Status|null $status */
         $status = $user->getRelation('status');
+
+        if (!$status instanceof Status) {
+            throw new \RuntimeException('Status relation is not loaded or invalid.');
+        }
 
         $status->fill([
             'status' => 'blocked',
@@ -192,7 +222,15 @@ class UserController extends AbstractController
             "onto för $user->first_name $user->last_name har blockerats."
         );
 
-        $currentPage = $this->request->get['page'] ?? 1;
+        $rawPage = $this->request->get['page'] ?? 1;
+
+        if (!is_int($rawPage) && !is_string($rawPage)) {
+            // Fallback om någon skickar något knasigt
+            $rawPage = 1;
+        }
+
+        /** @var int|string $rawPage */
+        $currentPage = (int) $rawPage;
 
         return new RedirectResponse(route('admin.user.index') . '?page=' . $currentPage);
     }
@@ -201,9 +239,17 @@ class UserController extends AbstractController
     {
         $this->before();
 
-        $page = $this->request->get['page'] ?? 1;
+        $rawPage = $this->request->get['page'] ?? 1;
 
-        $users = User::with('status')->getOnlySoftDeleted()->paginate(10, (int)$page);
+        if (!is_int($rawPage) && !is_string($rawPage)) {
+            // Fallback om någon skickar något knasigt
+            $rawPage = 1;
+        }
+
+        /** @var int|string $rawPage */
+        $page = (int) $rawPage;
+
+        $users = User::with('status')->getOnlySoftDeleted()->paginate(10, $page);
 
         return $this->view('admin.user.closed', ['users' => $users]);
     }
@@ -215,7 +261,15 @@ class UserController extends AbstractController
         $user = User::find($id, true);
 
         if (!$user) {
-            $currentPage = $this->request->get['page'] ?? 1;
+            $rawPage = $this->request->get['page'] ?? 1;
+
+            if (!is_int($rawPage) && !is_string($rawPage)) {
+                // Fallback om någon skickar något knasigt
+                $rawPage = 1;
+            }
+
+            /** @var int|string $rawPage */
+            $currentPage = (int) $rawPage;
 
             $this->request->session()->setFlashMessage(
                 "Användare kunde inte hittas."
@@ -231,7 +285,12 @@ class UserController extends AbstractController
 
         $user->loadMissing('status');
 
+        /** @var Status|null $status */
         $status = $user->getRelation('status');
+
+        if (!$status instanceof Status) {
+            throw new \RuntimeException('Status relation is not loaded or invalid.');
+        }
 
         $status->fill([
             'activation' => $token->hashHmac(),
@@ -262,31 +321,45 @@ class UserController extends AbstractController
     {
         $this->before();
 
-        $roleInput = $this->request->post['role'] ?? null;
-        $roleEnum = Role::tryFromName((string)$roleInput);
+        $rawRoleInput = $this->request->post['role'] ?? null;
 
-        if (!$roleEnum) {
-            $this->request->session()->setFlashMessage("Något blev fel, prova igen", 'error');
+        if (!is_string($rawRoleInput)) {
+            $this->request->session()->setFlashMessage('Något blev fel, prova igen.', 'error');
+
+            return new RedirectResponse(route('user.show', ['id' => $id]));
+        }
+
+        $roleInput = $rawRoleInput;
+        $roleEnum = Role::tryFromName($roleInput);
+
+        if ($roleEnum === null) {
+            $this->request->session()->setFlashMessage('Ogiltig behörighetsnivå angiven.', 'error');
 
             return new RedirectResponse(route('user.show', ['id' => $id]));
         }
 
         $user = User::find($id);
 
-        if (!$user) {
-            $this->request->session()->setFlashMessage('Användare saknas', 'error');
+        if ($user === null) {
+            $this->request->session()->setFlashMessage('Användare saknas.', 'error');
+
             return new RedirectResponse(route('user.show', ['id' => $id]));
         }
 
         if ($user->isAdmin()) {
             $this->request->session()->setFlashMessage('Du kan inte ändra en admin.', 'error');
+
             return new RedirectResponse(route('admin.user.index'));
         }
 
-        $user->setRole($roleEnum); // använder din setter som validerar
+        $user->setRole($roleEnum);
         $user->save();
 
-        $this->request->session()->setFlashMessage("$user->first_name $user->last_name har tilldelats behörighet $roleInput");
+        $roleName = $roleEnum->value;
+
+        $this->request->session()->setFlashMessage(
+            "$user->first_name $user->last_name har tilldelats behörighet {$roleName}"
+        );
 
         return new RedirectResponse(route('user.show', ['id' => $user->id]));
     }

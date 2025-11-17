@@ -17,74 +17,120 @@ class RadixErrorHandler
         string $errfile,
         int $errline,
     ): bool {
-        // Logga felet till PHP:s error_log
-        error_log("Error [$errno]: $errstr in $errfile on line $errline");
-
-        // Konvertera felet till en ErrorException och kasta det
+        if (!(error_reporting() & $errno)) {
+            return true;
+        }
+        // Logga via Logger
+        self::logger()->error(
+            'Error [{code}]: {msg} in {file} on line {line}',
+            ['code' => $errno, 'msg' => $errstr, 'file' => $errfile, 'line' => $errline]
+        );
         throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
     }
 
     public static function handleException(Throwable $exception): void
     {
-        // Identifiera om det är ett API-anrop (baserat på URI)
-        $isApiRequest = (!empty($_SERVER['REQUEST_URI']) && str_contains($_SERVER['REQUEST_URI'], '/api/'));
+        $appEnv = strtolower((string) (getenv('APP_ENV') ?: 'production'));
+        $isDev = in_array($appEnv, ['dev','development'], true);
 
-        // Fastställ korrekt statuskod
+        $requestUriRaw = $_SERVER['REQUEST_URI'] ?? '';
+        $requestUri = is_string($requestUriRaw) ? $requestUriRaw : '';
+
+        $acceptRaw = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $accept = is_string($acceptRaw) ? $acceptRaw : '';
+
+        $methodRaw = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $method = is_string($methodRaw) && $methodRaw !== '' ? strtoupper($methodRaw) : 'GET';
+
+        $isApiRequest =
+            str_contains($requestUri, '/api/')
+            || str_contains($accept, 'application/json');
+
         $statusCode = $exception instanceof HttpException ? $exception->getStatusCode() : 500;
 
-        // Samla loggningsinformation
-        $logMessage = sprintf(
-            "Exception [%s]: %s in %s on line %d\nStack trace:\n%s",
-            get_class($exception),
-            $exception->getMessage(),
-            $exception->getFile(),
-            $exception->getLine(),
-            $exception->getTraceAsString()
+        // Logga via Logger (inkl. stacktrace)
+        self::logger()->error(
+            'Exception [{class}]: {message} in {file} on line {line}',
+            [
+                'class' => get_class($exception),
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'trace' => $exception->getTraceAsString(),
+                'uri' => $requestUri,
+                'method' => $method,
+                'accept' => $accept,
+                'status' => $statusCode,
+            ]
         );
 
-        // Logga till systemets error_log
-        error_log($logMessage);
-
         if ($isApiRequest) {
-            // Skicka respons för API:er
             $body = [
-                "success" => false,
-                "errors" => [
-                    [
-                        "field" => "Exception",
-                        "messages" => [$exception->getMessage()],
-                    ],
+                'success' => false,
+                'errors' => [
+                    ['field' => 'Exception', 'messages' => [$exception->getMessage()]],
                 ],
             ];
 
-            // För utvecklingsläge - inkludera stack trace
-            if (getenv('APP_ENV') === 'development') {
+            if ($isDev) {
                 $body['debug'] = [
-                    "exception_class" => get_class($exception),
-                    "stack_trace" => $exception->getTraceAsString(),
+                    'exception_class' => get_class($exception),
+                    'stack_trace' => $exception->getTraceAsString(),
                 ];
             }
 
-            $response = new JsonResponse();
+            $response = new \Radix\Http\JsonResponse();
             $response
                 ->setStatusCode($statusCode)
-                ->setHeader('Content-Type', 'application/json')
-                ->setBody(json_encode($body));
+                ->setHeader('Content-Type', 'application/json; charset=utf-8')
+                ->setBody(
+                    $method === 'HEAD'
+                        ? ''
+                        : json_encode(
+                            $body,
+                            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+                        )
+                );
 
             $response->send();
             exit;
         }
 
-        // Hantering för vanliga rutter (icke-API)
-        if (getenv('APP_ENV') === 'development') {
-            ini_set('display_errors', '1');   // Visa detaljerat felmeddelande
-            echo '<pre>' . htmlspecialchars($logMessage, ENT_QUOTES, 'UTF-8') . '</pre>';
+        if ($isDev) {
+            ini_set('display_errors', '1');
+            echo '<pre>' . htmlspecialchars(sprintf(
+                "Exception [%s]: %s in %s on line %d\nStack trace:\n%s",
+                get_class($exception),
+                $exception->getMessage(),
+                $exception->getFile(),
+                $exception->getLine(),
+                $exception->getTraceAsString()
+            ), ENT_QUOTES, 'UTF-8') . '</pre>';
         } else {
             ini_set('display_errors', '0');
-            ini_set('log_errors', '1');      // Logga fel
-            require dirname(__DIR__, 3) . "/views/errors/$statusCode.php";
+            ini_set('log_errors', '1');
+
+            $root = defined('ROOT_PATH') ? (string) ROOT_PATH : (string) dirname(__DIR__, 3);
+            $viewFile = rtrim($root, '/\\') . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'errors' . DIRECTORY_SEPARATOR . $statusCode . '.php';
+            if (!is_file($viewFile)) {
+                $fallback = rtrim($root, '/\\') . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'errors' . DIRECTORY_SEPARATOR . '500.php';
+                if (is_file($fallback)) {
+                    $viewFile = $fallback;
+                } else {
+                    header('Content-Type: text/plain; charset=utf-8', true, $statusCode);
+                    echo "An error occurred. HTTP {$statusCode}";
+                    exit;
+                }
+            }
+            require $viewFile;
         }
 
         exit;
+    }
+
+    private static function logger(): \Radix\Support\Logger
+    {
+        // Egen kanal för fel
+        return new \Radix\Support\Logger('error');
     }
 }

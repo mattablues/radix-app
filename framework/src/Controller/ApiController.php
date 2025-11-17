@@ -11,21 +11,33 @@ use Radix\Support\Validator;
 abstract class ApiController extends AbstractController
 {
     /**
-     * Returnera JSON-svar.
+     * Skapa ett JsonResponse‑objekt från en array.
+     *
+     * @param array<string, mixed> $data
      */
     protected function json(array $data, int $status = 200): JsonResponse
     {
         $response = new JsonResponse();
+
+        $body = json_encode($data);
+        if ($body === false) {
+            // Här kan du logga felet om du vill
+            throw new \RuntimeException('Failed to encode response body to JSON.');
+        }
+
         $response->setStatusCode($status)
             ->setHeader('Content-Type', 'application/json')
-            ->setBody(json_encode($data));
+            ->setBody($body);
 
         return $response;
     }
 
     /**
-     * Kontrollera och hämta JSON från förfrågan.
-     * Returnerar en korrekt parsad JSON-array eller kastar ett fel.
+     * Hämta och dekoda JSON‑body som assoc‑array.
+     *
+     * Returnerar tom array för GET/HEAD/DELETE.
+     *
+     * @return array<string, mixed>
      */
     protected function getJsonPayload(): array
     {
@@ -34,18 +46,30 @@ abstract class ApiController extends AbstractController
             return [];
         }
 
-        $inputData = json_decode(file_get_contents('php://input'), true);
+        $rawBody = file_get_contents('php://input');
+
+        if ($rawBody === false) {
+            $this->respondWithBadRequest('Unable to read request body.');
+            return []; // För statisk analys – körs aldrig efter respondWithBadRequest()
+        }
+
+        /** @var string $rawBody */
+        $inputData = json_decode($rawBody, true);
 
         // Om JSON är ogiltig, skicka ett 400-fel
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($inputData)) {
             $this->respondWithBadRequest('Invalid or missing JSON in the request body.');
+            return []; // når i praktiken inte hit pga exit i respondWithBadRequest()
         }
 
+        /** @var array<string, mixed> $inputData */
         return $inputData;
     }
 
     /**
-     * Validera inkommande förfrågan med regler och API-token.
+     * Validera inkommande request mot givna regler och API-token.
+     *
+     * @param array<string, array<int, string>|string> $rules
      */
     protected function validateRequest(array $rules = []): void
     {
@@ -54,6 +78,7 @@ abstract class ApiController extends AbstractController
 
         // Validera regler om några skickats
         if (!empty($rules)) {
+            /** @var array<string, array<int, string>|string> $rules */
             $validator = new Validator($this->request->post, $rules);
 
             if (!$validator->validate()) {
@@ -79,9 +104,13 @@ abstract class ApiController extends AbstractController
 
         if (empty($apiToken)) {
             $this->respondWithErrors(['API-token' => ['Token saknas eller är ogiltig.']], 401);
+            return; // för PHPStan: exekveringen fortsätter inte
         }
 
-        if (!$this->isTokenValid($apiToken)) {
+        // Gör token till ren sträng
+        $token = (string)$apiToken;
+
+        if (!$this->isTokenValid($token)) {
             $this->respondWithErrors(['API-token' => ['Token är ogiltig eller valideringen misslyckades.']], 401);
         }
     }
@@ -101,9 +130,16 @@ abstract class ApiController extends AbstractController
         }
 
         // Kontrollera token i databasen
+        /** @var \App\Models\Token|null $existingToken */
         $existingToken = Token::query()->where('value', '=', $token)->first();
 
-        if (!$existingToken || strtotime($existingToken->expires_at) < time()) {
+        if (!$existingToken) {
+            return false;
+        }
+
+        // Säkerställ att vi skickar en ren sträng till strtotime
+        $expiresAt = (string)$existingToken->expires_at;
+        if ($expiresAt === '' || strtotime($expiresAt) < time()) {
             return false;
         }
 
@@ -127,7 +163,9 @@ abstract class ApiController extends AbstractController
     }
 
     /**
-     * Returnera fel.
+     * Skicka validerings-/API-fel som standardiserat JSON-svar.
+     *
+     * @param array<string, string|array<int, string>> $errors
      */
     protected function respondWithErrors(array $errors, int $status = 422): void
     {

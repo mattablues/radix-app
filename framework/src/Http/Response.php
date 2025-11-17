@@ -7,8 +7,9 @@ namespace Radix\Http;
 class Response
 {
     private string $body = '';
+    /** @var array<string,string> */
     private array $headers = [];
-    private  int $status_code = 200;
+    private int $status_code = 200;
 
     public function setStatusCode(int $code): Response
     {
@@ -17,9 +18,18 @@ class Response
         return $this;
     }
 
+    /**
+     * @param scalar $value
+     */
     public function setHeader(string $key, mixed $value): Response
     {
-        $this->headers[$key] = $value;
+        if (!is_scalar($value)) {
+            throw new \InvalidArgumentException(
+                'Header value must be a scalar, ' . get_debug_type($value) . ' given.'
+            );
+        }
+
+        $this->headers[$key] = (string) $value;
 
         return $this;
     }
@@ -51,17 +61,28 @@ class Response
         ob_end_flush();
     }
 
+    /**
+     * @return array<string,string>
+     */
     public function headers(): array
     {
         return $this->headers;
     }
 
+    /**
+     * @return list<string>
+     */
     public function header(string $header): array
     {
-        // Säkerställ att header alltid returnerar en array
-        $value = $this->headers[$header] ?? [];
+        // Säkerställ att header alltid returnerar en lista av strängar
+        if (!array_key_exists($header, $this->headers)) {
+            return [];
+        }
 
-        return is_array($value) ? $value : [$value];
+        $value = $this->headers[$header];
+
+        // Om du någon gång vill stödja flera värden per header kan du utöka detta
+        return [$value];
     }
 
     // Getter för statuskod
@@ -70,7 +91,9 @@ class Response
         return $this->status_code;
     }
 
-    // Getter för headers
+    /**
+     * @return array<string,string>
+     */
     public function getHeaders(): array
     {
         return $this->headers;

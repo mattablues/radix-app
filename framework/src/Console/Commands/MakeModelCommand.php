@@ -17,11 +17,21 @@ class MakeModelCommand extends BaseCommand
         $this->templatePath = $templatePath;
     }
 
+    /**
+     * Kör kommandot med givna argument.
+     *
+     * @param array<int, string> $args
+     */
     public function execute(array $args): void
     {
         $this->__invoke($args);
     }
 
+    /**
+     * Gör objektet anropbart som ett kommando.
+     *
+     * @param array<int, string> $args
+     */
     public function __invoke(array $args): void
     {
         if (in_array('--help', $args, true)) {
@@ -79,15 +89,23 @@ class MakeModelCommand extends BaseCommand
 
         $template = file_get_contents($templateFile);
 
+        // Ny helper: konvertera ModelName -> model_name
+        $toSnake = static function (string $name): string {
+            $snake = preg_replace('/(?<!^)[A-Z]/', '_$0', $name);
+            return strtolower($snake ?? $name);
+        };
+
         if ($explicitTable) {
             $tableName = $explicitTable;
         } elseif ($usePlural) {
-            // Samma pluraliseringskälla som relationer
-            $tableName = strtolower(StringHelper::pluralize($modelName));
+            // Pluralisera model-namnet först, därefter snake_case
+            $tableName = $toSnake(StringHelper::pluralize($modelName));
         } else {
-            $tableName = strtolower($modelName);
+            // Standard: snake_case av model-namnet
+            $tableName = $toSnake($modelName);
         }
 
+        /** @var string $template */
         $content = str_replace(
             ['[ModelName]', '[Namespace]', '[table_name]'],
             [$modelName, 'App\Models', $tableName],

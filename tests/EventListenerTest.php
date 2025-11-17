@@ -18,6 +18,9 @@ class EventListenerTest extends TestCase
     public function testCacheControlListenerAddsHeaders(): void
     {
         // Arrange: Skapa Request och Response
+        /** @var array<string, mixed> $server */
+        $server = $_SERVER;
+
         $request = new Request(
             uri: "/test",
             method: "GET",
@@ -25,7 +28,7 @@ class EventListenerTest extends TestCase
             post: [],
             files: [],
             cookie: [],
-            server: $_SERVER
+            server: $server
         ); // Simulera en HTTP-request
 
         $response = new Response();
@@ -48,36 +51,25 @@ class EventListenerTest extends TestCase
 
     public function testCorsListenerSetsHeader(): void
     {
-        // Arrange: Skapa Request och Response
-        $request = new Request(
-            uri: "/test",
-            method: "GET",
-            get: [],
-            post: [],
-            files: [],
-            cookie: [],
-            server: $_SERVER
-        );
+        putenv('APP_ENV=development');
+        putenv('CORS_ENABLED=1');
+        putenv('CORS_ALLOW_ORIGIN=*');
 
+        $request = new Request(uri: "/test", method: "GET", get: [], post: [], files: [], cookie: [], server: []);
         $response = new Response();
-
-        // Skapa ResponseEvent med både Request och Response
         $event = new ResponseEvent($request, $response);
 
-        // Act: Kör lyssnaren
-        $listener = new CorsListener();
-        $listener($event);
+        (new CorsListener())($event);
 
-        // Assert: Kontrollera att Access-Control-Allow-Origin-headern är satt
-        $this->assertEquals(
-            '*',
-            $response->getHeaders()['Access-Control-Allow-Origin']
-        );
+        $this->assertEquals('*', $response->getHeaders()['Access-Control-Allow-Origin']);
     }
 
     public function testContentLengthListenerSetsHeader(): void
     {
         // Arrange: Skapa Request och Response
+        /** @var array<string, mixed> $server */
+        $server = $_SERVER;
+
         $request = new Request(
             uri: "/test",
             method: "GET",
@@ -85,8 +77,8 @@ class EventListenerTest extends TestCase
             post: [],
             files: [],
             cookie: [],
-            server: $_SERVER
-        );
+            server: $server
+        ); // Simulera en HTTP-request
 
         $response = new Response();
         $response->setBody("Test body"); // Sätt en body för att kontrollera längd
@@ -108,6 +100,9 @@ class EventListenerTest extends TestCase
     public function testContentLengthListenerDoesNotOverrideExistingHeader(): void
     {
         // Arrange: Skapa Request och Response
+        /** @var array<string, mixed> $server */
+        $server = $_SERVER;
+
         $request = new Request(
             uri: "/test",
             method: "GET",
@@ -115,8 +110,8 @@ class EventListenerTest extends TestCase
             post: [],
             files: [],
             cookie: [],
-            server: $_SERVER
-        );
+            server: $server
+        ); // Simulera en HTTP-request
 
         $response = new Response();
         $response->setBody("Test body");
@@ -136,31 +131,23 @@ class EventListenerTest extends TestCase
         );
     }
 
-    public function testEventDispatcherCallsListeners(): void
+public function testEventDispatcherCallsListeners(): void
     {
+        putenv('APP_ENV=development');
+        putenv('CORS_ENABLED=1');
+        putenv('CORS_ALLOW_ORIGIN=*');
+
         $dispatcher = new EventDispatcher();
-
         $response = new Response();
-        $request = new Request(
-            uri: "/test",
-            method: "GET",
-            get: [],
-            post: [],
-            files: [],
-            cookie: [],
-            server: $_SERVER
-        );
-
+        $request = new Request(uri: "/test", method: "GET", get: [], post: [], files: [], cookie: [], server: []);
         $event = new ResponseEvent($request, $response);
 
-        // Lägg till lyssnare i dispatchern
         $dispatcher->addListener(ResponseEvent::class, new CacheControlListener());
         $dispatcher->addListener(ResponseEvent::class, new CorsListener());
         $dispatcher->addListener(ResponseEvent::class, new ContentLengthListener());
 
         $dispatcher->dispatch($event);
 
-        // Kontrollera att alla headers är inställda korrekt efter dispatcherflödet
         $headers = $response->getHeaders();
         $this->assertEquals('no-store, must-revalidate, max-age=0', $headers['Cache-Control']);
         $this->assertEquals('no-cache', $headers['Pragma']);

@@ -35,7 +35,9 @@ class Migrator
      */
     public function run(): int
     {
-        $migrations = glob($this->migrationsPath . "/*.php");
+        $migrations = glob($this->migrationsPath . "/*.php") ?: [];
+        /** @var array<int, string> $migrations */
+
         $executedMigrations = $this->getExecutedMigrations();
 
         $executedCount = 0;
@@ -44,15 +46,19 @@ class Migrator
             $className = pathinfo($migrationFile, PATHINFO_FILENAME);
 
             if (!in_array($className, $executedMigrations, true)) {
+                /** @var object $migration */
                 $migration = require_once $migrationFile;
                 $schema = new Schema($this->connection);
 
                 // Kör migrationen
-                if (is_object($migration)) {
+                if (method_exists($migration, 'up')) {
                     $migration->up($schema);
                 } elseif (class_exists($className)) {
+                    /** @var object $migrationInstance */
                     $migrationInstance = new $className();
-                    $migrationInstance->up($schema);
+                    if (method_exists($migrationInstance, 'up')) {
+                        $migrationInstance->up($schema);
+                    }
                 }
 
                 $this->markAsExecuted($className);
@@ -65,11 +71,23 @@ class Migrator
 
     /**
      * Hämta alla migreringar som redan har körts.
+     *
+     * @return array<int,string>
      */
     private function getExecutedMigrations(): array
     {
+        /** @var array<int, array<string, mixed>> $results */
         $results = $this->connection->fetchAll("SELECT `migration` FROM `migrations`");
-        return array_column($results, 'migration');
+
+        $migrations = [];
+        foreach ($results as $row) {
+            $name = $row['migration'] ?? null;
+            if (is_string($name)) {
+                $migrations[] = $name;
+            }
+        }
+
+        return $migrations;
     }
 
     /**
@@ -82,6 +100,8 @@ class Migrator
 
     /**
      * Rulla tillbaka den senaste körda migreringen.
+     *
+     * @return array<int,string>
      */
     public function rollback(?string $partialName = null): array
     {
@@ -99,7 +119,7 @@ class Migrator
             // Om flera matchningar hittas
             if (count($matchedMigrations) > 1) {
                 // Sortera migrationer efter namn (tidsstämpeln ordnas i fallande ordning)
-                usort($matchedMigrations, function ($a, $b) {
+                usort($matchedMigrations, static function (string $a, string $b): int {
                     return strcmp($b, $a); // Sortera i fallande ordning baserat på filnamnet
                 });
 
@@ -113,7 +133,7 @@ class Migrator
                 // Returnera information och köra rollback för den senaste
                 return [
                     "Multiple migrations match '$partialName'. Rolling back the latest migration:",
-                    $this->rollbackMigration($latestMigration)
+                    $this->rollbackMigration($latestMigration),
                 ];
             }
 
@@ -127,17 +147,18 @@ class Migrator
             }
         } else {
             // Om ingen $partialName anges, rulla tillbaka de senaste migrationerna
+            /** @var array<int, array<string, mixed>> $migrations */
             $migrations = $this->connection->fetchAll(
                 "SELECT `migration` FROM `migrations` ORDER BY `migration` DESC"
             );
 
-            foreach ($migrations as $migration) {
-                // Säkerställa att 'migration' existerar innan vi försöker använda det
-                if (!isset($migration['migration'])) {
+            foreach ($migrations as $row) {
+                $name = $row['migration'] ?? null;
+                if (!is_string($name)) {
                     continue;
                 }
 
-                $rolledBackMigrations[] = $this->rollbackMigration($migration['migration']);
+                $rolledBackMigrations[] = $this->rollbackMigration($name);
             }
         }
 
@@ -146,20 +167,31 @@ class Migrator
 
     /**
      * Hämta migrationer som matchar del av namnet.
+     *
+     * @return array<int,string>
      */
     private function getMatchingMigrations(string $partialName): array
     {
-        $migrations = $this->connection->fetchAll(
+        /** @var array<int, array<string, mixed>> $rows */
+        $rows = $this->connection->fetchAll(
             "SELECT `migration` FROM `migrations`"
         );
 
-        $filteredMigrations = array_filter(
-            array_column($migrations, 'migration'),
-            fn($migration) => stripos($migration, $partialName) !== false
-        );
+        $matches = [];
+        foreach ($rows as $row) {
+            $name = $row['migration'] ?? null;
+            if (!is_string($name)) {
+                continue;
+            }
 
-        // Om indexera arrayen för att säkerställa att nycklarna är numeriska
-        return array_values($filteredMigrations);
+            // stripos kräver string, och $partialName är redan string
+            if (stripos($name, $partialName) !== false) {
+                $matches[] = $name;
+            }
+        }
+
+        // $matches är redan list<string>
+        return $matches;
     }
 
     private function rollbackMigration(string $migrationName): string
@@ -167,16 +199,19 @@ class Migrator
         $migrationFile = $this->migrationsPath . "/$migrationName.php";
 
         if (file_exists($migrationFile)) {
+            /** @var object $migration */
             $migration = require_once $migrationFile;
 
-            // Skapa en Schema-instans och skicka den till migrationen
             $schema = new Schema($this->connection);
 
-            if (is_object($migration)) {
-                $migration->down($schema); // Skicka Schema som argument
+            if (method_exists($migration, 'down')) {
+                $migration->down($schema);
             } elseif (class_exists($migrationName)) {
+                /** @var object $migrationInstance */
                 $migrationInstance = new $migrationName();
-                $migrationInstance->down($schema); // Skicka Schema som argument
+                if (method_exists($migrationInstance, 'down')) {
+                    $migrationInstance->down($schema);
+                }
             }
 
             $this->connection->execute(
@@ -184,11 +219,9 @@ class Migrator
                 [$migrationName]
             );
 
-            // Returnera ett meddelande istället för att skriva ut
             return "Rolled back migration: $migrationName";
         }
 
-        // Returnera ett felmeddelande om filen inte hittas
         return "Migration file for $migrationName not found.";
     }
 }

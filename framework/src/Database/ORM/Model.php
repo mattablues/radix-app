@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Radix\Database\ORM;
 
 use JsonSerializable;
+use Radix\Collection\Collection;
 use Radix\Database\DatabaseManager;
 use Radix\Database\ORM\Relationships\BelongsTo;
 use Radix\Database\ORM\Relationships\BelongsToMany;
@@ -21,27 +22,31 @@ use Radix\Database\QueryBuilder\QueryBuilder;
  * @method static \Radix\Database\QueryBuilder\QueryBuilder setModelClass(string $modelClass) Ange modellklass.
  * @method static \Radix\Database\QueryBuilder\QueryBuilder from(string $table) Ange tabell (stödjer "AS").
  * @method static \Radix\Database\QueryBuilder\QueryBuilder fromRaw(string $raw) Ange FROM som rått uttryck/subquery.
- * @method static \Radix\Database\QueryBuilder\QueryBuilder select(string|string[] $columns = ['*']) Kolumner.
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder select(string|array<int,string> $columns = ['*']) Kolumner.
  * @method static \Radix\Database\QueryBuilder\QueryBuilder selectRaw(string $expression) Rå SELECT-uttryck.
  * @method static \Radix\Database\QueryBuilder\QueryBuilder selectSub(\Radix\Database\QueryBuilder\QueryBuilder $sub, string $alias) Subquery i SELECT.
  * @method static \Radix\Database\QueryBuilder\QueryBuilder distinct(bool $value = true) DISTINCT.
- * @method static string                                          toSql() Generera SQL.
- * @method static array                                           getBindings() Hämta bindningar.
- * @method static string                                          debugSql() SQL med interpolerade bindningar.
- * @method static mixed                                           value(string $column) Hämta ett enda värde.
- * @method static array                                           pluck(string $column, ?string $key = null) Hämta kolumnlista/assoc.
- * @method static array                                           get() Hämta resultat (hydreras till modeller).
- * @method static mixed                                           first() Första raden (modell eller null).
+ * @method static string                                    toSql() Generera SQL.
+ * @method static array<int,mixed>                          getBindings() Hämta bindningar.
+ * @method static string                                    debugSql() SQL med interpolerade bindningar.
+ * @method static string                                    getRawSql() SQL med insatta värden (debug).
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder dump() Dumpa interpolerad SQL och fortsätt kedjan.
+ * @method static mixed                                     value(string $column) Hämta ett enda värde.
+ * @method static array<int|string,mixed>                   pluck(string $column, ?string $key = null) Hämta kolumnlista/assoc.
+ * @method static \Radix\Collection\Collection              get() Hämta resultat (hydreras till modeller).
+ * @method static mixed                                     first() Första raden (modell eller null).
+ * @method static mixed                                     firstOrFail() Första raden eller exception.
  *
  * Snabba hämtningar
- * @method static array                                           fetchAllRaw() Hämta alla rader som assoc-arrayer (utan modell-hydrering).
- * @method static array|null                                      fetchRaw() Hämta första raden som assoc-array(utan modell-hydrering) eller null.
+ * @method static array<int, array<string, mixed>>            fetchAllRaw() Hämta alla rader som assoc-arrayer (utan modell-hydrering).
+ * @method static array<string,mixed>|null                  fetchRaw() Hämta första raden som assoc-array(utan modell-hydrering) eller null.
  *
  * Paginering/Sök
- * @method static array paginate(int $perPage = 10, int $currentPage = 1)
- * @method static array simplePaginate(int $perPage = 10, int $currentPage = 1)
- * @method static array search(string $term, array $searchColumns, int $perPage = 10, int $currentPage = 1)
- * @method static bool  exists()
+ * @method static array<string,mixed>                       paginate(int $perPage = 10, int $currentPage = 1)
+ * @method static array<string,mixed>                       simplePaginate(int $perPage = 10, int $currentPage = 1)
+ * @method static array<string,mixed>                       search(string $term, array<int,string> $searchColumns, int $perPage = 10, int $currentPage = 1)
+ * @method static bool                                      exists()
+ * @method static bool                                      doesntExist()
  *
  * Limit/Offset
  * @method static \Radix\Database\QueryBuilder\QueryBuilder limit(int $limit)
@@ -50,14 +55,14 @@ use Radix\Database\QueryBuilder\QueryBuilder;
  * Where/Filter
  * @method static \Radix\Database\QueryBuilder\QueryBuilder where(string|\Radix\Database\QueryBuilder\QueryBuilder|\Closure $column, ?string $operator = null, mixed $value = null, string $boolean = 'AND')
  * @method static \Radix\Database\QueryBuilder\QueryBuilder orWhere(string $column, string $operator, mixed $value)
- * @method static \Radix\Database\QueryBuilder\QueryBuilder whereIn(string $column, array $values, string $boolean = 'AND')
- * @method static \Radix\Database\QueryBuilder\QueryBuilder whereNotIn(string $column, array $values, string $boolean = 'AND')
- * @method static \Radix\Database\QueryBuilder\QueryBuilder whereBetween(string $column, array $range, string $boolean = 'AND')
- * @method static \Radix\Database\QueryBuilder\QueryBuilder whereNotBetween(string $column, array $range, string $boolean = 'AND')
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder whereIn(string $column, array<int,mixed> $values, string $boolean = 'AND')
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder whereNotIn(string $column, array<int,mixed> $values, string $boolean = 'AND')
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder whereBetween(string $column, array<int,mixed> $range, string $boolean = 'AND')
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder whereNotBetween(string $column, array<int,mixed> $range, string $boolean = 'AND')
  * @method static \Radix\Database\QueryBuilder\QueryBuilder whereColumn(string $left, string $operator, string $right, string $boolean = 'AND')
  * @method static \Radix\Database\QueryBuilder\QueryBuilder whereExists(\Radix\Database\QueryBuilder\QueryBuilder $sub, string $boolean = 'AND')
  * @method static \Radix\Database\QueryBuilder\QueryBuilder whereNotExists(\Radix\Database\QueryBuilder\QueryBuilder $sub, string $boolean = 'AND')
- * @method static \Radix\Database\QueryBuilder\QueryBuilder whereRaw(string $sql, array $bindings = [], string $boolean = 'AND')
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder whereRaw(string $sql, array<int,mixed> $bindings = [], string $boolean = 'AND')
  * @method static \Radix\Database\QueryBuilder\QueryBuilder whereNull(string $column, string $boolean = 'AND')
  * @method static \Radix\Database\QueryBuilder\QueryBuilder whereNotNull(string $column, string $boolean = 'AND')
  * @method static \Radix\Database\QueryBuilder\QueryBuilder orWhereNotNull(string $column)
@@ -74,39 +79,42 @@ use Radix\Database\QueryBuilder\QueryBuilder;
  * @method static \Radix\Database\QueryBuilder\QueryBuilder rightJoin(string $table, string $first, string $operator, string $second)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder fullJoin(string $table, string $first, string $operator, string $second)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder joinSub(self|\Radix\Database\QueryBuilder\QueryBuilder $subQuery, string $alias, string $first, string $operator, string $second, string $type = 'INNER')
- * @method static \Radix\Database\QueryBuilder\QueryBuilder joinRaw(string $raw, array $bindings = [])
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder joinRaw(string $raw, array<int,mixed> $bindings = [])
  *
  * Group/Having/Order
  * @method static \Radix\Database\QueryBuilder\QueryBuilder groupBy(string ...$columns)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder having(string $column, string $operator, mixed $value)
- * @method static \Radix\Database\QueryBuilder\QueryBuilder havingRaw(string $expression, array $bindings = [])
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder havingRaw(string $expression, array<int,mixed> $bindings = [])
  * @method static \Radix\Database\QueryBuilder\QueryBuilder orderBy(string $column, string $direction = 'ASC')
  * @method static \Radix\Database\QueryBuilder\QueryBuilder orderByRaw(string $expression)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder orderByDesc(string $column)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder latest(string $column = 'created_at')
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder oldest(string $column = 'created_at')
  *
  * Grouping sets och rollup
- * @method static \Radix\Database\QueryBuilder\QueryBuilder rollup(array $columns)
- * @method static \Radix\Database\QueryBuilder\QueryBuilder groupingSets(array $sets)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder rollup(array<int,string> $columns)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder groupingSets(array<int,mixed> $sets)
  *
  * Union
  * @method static \Radix\Database\QueryBuilder\QueryBuilder union(self|\Radix\Database\QueryBuilder\QueryBuilder $query, bool $all = false)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder unionAll(self|\Radix\Database\QueryBuilder\QueryBuilder $query)
  *
  * Fönsterfunktioner (Windows)
- * @method static \Radix\Database\QueryBuilder\QueryBuilder rowNumber(string $alias, array $partitionBy = [], array $orderBy = [])
- * @method static \Radix\Database\QueryBuilder\QueryBuilder rank(string $alias, array $partitionBy = [], array $orderBy = [])
- * @method static \Radix\Database\QueryBuilder\QueryBuilder denseRank(string $alias, array $partitionBy = [], array $orderBy = [])
- * @method static \Radix\Database\QueryBuilder\QueryBuilder sumOver(string $column, string $alias, array $partitionBy = [], array $orderBy = [])
- * @method static \Radix\Database\QueryBuilder\QueryBuilder avgOver(string $column, string $alias, array $partitionBy = [], array $orderBy = [])
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder rowNumber(string $alias, array<int,string> $partitionBy = [], array<int,string> $orderBy = [])
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder rank(string $alias, array<int,string> $partitionBy = [], array<int,string> $orderBy = [])
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder denseRank(string $alias, array<int,string> $partitionBy = [], array<int,string> $orderBy = [])
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder sumOver(string $column, string $alias, array<int,string> $partitionBy = [], array<int,string> $orderBy = [])
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder avgOver(string $column, string $alias, array<int,string> $partitionBy = [], array<int,string> $orderBy = [])
  * @method static \Radix\Database\QueryBuilder\QueryBuilder windowRaw(string $expression, ?string $alias = null)
  *
  * CASE-uttryck
- * @method static \Radix\Database\QueryBuilder\QueryBuilder caseWhen(array $whenThenRows, string $elseExpr, ?string $alias = null)
- * @method static \Radix\Database\QueryBuilder\QueryBuilder orderByCase(string $column, array $map, string $default, string $direction = 'ASC')
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder caseWhen(array<int,mixed> $whenThenRows, string $elseExpr, ?string $alias = null)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder orderByCase(string $column, array<string,string> $map, string $default, string $direction = 'ASC')
  *
  * CTE (WITH / RECURSIVE)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder withCte(string $name, \Radix\Database\QueryBuilder\QueryBuilder $sub)
- * @method static \Radix\Database\QueryBuilder\QueryBuilder withCteRaw(string $raw, array $bindings = [])
- * @method static \Radix\Database\QueryBuilder\QueryBuilder withRecursive(string $name, \Radix\Database\QueryBuilder\QueryBuilder $anchor, \Radix\Database\QueryBuilder\QueryBuilder $recursive, array $columns = [])
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder withCteRaw(string $raw, array<int, mixed> $bindings = [])
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder withRecursive(string $name, \Radix\Database\QueryBuilder\QueryBuilder $anchor, \Radix\Database\QueryBuilder\QueryBuilder $recursive, array<int, string> $columns)
  *
  * Låsning
  * @method static \Radix\Database\QueryBuilder\QueryBuilder forUpdate(bool $enable = true)
@@ -119,7 +127,7 @@ use Radix\Database\QueryBuilder\QueryBuilder;
  * @method static \Radix\Database\QueryBuilder\QueryBuilder sum(string $column, string $alias = 'sum')
  * @method static \Radix\Database\QueryBuilder\QueryBuilder min(string $column, string $alias = 'min')
  * @method static \Radix\Database\QueryBuilder\QueryBuilder max(string $column, string $alias = 'max')
- * @method static \Radix\Database\QueryBuilder\QueryBuilder concat(array $columns, string $alias)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder concat(array<int,string> $columns, string $alias)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder addExpression(string $expression)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder round(string $column, int $decimals = 0, string $alias = null)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder ceil(string $column, string $alias = null)
@@ -131,16 +139,25 @@ use Radix\Database\QueryBuilder\QueryBuilder;
  * @method static \Radix\Database\QueryBuilder\QueryBuilder month(string $column, string $alias = null)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder date(string $column, string $alias = null)
  *
+ * Skalära resultat
+ * @method static mixed        scalar() Returnera första kolumnen i första raden.
+ * @method static int|null     int() Returnera scalar som int (eller null).
+ * @method static float|null   float() Returnera scalar som float (eller null).
+ * @method static string|null  string() Returnera scalar som string (eller null).
+ *
  * Insert-Select och mutationer
- * @method static \Radix\Database\QueryBuilder\QueryBuilder insertSelect(string $table, array $columns, \Radix\Database\QueryBuilder\QueryBuilder $select)
- * @method static \Radix\Database\QueryBuilder\QueryBuilder insert(array $data)
- * @method static \Radix\Database\QueryBuilder\QueryBuilder update(array $data)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder insertSelect(string $table, array<int,string> $columns, \Radix\Database\QueryBuilder\QueryBuilder $select)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder insert(array<string,mixed> $data)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder update(array<string,mixed> $data)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder delete()
- * @method static \Radix\Database\QueryBuilder\QueryBuilder insertOrIgnore(array $data)
- * @method static \Radix\Database\QueryBuilder\QueryBuilder upsert(array $data, array $uniqueBy, ?array $update = null)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder insertOrIgnore(array<string,mixed> $data)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder upsert(array<int,array<string,mixed> > $data, array<int,string> $uniqueBy, array<string,mixed>|null $update = null)
  *
  * Transaktioner
  * @method static void transaction(callable $callback)
+ * @method static void startTransaction()
+ * @method static void commitTransaction()
+ * @method static void rollbackTransaction()
  *
  * Soft deletes
  * @method static \Radix\Database\QueryBuilder\QueryBuilder withSoftDeletes()
@@ -149,31 +166,44 @@ use Radix\Database\QueryBuilder\QueryBuilder;
  * @method static \Radix\Database\QueryBuilder\QueryBuilder withoutTrashed()
  *
  * Eager load/aggregat över relationer
- * @method static \Radix\Database\QueryBuilder\QueryBuilder with(string|string[] $relations)
- * @method static \Radix\Database\QueryBuilder\QueryBuilder withCount(string|string[] $relations)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder with(string|array<int,string> $relations)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder withCount(string|array<int,string> $relations)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder withCountWhere(string $relation, string $column, mixed $value, ?string $alias = null)
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder withConstraint(string $relation, \Closure $constraint)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder withSum(string $relation, string $column, ?string $alias = null)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder withAvg(string $relation, string $column, ?string $alias = null)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder withMin(string $relation, string $column, ?string $alias = null)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder withMax(string $relation, string $column, ?string $alias = null)
  * @method static \Radix\Database\QueryBuilder\QueryBuilder withAggregate(string $relation, string $column, string $fn, ?string $alias = null)
+ *
+ * Utilities/sugar
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder when(bool $condition, \Closure $then, ?\Closure $else = null) Villkorad chaining.
+ * @method static \Radix\Database\QueryBuilder\QueryBuilder tap(\Closure $callback) Hooka in i kedjan.
+ * @method static \Generator                             lazy(int $size = 1000) Lazy iteration.
+ * @method static void                                   chunk(int $size, \Closure $callback) Hämta i bitar.
  */
 abstract class Model implements JsonSerializable
 {
     protected string $primaryKey = 'id'; // Standard primärnyckel
+    /** @var array<string, mixed> */
     protected array $attributes = [];   // Modellens attribut
     protected bool $exists = false;    // Om posten existerar i databasen
     protected string $table;          // Tabellen kopplad till modellen
     protected bool $softDeletes = false; // Om modellen använder soft deletes
     protected bool $timestamps = false;
+    /** @var array<string, mixed> */
     protected array $relations = []; // Lagrar modellens relati
+    /** @var array<int, string> */
     protected array $internalKeys = ['exists', 'relations']; // Skyddade nycklar
+    /** @var array<int, string> */
     protected array $fillable = []; // Lista över tillåtna fält för massfyllning
+    /** @var array<int, string> */
     protected array $guarded = [];
+    /** @var array<int, string> */
     protected array $autoloadRelations = [];
 
     /**
-     * Konstruktor
+     * @param array<string, mixed> $attributes
      */
     public function __construct(array $attributes = [])
     {
@@ -238,6 +268,11 @@ abstract class Model implements JsonSerializable
         return method_exists($this, $relation);
     }
 
+    /**
+     * @param string              $method
+     * @param array<int, mixed>   $arguments
+     * @return mixed
+     */
     public static function __callStatic(string $method, array $arguments)
     {
         $query = self::query(); // Använd rätt kontext via `query()`
@@ -249,12 +284,12 @@ abstract class Model implements JsonSerializable
         throw new \BadMethodCallException("Method $method does not exist in " . static::class);
     }
 
-    /**
-     * Hämta anslutningen från DatabaseManager via app().
-     */
     protected function getConnection(): \Radix\Database\Connection
     {
-        return app(DatabaseManager::class)->connection();
+        /** @var \Radix\Database\DatabaseManager $db */
+        $db = app(\Radix\Database\DatabaseManager::class);
+
+        return $db->connection();
     }
 
     /**
@@ -276,7 +311,9 @@ abstract class Model implements JsonSerializable
         }
     }
 
-
+    /**
+     * @param array<int, string> $fields
+     */
     public function setGuarded(array $fields): void
     {
         $this->guarded = $fields; // Uppdatera guarded-attributet
@@ -312,13 +349,16 @@ abstract class Model implements JsonSerializable
     }
 
     /**
-     * Ange fillable-fält dynamiskt.
+     * @param array<int, string> $fields
      */
     public function setFillable(array $fields): void
     {
         $this->fillable = $fields;
     }
 
+    /**
+     * @param array<string, mixed> $attributes
+     */
     public function forceFill(array $attributes): self
     {
         foreach ($attributes as $key => $value) {
@@ -328,6 +368,9 @@ abstract class Model implements JsonSerializable
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $row
+     */
     public function hydrateFromDatabase(array $row): self
     {
         $guardAll = !empty($this->guarded) && in_array('*', $this->guarded, true);
@@ -342,6 +385,9 @@ abstract class Model implements JsonSerializable
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $attributes
+     */
     public function fill(array $attributes): void
     {
         $this->blockUndefinableAttributes();
@@ -396,6 +442,9 @@ abstract class Model implements JsonSerializable
         $this->attributes[$key] = $value;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getAttributes(): array
     {
         // Ta bort interna nycklar från resultatet
@@ -578,12 +627,15 @@ abstract class Model implements JsonSerializable
             // Kontrollera om `deleted_at` är satt i attributen
             if (!isset($this->attributes['deleted_at'])) {
                 // Hämta värdet från databasen om det inte är tillgängligt
-                $result = $this->getConnection()
-                    ->execute("SELECT deleted_at FROM `$this->table` WHERE `$this->primaryKey` = ?", [$this->attributes[$this->primaryKey]])
-                    ->fetch();
+                $stmt = $this->getConnection()
+                    ->execute(
+                        "SELECT deleted_at FROM `$this->table` WHERE `$this->primaryKey` = ?",
+                            [$this->attributes[$this->primaryKey]]
+                    );
 
-                // Om inget `deleted_at` hittas i databasen, bör det stanna false
-                $this->attributes['deleted_at'] = $result['deleted_at'] ?? null;
+                /** @var array<string, mixed>|false $row */
+                $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+                $this->attributes['deleted_at'] = is_array($row) ? ($row['deleted_at'] ?? null) : null;
             }
 
             // Om modellen är soft-deleted (`deleted_at` har ett värde), återställ den
@@ -592,7 +644,9 @@ abstract class Model implements JsonSerializable
 
                 // Uppdatera posten i databasen och returnera bool
                 $query = "UPDATE `$this->table` SET `deleted_at` = NULL WHERE `$this->primaryKey` = ?";
-                $affected = $this->getConnection()->execute($query, [$this->attributes[$this->primaryKey]])->rowCount() > 0;
+                $affected = $this->getConnection()
+                    ->execute($query, [$this->attributes[$this->primaryKey]])
+                    ->rowCount() > 0;
 
                 // Återställ den ursprungliga `guarded`
                 $this->setGuarded($originalGuarded);
@@ -629,11 +683,14 @@ abstract class Model implements JsonSerializable
 
     /**
      * Hämta en rad från databasen baserad på primärnyckeln.
+     *
+     * @param  int|string  $id
+     * @param  bool  $withTrashed
+     * @return static|null
      */
     public static function find(int|string $id, bool $withTrashed = false): ?static
     {
         $modelClass = static::class;
-        /** @var static $instance */
         $instance = new $modelClass();
 
         $query = (new QueryBuilder())
@@ -647,12 +704,21 @@ abstract class Model implements JsonSerializable
 
         $query->where($instance->primaryKey, '=', $id);
 
+        /** @var static|null $model */
         $model = $query->first();
 
         if ($model && property_exists($model, 'autoloadRelations') && !empty($model->autoloadRelations)) {
             foreach ($model->autoloadRelations as $relation) {
                 if ($model->relationExists($relation)) {
-                    $model->setRelation($relation, $model->$relation()->get());
+                    $relObj = $model->$relation();
+
+                    if (is_object($relObj) && method_exists($relObj, 'get')) {
+                        $related = $relObj->get();
+                    } else {
+                        $related = null;
+                    }
+
+                    $model->setRelation($relation, $related);
                 }
             }
         }
@@ -663,7 +729,7 @@ abstract class Model implements JsonSerializable
     /**
      * Hämta alla rader från tabellen.
      */
-    public static function all(): array
+    public static function all(): Collection
     {
         return self::query()->get();
     }
@@ -853,6 +919,14 @@ abstract class Model implements JsonSerializable
 
         $relatedInstance = new $relatedModel();
 
+        if (!$relatedInstance instanceof self) {
+            throw new \LogicException(
+                "belongsTo-relaterad klass '$relatedModel' måste ärva " . self::class . "."
+            );
+        }
+
+        /** @var self $relatedInstance */
+
         // Skicka den aktuella instansen (`$this`) som parent-modellen
         return new BelongsTo(
             $this->getConnection(),
@@ -863,6 +937,9 @@ abstract class Model implements JsonSerializable
         );
     }
 
+    /**
+     * @return array<int, string>
+     */
     public static function availableQueryBuilderMethods(): array
     {
         $queryBuilderClass = QueryBuilder::class;
@@ -870,12 +947,67 @@ abstract class Model implements JsonSerializable
     }
 
     /**
-     * Ladda relationer på den aktuella modellen.
-     *
+     * @return array<int, array{
+     *     name: string,
+     *     parameters: array<int, array{name: string, hasDefault: bool}>,
+     *     returnsSelf: bool
+     * }>
+     */
+    public static function describeQueryBuilderMethods(): array
+    {
+        $queryBuilderClass = \Radix\Database\QueryBuilder\QueryBuilder::class;
+        $ref = new \ReflectionClass($queryBuilderClass);
+
+        /** @var array<int, array{
+         *     name: string,
+         *     parameters: array<int, array{name: string, hasDefault: bool}>,
+         *     returnsSelf: bool
+         * }> $out
+         */
+        $out = [];
+
+        foreach ($ref->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+            if (
+                $method->isConstructor()
+                || $method->getDeclaringClass()->getName() !== $queryBuilderClass
+            ) {
+                continue;
+            }
+
+            /** @var array<int, array{name: string, hasDefault: bool}> $params */
+            $params = [];
+            foreach ($method->getParameters() as $p) {
+                $params[] = [
+                    'name' => '$' . $p->getName(),
+                    'hasDefault' => $p->isDefaultValueAvailable(),
+                ];
+            }
+
+            $returnType = $method->getReturnType();
+
+            $out[] = [
+                'name' => $method->getName(),
+                'parameters' => $params,
+                'returnsSelf' =>
+                    $returnType instanceof \ReflectionNamedType
+                    && in_array(
+                        $returnType->getName(),
+                        ['self', 'static', $queryBuilderClass],
+                        true
+                    ),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * Exempel:
      *  $user->load('posts');
      *  $user->load(['posts', 'profile']);
      *  $user->load(['posts' => function (QueryBuilder $q) { $q->where('status', '=', 'published'); }]);
+     *
+     * @param array<int, string>|array<string, \Closure>|string $relations
      */
     public function load(array|string $relations): self
     {
@@ -883,17 +1015,27 @@ abstract class Model implements JsonSerializable
 
         foreach ($relations as $key => $constraint) {
             // Stöd både 'rel' och 'rel' => closure
-            $name = is_int($key) ? $constraint : $key;
-            $closure = is_int($key) ? null : $constraint;
+            if (is_int($key)) {
+                // numeriska nycklar: värdet ÄR relationsnamnet och ska vara string
+                if (!is_string($constraint)) {
+                    throw new \InvalidArgumentException('Relation name must be a string for numeric keys.');
+                }
+                $name = $constraint;
+                $closure = null;
+            } else {
+                // assoc: nyckeln är relationsnamn, värdet är \Closure
+                $name = $key;
+                $closure = $constraint;
+            }
 
             if (!$this->relationExists($name)) {
-                throw new \InvalidArgumentException("Relation '$name' är inte definierad i modellen ".static::class.".");
+                throw new \InvalidArgumentException("Relation '$name' är inte definierad i modellen " . static::class . ".");
             }
 
             $relObj = $this->$name();
 
             // Sätt parent om möjligt
-            if (method_exists($relObj, 'setParent')) {
+            if (is_object($relObj) && method_exists($relObj, 'setParent')) {
                 $relObj->setParent($this);
             }
 
@@ -928,9 +1070,9 @@ abstract class Model implements JsonSerializable
 
                 // Försök extrahera QueryBuilder (om relationen har en)
                 $query = null;
-                if (method_exists($relObj, 'getQuery')) {
+                if (is_object($relObj) && method_exists($relObj, 'getQuery')) {
                     $query = $relObj->getQuery();
-                } elseif (method_exists($relObj, 'query')) {
+                } elseif (is_object($relObj) && method_exists($relObj, 'query')) {
                     $query = $relObj->query();
                 }
 
@@ -939,85 +1081,126 @@ abstract class Model implements JsonSerializable
                         // Ge closuren relationens QueryBuilder
                         $closure($query);
                         // Låt relationen hämta enligt sin get()
-                        $relatedData = method_exists($relObj, 'get')
-                            ? $relObj->get()
-                            : $query->get();
+                        if (is_object($relObj) && method_exists($relObj, 'get')) {
+                            $relatedData = $relObj->get();
+                        } else {
+                            $relatedData = $query->get();
+                        }
                     } else {
                         // Skapa en fristående QB som verkar mot relaterade tabellen
                         $relatedTable = null;
                         $relatedModelClass = null;
 
                         // HasMany/HasOne: har 'modelClass'
-                        if (property_exists($relObj, 'modelClass')) {
+                        if (is_object($relObj) && property_exists($relObj, 'modelClass')) {
                             $rc = new \ReflectionClass($relObj);
                             if ($rc->hasProperty('modelClass')) {
-                                $p = $rc->getProperty('modelClass'); $p->setAccessible(true);
+                                $p = $rc->getProperty('modelClass');
+                                $p->setAccessible(true);
                                 $relatedModelClass = $p->getValue($relObj);
                             }
                         }
                         // BelongsTo: har 'relatedTable'
-                        if (!$relatedModelClass && property_exists($relObj, 'relatedTable')) {
+                        if ($relatedModelClass === null && is_object($relObj) && property_exists($relObj, 'relatedTable')) {
                             $rc = new \ReflectionClass($relObj);
                             if ($rc->hasProperty('relatedTable')) {
-                                $p = $rc->getProperty('relatedTable'); $p->setAccessible(true);
+                                $p = $rc->getProperty('relatedTable');
+                                $p->setAccessible(true);
                                 $relatedTable = $p->getValue($relObj);
                             }
                         }
-                        if ($relatedModelClass && class_exists($relatedModelClass)) {
+
+                        if (is_string($relatedModelClass) && class_exists($relatedModelClass)) {
                             $tmpModel = new $relatedModelClass();
-                            $relatedTable = $tmpModel->getTable();
+                            if ($tmpModel instanceof self) {
+                                /** @var self $tmpModel */
+                                $relatedTable = $tmpModel->getTable();
+                            }
                         }
 
-                        $qb = (new QueryBuilder())
-                                ->setConnection($this->getConnection())
-                                ->setModelClass($relatedModelClass ?? static::class)
-                                ->from($relatedTable ?? $name);
+                        $tableForQuery = $relatedTable ?? $name;
+                        if (!is_string($tableForQuery)) {
+                            throw new \LogicException('Related table name must be a string.');
+                        }
 
-                            // Applicera foreign key-filter om möjligt (för HasMany/HasOne)
-                            try {
+                        $modelClassForQuery = is_string($relatedModelClass) ? $relatedModelClass : static::class;
+
+                        $qb = (new QueryBuilder())
+                            ->setConnection($this->getConnection())
+                            ->setModelClass($modelClassForQuery)
+                            ->from($tableForQuery);
+
+                        // Applicera foreign key-filter om möjligt (för HasMany/HasOne)
+                        try {
+                            if (is_object($relObj)) {
                                 $rc = new \ReflectionClass($relObj);
                                 if ($rc->hasProperty('foreignKey') && $rc->hasProperty('localKeyName')) {
-                                    $pfk = $rc->getProperty('foreignKey'); $pfk->setAccessible(true);
-                                    $plk = $rc->getProperty('localKeyName'); $plk->setAccessible(true);
+                                    $pfk = $rc->getProperty('foreignKey');
+                                    $pfk->setAccessible(true);
+                                    $plk = $rc->getProperty('localKeyName');
+                                    $plk->setAccessible(true);
+
                                     $foreignKey = $pfk->getValue($relObj);
                                     $localKeyName = $plk->getValue($relObj);
+
+                                    if (!is_string($foreignKey) || !is_string($localKeyName)) {
+                                        throw new \LogicException('Relation foreignKey/localKeyName must be strings.');
+                                    }
+
                                     $localValue = $this->getAttribute($localKeyName);
                                     if ($localValue !== null) {
                                         $qb->where($foreignKey, '=', $localValue);
                                     }
                                 }
-                            } catch (\Throwable) {
-                                // ignoreras
                             }
+                        } catch (\Throwable) {
+                            // ignoreras
+                        }
 
-                            $closure($qb);
-                            $relatedData = $qb->get();
-                        }
-                    } elseif (
-                        $paramType === null
-                        || str_starts_with((string)$paramType, 'Radix\\Database\\ORM\\Relationships\\')
-                    ) {
-                        // Skicka relationsobjektet (withDefault m.m.)
-                        $closure($relObj);
-                        $relatedData = method_exists($relObj, 'get')
-                            ? $relObj->get()
-                            : ($query instanceof QueryBuilder ? $query->get() : null);
+                        $closure($qb);
+                        $relatedData = $qb->get();
+                    }
+                } elseif (
+                    $paramType === null
+                    || (is_string($paramType) && str_starts_with($paramType, 'Radix\\Database\\ORM\\Relationships\\'))
+                ) {
+                    // Skicka relationsobjektet (withDefault m.m.)
+                    $closure($relObj);
+                    if (is_object($relObj) && method_exists($relObj, 'get')) {
+                        $relatedData = $relObj->get();
+                    } elseif ($query instanceof QueryBuilder) {
+                        $relatedData = $query->get();
                     } else {
-                        // Okänd typ: försök QB, annars relation
-                        if ($query instanceof QueryBuilder) {
-                            $closure($query);
-                            $relatedData = method_exists($relObj, 'get') ? $relObj->get() : $query->get();
-                        } else {
-                            $closure($relObj);
-                            $relatedData = method_exists($relObj, 'get') ? $relObj->get() : null;
-                        }
+                        $relatedData = null;
                     }
                 } else {
-                    // Ingen constraint
-                    $relatedData = $relObj->get();
+                    // Okänd typ: försök QB, annars relation
+                    if ($query instanceof QueryBuilder) {
+                        $closure($query);
+                        if (is_object($relObj) && method_exists($relObj, 'get')) {
+                            $relatedData = $relObj->get();
+                        } else {
+                            $relatedData = $query->get();
+                        }
+                    } else {
+                        $closure($relObj);
+                        if (is_object($relObj) && method_exists($relObj, 'get')) {
+                            $relatedData = $relObj->get();
+                        } else {
+                            $relatedData = null;
+                        }
+                    }
                 }
+            } else {
+                // Ingen constraint: hämta via relationens get()
+                if (is_object($relObj) && method_exists($relObj, 'get')) {
+                    $relatedData = $relObj->get();
+                } else {
+                    $relatedData = null;
+                }
+            }
 
-                $this->setRelation($name, is_array($relatedData) ? $relatedData : ($relatedData ?? null));
+            $this->setRelation($name, is_array($relatedData) ? $relatedData : ($relatedData ?? null));
         }
 
         return $this;
@@ -1029,13 +1212,24 @@ abstract class Model implements JsonSerializable
      * Exempel:
      *  $user->loadMissing(['posts', 'profile']);
      *  $user->loadMissing(['posts' => function (QueryBuilder $q) { $q->where('status', '=', 'published'); }]);
+     *
+     * @param array<int, string>|array<string, \Closure>|string $relations
      */
     public function loadMissing(array|string $relations): self
     {
         $relations = is_array($relations) ? $relations : [$relations];
 
         foreach ($relations as $key => $constraint) {
-            $name = is_int($key) ? $constraint : $key;
+            if (is_int($key)) {
+                if (!is_string($constraint)) {
+                    // enligt signaturen ska värdet här vara string; hoppa annars
+                    continue;
+                }
+                $name = $constraint;
+            } else {
+                $name = $key;
+            }
+
             if (array_key_exists($name, $this->relations)) {
                 continue; // redan laddad
             }
@@ -1044,7 +1238,15 @@ abstract class Model implements JsonSerializable
         // Kör load() med full uppsättning, men filtrera bort redan laddade
         $toLoad = [];
         foreach ($relations as $key => $constraint) {
-            $name = is_int($key) ? $constraint : $key;
+            if (is_int($key)) {
+                if (!is_string($constraint)) {
+                    continue;
+                }
+                $name = $constraint;
+            } else {
+                $name = $key;
+            }
+
             if (!array_key_exists($name, $this->relations)) {
                 $toLoad[$key] = $constraint;
             }
@@ -1057,19 +1259,27 @@ abstract class Model implements JsonSerializable
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         $array = [];
 
-        // Lägg till attribut
         foreach ($this->attributes as $key => $value) {
             $array[$key] = $this->getAttribute($key);
         }
 
-        // Lägg till relationer
         foreach ($this->relations as $relationKey => $relationValue) {
-            if (is_array($relationValue)) {
-                $array[$relationKey] = array_map(fn($item) => $item->toArray(), $relationValue);
+            if ($relationValue instanceof Collection) {
+                $array[$relationKey] = $relationValue->map(
+                    fn($item) => $item instanceof self ? $item->toArray() : $item
+                )->values()->toArray();
+            } elseif (is_array($relationValue)) {
+                $array[$relationKey] = array_map(
+                    fn($item) => $item instanceof self ? $item->toArray() : $item,
+                    $relationValue
+                );
             } elseif ($relationValue instanceof self) {
                 $array[$relationKey] = $relationValue->toArray();
             } else {
@@ -1077,14 +1287,31 @@ abstract class Model implements JsonSerializable
             }
         }
 
-        // Autoladda relationer vid serialisering
         if (!empty($this->autoloadRelations)) {
             foreach ($this->autoloadRelations as $relation) {
                 if (!isset($array[$relation]) && $this->relationExists($relation)) {
-                    $relatedData = $this->$relation()->get();
-                    $array[$relation] = is_array($relatedData)
-                        ? array_map(fn($item) => $item->toArray(), $relatedData)
-                        : $relatedData->toArray();
+                    $relObj = $this->$relation();
+
+                    if (is_object($relObj) && method_exists($relObj, 'get')) {
+                        $relatedData = $relObj->get();
+                    } else {
+                        $relatedData = null;
+                    }
+
+                    if ($relatedData instanceof Collection) {
+                        $array[$relation] = $relatedData->map(
+                            fn($item) => $item instanceof self ? $item->toArray() : $item
+                        )->values()->toArray();
+                    } elseif (is_array($relatedData)) {
+                        $array[$relation] = array_map(
+                            fn($item) => $item instanceof self ? $item->toArray() : $item,
+                            $relatedData
+                        );
+                    } elseif ($relatedData instanceof self) {
+                        $array[$relation] = $relatedData->toArray();
+                    } else {
+                        $array[$relation] = $relatedData;
+                    }
                 }
             }
         }
@@ -1097,6 +1324,9 @@ abstract class Model implements JsonSerializable
         return 'id'; // Standard primärnyckel
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function jsonSerialize(): array
     {
        return $this->toArray();

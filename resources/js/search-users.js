@@ -61,7 +61,7 @@ export default class SearchUsers extends Search {
 
                     li.innerHTML = `
                         <a href="${userRoute}" class="flex items-center gap-3">
-                            <img src="${result.avatar}" alt="${result.first_name}" class="w-8 h-8 rounded-full object-cover">
+                            <img src="${result.avatar_url || result.avatar}" alt="${result.first_name}" class="w-8 h-8 rounded-full object-cover">
                             <div>
                                 <div class="text-sm font-medium text-blue-600 hover:underline">${result.first_name} ${result.last_name}</div>
                                 <p class="text-xs text-gray-600">${result.email}</p>

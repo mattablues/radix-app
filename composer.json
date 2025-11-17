@@ -9,7 +9,8 @@
         }
     ],
     "scripts": {
-      "phpstan": "vendor/bin/phpstan analyse -c phpstan.neon.dist"
+      "stan": "phpstan analyse",
+      "test": "phpunit"
     },
     "minimum-stability": "dev",
     "autoload": {

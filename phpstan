@@ -54,3 +54,16 @@ Kontextberoende autoload/const
 bootstrapFiles kan sätta upp konstanta värden, t.ex. define('APP_ENV', 'testing');
 Exempel: parameters: bootstrapFiles: - tools/bootstrap-phpstan.php
 tools/bootstrap-phpstan.php:
+
+
+parameters:
+    level: 6
+    paths:
+        - src
+        - framework/src
+        - tests
+    reportUnmatchedIgnoredErrors: true
+    inferPrivatePropertyTypeFromConstructor: true
+    treatPhpDocTypesAsCertain: false
+    bootstrapFiles:
+    - tools/phpstan-bootstrap.php

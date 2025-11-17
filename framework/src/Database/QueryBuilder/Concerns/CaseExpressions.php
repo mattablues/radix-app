@@ -7,20 +7,18 @@ namespace Radix\Database\QueryBuilder\Concerns;
 trait CaseExpressions
 {
     /**
-     * Bygg ett CASE-uttryck för SELECT-listan.
-     *
-     * $conditions schema:
-     * [
-     *   ['cond' => '`status` = ?', 'bindings' => ['active'], 'then' => "'A'"],
-     *   ['cond' => '`status` = ?', 'bindings' => ['paused'], 'then' => "'P'"],
-     * ]
+     * @param array<int, array{
+     *     cond: string,
+     *     then?: string,
+     *     bindings?: array<int, mixed>
+     * }> $conditions
      */
     public function caseWhen(array $conditions, ?string $else = null, ?string $alias = null): self
     {
         $parts = ['CASE'];
         foreach ($conditions as $c) {
-            $cond = (string)($c['cond'] ?? '');
-            $then = (string)($c['then'] ?? 'NULL');
+            $cond = $c['cond'];
+            $then = $c['then'] ?? 'NULL';
             $bindings = (array)($c['bindings'] ?? []);
             foreach ($bindings as $b) {
                 $this->addSelectBinding($b);
@@ -39,7 +37,7 @@ trait CaseExpressions
     /**
      * ORDER BY CASE helper.
      *
-     * $whenMap: ['admin' => 1, 'editor' => 2, ...] appliceras på wrapColumn($column)
+     * @param array<string, int> $whenMap  Map värde => sorteringsrank
      */
     public function orderByCase(string $column, array $whenMap, string $else = 'ZZZ', string $direction = 'ASC'): self
     {

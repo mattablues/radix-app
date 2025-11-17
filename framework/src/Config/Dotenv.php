@@ -8,6 +8,7 @@ class Dotenv
 {
     private string $path;
     private ?string $basePath;
+    /** @var array<int,string> */
     private array $pathKeys = ['LOG_FILE', 'CACHE_DIR']; // Nycklar som representerar faktiska sökvägar
 
     public function __construct(string $path, ?string $basePath = null)
@@ -24,6 +25,11 @@ class Dotenv
     {
         $lines = file($this->path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
+        if ($lines === false) {
+            throw new \RuntimeException("Failed to read .env file at: {$this->path}");
+        }
+
+        /** @var list<string> $lines */
         foreach ($lines as $line) {
             // Hoppa över kommentar-rader eller tomma rader
             $line = trim($line);

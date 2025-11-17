@@ -14,12 +14,26 @@ class StringHelper
     public static function singularize(string $tableName): string
     {
         // Ladda konfigurationen för pluralisering
-        $config = new Config(include dirname(__DIR__, 3) . '/config/pluralization.php');
-        $irregularWords = $config->get('irregular', []);
+        $pluralConfig = include dirname(__DIR__, 3) . '/config/pluralization.php';
+
+        if (!is_array($pluralConfig)) {
+            throw new \RuntimeException('pluralization.php måste returnera en array.');
+        }
+
+        /** @var array<string,mixed> $pluralConfig */
+        $config = new Config($pluralConfig);
+        $rawIrregular = $config->get('irregular', []);
+        $irregularWords = is_array($rawIrregular) ? $rawIrregular : [];
+
+        $lower = strtolower($tableName);
 
         // Kontrollera om det finns oregelbundna pluralformer
-        if (isset($irregularWords[strtolower($tableName)])) {
-            return $irregularWords[strtolower($tableName)];
+        if (isset($irregularWords[$lower])) {
+            $mapped = $irregularWords[$lower];
+
+            if (is_string($mapped)) {
+                return $mapped;
+            }
         }
 
         // Hantera standardfallet där tabellnamnet slutar på 'ies'
@@ -41,8 +55,16 @@ class StringHelper
      */
     public static function pluralize(string $word): string
     {
-        $config = new Config(include dirname(__DIR__, 3) . '/config/pluralization.php');
-        $irregularWords = $config->get('irregular', []);
+        $pluralConfig = include dirname(__DIR__, 3) . '/config/pluralization.php';
+
+        if (!is_array($pluralConfig)) {
+            throw new \RuntimeException('pluralization.php måste returnera en array.');
+        }
+
+        /** @var array<string,mixed> $pluralConfig */
+        $config = new Config($pluralConfig);
+        $rawIrregular = $config->get('irregular', []);
+        $irregularWords = is_array($rawIrregular) ? $rawIrregular : [];
 
         $lower = strtolower($word);
 

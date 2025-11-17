@@ -30,6 +30,8 @@ final class Writer
     /**
      * Skriv JSON med valfria JSON-flaggor.
      * $pretty=true för läsbar formatering.
+     *
+     * @param array<string,mixed>|object $data
      */
     public static function json(string $path, array|object $data, bool $pretty = true, int $flags = 0, ?string $targetEncoding = null): void
     {
@@ -41,15 +43,15 @@ final class Writer
         self::text($path, $encoded . PHP_EOL, $targetEncoding);
     }
 
-
-
-
     /**
      * Skriv CSV.
      * - $rows: listor eller assoc-arrayer.
      * - $headers: null => genereras vid assoc.
      * - $delimiter: ',', ';', "\t" (TSV), '|'
      * - $targetEncoding: t.ex. 'ISO-8859-1'
+     *
+     * @param array<int,array<int|string,mixed>> $rows
+     * @param array<int,string>|null             $headers
      */
     public static function csv(
         string $path,
@@ -61,7 +63,13 @@ final class Writer
         self::ensureParentDir($path);
 
         $isAssoc = self::rowsAreAssoc($rows);
-        if ($isAssoc && $headers === null) {
+
+        // Normalisera headers så att det alltid är en array
+        if ($headers === null) {
+            $headers = [];
+        }
+
+        if ($isAssoc && $headers === []) {
             $headers = self::collectHeaders($rows);
         }
 
@@ -71,11 +79,35 @@ final class Writer
         }
 
         $write = function (array $fields) use ($fp, $delimiter, $targetEncoding): void {
-            // fputcsv hanterar quoting. Konvertera encoding per cell före skrivning.
+            // 1) Normalisera till int|string‑nycklar och tillåtna fputcsv‑värden
+            /** @var array<int|string, bool|float|int|string|null> $normalized */
+            $normalized = [];
+            foreach ($fields as $k => $v) {
+                /** @var int|string $k */
+
+                if ($v === null) {
+                    $normalized[$k] = null;
+                    continue;
+                }
+
+                if (is_bool($v) || is_int($v) || is_float($v) || is_string($v)) {
+                    $normalized[$k] = $v;
+                } else {
+                    // Oväntad typ: serialisera till sträng
+                    $encoded = json_encode($v);
+                    $normalized[$k] = $encoded !== false ? $encoded : '';
+                }
+            }
+
+            // 2) Encoding‑konvertering per cell
             if ($targetEncoding !== null && strcasecmp($targetEncoding, 'UTF-8') !== 0) {
-                foreach ($fields as &$v) {
-                    if ($v === null) { continue; }
-                    $v = (string)$v;
+                foreach ($normalized as &$v) {
+                    if ($v === null) {
+                        continue;
+                    }
+                    if (!is_string($v)) {
+                        $v = (string) $v;
+                    }
                     $conv = @iconv('UTF-8', $targetEncoding . '//TRANSLIT', $v);
                     if ($conv === false) {
                         throw new RuntimeException("Kunde inte konvertera cell till {$targetEncoding}");
@@ -84,7 +116,8 @@ final class Writer
                 }
                 unset($v);
             }
-            fputcsv($fp, $fields, $delimiter);
+
+            fputcsv($fp, $normalized, $delimiter);
         };
 
         try {
@@ -110,6 +143,8 @@ final class Writer
     /**
      * Streama skrivning av CSV. Anropa $writeRow med varje rad (array).
      * Om du anger $headers så skrivs header-rad först.
+     *
+     * @param array<int,string>|null $headers
      */
     public static function csvStream(
         string $path,
@@ -125,10 +160,33 @@ final class Writer
         }
 
         $writeRow = function (array $fields) use ($fp, $delimiter, $targetEncoding): void {
+            /** @var array<int|string, bool|float|int|string|null> $normalized */
+            $normalized = [];
+            foreach ($fields as $k => $v) {
+                /** @var int|string $k */
+
+                if ($v === null) {
+                    $normalized[$k] = null;
+                    continue;
+                }
+
+                if (is_bool($v) || is_int($v) || is_float($v) || is_string($v)) {
+                    $normalized[$k] = $v;
+                } else {
+                    $encoded = json_encode($v);
+                    $normalized[$k] = $encoded !== false ? $encoded : '';
+                }
+            }
+
             if ($targetEncoding !== null && strcasecmp($targetEncoding, 'UTF-8') !== 0) {
-                foreach ($fields as &$v) {
-                    if ($v === null) { continue; }
-                    $v = (string)$v;
+                foreach ($normalized as &$v) {
+                    if ($v === null) {
+                        continue;
+                    }
+                    if (!is_string($v)) {
+                        // här är $v begränsad till bool|int|float|string, så cast är säker
+                        $v = (string) $v;
+                    }
                     $conv = @iconv('UTF-8', $targetEncoding . '//TRANSLIT', $v);
                     if ($conv === false) {
                         throw new RuntimeException("Kunde inte konvertera cell till {$targetEncoding}");
@@ -137,7 +195,8 @@ final class Writer
                 }
                 unset($v);
             }
-            fputcsv($fp, $fields, $delimiter);
+
+            fputcsv($fp, $normalized, $delimiter);
         };
 
         try {
@@ -151,7 +210,10 @@ final class Writer
     }
 
     /**
-     * Konvertera JSON-data (array av rader) till CSV och skriv.
+     * Konvertera JSON‑liknande data (array) till CSV‑fil.
+     *
+     * @param array<int,array<string,mixed>>      $data
+     * @param array<int,string>|null              $headers
      */
     public static function jsonToCsv(
         string $path,
@@ -206,6 +268,9 @@ final class Writer
         }
     }
 
+    /**
+     * @param array<int,mixed> $rows
+     */
     private static function rowsAreAssoc(array $rows): bool
     {
         foreach ($rows as $r) {
@@ -216,6 +281,10 @@ final class Writer
         return false;
     }
 
+    /**
+     * @param array<int,mixed> $rows
+     * @return array<int,string>
+     */
     private static function collectHeaders(array $rows): array
     {
         $headers = [];
@@ -234,95 +303,175 @@ final class Writer
 
     /**
      * Validera rader mot ett enkelt schema.
-     * $schema = [
-     *   'required' => ['id','name'],
-     *   'types' => ['id' => 'int', 'price' => 'float', 'active' => 'bool'],
-     *   'defaults' => ['active' => false],
-     *   'trim' => true, 'nullable' => ['note']
-     * ]
-     * Returnerar normaliserade rader. Kastar RuntimeException vid fel om $onError === 'throw',
-     * annars hoppar över felaktiga rader om $onError === 'skip'.
+     *
+     * @param array<int,array<string,mixed>> $rows
+     * @param array<string,mixed>            $schema
+     * @return array<int,array<string,mixed>>
      */
-    public static function validateRows(array $rows, array $schema, string $onError = 'throw'): array
-    {
-        $required = $schema['required'] ?? [];
-        $types = $schema['types'] ?? [];
-        $defaults = $schema['defaults'] ?? [];
-        $trim = (bool)($schema['trim'] ?? false);
-        $nullable = array_flip($schema['nullable'] ?? []);
+        public static function validateRows(array $rows, array $schema, string $onError = 'throw'): array
+        {
+            // Normalisera schema-delar till säkra typer
+            $requiredRaw = $schema['required'] ?? [];
+            $required = is_array($requiredRaw) ? array_values($requiredRaw) : [];
 
-        $out = [];
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
-                if ($onError === 'skip') { continue; }
-                throw new RuntimeException('Raden är inte en array');
-            }
-            // required
-            foreach ($required as $key) {
-                if (!array_key_exists($key, $row) || ($row[$key] === '' && !isset($nullable[$key]))) {
-                    if ($onError === 'skip') { continue 2; }
-                    throw new RuntimeException("Saknar obligatoriskt fält: {$key}");
-                }
-            }
-            // defaults
-            foreach ($defaults as $k => $v) {
-                if (!array_key_exists($k, $row) || $row[$k] === null || $row[$k] === '') {
-                    $row[$k] = $v;
-                }
-            }
-            // trim
-            if ($trim) {
-                foreach ($row as $k => $v) {
-                    if (is_string($v)) {
-                        $row[$k] = trim($v);
+            $typesRaw = $schema['types'] ?? [];
+            $types = is_array($typesRaw) ? $typesRaw : [];
+
+            $defaultsRaw = $schema['defaults'] ?? [];
+            $defaults = is_array($defaultsRaw) ? $defaultsRaw : [];
+
+            $trim = (bool)($schema['trim'] ?? false);
+
+            $nullableRaw = $schema['nullable'] ?? [];
+            $nullableList = [];
+            if (is_array($nullableRaw)) {
+                foreach ($nullableRaw as $name) {
+                    if (is_scalar($name) || $name === null) {
+                        // bool|int|float|string|null → ok för strval
+                        $nullableList[] = strval($name);
+                    } else {
+                        // Oväntad typ: serialisera eller använd tom sträng
+                        $encoded = json_encode($name);
+                        $nullableList[] = $encoded !== false ? $encoded : '';
                     }
                 }
             }
-            // typer
-            foreach ($types as $k => $t) {
-                if (!array_key_exists($k, $row)) {
-                    continue;
+            /** @var array<string,int> $nullable */
+            $nullable = array_flip($nullableList);
+
+            $out = [];
+            foreach ($rows as $row) {
+                if (!is_array($row)) {
+                    if ($onError === 'skip') { continue; }
+                    throw new RuntimeException('Raden är inte en array');
                 }
-                $val = $row[$k];
-                if (isset($nullable[$k]) && ($val === '' || $val === null)) {
-                    $row[$k] = null;
-                    continue;
+
+                // Normalisera radernas nycklar till strängar
+                $normalizedRow = [];
+                foreach ($row as $rk => $rv) {
+                    // arraynycklar i PHP är alltid int|string, så detta är säkert
+                    $normalizedRow[(string) $rk] = $rv;
                 }
-                switch ($t) {
-                    case 'int':
-                        if (is_numeric($val) && (string)(int)$val == (string)$val) { $row[$k] = (int)$val; break; }
-                        if ($onError === 'skip') { continue 3; }
-                        throw new RuntimeException("Fält {$k} måste vara int");
-                    case 'float':
-                        if (is_numeric($val)) { $row[$k] = (float)$val; break; }
-                        if ($onError === 'skip') { continue 3; }
-                        throw new RuntimeException("Fält {$k} måste vara float");
-                    case 'bool':
-                        if (is_bool($val)) { break; }
-                        $lower = is_string($val) ? strtolower($val) : $val;
-                        if ($lower === 1 || $lower === 0 || $lower === '1' || $lower === '0' || $lower === 'true' || $lower === 'false' || $lower === 'yes' || $lower === 'no') {
-                            $row[$k] = in_array($lower, [1, '1', 'true', 'yes'], true);
-                            break;
+                /** @var array<string,mixed> $row */
+                $row = $normalizedRow;
+
+                // required
+                foreach ($required as $reqKey) {
+                    /** @var string $key */
+                    $key = $reqKey;
+
+                    if (
+                        !array_key_exists($key, $row)
+                        || ($row[$key] === '' && !array_key_exists($key, $nullable))
+                    ) {
+                        if ($onError === 'skip') { continue 2; }
+                        throw new RuntimeException("Saknar obligatoriskt fält: {$key}");
+                    }
+                }
+
+                // defaults
+                foreach ($defaults as $k => $v) {
+                    if (!array_key_exists($k, $row) || $row[$k] === null || $row[$k] === '') {
+                        $row[$k] = $v;
+                    }
+                }
+
+                // trim
+                if ($trim) {
+                    foreach ($row as $k => $v) {
+                        if (is_string($v)) {
+                            $row[$k] = trim($v);
                         }
-                        if ($onError === 'skip') { continue 3; }
-                        throw new RuntimeException("Fält {$k} måste vara bool");
-                    case 'string':
-                        $row[$k] = (string)$val;
-                        break;
-                    default:
-                        // okänd typ -> lämna orörd
-                        break;
+                    }
                 }
+
+                // typer
+                foreach ($types as $tKey => $t) {
+                    /** @var string $k */
+                    $k = $tKey;
+
+                    if (!array_key_exists($k, $row)) {
+                        continue;
+                    }
+
+                    $val = $row[$k];
+                    if (array_key_exists($k, $nullable) && ($val === '' || $val === null)) {
+                        $row[$k] = null;
+                        continue;
+                    }
+
+                    switch ($t) {
+                        case 'int':
+                            if (is_numeric($val) && (string)(int)$val == (string)$val) {
+                                $row[$k] = (int) $val;
+                                break;
+                            }
+                            if ($onError === 'skip') { continue 3; }
+                            throw new RuntimeException("Fält {$k} måste vara int");
+
+                        case 'float':
+                            if (is_numeric($val)) {
+                                $row[$k] = (float) $val;
+                                break;
+                            }
+                            if ($onError === 'skip') { continue 3; }
+                            throw new RuntimeException("Fält {$k} måste vara float");
+
+                        case 'bool':
+                            if (is_bool($val)) {
+                                break;
+                            }
+
+                            if (is_string($val)) {
+                                $lower = strtolower($val);
+                            } else {
+                                $lower = $val;
+                            }
+
+                            if (
+                                $lower === 1 || $lower === 0 ||
+                                $lower === '1' || $lower === '0' ||
+                                $lower === 'true' || $lower === 'false' ||
+                                $lower === 'yes' || $lower === 'no'
+                            ) {
+                                $row[$k] = in_array($lower, [1, '1', 'true', 'yes'], true);
+                                break;
+                            }
+                            if ($onError === 'skip') { continue 3; }
+                            throw new RuntimeException("Fält {$k} måste vara bool");
+
+                        case 'string':
+                            if (is_string($val)) {
+                                $row[$k] = $val;
+                            } elseif (is_int($val) || is_float($val) || is_bool($val) || $val === null) {
+                                // scalar/null → ok att casta
+                                $row[$k] = (string) $val;
+                            } else {
+                                // Oväntad typ: serialisera till sträng
+                                $encoded = json_encode($val);
+                                $row[$k] = $encoded !== false ? $encoded : '';
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+
+                /** @var array<string,mixed> $row */
+                $out[] = $row;
             }
-            $out[] = $row;
+
+            /** @var array<int,array<string,mixed>> $out */
+            return $out;
         }
-        return $out;
-    }
 
     /**
      * Skriv XML från array|object.
      * - $rootName: rotnodens namn.
      * - $targetEncoding: konvertering från UTF-8 till målencoding om satt.
+     *
+     * @param array<mixed,mixed>|object $data
      */
     public static function xml(string $path, array|object $data, string $rootName = 'root', ?string $targetEncoding = null): void
     {
@@ -356,18 +505,31 @@ final class Writer
         }
     }
 
+    /**
+     * @param array<mixed,mixed> $data
+     */
     private static function arrayToXml(array $data, \SimpleXMLElement $xml): void
     {
         foreach ($data as $key => $value) {
-            $key = is_numeric($key) ? 'item' : (string)$key;
+            // Normalisera nyckeln till sträng
+            $keyStr = (string) $key;
+            $keyStr = is_numeric($keyStr) ? 'item' : $keyStr;
+
             if (is_array($value)) {
-                $child = $xml->addChild($key);
+                $child = $xml->addChild($keyStr);
                 self::arrayToXml($value, $child);
             } else {
                 if (is_bool($value)) {
                     $value = $value ? 'true' : 'false';
+                } elseif (is_scalar($value)) {
+                    $value = (string) $value;
+                } else {
+                    // Fallback för objekt/resurser/null: serialisera eller gör tom sträng
+                    $encoded = json_encode($value);
+                    $value = $encoded !== false ? $encoded : '';
                 }
-                $xml->addChild($key, htmlspecialchars((string)$value));
+
+                $xml->addChild($keyStr, htmlspecialchars($value));
             }
         }
     }

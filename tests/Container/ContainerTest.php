@@ -230,14 +230,25 @@ class ContainerTest extends TestCase
         $container = new Container();
         $container->setParameter('name', 'Radix');
 
-        $container->add('greeting.service', function ($c) {
+        $container->add('greeting.service', function (Container $c): \stdClass {
             $name = $c->getParameter('name');
+
+            if (!is_string($name)) {
+                $this->fail('Parameter "name" måste vara en sträng.');
+            }
+
+            /** @var string $name */
             $service = new \stdClass();
-            $service->greeting = "Hello, $name!";
+            $service->greeting = sprintf('Hello, %s!', $name);
+
             return $service;
         });
 
         $service = $container->get('greeting.service');
+
+        // Narrowa typen för PHPStan
+        assert($service instanceof \stdClass);
+
         $this->assertSame('Hello, Radix!', $service->greeting);
     }
 

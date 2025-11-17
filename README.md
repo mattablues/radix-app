@@ -38,15 +38,17 @@ Radix System med ORM erbjuder en lättvikts QueryBuilder med säkra bindnings-bu
 ## Snabbstart
 
 php use App\Models\User;
-// Hämta användare $users = User::query() ->select(['id','name']) ->where('status', '=', 'active') ->orderBy('name') ->limit(10)->offset(0) ->get();
+// Hämta användare (returnerar Collection av modeller) $users = User::query() ->select(['id','name']) ->where('status', '=', 'active') ->orderBy('name') ->limit(10)->offset(0) ->get();
 // Enskilt värde $email = User::query()->where('id', '=', 1)->value('email');
 // Lista/assoc-lista emails = User::query()->where('status','=','active')->pluck('email');emailsById = User::query()->pluck('email', 'id');
+// Arbeta med Collection names =users->pluck('name')->values()->toArray(); firstActive =users->first();
 
 ## API-översikt
 - Alla metoder returnerar samma builderinstans (chainable).
 - toSql() returnerar SQL med placeholders.
 - getBindings() returnerar bindningar i rätt ordning.
-- get() hydratiserar till Model-exemplar.
+- get() hydratiserar till Model-exemplar och returnerar en Collection.
+- Relationers get(): many-relationer returnerar array, one-relationer returnerar Model|null (bakåtkompatibelt).
 
 ### Select och alias
 
@@ -84,9 +86,9 @@ q1->union(q2); // UNION q1->unionAll(q2); // UNION ALL
 
 ### Pagination och sök
 
-php // Klassisk pagination result = User::query() ->where('status','=','active') ->paginate(perPage: 10, currentPage: 2); //result['data'], $result['pagination']
+php // Klassisk pagination $result = User::query() ->where('status','=','active') ->paginate(perPage: 10, currentPage: 2); // ['data' => array, 'pagination' => [...]]
 
-// Sök (LIKE i flera kolumner + pagination) search = User::query() ->search('ma', ['first_name','last_name','email'], perPage: 10, currentPage: 1); //search['data'], $search['search']
+// Sök (LIKE i flera kolumner + pagination) $search = User::query() ->search('ma', ['first_name','last_name','email'], perPage: 10, currentPage: 1); // ['data'=>array,'search'=>[...]]
 
 // Enkel pagination utan total $simple = User::query()->simplePaginate(10, 1);
 
@@ -100,13 +102,13 @@ php // Första värdet i första raden (eller null) $email = User::query()->wher
 
 php // Insert User::query()->from('users')->insert([ 'name' => 'John Doe', 'email' => 'john@example.com', ])->execute();
 
-// Update (mutation-bucket före WHERE-bucket i bindningar) User::query()->from('users')->where('id','=',1) ->update(['name' => 'Jane Doe', 'email' => 'jane@example.com']) ->execute();
+// Update User::query()->from('users')->where('id','=',1) ->update(['name' => 'Jane Doe', 'email' => 'jane@example.com']) ->execute();
 
 // Delete (kräver WHERE) User::query()->from('users')->where('id','=',1)->delete()->execute();
 
 // Insert or ignore User::query()->from('users')->insertOrIgnore(['email'=>'dup@example.com'])->execute();
 
-// Upsert (SQLite-stil ON CONFLICT) User::query()->from('users') ->upsert(['email' => 'a@example.com', 'name' => 'A'], uniqueBy: ['email']) ->execute();
+// Upsert User::query()->from('users') ->upsert(['email' => 'a@example.com', 'name' => 'A'], uniqueBy: ['email']) ->execute();
 
 ### Soft deletes
 
@@ -132,28 +134,9 @@ php q = User::query()->where('name','LIKE','%John%');sql = q->toSql(); // SELECT
 
 ## Traits-översikt
 Följande traits i QueryBuilder (framework/src/Database/QueryBuilder/Concerns) modulariserar funktionaliteten:
-- Bindings: hanterar bindnings-buckets och ordning.
-- BuildsWhere: where/orWhere/whereIn/Between/Null/Raw/Column/Exists m.fl.
-- Joins: join/left/right/full/joinSub/joinRaw.
-- Ordering: orderBy/orderByRaw.
-- CompilesSelect: select/selectRaw/selectSub/distinct/compile av SELECT.
-- CompilesMutations: insert/update/delete/upsert/insertOrIgnore.
-- Unions: union/unionAll.
-- Pagination: paginate/simplePaginate/search.
-- SoftDeletes: withSoftDeletes/onlyTrashed/withoutTrashed.
-- EagerLoad: with() och hydrering av relationer.
-- WithCount: withCount och relaterade hjälpare.
-- WithAggregate: withSum/withAvg/withMin/withMax/withAggregate.
-- WithCtes: stöd för CTE/with/rekursiva CTE och deras bindningar.
-- Windows: fönsterfunktioner/OVER().
-- Wrapping: quoting av kolumner, alias och raw-hjälpmedel.
-- Functions: aggregerande och skalära SQL-funktioner samt helpers (inkl. value/pluck helpers).
-- Locks: frågelåsning där databasen stöds.
-- Transactions: transaktionella helpers (begin/commit/rollback).
-- CaseExpressions: CASE WHEN/THEN/ELSE helpers.
-- InsertSelect: INSERT INTO ... SELECT ...
-- JsonFunctions: JSON-funktioner (där drivrutin stöds).
-- GroupingSets: GROUPING SETS / CUBE / ROLLUP (där db stöds).
+- Bindings, BuildsWhere, Joins, Ordering, CompilesSelect, CompilesMutations, Unions, Pagination,
+  SoftDeletes, EagerLoad, WithCount, WithAggregate, WithCtes, Windows, Wrapping, Functions,
+  Locks, Transactions, CaseExpressions, InsertSelect, JsonFunctions, GroupingSets.
 
 Observera: Inte alla funktioner kanske stöds av varje databasdialekt; använd dialektens capability där relevant.
 
@@ -172,10 +155,12 @@ Observera: Inte alla funktioner kanske stöds av varje databasdialekt; använd d
 - PHPUnit: kör vendor/bin/phpunit.
 - PHPStan: kör vendor/bin/phpstan analyse.
 - Samtliga core-tester för QueryBuilder ska passera (inkl. de nya för whereNotIn/between/exists/column/orderByRaw/havingRaw/rightJoin/joinRaw/unionAll/selectSub/value/pluck/soft-delete-aliaser).
+- Collection: se tester under framework/tests/Collection för exempel på API och integration (map/filter/first/pluck/values m.m.).
 
 ## Vanliga frågor
 - Varför ser jag backticks runt alias (AS `alias`)? Builder wrappar alias konsekvent för att undvika krockar med reserverade ord. Testa mot DB-dialekten – MySQL/SQLite accepterar detta.
-- Hur undviker jag state-läckage i pagination/sök? Buildern klonas för COUNT, men WHERE och dess bindningar behålls. Vi återanvänder inte original-instanser för COUNT:s select/order/limit/offset.
+- Varför returnerar get() en Collection nu? För ett rikare, kedjbart API. Behöver du array i t.ex. pagination/search-respons, konverteras Collection till array automatiskt.
+- Påverkas relationer av Collection? Nej. Relationernas returtyper är oförändrade (arrays för “many”, Model|null för “one”) för bakåtkompatibilitet.
 
 ## Licens
 MIT (eller den licens du använder för projektet).

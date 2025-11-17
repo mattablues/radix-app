@@ -322,6 +322,7 @@ class RelationshipsTest extends TestCase
         $results = array_map(function ($record) {
             $m = new class extends Model {
                 protected string $table = 'comments';
+                /** array<int, string> */
                 protected array $fillable = ['id', 'post_id', 'content'];
             };
             $m->forceFill($record);
@@ -356,6 +357,7 @@ class RelationshipsTest extends TestCase
         // Dynamisk modell för profilen
         $profileClass = new class extends Model {
             protected string $table = 'profiles';
+            /** array<int, string> */
             protected array $fillable = ['id', 'user_id', 'profile'];
         };
 
@@ -393,6 +395,7 @@ class RelationshipsTest extends TestCase
         // Parent-modell med injicerad connection
         $post = new class($connectionMock) extends Model {
             protected string $table = 'posts';
+            /** array<int, string> */
             protected array $fillable = ['id', 'title'];
             private Connection $conn;
             public function __construct(Connection $c) { $this->conn = $c; parent::__construct([]); }
@@ -403,6 +406,7 @@ class RelationshipsTest extends TestCase
             {
                 $comment = new class extends Model {
                     protected string $table = 'comments';
+                    /** array<int, string> */
                     protected array $fillable = ['id','post_id','content'];
                 };
                 $rel = new HasMany(
@@ -426,7 +430,7 @@ class RelationshipsTest extends TestCase
         $this->assertEquals('First comment', $comments[0]->getAttribute('content'));
     }
 
-    public function testBelongsToReturnsRelatedParentRecord()
+    public function testBelongsToReturnsRelatedParentRecord(): void
     {
         $expectedResult = ['id' => 5, 'first_name' => 'Mats'];
 
@@ -453,7 +457,7 @@ class RelationshipsTest extends TestCase
         $this->assertEquals($expectedResult['first_name'], $result->getAttribute('first_name'));
     }
 
-    public function testBelongsToManyReturnsRelatedRecords()
+    public function testBelongsToManyReturnsRelatedRecords(): void
     {
         $expectedResults = [
             ['id' => 1, 'first_name' => 'John'],
@@ -548,7 +552,7 @@ class RelationshipsTest extends TestCase
         $this->assertEquals('First comment', $result->getAttribute('content'));
     }
 
-    public function testBelongsToManyFirstReturnsRecord()
+    public function testBelongsToManyFirstReturnsRecord(): void
     {
         // Mockat resultat från databasen
         $expectedResults = [
@@ -640,6 +644,7 @@ class RelationshipsTest extends TestCase
         // Parent: categories (utan ctor-argument)
         $category = new class extends Model {
             protected string $table = 'categories';
+            /** array<int, string> */
             protected array $fillable = ['id', 'name'];
             private ?Connection $conn = null;
 
@@ -654,12 +659,14 @@ class RelationshipsTest extends TestCase
         // Through: subjects
         $subjectClass = new class extends Model {
             protected string $table = 'subjects';
+            /** array<int, string> */
             protected array $fillable = ['id', 'category_id', 'name'];
         };
 
         // Related: votes
         $voteClass = new class extends Model {
             protected string $table = 'votes';
+            /** array<int, string> */
             protected array $fillable = ['id', 'subject_id', 'points'];
         };
 
@@ -693,6 +700,7 @@ class RelationshipsTest extends TestCase
         // Parentmodell med relation topVote() som HasOneThrough
         $parent = new class extends Model {
             protected string $table = 'categories';
+            /** array<int, string> */
             protected array $fillable = ['id', 'name'];
             private ?Connection $conn = null;
 
@@ -706,10 +714,12 @@ class RelationshipsTest extends TestCase
             {
                 $through = new class extends Model {
                     protected string $table = 'subjects';
+                    /** array<int, string> */
                     protected array $fillable = ['id', 'category_id'];
                 };
                 $related = new class extends Model {
                     protected string $table = 'votes';
+                    /** array<int, string> */
                     protected array $fillable = ['id', 'subject_id', 'points'];
                 };
 
@@ -752,6 +762,7 @@ class RelationshipsTest extends TestCase
         // Parent-modell utan ctor-argument + relation topVote()
         $parent = new class extends Model {
             protected string $table = 'categories';
+            /** array<int, string> */
             protected array $fillable = ['id', 'name'];
             private ?Connection $conn = null;
 
@@ -765,10 +776,12 @@ class RelationshipsTest extends TestCase
             {
                 $through = new class extends Model {
                     protected string $table = 'subjects';
+                    /** array<int, string> */
                     protected array $fillable = ['id', 'category_id'];
                 };
                 $related = new class extends Model {
                     protected string $table = 'votes';
+                    /** array<int, string> */
                     protected array $fillable = ['id', 'subject_id', 'points', 'status'];
                 };
 
@@ -808,9 +821,10 @@ class RelationshipsTest extends TestCase
 
         $parent = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'posts';
+            /** array<int, string> */
             protected array $fillable = ['id', 'title'];
             private ?\Radix\Database\Connection $c = null;
-            public function setConn($c): void
+            public function setConn(\Radix\Database\Connection $c): void
             { $this->c = $c; }
             protected function getConnection(): \Radix\Database\Connection { return $this->c ?? parent::getConnection(); }
 
@@ -818,6 +832,7 @@ class RelationshipsTest extends TestCase
             {
                 $comment = new class extends \Radix\Database\ORM\Model {
                     protected string $table = 'comments';
+                    /** array<int, string> */
                     protected array $fillable = ['id','post_id','status'];
                 };
                 return new \Radix\Database\ORM\Relationships\HasMany(
@@ -850,9 +865,10 @@ class RelationshipsTest extends TestCase
 
         $parent = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'roles';
+            /** array<int, string> */
             protected array $fillable = ['id', 'name'];
             private ?\Radix\Database\Connection $c = null;
-            public function setConn($c): void
+            public function setConn(\Radix\Database\Connection $c): void
             { $this->c = $c; }
             protected function getConnection(): \Radix\Database\Connection { return $this->c ?? parent::getConnection(); }
 
@@ -891,9 +907,10 @@ class RelationshipsTest extends TestCase
 
         $child = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'statuses';
+            /** array<int, string> */
             protected array $fillable = ['id','user_id','state'];
             private ?\Radix\Database\Connection $c = null;
-            public function setConn($c): void
+            public function setConn(\Radix\Database\Connection $c): void
             { $this->c = $c; }
             protected function getConnection(): \Radix\Database\Connection { return $this->c ?? parent::getConnection(); }
 
@@ -901,6 +918,7 @@ class RelationshipsTest extends TestCase
             {
                 $user = new class extends \Radix\Database\ORM\Model {
                     protected string $table = 'users';
+                    /** array<int, string> */
                     protected array $fillable = ['id','name','role'];
                 };
                 return new \Radix\Database\ORM\Relationships\BelongsTo(
@@ -940,9 +958,10 @@ class RelationshipsTest extends TestCase
         // Parent-modell med hasMany relation "comments"
         $post = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'posts';
+            /** array<int, string> */
             protected array $fillable = ['id', 'title'];
             private ?\Radix\Database\Connection $c = null;
-            public function setConn($c): void
+            public function setConn(\Radix\Database\Connection $c): void
             { $this->c = $c; }
             protected function getConnection(): \Radix\Database\Connection { return $this->c ?? parent::getConnection(); }
 
@@ -950,6 +969,7 @@ class RelationshipsTest extends TestCase
             {
                 $comment = new class extends \Radix\Database\ORM\Model {
                     protected string $table = 'comments';
+                    /** array<int, string> */
                     protected array $fillable = ['id','post_id','status'];
                 };
                 $rel = new \Radix\Database\ORM\Relationships\HasMany(
@@ -971,6 +991,8 @@ class RelationshipsTest extends TestCase
         $loaded = $post->getRelation('comments');
 
         $this->assertIsArray($loaded);
+        /** @var list<\Radix\Database\ORM\Model> $loaded */
+        $loaded = $loaded;
         $this->assertCount(2, $loaded);
         $this->assertSame('published', $loaded[0]->getAttribute('status'));
 
@@ -994,9 +1016,10 @@ class RelationshipsTest extends TestCase
 
         $post = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'posts';
+            /** array<int, string> */
             protected array $fillable = ['id', 'title'];
             private ?\Radix\Database\Connection $c = null;
-            public function setConn($c): void
+            public function setConn(\Radix\Database\Connection $c): void
             { $this->c = $c; }
             protected function getConnection(): \Radix\Database\Connection { return $this->c ?? parent::getConnection(); }
 
@@ -1004,6 +1027,7 @@ class RelationshipsTest extends TestCase
             {
                 $comment = new class extends \Radix\Database\ORM\Model {
                     protected string $table = 'comments';
+                    /** array<int, string> */
                     protected array $fillable = ['id','post_id','status'];
                 };
                 $rel = new \Radix\Database\ORM\Relationships\HasMany(
@@ -1023,11 +1047,17 @@ class RelationshipsTest extends TestCase
         // Ladda en gång
         $post->load('comments');
         $loadedFirst = $post->getRelation('comments');
+        $this->assertIsArray($loadedFirst);
+        /** @var list<\Radix\Database\ORM\Model> $loadedFirst */
+        $loadedFirst = $loadedFirst;
         $this->assertCount(1, $loadedFirst);
 
         // loadMissing ska inte ladda om "comments" (ska ignorera andra fetchAll-resultatet)
         $post->loadMissing('comments');
         $loadedAfter = $post->getRelation('comments');
+        $this->assertIsArray($loadedAfter);
+        /** @var list<\Radix\Database\ORM\Model> $loadedAfter */
+        $loadedAfter = $loadedAfter;
         $this->assertCount(1, $loadedAfter);
         $this->assertSame($loadedFirst[0]->getAttribute('status'), $loadedAfter[0]->getAttribute('status'));
     }
@@ -1044,9 +1074,10 @@ class RelationshipsTest extends TestCase
 
         $post = new class extends \Radix\Database\ORM\Model {
             protected string $table = 'posts';
+            /** array<int, string> */
             protected array $fillable = ['id'];
             private ?\Radix\Database\Connection $c = null;
-            public function setConn($c): void
+            public function setConn(\Radix\Database\Connection $c): void
             { $this->c = $c; }
             protected function getConnection(): \Radix\Database\Connection { return $this->c ?? parent::getConnection(); }
 
@@ -1054,6 +1085,7 @@ class RelationshipsTest extends TestCase
             {
                 $comment = new class extends \Radix\Database\ORM\Model {
                     protected string $table = 'comments';
+                    /** array<int, string> */
                     protected array $fillable = ['id','post_id','status'];
                 };
                 $rel = new \Radix\Database\ORM\Relationships\HasMany(
@@ -1077,9 +1109,13 @@ class RelationshipsTest extends TestCase
         ]);
 
         $loaded = $post->getRelation('comments');
-        $this->assertIsArray($loaded);
+
+
+        $this->assertInstanceOf(\Radix\Collection\Collection::class, $loaded);
         $this->assertCount(1, $loaded);
-        $this->assertSame('published', $loaded[0]->getAttribute('status'));
+        $first = $loaded->first();
+        $this->assertInstanceOf(\Radix\Database\ORM\Model::class, $first);
+        $this->assertSame('published', $first->getAttribute('status'));
     }
 
     public function testHasOneWithDefaultReturnsEmptyModelWhenMissing(): void
@@ -1090,6 +1126,7 @@ class RelationshipsTest extends TestCase
         // Parent-modell
         $user = new class extends Model {
             protected string $table = 'users';
+            /** array<int, string> */
             protected array $fillable = ['id', 'first_name'];
             private ?Connection $conn = null;
             public function setConn(Connection $c): void { $this->conn = $c; }
@@ -1099,6 +1136,7 @@ class RelationshipsTest extends TestCase
             {
                 $profile = new class extends Model {
                     protected string $table = 'profiles';
+                    /** array<int, string> */
                     protected array $fillable = ['id','user_id','avatar'];
                 };
 
@@ -1123,6 +1161,7 @@ class RelationshipsTest extends TestCase
 
         $user = new class extends Model {
             protected string $table = 'users';
+            /** array<int, string> */
             protected array $fillable = ['id'];
             private ?Connection $c = null;
             public function setConn(Connection $c): void { $this->c = $c; }
@@ -1132,6 +1171,7 @@ class RelationshipsTest extends TestCase
             {
                 $profile = new class extends Model {
                     protected string $table = 'profiles';
+                    /** array<int, string> */
                     protected array $fillable = ['avatar'];
                 };
                 $rel = new HasOne($this->getConnection(), get_class($profile), 'user_id', 'id');
@@ -1157,6 +1197,7 @@ class RelationshipsTest extends TestCase
         // Child-modell med belongsTo user()
         $status = new class extends Model {
             protected string $table = 'statuses';
+            /** array<int, string> */
             protected array $fillable = ['id','user_id'];
             private ?Connection $c = null;
             public function setConn(Connection $c): void { $this->c = $c; }
@@ -1166,6 +1207,7 @@ class RelationshipsTest extends TestCase
             {
                 $user = new class extends Model {
                     protected string $table = 'users';
+                    /** array<int, string> */
                     protected array $fillable = ['id','first_name'];
                 };
                 return new BelongsTo(
@@ -1196,6 +1238,7 @@ class RelationshipsTest extends TestCase
 
         $parent = new class extends Model {
             protected string $table = 'users';
+            /** array<int, string> */
             protected array $fillable = ['id'];
             private ?Connection $c = null;
             public function setConn(Connection $c): void { $this->c = $c; }
@@ -1205,6 +1248,7 @@ class RelationshipsTest extends TestCase
             {
                 $profile = new class extends Model {
                     protected string $table = 'profiles';
+                    /** array<int, string> */
                     protected array $fillable = ['avatar'];
                 };
                 $rel = new HasOne($this->getConnection(), get_class($profile), 'user_id', 'id');
@@ -1216,7 +1260,7 @@ class RelationshipsTest extends TestCase
         $parent->forceFill(['id' => 77]);
 
         $parent->load([
-            'profile' => function ($rel) {
+            'profile' => function (HasOne $rel) {
                 // relation-objekt (HasOne)
                 $rel->withDefault(['avatar' => '/img/default.png']);
             }
@@ -1235,6 +1279,7 @@ class RelationshipsTest extends TestCase
 
         $child = new class extends Model {
             protected string $table = 'statuses';
+            /** array<int, string> */
             protected array $fillable = ['id','user_id'];
             private ?Connection $c = null;
             public function setConn(Connection $c): void { $this->c = $c; }
@@ -1244,6 +1289,7 @@ class RelationshipsTest extends TestCase
             {
                 $user = new class extends Model {
                     protected string $table = 'users';
+                    /** array<int, string> */
                     protected array $fillable = ['first_name'];
                 };
                 return new BelongsTo(
@@ -1259,9 +1305,9 @@ class RelationshipsTest extends TestCase
         $child->forceFill(['user_id' => 5]);
 
         $child->loadMissing([
-            'user' => function ($rel) {
+            'user' => function (BelongsTo $rel): void {
                 $rel->withDefault(['first_name' => 'N/A']);
-            }
+            },
         ]);
 
         $user = $child->getRelation('user');

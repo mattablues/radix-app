@@ -40,7 +40,7 @@ class RegisterController extends AbstractController
 
         $expectedHoneypotId = $this->request->session()->get('honeypot_id');
 
-        if (!$expectedHoneypotId) {
+        if (!is_string($expectedHoneypotId) || $expectedHoneypotId === '') {
             return new RedirectResponse(route('auth.register.index')); // Tillbaka till formuläret
         }
 
@@ -93,14 +93,24 @@ class RegisterController extends AbstractController
 
         // Skapa en ny användare
         $user = new User();
+
+        $firstName = is_string($data['first_name'] ?? null) ? $data['first_name'] : '';
+        $lastName  = is_string($data['last_name'] ?? null) ? $data['last_name'] : '';
+        $email  = is_string($data['email'] ?? null) ? $data['email'] : '';
+
         $user->fill([
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'email' => $data['email'],
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => $email,
         ]);
 
-        // Sätt lösenord unikt (handled)
-        $user->password = $data['password'];
+        // Uppdatera lösenord om ett nytt lösenord angavs
+        if (isset($data['password']) && is_string($data['password']) && $data['password'] !== '') {
+            $password = $data['password']; // här vet PHPStan att det är string
+
+            $user->password = $password;
+        }
+
         $user->save();
 
         // Skapa en API-token i tokens-tabellen
@@ -124,16 +134,16 @@ class RegisterController extends AbstractController
 
         // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
-            email: $data['email'],
-            firstName: $data['first_name'],
-            lastName: $data['last_name'],
+            email: $email,
+            firstName: $firstName,
+            lastName: $lastName,
             activationLink: $activationLink,
             context: UserActivationContext::User,
         ));
 
         // Ställ in flash-meddelande och omdirigera
         $this->request->session()->setFlashMessage(
-            "{$data['first_name']} {$data['last_name']} ditt konto har registrerats. Kolla din email för aktiveringslänken."
+            "$firstName $lastName ditt konto har registrerats. Kolla din email för aktiveringslänken."
         );
 
         return new RedirectResponse(route('auth.login.index'));
@@ -153,6 +163,7 @@ class RegisterController extends AbstractController
             return new RedirectResponse(route('auth.login.index'));
         }
 
+        /** @var Status $status */
         $status->fill(['status' => 'activated', 'activation' => null]);
         $status->save();               // Spara modellen
 

@@ -148,4 +148,8 @@ $router->group(['path' => '/admin', 'middleware' => ['auth', 'role.min.moderator
     $router->post('/users/{id:[\d]+}/restore', [
         \App\Controllers\Admin\UserController::class, 'restore'
     ])->name('admin.user.restore');
+
+    $router->get('/health', [
+        \App\Controllers\Admin\HealthWebController::class, 'index'
+    ])->name('admin.health.index');
 });

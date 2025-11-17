@@ -21,101 +21,146 @@ class Connection
     }
 
     /**
-     * Kör en SQL-fråga via PDO.
+     * Intern hjälpare: returnera PDO eller kasta om anslutningen är stängd.
+     */
+    private function getPdoInternal(): PDO
+    {
+        if ($this->pdo === null) {
+            throw new \RuntimeException('PDO instance is not initialized in Connection (connection may be disconnected).');
+        }
+
+        return $this->pdo;
+    }
+
+    /**
+     * Kör ett statement och returnera PDOStatement.
      *
-     * @param  string  $query  SQL-frågan som ska köras.
-     * @param  array  $params  Parametrar som ska bindas.
-     * @return PDOStatement Returnerar true om operationen lyckades, false annars.
+     * @param array<int|string,mixed> $params
      */
     public function execute(string $query, array $params = []): PDOStatement
     {
-        $statement = $this->pdo->prepare($query);
+        $pdo = $this->getPdoInternal();
+        $statement = $pdo->prepare($query);
         $statement->execute($params);
 
         return $statement; // Returnera statement istället för bool
     }
+
     /**
-     * Hämta alla rader från en fråga.
+     * Hämta alla rader som assoc‑arrayer.
      *
-     * @param string $query
-     * @param array $params
-     * @return array
+     * @param array<int|string,mixed> $params
+     * @return array<int,array<string,mixed>>
      */
     public function fetchAll(string $query, array $params = []): array
     {
-        $statement = $this->pdo->prepare($query);
+        $pdo = $this->getPdoInternal();
+        $statement = $pdo->prepare($query);
         $statement->execute($params);
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        /** @var array<int,array<string,mixed>> $rows */
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        return $rows;
     }
 
     /**
-     * Hämta alla rader från en fråga som en viss klass.
+     * Hämta alla rader som objekt eller assoc‑arrayer.
      *
-     * @param string $query SQL-frågan som ska köras.
-     * @param array $params Parametrar som ska bindas.
-     * @param string|null $className Namnet på klassen som raderna ska mappas till.
-     * @return array|object[]
+     * @param array<int|string,mixed> $params
+     * @return array<int, array<string,mixed>|object>
      */
     public function fetchAllAsClass(string $query, array $params = [], ?string $className = null): array
     {
-        $statement = $this->pdo->prepare($query);
+        $pdo = $this->getPdoInternal();
+        $statement = $pdo->prepare($query);
         $statement->execute($params);
 
         if ($className) {
-            return $statement->fetchAll(PDO::FETCH_CLASS, $className);
+            /** @var array<int, object> $rows */
+            $rows = $statement->fetchAll(PDO::FETCH_CLASS, $className);
+        } else {
+            /** @var array<int, array<string,mixed>> $rows */
+            $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
         }
 
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
+        /** @var array<int, array<string,mixed>|object> $rows */
+        return $rows;
     }
 
     /**
-     * Hämta en enskild rad från en fråga som en viss klass.
+     * Hämta första raden som objekt (klass eller standard).
+     *
+     * @param array<int|string,mixed> $params
      */
     public function fetchOneAsClass(string $query, array $params = [], ?string $className = null): ?object
     {
-        $statement = $this->pdo->prepare($query);
+        $pdo = $this->getPdoInternal();
+        $statement = $pdo->prepare($query);
         $statement->execute($params);
 
         if ($className) {
             $statement->setFetchMode(PDO::FETCH_CLASS, $className);
-            return $statement->fetch() ?: null;
+            /** @var object|false $row */
+            $row = $statement->fetch();
+            return $row === false ? null : $row;
         }
 
-        return $statement->fetch(PDO::FETCH_ASSOC) ?: null;
+        /** @var array<string,mixed>|false $row */
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if ($row === false) {
+            return null;
+        }
+
+        // Gör assoc‑arrayen till ett stdClass‑objekt för att hålla signaturen object|null
+        return (object) $row;
     }
 
     /**
-     * Hämta en enskild rad från en fråga.
+     * Hämta första raden som assoc‑array (eller null).
      *
-     * @param string $query SQL-frågan som ska köras.
-     * @param array $params Parametrar som ska bindas.
-     * @return array|null Returnerar raden som en array eller null om ingen rad hittades.
+     * @param array<int|string,mixed> $params
+     * @return array<string,mixed>|null
      */
     public function fetchOne(string $query, array $params = []): ?array
     {
-        $statement = $this->pdo->prepare($query);
+        $pdo = $this->getPdoInternal();
+        $statement = $pdo->prepare($query);
         $statement->execute($params);
+
+        /** @var array<string,mixed>|false $result */
         $result = $statement->fetch(PDO::FETCH_ASSOC);
-        return $result ?: null;
+
+        if ($result === false) {
+            return null;
+        }
+
+        return $result;
     }
 
     /**
-     * Hämta antalet påverkade rader från den senaste operationen.
+     * Kör ett statement och returnera antal påverkade rader.
      *
-     * @param string $query SQL-frågan som ska köras.
-     * @param array $params Parametrar som ska bindas.
-     * @return int Antalet påverkade rader.
+     * @param array<int|string,mixed> $params
      */
     public function fetchAffected(string $query, array $params = []): int
     {
-        $statement = $this->pdo->prepare($query);
+        $pdo = $this->getPdoInternal();
+        $statement = $pdo->prepare($query);
         $statement->execute($params);
         return $statement->rowCount();
     }
 
     public function lastInsertId(): string
     {
-        return $this->pdo->lastInsertId();
+        $pdo = $this->getPdoInternal();
+        $id = $pdo->lastInsertId();
+
+        if ($id === false) {
+            throw new \RuntimeException('No last insert id available for this connection.');
+        }
+
+        return $id;
     }
 
     /**
@@ -123,7 +168,7 @@ class Connection
      */
     public function beginTransaction(): void
     {
-        $this->pdo->beginTransaction();
+        $this->getPdoInternal()->beginTransaction();
     }
 
     /**
@@ -131,7 +176,7 @@ class Connection
      */
     public function commitTransaction(): void
     {
-        $this->pdo->commit();
+        $this->getPdoInternal()->commit();
     }
 
     /**
@@ -139,7 +184,7 @@ class Connection
      */
     public function rollbackTransaction(): void
     {
-        $this->pdo->rollBack();
+        $this->getPdoInternal()->rollBack();
     }
 
     /**
@@ -150,9 +195,9 @@ class Connection
     public function isConnected(): bool
     {
         try {
-            $this->pdo->getAttribute(PDO::ATTR_CONNECTION_STATUS);
+            $this->getPdoInternal()->getAttribute(PDO::ATTR_CONNECTION_STATUS);
             return true;
-        } catch (Exception $e) {
+        } catch (\Throwable) {
             return false;
         }
     }
@@ -168,8 +213,8 @@ class Connection
     /**
      * Hämta den underliggande PDO-instansen.
      */
-    public function getPDO(): PDO
+    public function getPDO(): \PDO
     {
-        return $this->pdo;
+        return $this->getPdoInternal();
     }
 }

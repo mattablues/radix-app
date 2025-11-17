@@ -5,10 +5,10 @@ declare(strict_types=1);
 /** @var \Radix\Routing\Router $router */
 
 // API-rutter med versionering
-$router->group(['path' => '/api/v1'], function (\Radix\Routing\Router $router) {
+$router->group(['path' => '/api/v1', 'middleware' => ['request.id']], function (\Radix\Routing\Router $router) {
 //    // Route för att hämta alla användare
-//    $router->get('/users', [\App\Controllers\Api\UserController::class, 'index'])
-//        ->name('api.users.index');
+    $router->get('/users', [\App\Controllers\Api\UserController::class, 'index'])
+        ->name('api.users.index');
 //
 //    // Route för att skapa en ny användare
 //    $router->post('/users', [\App\Controllers\Api\UserController::class, 'store'])
@@ -31,5 +31,22 @@ $router->group(['path' => '/api/v1'], function (\Radix\Routing\Router $router) {
 
     $router->post('/search/deleted-users', [\App\Controllers\Api\SearchController::class, 'deletedUsers'])
        ->name('api.search.deleted-users');
-});
 
+    $router->get('/health', [\App\Controllers\Api\HealthController::class, 'index'])
+        ->name('api.health.index')->middleware(['ip.allowlist']);
+
+    // Preflight (OPTIONS mappas till GET i Dispatcher): returnera 204 endast om originalmetoden var OPTIONS
+    $router->get('/{any:.*}', function () {
+        $response = new \Radix\Http\Response();
+
+        // Säkerställ att vi inte stjäl riktiga GET-rutter: svara 204 endast för preflight (OPTIONS)
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+            $response->setStatusCode(204);
+            return $response;
+        }
+
+        // För andra metoder (t.ex. GET) låt detta falla igenom som 404
+        $response->setStatusCode(404);
+        return $response;
+    })->name('api.preflight');
+});

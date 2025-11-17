@@ -25,11 +25,6 @@
 
         <div class="area-content">
           <h1 class="text-3xl font-semibold my-6">Om oss</h1>
-
-          <h2 class="text-2xl font-semibold mb-4">Lorem ipsum</h2>
-          <p class="mb-3">Lorem ipsum dolor sit amet, consectetur adipisicing elit. At, cupiditate delectus eaque eligendi enim pariatur quia! Dolorem facilis ipsum magni officia provident ratione similique! Aliquid atque cupiditate delectus deserunt doloremque impedit inventore iste iure nobis, non pariatur quasi qui velit voluptatem voluptatibus! Eligendi, incidunt ipsum! Cum nemo porro quasi quia!</p>
-          <h2 class="mb-1 text-[18px] font-semibold">Lorem ipsum</h2>
-          <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Amet cupiditate ea eos esse expedita fugiat impedit, iusto laboriosam possimus quas, reprehenderit similique soluta temporibus vero voluptatibus! Delectus dolorem earum eius, est fuga hic impedit ipsa ipsam iste mollitia quas quasi quo quod quos reiciendis repellendus tempore? Aspernatur cum cupiditate deleniti, dignissimos dolorum eius nisi numquam quibusdam rerum, unde ut veritatis? Aperiam atque autem commodi consectetur distinctio, eum harum quasi quisquam reprehenderit repudiandae saepe similique tempore!</p>
         </div>
 
         <aside class="area-aside-right sticky-top pb-5 lg:py-5">

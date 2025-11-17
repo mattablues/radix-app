@@ -12,20 +12,17 @@ trait JsonFunctions
     protected function getDriverName(): string
     {
         try {
-            // Antag att Connection exponerar en metod getPdo() eller attribute()
-            if (method_exists($this->connection, 'getPdo')) {
-                /** @var \PDO $pdo */
-                $pdo = $this->connection->getPdo();
-                return $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME) ?: 'mysql';
-            }
-            if (method_exists($this->connection, 'attribute')) {
-                $name = $this->connection->attribute(\PDO::ATTR_DRIVER_NAME);
-                return is_string($name) ? $name : 'mysql';
-            }
+            $connection = $this->getConnection(); // garanterar Connection, ej null
+
+            /** @var \PDO $pdo */
+            $pdo = $connection->getPDO(); // Connection har alltid getPDO()
+            $name = $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+
+            return is_string($name) && $name !== '' ? $name : 'mysql';
         } catch (\Throwable) {
-            // ignorera och fall tillbaka
+            // Vid fel: fallback till mysql
+            return 'mysql';
         }
-        return 'mysql';
     }
 
     public function jsonExtract(string $column, string $path, ?string $alias = null): self
@@ -50,20 +47,34 @@ trait JsonFunctions
 
         if ($driver === 'sqlite') {
             $expr = "$wrapped LIKE ?";
-            $binding = '%' . (string)$needle . '%';
+
+            // Normalisera $needle till sträng på ett säkert sätt
+            if (is_scalar($needle)) {
+                $needleStr = (string) $needle;
+            } elseif ($needle instanceof \Stringable) {
+                $needleStr = (string) $needle;
+            } else {
+                // Fallback: json_encode, annars tom sträng
+                $encoded = json_encode($needle, JSON_UNESCAPED_UNICODE);
+                $needleStr = $encoded !== false ? $encoded : '';
+            }
+
+            $binding = '%' . $needleStr . '%';
         } else {
-            $expr = "$wrapped JSON_CONTAINS ?";
-            $binding = json_encode($needle, JSON_UNESCAPED_UNICODE);
+            $expr = "JSON_CONTAINS($wrapped, ?)";
+            $json = json_encode($needle, JSON_UNESCAPED_UNICODE);
+            if (!is_string($json)) {
+                throw new \RuntimeException('Failed to JSON-encode value for whereJsonContains().');
+            }
+            $binding = $json;
         }
 
-        // Skriv rå WHERE-del (utan parenteser)
         $this->whereRawString = is_string($this->whereRawString ?? null) ? $this->whereRawString : '';
         $this->whereRawString = $this->whereRawString === ''
             ? $expr
             : ($this->whereRawString . ' ' . strtoupper($boolean) . ' ' . $expr);
 
-        // Viktigt: lägg needle i select-bucket för att komma efter path i bindings
-        $this->addSelectBinding($binding);
+        $this->addWhereBinding($binding);
 
         return $this;
     }

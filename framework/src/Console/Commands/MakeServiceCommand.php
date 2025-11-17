@@ -15,11 +15,21 @@ class MakeServiceCommand extends BaseCommand
         $this->templatePath = $templatePath;
     }
 
+    /**
+     * Kör kommandot med givna argument.
+     *
+     * @param array<int, string> $args
+     */
     public function execute(array $args): void
     {
         $this->__invoke($args); // Anropa __invoke-logiken
     }
 
+    /**
+     * Gör objektet anropbart som ett kommando.
+     *
+     * @param array<int, string> $args
+     */
     public function __invoke(array $args): void
     {
         // Kontrollera om hjälp ska visas
@@ -74,7 +84,12 @@ class MakeServiceCommand extends BaseCommand
         }
 
         $template = file_get_contents($templateFile);
+        if ($template === false) {
+            $this->coloredOutput("Error: Failed to read service template at $templateFile.", "red");
+            return;
+        }
 
+        /** @var string $template */
         // Byt ut placeholders i mallen
         $content = str_replace(
             ['[ServiceName]', '[Namespace]'],

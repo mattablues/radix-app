@@ -28,17 +28,51 @@ final class Reader
         return $content;
     }
 
-    public static function json(string $path, bool $assoc = true, ?string $encoding = null): array|object
+    /**
+     * Läs JSON-fil.
+     *
+     * @return array<string,mixed>|object
+     */
+    public static function json(string $path, bool $assoc = true): array|object
     {
-        $content = self::text($path, $encoding);
-        return json_decode($content, $assoc, 512, JSON_THROW_ON_ERROR);
+        $contents = file_get_contents($path);
+        if ($contents === false) {
+            throw new \RuntimeException("Kunde inte läsa fil: {$path}");
+        }
+
+        $data = json_decode(
+            $contents,
+            $assoc,
+            512,
+            JSON_THROW_ON_ERROR
+        );
+
+        if ($assoc) {
+            if (!is_array($data)) {
+                throw new \RuntimeException("JSON-data i {$path} är inte ett objekt/array som kan tolkas associativt.");
+            }
+
+            /** @var array<string,mixed> $data */
+            return $data;
+        }
+
+        if (!is_object($data)) {
+            throw new \RuntimeException("JSON-data i {$path} är inte ett objekt.");
+        }
+
+        return $data;
     }
 
-        /**
+    /**
      * Läs XML.
      * - assoc=true returnerar array (konverterad från SimpleXMLElement).
      * - assoc=false returnerar SimpleXMLElement.
      * - $encoding: konverterar inläst råtext till UTF-8 innan parse.
+     *
+     * När $assoc = true returneras en assoc‑array (rekursivt).
+     * När $assoc = false returneras en SimpleXMLElement.
+     *
+     * @phpstan-return ($assoc is true ? array<string, mixed> : \SimpleXMLElement)
      */
     public static function xml(string $path, bool $assoc = true, ?string $encoding = null): array|\SimpleXMLElement
     {
@@ -66,6 +100,11 @@ final class Reader
         return $assoc ? self::xmlToArray($xml) : $xml;
     }
 
+    /**
+     * Läs en CSV-fil till en array av rader.
+     *
+     * @return array<int, array<string, mixed>>
+     */
     public static function csv(
         string $path,
         ?string $delimiter = null,
@@ -74,13 +113,40 @@ final class Reader
         bool $castNumeric = true
     ): array {
         // För små/medelstora filer. För mycket stora filer använd csvStream().
+        /** @var array<int, array<string, mixed>> $rows */
         $rows = [];
-        self::csvStream($path, function (array $row) use (&$rows): void {
-            $rows[] = $row;
-        }, $delimiter, $hasHeader, $encoding, $castNumeric);
+
+        self::csvStream(
+            $path,
+            /**
+             * @param array<mixed> $row
+             */
+            function (array $row) use (&$rows): void {
+                // Normalisera nycklar till string
+                $normalized = [];
+                foreach ($row as $k => $v) {
+                    /** @var int|string $k */
+                    $normalized[(string) $k] = $v;
+                }
+
+                /** @var array<string, mixed> $normalized */
+                $rows[] = $normalized;
+            },
+            $delimiter,
+            $hasHeader,
+            $encoding,
+            $castNumeric
+        );
+
+        /** @var array<int, array<string, mixed>> $rows */
         return $rows;
     }
 
+    /**
+     * Läs CSV och returnera JSON‑vänlig struktur (array av assoc‑arrayer).
+     *
+     * @return array<int, array<string, mixed>>
+     */
     public static function csvToJson(
         string $path,
         ?string $delimiter = null,
@@ -120,30 +186,51 @@ final class Reader
                 continue;
             }
 
+            if (!is_array($row)) {
+                // Skydda mot oväntade typer från SplFileObject
+                continue;
+            }
+
             // Trimma och ev. encoding-konvertera celler
-            $row = array_map(static function ($v) use ($encoding, $castNumeric) {
-                if ($v === null) {
-                    return null;
-                }
-                $s = (string)$v;
-                $s = trim($s);
-                if ($encoding !== null && strcasecmp($encoding, 'UTF-8') !== 0) {
-                    $s2 = @iconv($encoding, 'UTF-8//IGNORE', $s);
-                    if ($s2 === false) {
-                        throw new RuntimeException("Kunde inte konvertera cell från {$encoding} till UTF-8");
+            $row = array_map(
+                static function ($v) use ($encoding, $castNumeric) {
+                    if ($v === null) {
+                        return null;
                     }
-                    $s = $s2;
-                }
-                // Försök numerisk typning: heltal eller flyttal
-                if ($castNumeric && $s !== '' && is_numeric($s)) {
-                    if (ctype_digit($s)) {
-                        return (int)$s;
+
+                    // Gör om värdet till sträng på ett säkert sätt
+                    if (!is_scalar($v)) {
+                        // Oväntad typ: försök json_encode, annars tom sträng
+                        $encoded = json_encode($v);
+                        $s = $encoded !== false ? $encoded : '';
+                    } else {
+                        /** @var scalar $v */
+                        $s = (string) $v;
                     }
-                    // Hantera decimaltal med punkt
-                    return (float)$s;
-                }
-                return $s;
-            }, $row);
+
+                    $s = trim($s);
+
+                    if ($encoding !== null && strcasecmp($encoding, 'UTF-8') !== 0) {
+                        $s2 = @iconv($encoding, 'UTF-8//IGNORE', $s);
+                        if ($s2 === false) {
+                            throw new RuntimeException("Kunde inte konvertera cell från {$encoding} till UTF-8");
+                        }
+                        $s = $s2;
+                    }
+
+                    // Försök numerisk typning: heltal eller flyttal
+                    if ($castNumeric && $s !== '' && is_numeric($s)) {
+                        if (ctype_digit($s)) {
+                            return (int) $s;
+                        }
+                        // Hantera decimaltal med punkt
+                        return (float) $s;
+                    }
+
+                    return $s;
+                },
+                $row
+            );
 
             if ($hasHeader && $headers === null) {
                 $headers = $row;
@@ -154,7 +241,11 @@ final class Reader
                 $assoc = [];
                 $max = max(count($headers), count($row));
                 for ($i = 0; $i < $max; $i++) {
-                    $key = $headers[$i] ?? "col_{$i}";
+                    $headerKey = $headers[$i] ?? "col_{$i}";
+
+                    /** @var string $key */
+                    $key = $headerKey;
+
                     $assoc[$key] = $row[$i] ?? null;
                 }
                 $onRow($assoc);
@@ -171,9 +262,14 @@ final class Reader
     public static function textStream(string $path, callable $onChunk, int $chunkSize = 8192, ?string $encoding = null): void
     {
         self::ensureFileReadable($path);
+
+        if ($chunkSize <= 0) {
+            throw new RuntimeException("chunkSize must be a positive integer, got {$chunkSize}");
+        }
+
         $h = fopen($path, 'rb');
         if ($h === false) {
-            throw new RuntimeException("Kunde inte öppna fil: {$path}");
+            throw new RuntimeException("Kunde inte öppna fil: $path");
         }
         try {
             while (!feof($h)) {
@@ -235,10 +331,12 @@ final class Reader
     private static function ensureFileReadable(string $path): void
     {
         if (!is_file($path)) {
-            throw new RuntimeException("Filen finns inte: {$path}");
+            $rp = @realpath($path) ?: $path;
+            throw new RuntimeException("Filen finns inte: {$rp}");
         }
         if (!is_readable($path)) {
-            throw new RuntimeException("Filen är inte läsbar: {$path}");
+            $rp = @realpath($path) ?: $path;
+            throw new RuntimeException("Filen är inte läsbar: {$rp}");
         }
     }
 
@@ -270,10 +368,13 @@ final class Reader
         return $best ?? ',';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private static function xmlToArray(\SimpleXMLElement $xml): array
     {
         $json = json_encode($xml, JSON_THROW_ON_ERROR);
-        /** @var array $arr */
+        /** @var array<string, mixed> $arr */
         $arr = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         return $arr;
     }

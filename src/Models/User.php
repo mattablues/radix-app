@@ -17,7 +17,7 @@ use Radix\Enums\Role;
  * @property string $role
  * @property string $created_at
  * @property string $updated_at
- * @property string $deleted_at
+ * @property string|null $deleted_at
  * @property-read \App\Models\Status|null $status
  * @property-read \App\Models\Token|null $token
  */
@@ -27,7 +27,9 @@ class User extends Model
     protected string $primaryKey = 'id';     // Standard primärnyckel
     public bool $timestamps = true;         // Vill du använda timestamps?
     protected bool $softDeletes = true;
+    /** @var array<int,string> */
     protected array $fillable = ['id', 'first_name', 'last_name', 'email', 'avatar']; // Tillåtna att massfylla
+    /** @var array<int,string> */
     protected array $guarded = ['password', 'role', 'deleted_at'];
     //protected array $autoloadRelations = ['status'];
 
@@ -45,7 +47,17 @@ class User extends Model
 
     public function isPasswordValid(string $plainPassword): bool
     {
-        return isset($this->attributes['password']) && password_verify($plainPassword, $this->attributes['password']);
+        if (!isset($this->attributes['password'])) {
+            return false;
+        }
+
+        $hash = $this->attributes['password'];
+
+        if (!is_string($hash)) {
+            return false;
+        }
+
+        return password_verify($plainPassword, $hash);
     }
 
     // Hantera första bokstaven som stor bokstav för förnamn
@@ -181,7 +193,8 @@ class User extends Model
     {
         $enum = $role instanceof Role ? $role : Role::tryFromName($role);
         if (!$enum) {
-            throw new \InvalidArgumentException('Ogiltig roll: ' . $role);
+            $roleLabel = $role instanceof Role ? $role->name : (string) $role;
+            throw new \InvalidArgumentException('Ogiltig roll: ' . $roleLabel);
         }
         $this->attributes['role'] = $enum->value;
     }

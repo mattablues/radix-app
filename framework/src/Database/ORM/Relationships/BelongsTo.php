@@ -16,7 +16,7 @@ class BelongsTo
     private string $ownerKey;
     private Model $parentModel;
     private bool $useDefault = false;
-    /** @var null|array|callable */
+    /** @var array<string, mixed>|callable|null */
     private $defaultAttributes = null;
 
     public function __construct(
@@ -33,6 +33,9 @@ class BelongsTo
         $this->parentModel = $parentModel;
     }
 
+    /**
+     * @param array<string, mixed>|callable|null $attributes
+     */
     public function withDefault(null|array|callable $attributes = null): self
     {
         $this->useDefault = true;
@@ -81,7 +84,9 @@ class BelongsTo
         $model = new $modelClass();
 
         if (is_array($this->defaultAttributes)) {
-            $model->forceFill($this->defaultAttributes);
+            /** @var array<string, mixed> $defaults */
+            $defaults = $this->defaultAttributes;
+            $model->forceFill($defaults);
         } elseif (is_callable($this->defaultAttributes)) {
             ($this->defaultAttributes)($model);
         }
@@ -116,10 +121,22 @@ class BelongsTo
         throw new \Exception("Model class '$classOrTable' not found. Expected '$singularClass'.");
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private function createModelInstance(array $data, string $classOrTable): Model
     {
         $modelClass = $this->resolveModelClass($classOrTable);
+
+        if (!is_subclass_of($modelClass, Model::class)) {
+            throw new \LogicException(
+                "BelongsTo relation resolved model class '$modelClass' måste ärva " . Model::class . "."
+            );
+        }
+
+        /** @var class-string<Model> $modelClass */
         $model = new $modelClass();
+        /** @var Model $model */
         $model->hydrateFromDatabase($data);
         $model->markAsExisting();
 

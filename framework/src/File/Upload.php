@@ -10,10 +10,15 @@ use RuntimeException;
 class Upload
 {
     // Egenskaper för att hantera uppladdningen
+    /** @var array<string,mixed> */
     protected array $file;
+    /** @var array<string,array<int,string>> */
     protected array $errors = [];
     protected string $uploadDirectory;
 
+    /**
+     * @param array<string,mixed> $file
+     */
     public function __construct(array $file, string $uploadDirectory)
     {
         $this->file = $file;
@@ -28,7 +33,7 @@ class Upload
     /**
      * Validera uppladdad fil med given regeluppsättning.
      *
-     * @param array $rules
+     * @param  array<string,string|array<int,string>>  $rules
      * @return bool
      */
     public function validate(array $rules): bool
@@ -55,7 +60,12 @@ class Upload
         $fileName = $fileName ?: $this->generateFileName();
         $targetPath = rtrim($this->uploadDirectory, '/') . '/' . $fileName;
 
-        if (!move_uploaded_file($this->file['tmp_name'], $targetPath)) {
+        $tmpName = $this->file['tmp_name'] ?? null;
+        if (!is_string($tmpName) || $tmpName === '') {
+            throw new RuntimeException('Ogiltigt tmp_name för uppladdad fil.');
+        }
+
+        if (!move_uploaded_file($tmpName, $targetPath)) {
             throw new RuntimeException("Misslyckades med att flytta uppladdad fil till $targetPath");
         }
 
@@ -72,7 +82,12 @@ class Upload
      */
     public function processImage(callable $processCallback, string $outputFileName = ''): string
     {
-        $image = new Image($this->file['tmp_name']);
+        $tmpName = $this->file['tmp_name'] ?? null;
+        if (!is_string($tmpName) || $tmpName === '') {
+            throw new RuntimeException('Ogiltigt tmp_name för uppladdad bildfil.');
+        }
+
+        $image = new Image($tmpName);
         $processCallback($image);
 
         $outputFileName = $outputFileName ?: $this->generateFileName();
@@ -90,14 +105,29 @@ class Upload
      */
     protected function generateFileName(): string
     {
-        $extension = pathinfo($this->file['name'], PATHINFO_EXTENSION);
-        return uniqid('', true) . "." . strtolower($extension);
+        $rawName = $this->file['name'] ?? '';
+
+        if (!is_string($rawName) || $rawName === '') {
+            // fallback: inget namn, använd bara uniqid utan extension
+            return uniqid('', true);
+        }
+
+        $extension = pathinfo($rawName, PATHINFO_EXTENSION);
+        if (!is_string($extension)) {
+            $extension = '';
+        }
+
+        $base = uniqid('', true);
+
+        return $extension !== ''
+            ? $base . '.' . strtolower($extension)
+            : $base;
     }
 
     /**
      * Hämta eventuella valideringsfel.
      *
-     * @return array
+     * @return array<string,array<int,string>>
      */
     public function getErrors(): array
     {

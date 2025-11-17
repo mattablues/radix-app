@@ -10,7 +10,7 @@ use Radix\Http\Exception\GeoLocatorException;
 
 class GeoLocatorTest extends TestCase
 {
-    public function testGetLocationThrowsExceptionOnApiError()
+    public function testGetLocationThrowsExceptionOnApiError(): void
     {
         $geoLocator = new GeoLocator();
 
@@ -22,7 +22,7 @@ class GeoLocatorTest extends TestCase
         $geoLocator->getLocation('256.256.256.256');
     }
 
-    public function testGetLocationThrowsExceptionOnNetworkError()
+    public function testGetLocationThrowsExceptionOnNetworkError(): void
     {
         $geoLocator = new GeoLocator();
 
@@ -38,7 +38,7 @@ class GeoLocatorTest extends TestCase
         $geoLocator->getLocation('8.8.8.8');
     }
 
-    public function testGetSpecificValue()
+    public function testGetSpecificValue(): void
     {
         $geoLocator = new GeoLocator();
 
@@ -50,7 +50,7 @@ class GeoLocatorTest extends TestCase
         $this->assertEquals('United States', $country);
     }
 
-    public function testGetLocationSuccess()
+    public function testGetLocationSuccess(): void
     {
         $geoLocator = new GeoLocator();
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Models\Status;
 use App\Models\User;
 use App\Services\UploadService;
 use Radix\Controller\AbstractController;
@@ -23,8 +24,16 @@ class UserController extends AbstractController
 
     public function show(string $id): Response
     {
-        $authUser = User::find($this->request->session()->get(Session::AUTH_KEY));
+        // Hämta inloggad användare för att avgöra behörighet
+        $authId = $this->request->session()->get(Session::AUTH_KEY);
 
+        if (!is_int($authId) && !is_string($authId)) {
+            throw new NotAuthorizedException('Invalid user id in session.');
+        }
+
+        $authUser = User::find($authId);
+
+        // $id här är route-parametern: vilken användare vi vill visa
         if (!$authUser || !$authUser->hasAtLeast('moderator')) {
             $user = User::with('status')->where('id', '=', $id)->first();
         } else {
@@ -38,7 +47,13 @@ class UserController extends AbstractController
 
     public function edit(): Response
     {
-        $user = User::find($this->request->session()->get(Session::AUTH_KEY));
+        $id = $this->request->session()->get(Session::AUTH_KEY);
+
+        if (!is_int($id) && !is_string($id)) {
+            throw new NotAuthorizedException('Invalid user id in session.');
+        }
+
+        $user = User::find($id);
 
         return $this->view('user.edit', ['user' => $user]);
     }
@@ -48,23 +63,30 @@ class UserController extends AbstractController
         $this->before();
 
         $data = $this->request->post; // Hämta formulärdata
-        $avatar = $this->request->files['avatar'] ?? null; // Hämta avatar-filen om den finns
 
-        $userId = $this->request->session()->get(Session::AUTH_KEY); // Hämta aktuellt användar-ID
-        $user = User::find($userId); // Hitta användaren i databasen
+        $rawAvatar = $this->request->files['avatar'] ?? null;
+        /** @var array{error:int,name?:string,tmp_name?:string,size?:int,type?:string}|null $avatar */
+        $avatar = is_array($rawAvatar) && array_key_exists('error', $rawAvatar) ? $rawAvatar : null;
+
+        $userId = $this->request->session()->get(Session::AUTH_KEY);
+
+        if (!is_int($userId) && !is_string($userId)) {
+            throw new NotAuthorizedException('Invalid user id in session.');
+        }
+
+        $user = User::find($userId);
 
         // Validera data inklusive avatar
         $validator = new Validator($data + ['avatar' => $avatar], [
             'first_name' => 'required|min:2|max:15',
             'last_name' => 'required|min:2|max:15',
             'email' => 'required|email|unique:App\Models\User,email,id=' . $userId,
-            'avatar' => 'nullable|file_size:2|file_type:image/jpeg,image/png', // Validera avatar-filen
+            'avatar' => 'nullable|file_size:2|file_type:image/jpeg,image/png',
             'password' => 'nullable|min:8|max:15',
             'password_confirmation' => 'nullable|required_with:password|confirmed:password',
         ]);
 
         if (!$validator->validate()) {
-            // Om validering misslyckas, lagra gamla indata och returnera vy med felmeddelanden
             $this->request->session()->set('old', $data);
 
             return $this->view('user.edit', [
@@ -74,14 +96,16 @@ class UserController extends AbstractController
         }
 
         // Hantera avatar-uppladdning om en fil har laddats upp
-        if ($avatar && $avatar['error'] === UPLOAD_ERR_OK) {
+        if ($avatar !== null && $avatar['error'] === UPLOAD_ERR_OK) {
             try {
                 $uploadDirectory = ROOT_PATH . "/public/images/user/$userId/";
 
-                // Skapa en instans av UploadService
                 $uploadService = new UploadService();
 
-                // Radera gammal avatar om det inte är standard-avatar
+                if ($user === null) {
+                    throw new NotAuthorizedException('User not found.');
+                }
+
                 if ($user->avatar !== '/images/graphics/avatar.png') {
                     $oldAvatarPath = ROOT_PATH . $user->avatar;
                     if (file_exists($oldAvatarPath)) {
@@ -89,10 +113,8 @@ class UserController extends AbstractController
                     }
                 }
 
-                // Ladda upp och bearbeta avataren med `uploadAvatar`
                 $data['avatar'] = $uploadService->uploadAvatar($avatar, $uploadDirectory);
             } catch (\RuntimeException $e) {
-                // Vid fel under uppladdning, returnera vy med felet
                 return $this->view('user.edit', [
                     'errors' => ['avatar' => $e->getMessage()],
                 ]);
@@ -100,8 +122,8 @@ class UserController extends AbstractController
         }
 
         // Kontrollera avatar innan fälten filtreras
-        if ($avatar && $avatar['error'] === UPLOAD_ERR_NO_FILE) {
-            unset($data['avatar']); // Ingen fil uppladdad, ta bort avatar från datan
+        if ($avatar !== null && $avatar['error'] === UPLOAD_ERR_NO_FILE) {
+            unset($data['avatar']);
         }
 
         // Filtrera irrelevanta fält
@@ -109,6 +131,10 @@ class UserController extends AbstractController
 
         // Rensa session för gamla indata
         $this->request->session()->remove('old');
+
+        if ($user === null) {
+            throw new NotAuthorizedException('User not found.');
+        }
 
         // Uppdatera användardata i databasen
         $user->fill([
@@ -123,15 +149,24 @@ class UserController extends AbstractController
         }
 
         // Uppdatera lösenord om ett nytt lösenord angavs
-        if (!empty($data['password'])) {
-            $user->password = $data['password'];
+        if (isset($data['password']) && is_string($data['password']) && $data['password'] !== '') {
+            $password = $data['password']; // här vet PHPStan att det är string
+
+            $user->password = $password;
         }
 
         // Spara ändringar i databasen
         $user->save();
 
         // Ange ett framgångsmeddelande
-        $this->request->session()->setFlashMessage("Konto för {$data['first_name']} {$data['last_name']} har uppdaterats.");
+        $firstName = is_string($data['first_name'] ?? null) ? $data['first_name'] : '';
+        $lastName  = is_string($data['last_name'] ?? null) ? $data['last_name'] : '';
+
+        /** @var string $firstName */
+        /** @var string $lastName */
+        $this->request->session()->setFlashMessage(
+            "Konto för $firstName $lastName har uppdaterats."
+        );
 
         // Omdirigera till användarens startsida
         return new RedirectResponse(route('user.index'));
@@ -141,15 +176,30 @@ class UserController extends AbstractController
     {
         $this->before();
 
-        $user = User::find($this->request->session()->get(Session::AUTH_KEY));
+        $id = $this->request->session()->get(Session::AUTH_KEY);
+
+        if (!is_int($id) && !is_string($id)) {
+            throw new NotAuthorizedException('Invalid user id in session.');
+        }
+
+        $user = User::find($id);
 
         if ($user && $user->isAdmin()) {
             throw new NotAuthorizedException('You are not authorized to close this account.');
         }
 
+        if ($user === null) {
+            throw new NotAuthorizedException('User not found.');
+        }
+
         $user->loadMissing('status');
 
+        /** @var \App\Models\Status|null $status */
         $status = $user->getRelation('status');
+
+        if (!$status instanceof Status) {
+            throw new \RuntimeException('Status relation is not loaded or invalid.');
+        }
 
         $status->fill(['status' => 'closed', 'active' => 'offline']);
         $status->save();
@@ -165,10 +215,20 @@ class UserController extends AbstractController
     {
         $this->before();
 
-        $user = User::find($this->request->session()->get(Session::AUTH_KEY));
+        $id = $this->request->session()->get(Session::AUTH_KEY);
+
+        if (!is_int($id) && !is_string($id)) {
+            throw new NotAuthorizedException('Invalid user id in session.');
+        }
+
+        $user = User::find($id);
 
         if ($user && $user->isAdmin()) {
             throw new NotAuthorizedException('You are not authorized to delete this user.');
+        }
+
+        if ($user === null) {
+            throw new NotAuthorizedException('User not found.');
         }
 
         $userDirectory = ROOT_PATH . '/public/images/user/' . $user->id;

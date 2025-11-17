@@ -21,8 +21,51 @@ trait Pagination
         $q->offset = null;
         $q->selectRaw('1');
 
-        $result = $this->connection->fetchOne($q->toSql(), $q->getBindings());
+        $result = $this->getConnection()->fetchOne($q->toSql(), $q->getBindings());
         return $result !== null;
+    }
+
+    /**
+     * Enkel pagination utan totalräkning (snabbare).
+     *
+     * @param int $perPage
+     * @param int $currentPage
+     * @return array{
+     *     data: array<int|string, mixed>,
+     *     pagination: array{
+     *         per_page: int,
+     *         current_page: int,
+     *         has_more: bool,
+     *         first_page: int
+     *     }
+     * }
+     */
+   public function simplePaginate(int $perPage = 10, int $currentPage = 1): array
+    {
+        $currentPage = ($currentPage > 0) ? $currentPage : 1;
+        $offset = ($currentPage - 1) * $perPage;
+
+        // Hämta en extra rad för att indikera om det finns fler
+        $this->limit($perPage + 1)->offset($offset);
+        $data = $this->get(); // Collection
+
+        // Reindexera till numeriska nycklar för att matcha array<int, mixed>
+        $items = $data->values()->toArray();
+
+        $hasMore = count($items) > $perPage;
+        if ($hasMore) {
+            array_pop($items); // ta bort extra raden
+        }
+
+        return [
+            'data' => $items,
+            'pagination' => [
+                'per_page' => $perPage,
+                'current_page' => $currentPage,
+                'has_more' => $hasMore,
+                'first_page' => 1,
+            ],
+        ];
     }
 
     /**
@@ -30,7 +73,16 @@ trait Pagination
      *
      * @param int $perPage
      * @param int $currentPage
-     * @return array{data: array, pagination: array{total:int,per_page:int,current_page:int,last_page:int,first_page:int}}
+     * @return array{
+     *     data: array<int|string, mixed>,
+     *     pagination: array{
+     *         total: int,
+     *         per_page: int,
+     *         current_page: int,
+     *         last_page: int,
+     *         first_page: int
+     *     }
+     * }
      */
     public function paginate(int $perPage = 10, int $currentPage = 1): array
     {
@@ -44,8 +96,18 @@ trait Pagination
         $countQuery->offset = null;
         $countQuery->selectRaw('COUNT(*) as total');
 
-        $countResult = $this->connection->fetchOne($countQuery->toSql(), $countQuery->getBindings());
-        $totalRecords = (int)($countResult['total'] ?? 0);
+        $countResult = $this->getConnection()->fetchOne($countQuery->toSql(), $countQuery->getBindings());
+
+        $rawTotal = $countResult['total'] ?? 0;
+        if (!is_int($rawTotal)) {
+            if (is_numeric($rawTotal)) {
+                $rawTotal = (int) $rawTotal;
+            } else {
+                $rawTotal = 0;
+            }
+        }
+        /** @var int $rawTotal */
+        $totalRecords = $rawTotal;
 
         $lastPage = (int) ceil($totalRecords / $perPage);
 
@@ -70,8 +132,11 @@ trait Pagination
         $this->limit($perPage)->offset($offset);
         $data = $this->get();
 
+        // Reindexera till numeriska nycklar
+        $dataArray = $data->values()->toArray();
+
         return [
-            'data' => $data,
+            'data' => $dataArray,
             'pagination' => [
                 'total' => $totalRecords,
                 'per_page' => $perPage,
@@ -89,7 +154,17 @@ trait Pagination
      * @param array<int,string> $searchColumns
      * @param int $perPage
      * @param int $currentPage
-     * @return array{data: array, search: array{term:string,total:int,per_page:int,current_page:int,last_page:int,first_page:int}}
+     * @return array{
+     *     data: array<int|string, mixed>,
+     *     search: array{
+     *         term: string,
+     *         total: int,
+     *         per_page: int,
+     *         current_page: int,
+     *         last_page: int,
+     *         first_page: int
+     *     }
+     * }
      */
     public function search(string $term, array $searchColumns, int $perPage = 10, int $currentPage = 1): array
     {
@@ -116,8 +191,18 @@ trait Pagination
         $countQuery->offset = null;
         $countQuery->selectRaw('COUNT(*) as total');
 
-        $countResult = $this->connection->fetchOne($countQuery->toSql(), $countQuery->getBindings());
-        $totalRecords = (int)($countResult['total'] ?? 0);
+        $countResult = $this->getConnection()->fetchOne($countQuery->toSql(), $countQuery->getBindings());
+
+        $rawTotal = $countResult['total'] ?? 0;
+        if (!is_int($rawTotal)) {
+            if (is_numeric($rawTotal)) {
+                $rawTotal = (int) $rawTotal;
+            } else {
+                $rawTotal = 0;
+            }
+        }
+        /** @var int $rawTotal */
+        $totalRecords = $rawTotal;
 
         $lastPage = (int) ceil($totalRecords / $perPage);
         if ($currentPage > $lastPage && $lastPage > 0) {
@@ -127,8 +212,11 @@ trait Pagination
         $this->limit($perPage)->offset(($currentPage - 1) * $perPage);
         $data = $this->get();
 
+        // Reindexera till numeriska nycklar
+        $dataArray = $data->values()->toArray();
+
         return [
-            'data' => $data,
+            'data' => $dataArray,
             'search' => [
                 'term' => $term,
                 'total' => $totalRecords,
@@ -138,37 +226,5 @@ trait Pagination
                 'first_page' => 1,
             ],
         ];
-    }
-
-    /**
-     * Returnera SQL med värden insatta för debug.
-     *
-     * @return string
-     */
-    public function debugSql(): string
-    {
-        // Visa parametriserad SQL (behåll frågetecken)
-        return $this->toSql();
-    }
-
-    public function debugSqlInterpolated(): string
-    {
-        // Visa “prettified” SQL med insatta värden (endast för debug)
-        $query = $this->toSql();
-        foreach ($this->getBindings() as $binding) {
-            if (is_string($binding)) {
-                $replacement = "'" . addslashes($binding) . "'";
-            } elseif (is_null($binding)) {
-                $replacement = 'NULL';
-            } elseif (is_bool($binding)) {
-                $replacement = $binding ? '1' : '0';
-            } elseif ($binding instanceof \DateTimeInterface) {
-                $replacement = "'" . $binding->format('Y-m-d H:i:s') . "'";
-            } else {
-                $replacement = (string)$binding;
-            }
-            $query = preg_replace('/\?/', $replacement, $query, 1);
-        }
-        return $query;
     }
 }

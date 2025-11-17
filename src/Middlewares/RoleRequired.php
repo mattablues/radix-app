@@ -41,12 +41,14 @@ final readonly class RoleRequired implements MiddlewareInterface
             throw new NotAuthorizedException('User not found.');
         }
 
+        /** @var User $user */
         if ($this->exact !== null) {
             if (!$user->hasRole($this->exact)) {
                 throw new NotAuthorizedException('You do not have permission to access this page');
             }
         } else {
-            if (!$user->hasAtLeast($this->min)) {
+            // $this->min är garanterat icke-null här p.g.a. konstruktorns validering
+            if (!$user->hasAtLeast((string) $this->min)) {
                 throw new NotAuthorizedException('You do not have permission to access this page');
             }
         }

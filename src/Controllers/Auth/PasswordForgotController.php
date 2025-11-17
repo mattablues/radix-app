@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers\Auth;
 
 use App\Events\UserPasswordEvent;
+use App\Models\Status;
 use App\Models\User;
 use App\Services\AuthService;
 use Radix\Controller\AbstractController;
@@ -43,7 +44,15 @@ class PasswordForgotController extends AbstractController
             ]);
         }
 
-        $email = $data['email'];
+        // Säkerställ att email är en sträng
+        $rawEmail = $data['email'] ?? null;
+        if (!is_string($rawEmail) || $rawEmail === '') {
+            // Valideringen borde egentligen ha fångat detta, men vi skyddar oss ändå
+            $this->request->session()->setFlashMessage('Ogiltig e‑postadress.', 'error');
+            return new RedirectResponse(route('auth.password-forgot.index'));
+        }
+
+        $email = $rawEmail;
         $ip = $this->request->ip(); // Hämta användarens IP-adress
 
         // Kontrollera om användaren är tillfälligt blockerad på grund av för många försök
@@ -84,10 +93,12 @@ class PasswordForgotController extends AbstractController
         $user = User::where('email', '=', $email)->first();
 
         if ($user) {
+            /** @var User $user */
             $user->loadMissing('status');
 
             $status = $user->getRelation('status');
 
+            /** @var Status $status */
             if ($status && $status->getAttribute('status') === 'activated') {
                 $token = new Token();
                 $tokenValue = $token->value();
@@ -107,7 +118,7 @@ class PasswordForgotController extends AbstractController
                 $this->eventDispatcher->dispatch(new UserPasswordEvent(
                     firstName: $user->first_name,
                     lastName: $user->last_name,
-                    email: $data['email'],
+                    email: $email,
                     resetLink: $resetLink
                 ));
 

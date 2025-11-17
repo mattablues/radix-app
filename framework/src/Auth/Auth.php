@@ -45,11 +45,15 @@ readonly class Auth
      */
     public function logout(): void
     {
-        $user_id = $this->session->get(Session::AUTH_KEY);
+        $userIdRaw = $this->session->get(Session::AUTH_KEY);
 
-        if ($user_id) {
-            $this->setOfflineStatus($user_id); // Uppdatera offline-status
+        // Tillåt endast int, annars är sessionen korrupt/ogiltig
+        if (!is_int($userIdRaw)) {
+            throw new \RuntimeException('Invalid user id in session.');
         }
+
+        /** @var int $userIdRaw */
+        $this->setOfflineStatus($userIdRaw);
 
         $this->session->destroy(); // Förstör sessionen
     }
@@ -62,8 +66,8 @@ readonly class Auth
 
     private function setOfflineStatus(int $user_id): void
     {
-        $user = User::find($user_id); // Hämta användaren
-        $user?->setOffline(); // Markera som offline
+        $user = User::find($user_id);
+        $user?->setOffline();
     }
 
     private function updateInactiveUsers(): void
@@ -71,22 +75,20 @@ readonly class Auth
         $timeout = 15 * 60; // 15 minuter
         $threshold = time() - $timeout; // Aktuell tid minus timeout
 
-        // Hämta alla användare som varit online för länge
+        /** @var \Radix\Collection\Collection<\App\Models\Status> $inactiveUsers */
         $inactiveUsers = \App\Models\Status::where('active', '=', 'online')
             ->where('active_at', '<', $threshold)
             ->get();
 
-        // Kolla om det finns några inaktiva användare att uppdatera
-        if (empty($inactiveUsers)) {
+        if ($inactiveUsers->isEmpty()) {
             return;
         }
 
-        // Markera varje inaktiv användare som offline
         foreach ($inactiveUsers as $userStatus) {
-            // Uppdatera användarens status
+            /** @var \App\Models\Status $userStatus */
             $userStatus->active = 'offline';
-            $userStatus->active_at = time(); // Sätt en ny aktiv tidpunkt om det behövs
-            $userStatus->save(); // Uppdatera raden i databasen
+            $userStatus->active_at = (string) time(); // cast till string
+            $userStatus->save();
         }
     }
 }

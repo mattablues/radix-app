@@ -13,6 +13,8 @@ use Radix\Enums\Role;
 
 class UserRoleTest extends TestCase
 {
+    private int $emailSeq = 0;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -50,10 +52,13 @@ class UserRoleTest extends TestCase
     {
         $pdo = ApplicationContainer::get()->get(\PDO::class);
 
+        if (!$pdo instanceof \PDO) {
+            $this->fail('Container must return a PDO instance for ' . \PDO::class);
+        }
+
         // unik e-post per anrop
-        static $seq = 0;
-        $seq++;
-        $email = "test$seq@example.com";
+        $this->emailSeq++;
+        $email = "test{$this->emailSeq}@example.com";
 
         $stmt = $pdo->prepare("
             INSERT INTO users (first_name, last_name, email, password, avatar, role, created_at, updated_at, deleted_at)
@@ -67,7 +72,7 @@ class UserRoleTest extends TestCase
             ':avatar'     => '/images/graphics/avatar.png',
             ':role'       => $role,
         ]);
-        $id = (int)$pdo->lastInsertId();
+        $id = (int) $pdo->lastInsertId();
 
         $u = new User();
         $ref = new \ReflectionClass($u);
@@ -117,7 +122,13 @@ class UserRoleTest extends TestCase
         $this->assertTrue($user->save(), 'Save ska lyckas och uppdatera DB.');
 
         // Ladda om från DB och verifiera att rollen är persisterad
-        $reloaded = \App\Models\User::find($user->getAttribute('id'));
+        $id = $user->getAttribute('id');
+        if (!is_int($id) && !is_string($id)) {
+            $this->fail('User id must be int|string for Model::find().');
+        }
+
+        /** @var int|string $id */
+        $reloaded = \App\Models\User::find($id);
         $this->assertNotNull($reloaded, 'Reloaded user ska finnas.');
         $this->assertTrue($reloaded->isAdmin(), 'Reloaded user ska ha admin.');
         $this->assertFalse($reloaded->isUser());
@@ -137,7 +148,13 @@ class UserRoleTest extends TestCase
         $this->assertTrue($user->save(), 'Save ska lyckas och uppdatera DB.');
 
         // Ladda om och verifiera
-        $reloaded = \App\Models\User::find($user->getAttribute('id'));
+        $id = $user->getAttribute('id');
+        if (!is_int($id) && !is_string($id)) {
+            $this->fail('User id must be int|string for Model::find().');
+        }
+
+        /** @var int|string $id */
+        $reloaded = \App\Models\User::find($id);
         $this->assertNotNull($reloaded);
         $this->assertTrue($reloaded->isUser());
         $this->assertFalse($reloaded->isAdmin());
@@ -322,7 +339,13 @@ class UserRoleTest extends TestCase
             $user->setRole($role);
             $this->assertTrue($user->save());
 
-            $reloaded = \App\Models\User::find($user->getAttribute('id'));
+            $id = $user->getAttribute('id');
+            if (!is_int($id) && !is_string($id)) {
+                $this->fail('User id must be int|string for Model::find().');
+            }
+
+            /** @var int|string $id */
+            $reloaded = \App\Models\User::find($id);
             $this->assertNotNull($reloaded);
             $this->assertTrue($reloaded->hasRole($role), "Reloaded user ska ha rollen $role");
         }

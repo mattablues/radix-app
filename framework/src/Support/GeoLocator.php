@@ -10,10 +10,18 @@ class GeoLocator
 {
     private string $baseUrl = 'http://ip-api.com/json'; // Ny URL till IP-API
 
+    /**
+     * @return array<string,mixed>
+     */
     public function getLocation(?string $ip = null): array
     {
-        $ip = $ip ?? $_SERVER['REMOTE_ADDR'];
-        $url = "$this->baseUrl/$ip";
+        $serverIp = $_SERVER['REMOTE_ADDR'] ?? null;
+
+        if ($ip === null) {
+            $ip = is_string($serverIp) ? $serverIp : '';
+        }
+
+        $url = $this->baseUrl . '/' . $ip;
         $data = @file_get_contents($url);
 
         if ($data === false) {
@@ -27,9 +35,19 @@ class GeoLocator
         }
 
         if ($location['status'] !== 'success') {
-            throw new GeoLocatorException("API fel: " . $location['message']);
+            $rawMessage = $location['message'] ?? 'okänt fel';
+
+            if (is_string($rawMessage)) {
+                $message = $rawMessage;
+            } else {
+                $encoded = json_encode($rawMessage, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $message = $encoded === false ? 'okänt fel' : $encoded;
+            }
+
+            throw new GeoLocatorException('API fel: ' . $message);
         }
 
+        /** @var array<string,mixed> $location */
         return $location;
     }
 
