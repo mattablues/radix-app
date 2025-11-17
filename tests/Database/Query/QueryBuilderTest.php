@@ -25,9 +25,10 @@ class QueryBuilderTest extends TestCase
     public function testNestedWhere(): void
     {
         $query = (new QueryBuilder())
+            ->setConnection($this->connection)
             ->from('users')
             ->where('status', '=', 'active')
-            ->where(function ($q) {
+            ->where(function (QueryBuilder $q): void {
                 $q->where('age', '>=', 18)
                   ->where('country', '=', 'Sweden');
             })

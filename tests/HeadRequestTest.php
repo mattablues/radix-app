@@ -41,7 +41,7 @@ class HeadRequestTest extends TestCase
         $container = $this->createMock(Container::class);
 
         // Matcha förväntade beroenden med rätt objekt
-        $container->method('get')->willReturnCallback(function ($classname) {
+        $container->method('get')->willReturnCallback(function (string $classname) {
             return match ($classname) {
                 // Mocka den nödvändiga SessionInterface
                 SessionInterface::class => $this->createMock(SessionInterface::class),

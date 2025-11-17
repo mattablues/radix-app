@@ -50,16 +50,37 @@ class CollectionTest extends TestCase
     {
         $c = new Collection([1, 2, 3, 4]);
 
-        $mapped = $c->map(fn($v) => $v * 2);
+        // map: vi vet att kollektionen innehåller ints, så vi kan typa v som int
+        $mapped = $c->map(fn(int $v, int|string $k): int => $v * 2);
         $this->assertSame([2, 4, 6, 8], $mapped->toArray());
 
-        $filtered = $c->filter(fn($v) => $v % 2 === 0);
+        // filter: officiell signatur är callable(mixed, int|string): bool,
+        // så vi tar mixed, men smalnar av med runtime‑check.
+        $filtered = $c->filter(function (mixed $v, int|string $k): bool {
+            if (!is_int($v)) {
+                $this->fail('Expected int value in Collection::filter() test.');
+            }
+            return $v % 2 === 0;
+        });
         $this->assertSame([1 => 2, 3 => 4], $filtered->toArray());
 
-        $rejected = $c->reject(fn($v) => $v <= 2);
+        $rejected = $c->reject(function (mixed $v, int|string $k): bool {
+            if (!is_int($v)) {
+                $this->fail('Expected int value in Collection::reject() test.');
+            }
+            return $v <= 2;
+        });
         $this->assertSame([2 => 3, 3 => 4], $rejected->toArray());
 
-        $sum = $c->reduce(fn($acc, $v) => $acc + $v, 0);
+        $sum = $c->reduce(function (mixed $acc, mixed $v, int|string $k): int {
+            if (!is_int($acc)) {
+                $this->fail('Expected int accumulator in Collection::reduce() test.');
+            }
+            if (!is_int($v)) {
+                $this->fail('Expected int value in Collection::reduce() test.');
+            }
+            return $acc + $v;
+        }, 0);
         $this->assertSame(10, $sum);
     }
 

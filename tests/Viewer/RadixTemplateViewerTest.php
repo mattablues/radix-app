@@ -510,7 +510,7 @@ public function testCacheInvalidation(): void
         file_put_contents($templatePath, '<p>{{ $message }}</p>');
 
         // Registrera ett globalt filter som gör texten versaler
-        $this->viewer->registerFilter('uppercase', function ($value) {
+        $this->viewer->registerFilter('uppercase', function (string $value): string {
             return strtoupper($value);
         });
 

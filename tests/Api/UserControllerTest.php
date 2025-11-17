@@ -31,8 +31,15 @@ class UserControllerTest extends TestCase
         $container = new Container();
 
         // Registrera PDO och Connection i containern
-        $container->add(PDO::class, fn() => $this->pdo);
-        $container->add(Connection::class, fn($container) => new Connection($container->get(PDO::class)));
+        $container->add(PDO::class, fn(): PDO => $this->pdo);
+
+        $container->add(Connection::class, function (Container $c): Connection {
+            $pdo = $c->get(PDO::class);
+            if (!$pdo instanceof PDO) {
+                throw new \RuntimeException('Container must return a PDO instance for ' . PDO::class);
+            }
+            return new Connection($pdo);
+        });
 
         // Registrera aliaset för Psr\Container\ContainerInterface
         $container->add('Psr\Container\ContainerInterface', fn() => $container);

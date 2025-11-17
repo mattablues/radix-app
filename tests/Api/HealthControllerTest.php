@@ -118,13 +118,20 @@ final class HealthControllerTest extends TestCase
         $response = $dispatcher->handle($request);
         $this->assertSame(200, $response->getStatusCode());
 
+        /** @var array<string, mixed> $headers */
         $headers = $response->getHeaders();
         $this->assertArrayHasKey('Content-Type', $headers);
         $this->assertArrayHasKey('X-Request-Id', $headers);
         $this->assertArrayHasKey('X-Response-Time', $headers);
 
+        /** @var array{
+         *     ok: bool,
+         *     checks: array<string, mixed>
+         * } $body
+         */
         $body = json_decode($response->getBody(), true);
         $this->assertIsArray($body);
+
         $this->assertTrue($body['ok']);
         $this->assertArrayHasKey('php', $body['checks']);
         $this->assertArrayHasKey('time', $body['checks']);

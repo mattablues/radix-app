@@ -1260,7 +1260,7 @@ class RelationshipsTest extends TestCase
         $parent->forceFill(['id' => 77]);
 
         $parent->load([
-            'profile' => function ($rel) {
+            'profile' => function (HasOne $rel) {
                 // relation-objekt (HasOne)
                 $rel->withDefault(['avatar' => '/img/default.png']);
             }
@@ -1305,9 +1305,9 @@ class RelationshipsTest extends TestCase
         $child->forceFill(['user_id' => 5]);
 
         $child->loadMissing([
-            'user' => function ($rel) {
+            'user' => function (BelongsTo $rel): void {
                 $rel->withDefault(['first_name' => 'N/A']);
-            }
+            },
         ]);
 
         $user = $child->getRelation('user');

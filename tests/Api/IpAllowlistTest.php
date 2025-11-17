@@ -47,6 +47,9 @@ final class IpAllowlistTest extends TestCase
             }
         };
 
+        /** @var array<string, mixed> $serverArray */
+        $serverArray = $_SERVER;
+
         $request = new Request(
             uri: '/api/v1/health',
             method: 'GET',
@@ -54,7 +57,7 @@ final class IpAllowlistTest extends TestCase
             post: [],
             files: [],
             cookie: [],
-            server: $_SERVER
+            server: $serverArray
         );
 
         return $middleware->process($request, $handler);

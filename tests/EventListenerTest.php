@@ -18,6 +18,9 @@ class EventListenerTest extends TestCase
     public function testCacheControlListenerAddsHeaders(): void
     {
         // Arrange: Skapa Request och Response
+        /** @var array<string, mixed> $server */
+        $server = $_SERVER;
+
         $request = new Request(
             uri: "/test",
             method: "GET",
@@ -25,7 +28,7 @@ class EventListenerTest extends TestCase
             post: [],
             files: [],
             cookie: [],
-            server: $_SERVER
+            server: $server
         ); // Simulera en HTTP-request
 
         $response = new Response();
@@ -64,6 +67,9 @@ class EventListenerTest extends TestCase
     public function testContentLengthListenerSetsHeader(): void
     {
         // Arrange: Skapa Request och Response
+        /** @var array<string, mixed> $server */
+        $server = $_SERVER;
+
         $request = new Request(
             uri: "/test",
             method: "GET",
@@ -71,8 +77,8 @@ class EventListenerTest extends TestCase
             post: [],
             files: [],
             cookie: [],
-            server: $_SERVER
-        );
+            server: $server
+        ); // Simulera en HTTP-request
 
         $response = new Response();
         $response->setBody("Test body"); // Sätt en body för att kontrollera längd
@@ -94,6 +100,9 @@ class EventListenerTest extends TestCase
     public function testContentLengthListenerDoesNotOverrideExistingHeader(): void
     {
         // Arrange: Skapa Request och Response
+        /** @var array<string, mixed> $server */
+        $server = $_SERVER;
+
         $request = new Request(
             uri: "/test",
             method: "GET",
@@ -101,8 +110,8 @@ class EventListenerTest extends TestCase
             post: [],
             files: [],
             cookie: [],
-            server: $_SERVER
-        );
+            server: $server
+        ); // Simulera en HTTP-request
 
         $response = new Response();
         $response->setBody("Test body");

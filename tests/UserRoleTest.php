@@ -13,6 +13,8 @@ use Radix\Enums\Role;
 
 class UserRoleTest extends TestCase
 {
+    private int $emailSeq = 0;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -55,9 +57,8 @@ class UserRoleTest extends TestCase
         }
 
         // unik e-post per anrop
-        static $seq = 0;
-        $seq++;
-        $email = "test$seq@example.com";
+        $this->emailSeq++;
+        $email = "test{$this->emailSeq}@example.com";
 
         $stmt = $pdo->prepare("
             INSERT INTO users (first_name, last_name, email, password, avatar, role, created_at, updated_at, deleted_at)

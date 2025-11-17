@@ -29,15 +29,28 @@ class ConnectionTest extends TestCase
         $this->connection->execute('CREATE TABLE test_table (id INTEGER PRIMARY KEY, name TEXT)');
 
         // Infoga data
-        $this->connection->execute('INSERT INTO test_table (name) VALUES (:name)', ['name' => 'Test Name']);
+        $this->connection->execute(
+            'INSERT INTO test_table (name) VALUES (:name)',
+            ['name' => 'Test Name']
+        );
 
         // Hämta data
-        $result = $this->connection->execute('SELECT * FROM test_table WHERE name = :name', ['name' => 'Test Name'])
+        /** @var array<int, array<string, mixed>> $result */
+        $result = $this->connection
+            ->execute(
+                'SELECT * FROM test_table WHERE name = :name',
+                ['name' => 'Test Name']
+            )
             ->fetchAll();
 
         $this->assertCount(1, $result, 'One row should be retrieved');
-        $this->assertEquals('Test Name', $result[0]['name'], 'The retrieved name should match the inserted value');
+        $this->assertEquals(
+            'Test Name',
+            $result[0]['name'],
+            'The retrieved name should match the inserted value'
+        );
     }
+
 
     public function testTransactionRollback(): void
     {
