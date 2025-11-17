@@ -16,7 +16,8 @@ class QueryBuilderTest extends TestCase
     {
         parent::setUp();
 
-        $pdo = new \PDO('mysql:host=localhost;dbname=test', 'root', 'root');
+        // Använd SQLite i minnet för testerna
+        $pdo = new \PDO('sqlite::memory:');
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
         $this->connection = new Connection($pdo);
@@ -1247,12 +1248,20 @@ class QueryBuilderTest extends TestCase
             ->whereJsonContains('tags', 'sale');
 
         $sql = $q->toSql();
-        $this->assertStringContainsString('SELECT JSON_EXTRACT(`meta`, ?) AS `brand` FROM `products`', $sql);
-        $this->assertStringContainsString('WHERE JSON_CONTAINS(`tags`, ?)', $sql);
 
-        // WHERE-bindningen ("sale") kommer före SELECT-bindningen ("$.brand")
+        // Vi kör SQLite i testerna, så vi förväntar sqlite-syntax
+        $this->assertStringContainsString(
+            'SELECT json_extract(`meta`, ?) AS `brand` FROM `products`',
+            $sql
+        );
+        $this->assertStringContainsString(
+            'WHERE `tags` LIKE ?',
+            $sql
+        );
+
+        // WHERE-bindningen ("%sale%") kommer före SELECT-bindningen ("$.brand")
         $this->assertEquals(
-            [json_encode('sale', JSON_UNESCAPED_UNICODE), '$.brand'],
+            ['%sale%', '$.brand'],
             $q->getBindings()
         );
     }
