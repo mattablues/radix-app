@@ -40,7 +40,11 @@ $router->group(['path' => '/api/v1', 'middleware' => ['request.id']], function (
         $response = new \Radix\Http\Response();
 
         // Säkerställ att vi inte stjäl riktiga GET-rutter: svara 204 endast för preflight (OPTIONS)
-        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+        $method = isset($_SERVER['REQUEST_METHOD']) && is_string($_SERVER['REQUEST_METHOD'])
+            ? $_SERVER['REQUEST_METHOD']
+            : '';
+
+        if (strtoupper($method) === 'OPTIONS') {
             $response->setStatusCode(204);
             return $response;
         }
