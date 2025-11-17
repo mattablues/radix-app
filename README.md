@@ -164,3 +164,4 @@ Observera: Inte alla funktioner kanske stöds av varje databasdialekt; använd d
 
 ## Licens
 MIT (eller den licens du använder för projektet).
+
