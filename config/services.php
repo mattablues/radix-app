@@ -9,6 +9,7 @@ use Radix\Console\CommandsRegistry;
 use Radix\Database\DatabaseManager;
 use Radix\Database\Migration\Migrator;
 use Radix\Mailer\MailManager;
+use Radix\Viewer\TemplateViewerInterface;
 
 // Ladda miljövariabler
 $dotenv = new Dotenv(ROOT_PATH . '/.env', ROOT_PATH);
@@ -19,19 +20,31 @@ $container = new Radix\Container\Container();
 $container->add(\Psr\Container\ContainerInterface::class, $container);
 
 $excludeFiles = ['services.php', 'routes.php', 'middleware.php', 'providers.php', 'listeners.php'];
-$configFiles = glob(ROOT_PATH . '/config/*.php');
-$configFiles = array_filter($configFiles, function ($file) use ($excludeFiles) {
+
+/** @var list<string> $configFiles */
+$configFiles = glob(ROOT_PATH . '/config/*.php') ?: [];
+
+$configFiles = array_filter($configFiles, function (string $file) use ($excludeFiles): bool {
     return !in_array(basename($file), $excludeFiles, true);
 });
 
+/** @var array<string,mixed> $configData */
 $configData = [];
 
 // Sammanslå innehåll från alla andra konfigurationsfiler
 foreach ($configFiles as $file) {
-    $configData = array_merge_deep($configData, require $file);
+    $loadedConfig = require $file;
+
+    if (!is_array($loadedConfig)) {
+        throw new \RuntimeException(sprintf('Config file "%s" must return an array.', $file));
+    }
+
+    /** @var array<string,mixed> $loadedConfig */
+    $configData = array_merge_deep($configData, $loadedConfig);
 }
 
 // Registrera den sammanslagna konfigurationen i containern
+/** @var array<string,mixed> $configData */
 $container->add('config', new Config($configData));
 $container->add(\Radix\Support\FileCache::class, fn() => new \Radix\Support\FileCache());
 
@@ -44,51 +57,136 @@ $container->add(\App\Services\HealthCheckService::class, function () {
 });
 
 $container->addShared(\Radix\Database\Connection::class, function () use ($container) {
-    /** @var Radix\Config\Config $config */
     $config = $container->get('config');
-    $dbConfig = $config->get('database');
 
-    // Validera att nödvändiga värden finns
-    if (!$dbConfig['driver'] || !$dbConfig['database']) {
-        throw new RuntimeException('Database configuration is invalid. Ensure "driver" and "database" are set.');
+    if (!$config instanceof \Radix\Config\Config) {
+        throw new \RuntimeException('Container returned invalid config instance.');
     }
 
+    /** @var \Radix\Config\Config $config */
+
+    $dbConfig = $config->get('database');
+
+    if (!is_array($dbConfig)) {
+        throw new \RuntimeException('Database configuration must be an array.');
+    }
+
+    /** @var array<string,mixed> $dbConfig */
+
+    $driverRaw   = $dbConfig['driver']   ?? null;
+    $databaseRaw = $dbConfig['database'] ?? null;
+    $hostRaw     = $dbConfig['host']     ?? '127.0.0.1';
+    $portRaw     = $dbConfig['port']     ?? 3306;
+    $charsetRaw  = $dbConfig['charset']  ?? 'utf8mb4';
+    $userRaw     = $dbConfig['username'] ?? null;
+    $passRaw     = $dbConfig['password'] ?? null;
+    $optionsRaw  = $dbConfig['options']  ?? [];
+
+    if (!is_string($driverRaw) || $driverRaw === '') {
+        throw new \RuntimeException('Database driver must be a non-empty string.');
+    }
+    if (!is_string($databaseRaw) || $databaseRaw === '') {
+        throw new \RuntimeException('Database name must be a non-empty string.');
+    }
+    $driver   = $driverRaw;
+    $database = $databaseRaw;
+
+    $host = is_string($hostRaw) && $hostRaw !== '' ? $hostRaw : '127.0.0.1';
+
+    if (is_int($portRaw)) {
+        $port = (string) $portRaw;
+    } elseif (is_string($portRaw) && $portRaw !== '') {
+        $port = $portRaw;
+    } else {
+        $port = '3306';
+    }
+
+    $charset = is_string($charsetRaw) && $charsetRaw !== '' ? $charsetRaw : 'utf8mb4';
+
+    $userRaw = $dbConfig['username'] ?? null;
+    $passRaw = $dbConfig['password'] ?? null;
+
+    if ($userRaw !== null && !is_string($userRaw)) {
+        throw new \RuntimeException('Database username must be a string or null.');
+    }
+    if ($passRaw !== null && !is_string($passRaw)) {
+        throw new \RuntimeException('Database password must be a string or null.');
+    }
+
+    /** @var string|null $username */
+    $username = $userRaw;
+    /** @var string|null $password */
+    $password = $passRaw;
+
+    $optionsRaw = $dbConfig['options'] ?? [];
+    if (!is_array($optionsRaw)) {
+        throw new \RuntimeException('Database options must be an array.');
+    }
+    /** @var array<mixed> $options */
+    $options = $optionsRaw;
+
     // Skapa DSN-strängen baserat på föraren
-    $dsn = match ($dbConfig['driver']) {
-        'sqlite' => "sqlite:{$dbConfig['database']}",
+    $dsn = match ($driver) {
+        'sqlite' => "sqlite:{$database}",
         'mysql' => sprintf(
             'mysql:host=%s;port=%s;dbname=%s;charset=%s',
-            $dbConfig['host'],
-            $dbConfig['port'],
-            $dbConfig['database'],
-            $dbConfig['charset']
+            $host,
+            $port,
+            $database,
+            $charset
         ),
-        default => throw new RuntimeException("Unsupported database driver: {$dbConfig['driver']}"),
+        default => throw new \RuntimeException("Unsupported database driver: {$driver}"),
     };
 
     try {
-        // Skapa en PDO-instans och återlämna en Connection
-        $pdo = new PDO($dsn, $dbConfig['username'], $dbConfig['password'], $dbConfig['options']);
+        $pdo = new \PDO($dsn, $username, $password, $options);
 
-        return new Radix\Database\Connection($pdo);
-    } catch (PDOException $e) {
-        throw new RuntimeException("Failed to connect to the database: " . $e->getMessage(), $e->getCode(), $e);
+        return new \Radix\Database\Connection($pdo);
+    } catch (\PDOException $e) {
+        throw new \RuntimeException(
+            "Failed to connect to the database: " . $e->getMessage(),
+            (int) $e->getCode(),
+            $e
+        );
     }
 });
 
 $container->addShared(\Radix\DateTime\RadixDateTime::class, function () use ($container) {
-    $config = $container->get('config'); // Hämta config-instansen
-    return new \Radix\DateTime\RadixDateTime($config); // Injicera config till RadixDateTime
+    $config = $container->get('config');
+
+    if (!$config instanceof \Radix\Config\Config) {
+        throw new \RuntimeException('Container returned invalid config instance.');
+    }
+
+    /** @var \Radix\Config\Config $config */
+
+    return new \Radix\DateTime\RadixDateTime($config);
 });
 
 $container->add(\Radix\Database\Migration\Migrator::class, function () use ($container) {
-        $connection = $container->get(Radix\Database\Connection::class);
-        $migrationsPath = ROOT_PATH . '/migrations';
-        return new Migrator($connection, $migrationsPath);
+    $connection = $container->get(\Radix\Database\Connection::class);
+
+    if (!$connection instanceof \Radix\Database\Connection) {
+        throw new \RuntimeException('Container returned invalid database connection.');
+    }
+
+    /** @var \Radix\Database\Connection $connection */
+
+    $migrationsPath = ROOT_PATH . '/migrations';
+
+    return new Migrator($connection, $migrationsPath);
 });
 
 $container->add(\Radix\Console\Commands\MigrationCommand::class, function () use ($container) {
-    return new MigrationCommand($container->get(\Radix\Database\Migration\Migrator::class));
+    $migrator = $container->get(\Radix\Database\Migration\Migrator::class);
+
+    if (!$migrator instanceof \Radix\Database\Migration\Migrator) {
+        throw new \RuntimeException('Container returned invalid migrator instance.');
+    }
+
+    /** @var \Radix\Database\Migration\Migrator $migrator */
+
+    return new \Radix\Console\Commands\MigrationCommand($migrator);
 });
 
 $container->add(\Radix\Console\Commands\MakeControllerCommand::class, function () {
@@ -171,9 +269,15 @@ $container->add(\Radix\Console\Commands\MakeModelCommand::class, function () {
 });
 
 $container->add(\Radix\Database\Migration\Schema::class, function () use ($container) {
-    return new Radix\Database\Migration\Schema(
-        $container->get(Radix\Database\Connection::class)
-    );
+    $connection = $container->get(\Radix\Database\Connection::class);
+
+    if (!$connection instanceof \Radix\Database\Connection) {
+        throw new \RuntimeException('Container returned invalid database connection.');
+    }
+
+    /** @var \Radix\Database\Connection $connection */
+
+    return new \Radix\Database\Migration\Schema($connection);
 });
 
 $container->add(\Radix\Console\CommandsRegistry::class, function () {
@@ -195,16 +299,29 @@ $container->add(\Radix\Console\CommandsRegistry::class, function () {
 });
 
 $container->addShared(\Radix\Session\RadixSessionHandler::class, function () use ($container) {
+    /** @var \PDO|null $dbConnection */
     $dbConnection = null;
+
     try {
-        $dbConnection = $container->get(Radix\Database\Connection::class)->getPDO();
-    } catch (Throwable $e) {
-        error_log("Kunde inte hämta PDO: " . $e->getMessage());
+        /** @var \Radix\Database\Connection $connection */
+        $connection = $container->get(\Radix\Database\Connection::class);
+        $dbConnection = $connection->getPDO();
+    } catch (\Throwable $e) {
+        /** @var \Radix\Support\Logger $logger */
+        $logger = $container->get(\Radix\Support\Logger::class);
+        $logger->error('Kunde inte hämta PDO för sessionshantering.', [
+            'exception' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
     }
 
+    /** @var \Radix\Config\Config $config */
     $config = $container->get('config');
 
-    return new Radix\Session\RadixSessionHandler($config->get('session'), $dbConnection);
+    /** @var array<string,mixed> $sessionConfig */
+    $sessionConfig = $config->get('session');
+
+    return new \Radix\Session\RadixSessionHandler($sessionConfig, $dbConnection);
 });
 
 $container->addShared(\Radix\Session\SessionInterface::class, \Radix\Session\Session::class);
@@ -223,14 +340,30 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
     $viewer->shared('datetime', $datetime); // Gör datetime tillgänglig i alla vyer
     $viewer->shared('session', $session);
 
-    $userId = $session->get(\Radix\Session\Session::AUTH_KEY);
-    
-    if ($userId && ($user = \App\Models\User::with(['status', 'token'])
+    /** @var \Radix\Session\SessionInterface $session */
+
+    $userIdRaw = $session->get(\Radix\Session\Session::AUTH_KEY);
+
+    /** @var int|null $userId */
+    $userId = is_int($userIdRaw) ? $userIdRaw : null;
+
+    if ($userId) {
+        /** @var \App\Models\User|null $user */
+        $user = \App\Models\User::with(['status', 'token'])
             ->where('id', '=', $userId)
-            ->first())
-    ) {
-        $viewer->shared('currentUser', $user); // Gör currentUser tillgänglig i alla vyer
-        $viewer->shared('currentToken', $user->getRelation('token')->getAttribute('value') ?? null); // Gör currentStatus tillgänglig i alla vyer
+            ->first();
+
+        if ($user !== null) {
+            $viewer->shared('currentUser', $user); // Gör currentUser tillgänglig i alla vyer
+
+            $tokenRelation = $user->getRelation('token');
+
+            $currentToken = is_object($tokenRelation) && method_exists($tokenRelation, 'getAttribute')
+                ? $tokenRelation->getAttribute('value')
+                : null;
+
+            $viewer->shared('currentToken', $currentToken); // Gör currentToken tillgänglig i alla vyer
+        }
     }
 
     return $viewer;
@@ -238,11 +371,14 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
 
 $container->addShared(\Radix\EventDispatcher\EventDispatcher::class, \Radix\EventDispatcher\EventDispatcher::class);
 
-$container->add(\Radix\Mailer\MailManager::class, function () use ($container) {
-    $templateViewer = $container->get(\Radix\Viewer\TemplateViewerInterface::class);
-    $config = $container->get('config'); // Rätt instans av Config
+$container->add(MailManager::class, function () use ($container) {
+    /** @var Config $config */
+    $config = $container->get('config');
 
-    return MailManager::createDefault($templateViewer, $config); // Skickar in rätt argument
+    /** @var TemplateViewerInterface $templateViewer */
+    $templateViewer = $container->get(TemplateViewerInterface::class);
+
+    return MailManager::createDefault($templateViewer, $config);
 });
 
 return $container;

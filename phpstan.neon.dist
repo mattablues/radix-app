@@ -4,6 +4,8 @@ parameters:
         - src
         - framework/src
         - tests
+        - config
+        - public
     reportUnmatchedIgnoredErrors: true
     inferPrivatePropertyTypeFromConstructor: true
     treatPhpDocTypesAsCertain: false

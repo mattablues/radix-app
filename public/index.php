@@ -16,7 +16,9 @@ $request = \Radix\Http\Request::createFromGlobals();
 
 $container->addShared(\Radix\Http\Request::class, $request);
 
-$request->setSession($container->get(\Radix\Session\SessionInterface::class));
+/** @var \Radix\Session\SessionInterface $session */
+$session = $container->get(\Radix\Session\SessionInterface::class);
+$request->setSession($session);
 
 $response = $dispatcher->handle($request);
 $response->send();

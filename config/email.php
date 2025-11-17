@@ -2,17 +2,30 @@
 
 declare(strict_types=1);
 
+$envMailDebug    = getenv('MAIL_DEBUG');
+$envMailCharset  = getenv('MAIL_CHARSET');
+$envMailHost     = getenv('MAIL_HOST');
+$envMailPort     = getenv('MAIL_PORT');
+$envMailSecure   = getenv('MAIL_SECURE');
+$envMailAuth     = getenv('MAIL_AUTH');
+$envMailAccount  = getenv('MAIL_ACCOUNT');
+$envMailPassword = getenv('MAIL_PASSWORD');
+$envMailEmail    = getenv('MAIL_EMAIL');
+$envMailFrom     = getenv('MAIL_FROM');
+
 return [
     'email' => [
-        'debug' => getenv('MAIL_DEBUG') ?? '0',
-        'charset' => getenv('MAIL_CHARSET') ?? 'UTF-8',
-        'host' => getenv('MAIL_HOST') ?? '',
-        'port' => getenv('MAIL_PORT') ?? '',
-        'secure' => getenv('MAIL_SECURE') ?? 'tls',
-        'auth' => filter_var(getenv('MAIL_AUTH') ?? true, FILTER_VALIDATE_BOOLEAN),
-        'username' => getenv('MAIL_ACCOUNT') ?? '',
-        'password' => getenv('MAIL_PASSWORD') ?? '',
-        'email' => getenv('MAIL_EMAIL') ?? 'noreply@example.com', // <== Fall back to a default address
-        'from' => getenv('MAIL_FROM') ?? 'No Reply', // <== Fall back to a default name
-    ]
+        'debug'    => $envMailDebug === false ? '0' : $envMailDebug,
+        'charset'  => $envMailCharset === false ? 'UTF-8' : $envMailCharset,
+        'host'     => $envMailHost === false ? '' : $envMailHost,
+        'port'     => $envMailPort === false ? '' : $envMailPort,
+        'secure'   => $envMailSecure === false ? 'tls' : $envMailSecure,
+        'auth'     => $envMailAuth === false
+            ? true
+            : (bool) filter_var($envMailAuth, FILTER_VALIDATE_BOOLEAN),
+        'username' => $envMailAccount === false ? '' : $envMailAccount,
+        'password' => $envMailPassword === false ? '' : $envMailPassword,
+        'email'    => $envMailEmail === false ? 'noreply@example.com' : $envMailEmail,
+        'from'     => $envMailFrom === false ? 'No Reply' : $envMailFrom,
+    ],
 ];
