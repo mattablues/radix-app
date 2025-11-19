@@ -61,8 +61,8 @@ final class IpAllowlist implements MiddlewareInterface
 
                 // IPv4-CIDR
                 if (
-                    filter_var($clientIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) &&
-                    filter_var($subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)
+                    filter_var($clientIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)
+                    && filter_var($subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)
                 ) {
                     if ($mask < 0 || $mask > 32) {
                         continue;
@@ -84,8 +84,8 @@ final class IpAllowlist implements MiddlewareInterface
 
                 // IPv6-CIDR
                 if (
-                    filter_var($clientIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) &&
-                    filter_var($subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)
+                    filter_var($clientIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)
+                    && filter_var($subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)
                 ) {
                     if ($mask < 0 || $mask > 128) {
                         continue;

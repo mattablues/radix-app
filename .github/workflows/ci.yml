@@ -41,6 +41,9 @@ jobs:
       - name: Build assets
         run: npm run start:build
 
+      - name: Check Code Style
+        run: composer format:check
+
       - name: Run PHPStan
         run: composer stan
 

@@ -7,8 +7,8 @@ namespace Radix\Tests\Api;
 use App\Middlewares\IpAllowlist;
 use PHPUnit\Framework\TestCase;
 use Radix\Http\Request;
-use Radix\Http\Response;
 use Radix\Http\RequestHandlerInterface;
+use Radix\Http\Response;
 
 final class IpAllowlistTest extends TestCase
 {

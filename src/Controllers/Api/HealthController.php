@@ -9,9 +9,7 @@ use Radix\Http\JsonResponse;
 
 final class HealthController extends ApiController
 {
-    public function __construct(private readonly \App\Services\HealthCheckService $health)
-    {
-    }
+    public function __construct(private readonly \App\Services\HealthCheckService $health) {}
 
     public function index(): JsonResponse
     {
@@ -31,7 +29,7 @@ final class HealthController extends ApiController
         $start = microtime(true);
 
         $checks = $this->health->run();
-        $ok = (bool)($checks['_ok'] ?? false);
+        $ok = (bool) ($checks['_ok'] ?? false);
         unset($checks['_ok']);
 
         if ($env === 'production') {

@@ -2,13 +2,14 @@
 
 namespace Radix\Tests\Api;
 
-use PHPUnit\Framework\TestCase;
 use App\Controllers\Api\UserController;
-use Radix\Container\Container;
+use PDO;
+use PHPUnit\Framework\TestCase;
 use Radix\Container\ApplicationContainer;
+use Radix\Container\Container;
 use Radix\Database\Connection;
 use Radix\Http\Request;
-use PDO;
+use RuntimeException;
 
 class UserControllerTest extends TestCase
 {
@@ -17,7 +18,7 @@ class UserControllerTest extends TestCase
     private PDO $pdo;
 
     protected function setUp(): void
-        {
+    {
         parent::setUp();
 
         // Återställ containern före varje test
@@ -36,7 +37,7 @@ class UserControllerTest extends TestCase
         $container->add(Connection::class, function (Container $c): Connection {
             $pdo = $c->get(PDO::class);
             if (!$pdo instanceof PDO) {
-                throw new \RuntimeException('Container must return a PDO instance for ' . PDO::class);
+                throw new RuntimeException('Container must return a PDO instance for ' . PDO::class);
             }
             return new Connection($pdo);
         });
@@ -69,7 +70,7 @@ class UserControllerTest extends TestCase
             files: [],
             cookie: [],
             server: [
-                'HTTP_AUTHORIZATION' => 'Bearer test-api-token' // Giltig token
+                'HTTP_AUTHORIZATION' => 'Bearer test-api-token', // Giltig token
             ]
         );
 
@@ -123,34 +124,34 @@ class UserControllerTest extends TestCase
     }
 
     public function testGet(): void
-        {
-            // Förbered testdata för en användare
-            $this->connection->execute('
+    {
+        // Förbered testdata för en användare
+        $this->connection->execute('
                 INSERT INTO users (first_name, last_name, email, password)
                 VALUES (:first_name, :last_name, :email, :password)
             ', [
-                'first_name' => 'Test',
-                'last_name' => 'User',
-                'email' => 'test.user@example.com',
-                'password' => password_hash('password123', PASSWORD_BCRYPT),
-            ]);
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'email' => 'test.user@example.com',
+            'password' => password_hash('password123', PASSWORD_BCRYPT),
+        ]);
 
-            // Hämta användarens ID (auto_increment)
-            /** @var array{id:int} $userRow */
-            $userRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
-                'email' => 'test.user@example.com',
-            ]);
-            $userId = $userRow['id'];
+        // Hämta användarens ID (auto_increment)
+        /** @var array{id:int} $userRow */
+        $userRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
+            'email' => 'test.user@example.com',
+        ]);
+        $userId = $userRow['id'];
 
-            // Förbered tillhörande status för användaren
-            $this->connection->execute('
+        // Förbered tillhörande status för användaren
+        $this->connection->execute('
                 INSERT INTO status (user_id, status, active)
                 VALUES (:user_id, :status, :active)
             ', [
-                'user_id' => $userId,
-                'status' => 'activate',
-                'active' => 'offline',
-            ]);
+            'user_id' => $userId,
+            'status' => 'activate',
+            'active' => 'offline',
+        ]);
 
         // Förbered en giltig token för användaren
         $this->connection->execute('
@@ -218,7 +219,7 @@ class UserControllerTest extends TestCase
         // Hämta användarens ID för att associera token med användaren
         /** @var array{id:int} $adminRow */
         $adminRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
-            'email' => 'admin@example.com'
+            'email' => 'admin@example.com',
         ]);
         $userId = $adminRow['id'];
 
@@ -229,7 +230,7 @@ class UserControllerTest extends TestCase
         ', [
             'user_id' => $userId,
             'value' => 'test-api-token',
-            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')) // Token giltig i en timme
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')), // Token giltig i en timme
         ]);
 
         // Mocka getJsonPayload direkt i ApiController
@@ -254,7 +255,7 @@ class UserControllerTest extends TestCase
             cookie: [],
             server: [
                 'HTTP_AUTHORIZATION' => 'Bearer test-api-token',
-                'CONTENT_TYPE' => 'application/json'
+                'CONTENT_TYPE' => 'application/json',
             ]
         ));
 
@@ -263,7 +264,7 @@ class UserControllerTest extends TestCase
 
         // Verifiera att ett 201-svar returneras och att användaren sparades korrekt
         $this->assertEquals(201, $response->getStatusCode());
-         /** @var array{success:bool,data:array<string,mixed>} $body */
+        /** @var array{success:bool,data:array<string,mixed>} $body */
         $body = json_decode($response->getBody(), true);
 
         $this->assertTrue($body['success']);
@@ -304,7 +305,7 @@ class UserControllerTest extends TestCase
         ', [
             'user_id' => $userId,
             'value' => 'test-api-token',
-            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')) // Token giltig i 1 timme
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')), // Token giltig i 1 timme
         ]);
 
         // Mocka getJsonPayload-metoden för att returnera korrekt data

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Radix\Tests\Api;
 
+use PDOStatement;
 use PHPUnit\Framework\TestCase;
 use Radix\Container\ApplicationContainer;
 use Radix\Container\Container;
@@ -13,8 +14,8 @@ use Radix\Http\Request;
 use Radix\Http\Response;
 use Radix\Routing\Dispatcher;
 use Radix\Routing\Router;
-use Radix\Viewer\TemplateViewerInterface;
 use Radix\Viewer\RadixTemplateViewer;
+use Radix\Viewer\TemplateViewerInterface;
 
 final class HealthControllerTest extends TestCase
 {
@@ -40,16 +41,19 @@ final class HealthControllerTest extends TestCase
         $container->add(TemplateViewerInterface::class, fn() => new RadixTemplateViewer());
 
         // Stubba PDOStatement minimalt
-        $pdoStmt = $this->createMock(\PDOStatement::class);
+        $pdoStmt = $this->createMock(PDOStatement::class);
 
         // Mocka Connection så execute() returnerar PDOStatement
         $dbConn = $this->createMock(Connection::class);
         $dbConn->method('execute')->willReturn($pdoStmt);
 
         // Minimal DatabaseManager-stub
-        $dbManager = new class($dbConn) {
+        $dbManager = new class ($dbConn) {
             public function __construct(private Connection $conn) {}
-            public function connection(): Connection { return $this->conn; }
+            public function connection(): Connection
+            {
+                return $this->conn;
+            }
         };
         $container->add(\Radix\Database\DatabaseManager::class, fn() => $dbManager);
 

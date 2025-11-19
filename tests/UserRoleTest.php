@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Radix\Tests;
 
 use App\Models\User;
+use InvalidArgumentException;
 use PDO;
 use PHPUnit\Framework\TestCase;
 use Radix\Container\ApplicationContainer;
 use Radix\Container\Container;
 use Radix\Enums\Role;
+use ReflectionClass;
 
 class UserRoleTest extends TestCase
 {
@@ -50,10 +52,10 @@ class UserRoleTest extends TestCase
 
     private function makeUser(string $role = 'user'): User
     {
-        $pdo = ApplicationContainer::get()->get(\PDO::class);
+        $pdo = ApplicationContainer::get()->get(PDO::class);
 
-        if (!$pdo instanceof \PDO) {
-            $this->fail('Container must return a PDO instance for ' . \PDO::class);
+        if (!$pdo instanceof PDO) {
+            $this->fail('Container must return a PDO instance for ' . PDO::class);
         }
 
         // unik e-post per anrop
@@ -75,7 +77,7 @@ class UserRoleTest extends TestCase
         $id = (int) $pdo->lastInsertId();
 
         $u = new User();
-        $ref = new \ReflectionClass($u);
+        $ref = new ReflectionClass($u);
         $p = $ref->getProperty('attributes');
         $p->setAccessible(true);
         $p->setValue($u, [
@@ -234,7 +236,7 @@ class UserRoleTest extends TestCase
 
     public function testSetRoleWithInvalidValueThrows(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $user = $this->makeUser('user');
         $user->setRole('superadmin');
     }

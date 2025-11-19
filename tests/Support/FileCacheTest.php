@@ -16,7 +16,7 @@ final class FileCacheTest extends TestCase
     {
         parent::setUp();
         $this->tmpDir = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'radix_filecache_' . bin2hex(random_bytes(4));
-        @mkdir($this->tmpDir, 0755, true);
+        @mkdir($this->tmpDir, 0o755, true);
         $this->cache = new FileCache($this->tmpDir);
     }
 
