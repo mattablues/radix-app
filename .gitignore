@@ -15,9 +15,9 @@ node_modules/
 .phpunit.result.cache
 phpunit.xml.bak
 
-infection-report.html
-
 # PhpStorm-specifika filer
 .idea/
 cache/
 storage/
+.php-cs-fixer.cache
+infection-report.html
