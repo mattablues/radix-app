@@ -7,7 +7,7 @@ namespace App\Services;
 use RuntimeException;
 use Throwable;
 
-final class HealthCheckService
+class HealthCheckService
 {
     private \Radix\Support\Logger $logger;
 

@@ -66,6 +66,44 @@ final class FileCacheTest extends TestCase
         $this->assertNull($this->cache->get('short'));
     }
 
+    public function testSetWithDateInterval(): void
+    {
+        // Testa att använda DateInterval som TTL
+        $ttl = new \DateInterval('PT1H'); // 1 timme
+        $this->assertTrue($this->cache->set('interval', 'value_interval', $ttl));
+        $this->assertSame('value_interval', $this->cache->get('interval'));
+    }
+
+    public function testGetHandlesCorruptedJson(): void
+    {
+        // Skapa en korrupt cachefil manuellt
+        // För nyckeln 'corrupt' blir filnamnet 'corrupt.cache'
+        $file = $this->tmpDir . DIRECTORY_SEPARATOR . 'corrupt.cache';
+        file_put_contents($file, '{invalid_json');
+
+        // get() ska returnera default (null) om JSON är ogiltig
+        $this->assertNull($this->cache->get('corrupt'));
+    }
+
+    public function testGetHandlesNonArrayPayload(): void
+    {
+        $file = $this->tmpDir . DIRECTORY_SEPARATOR . 'not_array.cache';
+        // Valid JSON men inte en array (som förväntas av FileCache implementationen)
+        file_put_contents($file, '"just_a_string"');
+
+        $this->assertNull($this->cache->get('not_array'));
+    }
+
+    public function testGetHandlesMissingExpiresKey(): void
+    {
+        $file = $this->tmpDir . DIRECTORY_SEPARATOR . 'no_expires.cache';
+        // Payload utan 'e' (expires) nyckel
+        file_put_contents($file, json_encode(['v' => 'value']));
+
+        // Ska defaulta expires till 0 (aldrig utgången) och returnera värdet
+        $this->assertSame('value', $this->cache->get('no_expires'));
+    }
+
     private function deleteDirectory(string $dir): void
     {
         if (!is_dir($dir)) {

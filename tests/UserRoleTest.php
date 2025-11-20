@@ -237,6 +237,10 @@ class UserRoleTest extends TestCase
     public function testSetRoleWithInvalidValueThrows(): void
     {
         $this->expectException(InvalidArgumentException::class);
+        // Vi måste även verifiera att undantagsmeddelandet innehåller den felaktiga rollen.
+        // Detta dödar mutanten som tar bort . $roleLabel från throw-satsen.
+        $this->expectExceptionMessage('Ogiltig roll: superadmin');
+
         $user = $this->makeUser('user');
         $user->setRole('superadmin');
     }
@@ -351,5 +355,124 @@ class UserRoleTest extends TestCase
             $this->assertNotNull($reloaded);
             $this->assertTrue($reloaded->hasRole($role), "Reloaded user ska ha rollen $role");
         }
+    }
+
+    public function testHasAtLeastReturnsFalseForInvalidInputs(): void
+    {
+        $user = $this->makeUser('user');
+
+        // Testa med en ogiltig roll (target blir null)
+        // Detta dödar mutanten eftersom den försöker utvärdera nivåjämförelsen istället för att avbryta tidigt
+        $this->assertFalse($user->hasAtLeast('non_existent_role'));
+
+        // Testa med en användare som har en ogiltig roll sparad (current blir null)
+        // Vi använder makeUser för att undvika problem med oinitierad Model (som new User() orsakade)
+        $userWithInvalidRole = $this->makeUser('some_weird_role');
+        $this->assertFalse($userWithInvalidRole->hasAtLeast('user'));
+    }
+
+    public function testHasRoleReturnsFalseWhenUserHasNoRole(): void
+    {
+        // Skapa en användare som har en ogiltig roll sparad i databasen
+        // Detta gör att roleEnum() returnerar null
+        $user = $this->makeUser('invalid_role_string');
+
+        // Anropa hasRole med en giltig roll
+        // Originalkoden ska hantera null-current säkert och returnera false
+        // Mutanten (utan null-safe operator) kommer att krascha här
+        $this->assertFalse($user->hasRole('user'));
+        $this->assertFalse($user->hasRole(Role::Admin));
+    }
+
+    public function testGetEmailAttributeIsPublic(): void
+    {
+        $user = new User();
+        // Direkt anrop verifierar att metoden är public.
+        // Mutanten PublicVisibility (som gör den protected) kommer att orsaka ett fatal error här.
+        $this->assertSame('test@example.com', $user->getEmailAttribute('test@example.com'));
+    }
+
+    public function testSetEmailAttributeTrimsWhitespace(): void
+    {
+        $user = new User();
+
+        // Sätt e-post med blanksteg
+        $user->setEmailAttribute('  test@example.com  ');
+
+        // Kontrollera att blanksteg har trimmats bort
+        $this->assertSame('test@example.com', $user->getAttribute('email'));
+    }
+
+    public function testSetEmailAttributeHandlesMultibyteCharacters(): void
+    {
+        $user = new User();
+
+        // Sätt e-post med multibyte-tecken i versaler
+        // strtolower hanterar inte ÅÄÖ korrekt, men mb_strtolower gör det
+        $user->setEmailAttribute('ÅÄÖ@EXAMPLE.COM');
+
+        // Verifiera att det har konverterats korrekt till små bokstäver
+        $this->assertSame('åäö@example.com', $user->getAttribute('email'));
+    }
+
+    public function testGetLastNameAttributeIsPublic(): void
+    {
+        $user = new User();
+        // Direkt anrop verifierar att metoden är public.
+        // Mutanten PublicVisibility (som gör den protected) kommer att orsaka ett fatal error här.
+        $this->assertSame('Doe', $user->getLastNameAttribute('Doe'));
+    }
+
+    public function testGetFirstNameAttributeIsPublic(): void
+    {
+        $user = new User();
+        // Direkt anrop verifierar att metoden är public.
+        $this->assertSame('John', $user->getFirstNameAttribute('John'));
+    }
+
+    public function testSetLastNameAttributeIsPublic(): void
+    {
+        $user = new User();
+        // Direkt anrop verifierar att metoden är public.
+        // Mutanten PublicVisibility (som gör den protected) kommer att orsaka ett fatal error här.
+        $user->setLastNameAttribute('Doe');
+        $this->assertSame('Doe', $user->getAttribute('last_name'));
+    }
+
+    public function testSetFirstNameAttributeIsPublic(): void
+    {
+        $user = new User();
+        // Direkt anrop verifierar att metoden är public.
+        $user->setFirstNameAttribute('John');
+        $this->assertSame('John', $user->getAttribute('first_name'));
+    }
+
+    public function testSetPasswordAttributeIsPublic(): void
+    {
+        $user = new User();
+        // Direkt anrop verifierar att metoden är public.
+        // Mutanten PublicVisibility (som gör den protected) kommer att orsaka ett fatal error här.
+        $user->setPasswordAttribute('secret123');
+
+        // Verifiera också att lösenordet har blivit hashat
+        // Detta hjälper till att döda LogicalNot-mutanten som skulle spara klartext om det inte redan var hashat
+        $hashedPassword = $user->getAttribute('password');
+
+        // Försäkra oss om att det är en sträng för PHPStan och testlogik
+        $this->assertIsString($hashedPassword);
+        $this->assertNotSame('secret123', $hashedPassword);
+        $this->assertTrue(password_verify('secret123', $hashedPassword));
+    }
+
+    public function testSetPasswordAttributeDoesNotRehashHashedPassword(): void
+    {
+        $user = new User();
+        $alreadyHashed = password_hash('secret123', PASSWORD_DEFAULT);
+
+        // Sätt ett redan hashat lösenord
+        $user->setPasswordAttribute($alreadyHashed);
+
+        // Verifiera att det sparades exakt som det var (ingen dubbel-hashning)
+        $this->assertSame($alreadyHashed, $user->getAttribute('password'));
     }
 }
