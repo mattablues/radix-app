@@ -180,7 +180,7 @@ class UserController extends ApiController
         if (!array_key_exists('deleted_at', $user->getAttributes())) {
             $rawDeletedAt = $user->fetchGuardedAttribute('deleted_at');
 
-            if (!is_string($rawDeletedAt) && $rawDeletedAt !== null) {
+            if (!is_string($rawDeletedAt)) {
                 $rawDeletedAt = null;
             }
 
@@ -189,7 +189,7 @@ class UserController extends ApiController
         }
 
         // Steg 4: Kontrollera om användaren redan är soft deleted
-        if ($user->deleted_at !== null && $user->deleted_at !== '') {
+        if (!empty($user->deleted_at)) {
             return $this->json([
                 'success' => false,
                 'errors' => ['user' => 'Användaren är redan soft deleted.'],

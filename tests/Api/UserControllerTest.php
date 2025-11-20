@@ -426,7 +426,7 @@ class UserControllerTest extends TestCase
         $this->assertEquals('put.updated@example.com', $body['data']['email'], 'Felaktig e-postadress');
 
         // Hämta uppdaterad användare från databasen
-        /** @var array{first_name:string,last_name:string,email:string} $updatedUser */
+        /** @var array{first_name:string,last_name:string,email:string,password:string} $updatedUser */
         $updatedUser = $this->connection->fetchOne('SELECT * FROM users WHERE id = :id', [
             'id' => $userId,
         ]);
@@ -436,19 +436,197 @@ class UserControllerTest extends TestCase
         $this->assertEquals('Userupdated', $updatedUser['last_name'], 'Databasens efternamn matchar inte.');
         $this->assertEquals('put.updated@example.com', $updatedUser['email'], 'Databasens e-post matchar inte.');
 
-        // Manuellt uppdatera lösenordet eftersom det är guarded
-        $this->connection->execute(
-            'UPDATE users SET password = :password WHERE id = :id',
-            [
-                'password' => password_hash('newpassword123', PASSWORD_BCRYPT),
-                'id' => $userId,
-            ]
-        );
-
-        // Bekräfta att lösenordet uppdaterades
-        /** @var array{password:string} $updatedUser */
-        $updatedUser = $this->connection->fetchOne('SELECT * FROM users WHERE id = :id', ['id' => $userId]);
+        // Bekräfta att lösenordet uppdaterades av controllern (utan manuell SQL-uppdatering)
         $this->assertTrue(password_verify('newpassword123', $updatedUser['password']), 'Lösenordet matchar inte i databasen.');
+    }
+
+    public function testPutUpdateWithNullPassword(): void
+    {
+        // Skapa användare
+        $this->connection->execute('
+            INSERT INTO users (first_name, last_name, email, password)
+            VALUES (:first_name, :last_name, :email, :password)
+        ', [
+            'first_name' => 'NullPass',
+            'last_name' => 'User',
+            'email' => 'null.pass@example.com',
+            'password' => password_hash('originalpass', PASSWORD_BCRYPT),
+        ]);
+
+        /** @var array{id:int} $userRow */
+        $userRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', ['email' => 'null.pass@example.com']);
+        $userId = $userRow['id'];
+
+        // Token
+        $tokenValue = 'test-api-token-null-pass';
+        $this->connection->execute('
+            INSERT INTO tokens (user_id, value, expires_at)
+            VALUES (:user_id, :value, :expires_at)
+        ', [
+            'user_id' => $userId,
+            'value' => $tokenValue,
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')),
+        ]);
+
+        // Mocka för null password
+        $this->controller = $this->getMockBuilder(UserController::class)
+            ->onlyMethods(['getJsonPayload'])
+            ->getMock();
+
+        $this->controller->method('getJsonPayload')->willReturn([
+            'first_name' => 'UpdatedName',
+            'last_name' => 'UpdatedLast',
+            'email' => 'null.pass@example.com',
+            'password' => null, // Null password
+        ]);
+
+        $this->controller->setRequest(new Request(
+            uri: "/api/users/{$userId}",
+            method: 'PUT',
+            get: [],
+            post: [],
+            files: [],
+            cookie: [],
+            server: [
+                'HTTP_AUTHORIZATION' => "Bearer {$tokenValue}",
+                'CONTENT_TYPE' => 'application/json',
+            ]
+        ));
+
+        $this->controller->update((string) $userId);
+
+        // Kontrollera att lösenordet INTE har ändrats
+        /** @var array{password:string} $user */
+        $user = $this->connection->fetchOne('SELECT password FROM users WHERE id = :id', ['id' => $userId]);
+        $this->assertTrue(password_verify('originalpass', $user['password']), 'Lösenordet ska inte ha ändrats om input var null.');
+    }
+
+    public function testPutUpdateWithoutPasswordKey(): void
+    {
+        // Skapa användare
+        $this->connection->execute('
+            INSERT INTO users (first_name, last_name, email, password)
+            VALUES (:first_name, :last_name, :email, :password)
+        ', [
+            'first_name' => 'MissingPass',
+            'last_name' => 'User',
+            'email' => 'missing.pass@example.com',
+            'password' => password_hash('originalpass', PASSWORD_BCRYPT),
+        ]);
+
+        /** @var array{id:int} $userRow */
+        $userRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', ['email' => 'missing.pass@example.com']);
+        $userId = $userRow['id'];
+
+        // Token
+        $tokenValue = 'test-api-token-missing-pass';
+        $this->connection->execute('
+            INSERT INTO tokens (user_id, value, expires_at)
+            VALUES (:user_id, :value, :expires_at)
+        ', [
+            'user_id' => $userId,
+            'value' => $tokenValue,
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')),
+        ]);
+
+        // Mocka payload utan password-nyckel
+        $this->controller = $this->getMockBuilder(UserController::class)
+            ->onlyMethods(['getJsonPayload'])
+            ->getMock();
+
+        $this->controller->method('getJsonPayload')->willReturn([
+            'first_name' => 'UpdatedName',
+            'last_name' => 'UpdatedLast',
+            'email' => 'missing.pass@example.com',
+            // 'password' saknas helt
+        ]);
+
+        $this->controller->setRequest(new Request(
+            uri: "/api/users/{$userId}",
+            method: 'PUT',
+            get: [],
+            post: [],
+            files: [],
+            cookie: [],
+            server: [
+                'HTTP_AUTHORIZATION' => "Bearer {$tokenValue}",
+                'CONTENT_TYPE' => 'application/json',
+            ]
+        ));
+
+        $this->controller->update((string) $userId);
+
+        // Kontrollera att lösenordet INTE har ändrats
+        /** @var array{password:string} $user */
+        $user = $this->connection->fetchOne('SELECT password FROM users WHERE id = :id', ['id' => $userId]);
+        $this->assertTrue(password_verify('originalpass', $user['password']), 'Lösenordet ska inte ha ändrats om nyckeln saknades.');
+    }
+
+    public function testPatchUpdateValidation(): void
+    {
+        // Förbered användare
+        $this->connection->execute('
+            INSERT INTO users (first_name, last_name, email, password)
+            VALUES (:first_name, :last_name, :email, :password)
+        ', [
+            'first_name' => 'Valid',
+            'last_name' => 'User',
+            'email' => 'patch.validation@example.com',
+            'password' => password_hash('password123', PASSWORD_BCRYPT),
+        ]);
+
+        /** @var array{id:int} $userRow */
+        $userRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
+            'email' => 'patch.validation@example.com',
+        ]);
+        $userId = $userRow['id'];
+
+        // Token
+        $tokenValue = 'test-api-token-patch-val';
+        $this->connection->execute('
+            INSERT INTO tokens (user_id, value, expires_at)
+            VALUES (:user_id, :value, :expires_at)
+        ', [
+            'user_id' => $userId,
+            'value' => $tokenValue,
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')),
+        ]);
+
+        // Mocka getJsonPayload med ogiltig data (för kort förnamn)
+        $this->controller = $this->getMockBuilder(UserController::class)
+            ->onlyMethods(['getJsonPayload', 'respondWithErrors'])
+            ->getMock();
+
+        $this->controller->method('getJsonPayload')->willReturn([
+            'first_name' => 'A', // För kort (min: 2)
+        ]);
+
+        $this->controller->expects($this->once())
+            ->method('respondWithErrors')
+            ->with($this->anything(), 422)
+            ->willThrowException(new RuntimeException('ValidationFailed'));
+
+        $this->controller->setRequest(new Request(
+            uri: "/api/users/{$userId}",
+            method: 'PATCH',
+            get: [],
+            post: [],
+            files: [],
+            cookie: [],
+            server: [
+                'HTTP_AUTHORIZATION' => "Bearer {$tokenValue}",
+                'CONTENT_TYPE' => 'application/json',
+            ]
+        ));
+
+        try {
+            $this->controller->partialUpdate((string) $userId);
+        } catch (RuntimeException $e) {
+            if ($e->getMessage() === 'ValidationFailed') {
+                return;
+            }
+            throw $e;
+        }
     }
 
     public function testDelete(): void
@@ -513,5 +691,92 @@ class UserControllerTest extends TestCase
             'id' => $userId,
         ]);
         $this->assertNotNull($deletedUser['deleted_at'], 'deleted_at ska vara satt för soft deleted användare.');
+
+    }
+
+    public function testDeleteAlreadyDeleted(): void
+    {
+        // Förbered en användare som redan är soft deleted
+        $this->connection->execute('
+            INSERT INTO users (first_name, last_name, email, password, deleted_at)
+            VALUES (:first_name, :last_name, :email, :password, :deleted_at)
+        ', [
+            'first_name' => 'Deleted',
+            'last_name' => 'User',
+            'email' => 'already.deleted@example.com',
+            'password' => password_hash('password123', PASSWORD_BCRYPT),
+            'deleted_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        /** @var array{id:int} $userRow */
+        $userRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
+            'email' => 'already.deleted@example.com',
+        ]);
+        $userId = $userRow['id'];
+
+        // Token
+        $tokenValue = 'test-api-token-deleted';
+        $this->connection->execute('
+            INSERT INTO tokens (user_id, value, expires_at)
+            VALUES (:user_id, :value, :expires_at)
+        ', [
+            'user_id' => $userId,
+            'value' => $tokenValue,
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')),
+        ]);
+
+        $this->controller->setRequest(new Request(
+            uri: "/api/users/{$userId}",
+            method: 'DELETE',
+            get: [],
+            post: [],
+            files: [],
+            cookie: [],
+            server: [
+                'HTTP_AUTHORIZATION' => "Bearer {$tokenValue}",
+                'CONTENT_TYPE' => 'application/json',
+            ]
+        ));
+
+        $response = $this->controller->delete((string) $userId);
+
+        $this->assertEquals(400, $response->getStatusCode());
+        /** @var array{success:bool,errors:array<string,string>} $body */
+        $body = json_decode($response->getBody(), true);
+        $this->assertFalse($body['success']);
+        $this->assertEquals('Användaren är redan soft deleted.', $body['errors']['user']);
+    }
+
+    public function testDeleteUnauthenticated(): void
+    {
+        $controllerMock = $this->getMockBuilder(UserController::class)
+            ->onlyMethods(['respondWithErrors'])
+            ->getMock();
+
+        $controllerMock->expects($this->once())
+            ->method('respondWithErrors')
+            ->with($this->anything(), 401)
+            ->willThrowException(new RuntimeException('Unauthorized'));
+
+        $request = new Request(
+            uri: '/api/users/1',
+            method: 'DELETE',
+            get: [],
+            post: [],
+            files: [],
+            cookie: [],
+            server: [] // Ingen token
+        );
+
+        $controllerMock->setRequest($request);
+
+        try {
+            $controllerMock->delete('1');
+        } catch (RuntimeException $e) {
+            if ($e->getMessage() === 'Unauthorized') {
+                return;
+            }
+            throw $e;
+        }
     }
 }
