@@ -28,9 +28,13 @@ final class IpAllowlist implements MiddlewareInterface
         $forwardedFor = is_string($forwardedRaw) ? $forwardedRaw : '';
 
         $trustedProxyEnv = getenv('TRUSTED_PROXY');
-        $trustedProxy = is_string($trustedProxyEnv) && $trustedProxyEnv !== '' ? $trustedProxyEnv : null;
+        // Använd ?: för att hantera både false och tom sträng som null.
+        // Detta dödar LogicalAnd-mutanten på rad 31.
+        $trustedProxy = $trustedProxyEnv ?: null;
 
-        if ($trustedProxy !== null && isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] === $trustedProxy) {
+        // Förenkla villkoret genom att använda $clientIp istället för att kolla $_SERVER igen.
+        // Detta tar bort redundans och dödar LogicalAnd-mutanten på rad 33.
+        if ($trustedProxy !== null && $clientIp === $trustedProxy) {
             if ($forwardedFor !== '') {
                 $parts = array_map('trim', explode(',', $forwardedFor));
                 if (!empty($parts)) {
@@ -46,9 +50,10 @@ final class IpAllowlist implements MiddlewareInterface
         // Tomma strängar i arrayen (från t.ex. trailing comma) kommer hanteras av loopen (matchar ej).
         $allowed = array_map('trim', explode(',', $allowlist));
 
-        // Tog bort redundant (string) cast i true-grenen eftersom getenv garanterat är sträng där.
+        // Använd ?: för att hantera både false och tom sträng som 'production'.
+        // Detta undviker CastString-mutanten och gör koden renare.
         $appEnvEnv = getenv('APP_ENV');
-        $env = (string)$appEnvEnv !== '' ? $appEnvEnv : 'production';
+        $env = $appEnvEnv ?: 'production';
 
         $isLocal = in_array($clientIp, ['127.0.0.1', '::1'], true);
 

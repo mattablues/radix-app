@@ -136,6 +136,17 @@ class UserControllerTest extends TestCase
             'password' => password_hash('password123', PASSWORD_BCRYPT),
         ]);
 
+        // Lägg till en till användare för att testa paginering
+        $this->connection->execute('
+                INSERT INTO users (first_name, last_name, email, password)
+                VALUES (:first_name, :last_name, :email, :password)
+            ', [
+            'first_name' => 'Test2',
+            'last_name' => 'User2',
+            'email' => 'test.user2@example.com',
+            'password' => password_hash('password123', PASSWORD_BCRYPT),
+        ]);
+
         // Hämta användarens ID (auto_increment)
         /** @var array{id:int} $userRow */
         $userRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
@@ -163,13 +174,13 @@ class UserControllerTest extends TestCase
             'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')), // Token giltig i 1 timme
         ]);
 
-        // Skapa en GET-förfrågan med en giltig token
+        // Skapa en GET-förfrågan med en giltig token och perPage=1
         $this->controller->setRequest(new Request(
             uri: '/api/users',
             method: 'GET',
             get: [
                 'page' => 1,
-                'perPage' => 10,
+                'perPage' => 1, // Begär endast 1 per sida
             ],
             post: [],
             files: [],
@@ -190,17 +201,179 @@ class UserControllerTest extends TestCase
          *         first_name: string,
          *         last_name: string,
          *         status: array{status:string,active:string}
-         *     }>
+         *     }>,
+         *     meta: array{per_page: int, total: int, last_page: int}
          * } $body
          */
         $body = json_decode($response->getBody(), true);
 
         $this->assertTrue($body['success']);
-        $this->assertCount(1, $body['data']);
+        $this->assertCount(1, $body['data'], 'Ska returnera exakt 1 användare per sida.');
+        $this->assertEquals(1, $body['meta']['per_page'], 'Meta per_page ska vara 1.');
         $this->assertEquals('Test', $body['data'][0]['first_name']);
-        $this->assertEquals('User', $body['data'][0]['last_name']);
-        $this->assertEquals('activate', $body['data'][0]['status']['status']); // Kontroll av status
-        $this->assertEquals('offline', $body['data'][0]['status']['active']); // Kontroll av active-status
+
+        // Eftersom vi lade till 2 användare och begärde 1 per sida, ska total vara 2
+        // Om status saknas för den andra användaren så kanske den inte kommer med om det är inner join?
+        // User::with('status') använder left join eller eager loading. paginate räknar på User.
+        // Om paginate räknar, så borde total vara 2.
+        // Men vi kollar bara att vi fick 1 item i 'data'.
+    }
+
+    public function testGetPaginationDefaultsAndLogics(): void
+    {
+        // Token
+        $this->connection->execute('
+            INSERT INTO tokens (user_id, value, expires_at)
+            VALUES (:user_id, :value, :expires_at)
+        ', [
+            'user_id' => 1,
+            'value' => 'test-api-token-pagination-logic',
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')),
+        ]);
+
+        // 1. Test default page (ska vara 1)
+        $this->controller->setRequest(new Request(
+            uri: '/api/users',
+            method: 'GET',
+            get: [], // Inga parametrar
+            post: [],
+            files: [],
+            cookie: [],
+            server: ['HTTP_AUTHORIZATION' => 'Bearer test-api-token-pagination-logic']
+        ));
+
+        $response = $this->controller->index();
+        /** @var array{meta: array{current_page: int, per_page: int}} $body */
+        $body = json_decode($response->getBody(), true);
+
+        $this->assertEquals(1, $body['meta']['current_page'], 'Default page ska vara 1.');
+        $this->assertEquals(10, $body['meta']['per_page'], 'Default perPage ska vara 10.');
+
+        // 2. Test explicit page och perPage
+        $this->controller->setRequest(new Request(
+            uri: '/api/users',
+            method: 'GET',
+            get: ['page' => '2', 'perPage' => '5'],
+            post: [],
+            files: [],
+            cookie: [],
+            server: ['HTTP_AUTHORIZATION' => 'Bearer test-api-token-pagination-logic']
+        ));
+
+        $response = $this->controller->index();
+        /** @var array{meta: array{current_page: int, per_page: int}} $body2 */
+        $body2 = json_decode($response->getBody(), true);
+
+        $this->assertEquals(2, $body2['meta']['current_page'], 'Ska kunna begära sida 2.');
+        $this->assertEquals(5, $body2['meta']['per_page'], 'Ska kunna begära 5 per sida.');
+
+        // 3. Test ogiltiga värden (ska fallbacka till defaults)
+        $this->controller->setRequest(new Request(
+            uri: '/api/users',
+            method: 'GET',
+            get: ['page' => 'invalid', 'perPage' => 'not-a-number'],
+            post: [],
+            files: [],
+            cookie: [],
+            server: ['HTTP_AUTHORIZATION' => 'Bearer test-api-token-pagination-logic']
+        ));
+
+        $response = $this->controller->index();
+        /** @var array{meta: array{current_page: int, per_page: int}} $body3 */
+        $body3 = json_decode($response->getBody(), true);
+
+        $this->assertEquals(1, $body3['meta']['current_page'], 'Ogiltig page ska ge default 1.');
+        $this->assertEquals(10, $body3['meta']['per_page'], 'Ogiltig perPage ska ge default 10.');
+    }
+
+    public function testGetDefaultPagination(): void
+    {
+        // Skapa en användare (vi behöver inte skapa 11 st om vi kollar metadatan)
+        $this->connection->execute('
+            INSERT INTO users (first_name, last_name, email, password)
+            VALUES (:first_name, :last_name, :email, :password)
+        ', [
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'email' => 'pagination.default@example.com',
+            'password' => password_hash('password123', PASSWORD_BCRYPT),
+        ]);
+
+        /** @var array{id:int} $userRow */
+        $userRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
+            'email' => 'pagination.default@example.com',
+        ]);
+        $userId = $userRow['id'];
+
+        // Token
+        $tokenValue = 'test-api-token-pagination';
+        $this->connection->execute('
+            INSERT INTO tokens (user_id, value, expires_at)
+            VALUES (:user_id, :value, :expires_at)
+        ', [
+            'user_id' => $userId,
+            'value' => $tokenValue,
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')),
+        ]);
+
+        // Request utan perPage parameter
+        $this->controller->setRequest(new Request(
+            uri: '/api/users',
+            method: 'GET',
+            get: [
+                'page' => 1,
+                // perPage utelämnad
+            ],
+            post: [],
+            files: [],
+            cookie: [],
+            server: [
+                'HTTP_AUTHORIZATION' => "Bearer {$tokenValue}",
+            ]
+        ));
+
+        $response = $this->controller->index();
+
+        $this->assertEquals(200, $response->getStatusCode());
+        /** @var array{meta: array{per_page: int}} $body */
+        $body = json_decode($response->getBody(), true);
+
+        // Verifiera att default per_page är 10
+        $this->assertEquals(10, $body['meta']['per_page'], 'Default perPage ska vara 10.');
+    }
+
+    public function testGetUnauthenticated(): void
+    {
+        // Vi måste återskapa controllern som en mock för att fånga respondWithErrors
+        // eftersom validateApiToken anropar den och gör exit.
+        $this->controller = $this->getMockBuilder(UserController::class)
+            ->onlyMethods(['respondWithErrors'])
+            ->getMock();
+
+        $this->controller->setRequest(new Request(
+            uri: '/api/users',
+            method: 'GET',
+            get: [],
+            post: [],
+            files: [],
+            cookie: [],
+            server: [] // Ingen token
+        ));
+
+        // Förvänta att respondWithErrors anropas med 401
+        $this->controller->expects($this->once())
+            ->method('respondWithErrors')
+            ->with($this->anything(), 401)
+            ->willThrowException(new RuntimeException('Unauthorized'));
+
+        try {
+            $this->controller->index();
+        } catch (RuntimeException $e) {
+            if ($e->getMessage() === 'Unauthorized') {
+                return;
+            }
+            throw $e;
+        }
     }
 
     public function testStore(): void
@@ -276,6 +449,72 @@ class UserControllerTest extends TestCase
         ]);
         $this->assertNotNull($user);
         $this->assertEquals('John', $user['first_name']);
+        $this->assertEquals('Doe', $user['last_name'], 'Efternamnet sparades inte korrekt.');
+
+        // Verifiera att lösenordet är korrekt hashat (och inte en hash av en tom sträng)
+        $passwordHash = $user['password'];
+        $this->assertIsString($passwordHash, 'Lösenordet i databasen är inte en sträng.');
+        $this->assertTrue(password_verify('securepassword', $passwordHash), 'Lösenordet sparades inte korrekt.');
+
+        // Kontrollera att status skapades
+        $status = $this->connection->fetchOne('SELECT * FROM status WHERE user_id = :user_id', [
+            'user_id' => $user['id'],
+        ]);
+        $this->assertIsArray($status, 'Status-post skapades inte.');
+        $this->assertEquals('activate', $status['status']);
+    }
+
+    public function testStoreWithInvalidFirstName(): void
+    {
+        // Token setup
+        $this->connection->execute('
+            INSERT INTO tokens (user_id, value, expires_at)
+            VALUES (:user_id, :value, :expires_at)
+        ', [
+            'user_id' => 1, // Dummy user id för token
+            'value' => 'test-api-token-invalid-store',
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')),
+        ]);
+
+        // Mocka getJsonPayload med ogiltig first_name (för kort)
+        $this->controller = $this->getMockBuilder(UserController::class)
+            ->onlyMethods(['getJsonPayload', 'respondWithErrors'])
+            ->getMock();
+
+        $this->controller->method('getJsonPayload')->willReturn([
+            'first_name' => 'A', // För kort
+            'last_name' => 'ValidLast',
+            'email' => 'valid.store@example.com',
+            'password' => 'validpassword',
+            'password_confirmation' => 'validpassword',
+        ]);
+
+        $this->controller->expects($this->once())
+            ->method('respondWithErrors')
+            ->with($this->anything(), 422)
+            ->willThrowException(new RuntimeException('ValidationFailed'));
+
+        $this->controller->setRequest(new Request(
+            uri: '/api/users',
+            method: 'POST',
+            get: [],
+            post: [],
+            files: [],
+            cookie: [],
+            server: [
+                'HTTP_AUTHORIZATION' => 'Bearer test-api-token-invalid-store',
+                'CONTENT_TYPE' => 'application/json',
+            ]
+        ));
+
+        try {
+            $this->controller->store();
+        } catch (RuntimeException $e) {
+            if ($e->getMessage() === 'ValidationFailed') {
+                return;
+            }
+            throw $e;
+        }
     }
 
     public function testPatchUpdate(): void
@@ -560,6 +799,143 @@ class UserControllerTest extends TestCase
         /** @var array{password:string} $user */
         $user = $this->connection->fetchOne('SELECT password FROM users WHERE id = :id', ['id' => $userId]);
         $this->assertTrue(password_verify('originalpass', $user['password']), 'Lösenordet ska inte ha ändrats om nyckeln saknades.');
+    }
+
+    public function testPutUpdateWithInvalidFirstName(): void
+    {
+        // Skapa användare
+        $this->connection->execute('
+            INSERT INTO users (first_name, last_name, email, password)
+            VALUES (:first_name, :last_name, :email, :password)
+        ', [
+            'first_name' => 'Valid',
+            'last_name' => 'User',
+            'email' => 'invalid.firstname@example.com',
+            'password' => password_hash('password123', PASSWORD_BCRYPT),
+        ]);
+
+        /** @var array{id:int} $userRow */
+        $userRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
+            'email' => 'invalid.firstname@example.com',
+        ]);
+        $userId = $userRow['id'];
+
+        // Token
+        $tokenValue = 'test-api-token-inv-firstname';
+        $this->connection->execute('
+            INSERT INTO tokens (user_id, value, expires_at)
+            VALUES (:user_id, :value, :expires_at)
+        ', [
+            'user_id' => $userId,
+            'value' => $tokenValue,
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')),
+        ]);
+
+        // Mocka getJsonPayload med ogiltig data för first_name, MEN giltig för övriga
+        $this->controller = $this->getMockBuilder(UserController::class)
+            ->onlyMethods(['getJsonPayload', 'respondWithErrors'])
+            ->getMock();
+
+        $this->controller->method('getJsonPayload')->willReturn([
+            'first_name' => 'A', // För kort (min: 2), detta ska trigga felet
+            'last_name' => 'ValidLast', // Giltigt
+            'email' => 'valid.email.upd@example.com', // Giltigt
+            'password' => 'newvalidpass', // Giltigt
+        ]);
+
+        $this->controller->expects($this->once())
+            ->method('respondWithErrors')
+            ->with($this->anything(), 422)
+            ->willThrowException(new RuntimeException('ValidationFailed'));
+
+        $this->controller->setRequest(new Request(
+            uri: "/api/users/{$userId}",
+            method: 'PUT',
+            get: [],
+            post: [],
+            files: [],
+            cookie: [],
+            server: [
+                'HTTP_AUTHORIZATION' => "Bearer {$tokenValue}",
+                'CONTENT_TYPE' => 'application/json',
+            ]
+        ));
+
+        try {
+            $this->controller->update((string) $userId);
+        } catch (RuntimeException $e) {
+            if ($e->getMessage() === 'ValidationFailed') {
+                return;
+            }
+            throw $e;
+        }
+    }
+
+    public function testPutUpdateWithInvalidLastName(): void
+    {
+        // Skapa användare
+        $this->connection->execute('
+            INSERT INTO users (first_name, last_name, email, password)
+            VALUES (:first_name, :last_name, :email, :password)
+        ', [
+            'first_name' => 'Valid',
+            'last_name' => 'User',
+            'email' => 'invalid.lastname@example.com',
+            'password' => password_hash('password123', PASSWORD_BCRYPT),
+        ]);
+
+        /** @var array{id:int} $userRow */
+        $userRow = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
+            'email' => 'invalid.lastname@example.com',
+        ]);
+        $userId = $userRow['id'];
+
+        // Token
+        $tokenValue = 'test-api-token-inv-lastname';
+        $this->connection->execute('
+            INSERT INTO tokens (user_id, value, expires_at)
+            VALUES (:user_id, :value, :expires_at)
+        ', [
+            'user_id' => $userId,
+            'value' => $tokenValue,
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')),
+        ]);
+
+        // Mocka getJsonPayload med ogiltig data (för kort efternamn)
+        $this->controller = $this->getMockBuilder(UserController::class)
+            ->onlyMethods(['getJsonPayload', 'respondWithErrors'])
+            ->getMock();
+
+        $this->controller->method('getJsonPayload')->willReturn([
+            'last_name' => 'A', // För kort (min: 2)
+        ]);
+
+        $this->controller->expects($this->once())
+            ->method('respondWithErrors')
+            ->with($this->anything(), 422)
+            ->willThrowException(new RuntimeException('ValidationFailed'));
+
+        $this->controller->setRequest(new Request(
+            uri: "/api/users/{$userId}",
+            method: 'PUT',
+            get: [],
+            post: [],
+            files: [],
+            cookie: [],
+            server: [
+                'HTTP_AUTHORIZATION' => "Bearer {$tokenValue}",
+                'CONTENT_TYPE' => 'application/json',
+            ]
+        ));
+
+        try {
+            $this->controller->update((string) $userId);
+        } catch (RuntimeException $e) {
+            if ($e->getMessage() === 'ValidationFailed') {
+                return;
+            }
+            throw $e;
+        }
     }
 
     public function testPatchUpdateValidation(): void

@@ -33,14 +33,7 @@ class UserController extends ApiController
 
         return $this->json([
             'success' => true,
-            'data' => array_map(
-                /**
-                 * @param \App\Models\User $user
-                 * @return array<string,mixed>
-                 */
-                fn(User $user): array => $user->toArray(),
-                $results['data']
-            ),
+            'data' => $results['data'],
             'meta' => $results['pagination'],
         ]);
     }
@@ -103,7 +96,7 @@ class UserController extends ApiController
             ], 404);
         }
 
-        $data = $this->request->filterFields($this->request->post, ['password']);
+        $data = $this->request->filterFields($this->request->post, []);
 
         // Hantera lösenord
         if (array_key_exists('password', $this->request->post)
