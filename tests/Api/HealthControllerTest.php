@@ -679,6 +679,14 @@ namespace Radix\Tests\Api {
             $this->assertNotEmpty($spyLogger->logs, 'Expected logs to be written');
 
             $firstLogEntry = $spyLogger->logs[0] ?? [];
+
+            // Kontrollera att 'php' finns i kontexten för att döda ArrayItemRemoval
+            if (is_array($firstLogEntry)) {
+                $ctx = $firstLogEntry['ctx'] ?? [];
+                $this->assertArrayHasKey('php', $ctx, 'Context should contain "php" key');
+                $this->assertArrayHasKey('time', $ctx, 'Context should contain "time" key');
+            }
+
             $firstMsg = '';
             if (is_array($firstLogEntry)) {
                 $firstMsg = $firstLogEntry['msg'] ?? '';
@@ -755,11 +763,77 @@ namespace Radix\Tests\Api {
             }
         }
 
+        public function testHealthCheckExecutesDatabaseQuery(): void
+        {
+            // Skapa en mock för Connection där vi förväntar oss att execute anropas
+            $pdoStmt = $this->createMock(PDOStatement::class);
+            $dbConn = $this->createMock(Connection::class);
+
+            // HÄR är assertionen som dödar MethodCallRemoval av $conn->execute(...)
+            $dbConn->expects($this->once())
+                ->method('execute')
+                ->with('SELECT 1')
+                ->willReturn($pdoStmt);
+
+            // Vi måste ersätta DatabaseManager i containern med en som returnerar vår mockade connection
+            // Eftersom app() använder ApplicationContainer::get(), måste vi uppdatera containern.
+
+            $dbManager = new class ($dbConn) {
+                public function __construct(private Connection $conn) {}
+                public function connection(): Connection { return $this->conn; }
+            };
+
+            $container = ApplicationContainer::get();
+            // Vi kan behöva "binda om" om det är möjligt, eller skapa en ny container och sätta den.
+            // I setUp skapas en ny container och sätts med ApplicationContainer::set().
+            // Vi kan hämta den och lägga till vår nya definition.
+
+            // Eftersom ApplicationContainer::get() returnerar containern som sattes i setUp...
+            // Vi behöver bara överskriva definitionen.
+            // Radix Container har ingen 'set' metod för att skriva över, men 'add' skriver oftast över.
+            /** @var \Radix\Container\Container $container */
+            $container->add(\Radix\Database\DatabaseManager::class, fn() => $dbManager);
+
+            $spyLogger = new TestSpyLogger();
+            $service = new \App\Services\HealthCheckService($spyLogger);
+            $service->run();
+        }
+
+        public function testHealthServiceLogsDatabaseCheckSuccess(): void
+        {
+            // Mocka app() och DB om det behövs, eller lita på att app() finns (vilket det verkar göra)
+            // Om app() finns i testmiljön och vi har en mockad DB-koppling (från setUp), så borde 'db=ok' loggas.
+
+            $spyLogger = new TestSpyLogger();
+            $service = new \App\Services\HealthCheckService($spyLogger);
+
+            // Vi behöver se till att app() returnerar en mockad DatabaseManager.
+            // I setUp() gör vi: $container->add(\Radix\Database\DatabaseManager::class, fn() => $dbManager);
+            // Och app() använder ApplicationContainer::get().
+            // Så det borde fungera.
+
+            $service->run();
+
+            $foundDbLog = false;
+            foreach ($spyLogger->logs as $entry) {
+                $msg = is_array($entry) ? ($entry['msg'] ?? '') : (string)$entry;
+                if (str_contains($msg, 'db=ok')) {
+                    $foundDbLog = true;
+                    break;
+                }
+            }
+
+            $this->assertTrue($foundDbLog, 'Expected log message "db=ok" was not found. DB check might have failed or been skipped.');
+        }
+
         public function testHealthServiceLogsDirectoryCreation(): void
         {
-            $projectRoot = defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__, 2);
-            $healthDir = rtrim($projectRoot, '/\\') . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'health';
+            // Använd samma logik som i servicen för att hitta katalogen
+            $projectRoot = dirname(__DIR__, 2);
+            // Ingen rtrim i servicen längre
+            $healthDir = $projectRoot . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'health';
 
+            // Se till att den är borta innan vi startar
             if (is_dir($healthDir)) {
                 foreach (scandir($healthDir) ?: [] as $file) {
                     if ($file !== '.' && $file !== '..') {
@@ -768,6 +842,9 @@ namespace Radix\Tests\Api {
                 }
                 @rmdir($healthDir);
             }
+
+            // Dubbelkolla att den är borta
+            $this->assertDirectoryDoesNotExist($healthDir, 'Failed to cleanup health directory before test');
 
             $spyLogger = new TestSpyLogger();
 
