@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Radix\Tests;
 
 use App\Models\Status;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class StatusTest extends TestCase
@@ -69,7 +70,7 @@ class StatusTest extends TestCase
 
     public function testSetActiveAtThrowsExceptionForNegativeNumbers(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Ogiltigt värde för active_at: -1');
 
         $status = new Status();
@@ -103,7 +104,7 @@ class StatusTest extends TestCase
 
     public function testSetActiveAtThrowsExceptionForZero(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Ogiltigt värde för active_at: 0');
 
         $status = new Status();

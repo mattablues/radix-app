@@ -85,8 +85,8 @@ final class IpAllowlist implements MiddlewareInterface
                     && filter_var($subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)
                 ) {
                     if ($mask < 0 || $mask > 32) {
-                    continue;
-                }
+                        continue;
+                    }
 
                     $ipLong = ip2long($clientIp);
                     $subnetLong = ip2long($subnet);
@@ -134,7 +134,7 @@ final class IpAllowlist implements MiddlewareInterface
         $subnetBin = $this->inet6ToBits($subnet);
 
         // Död kod borttagen. Castar till string för att hantera eventuell null (även om det inte borde ske).
-        return substr((string)$ipBin, 0, $mask) === substr((string)$subnetBin, 0, $mask);
+        return substr((string) $ipBin, 0, $mask) === substr((string) $subnetBin, 0, $mask);
     }
 
     private function inet6ToBits(string $ip): ?string

@@ -23,7 +23,7 @@ namespace App\Services {
     /**
      * @param resource|null $context
      */
-    function mkdir(string $directory, int $permissions = 0777, bool $recursive = false, mixed $context = null): bool
+    function mkdir(string $directory, int $permissions = 0o777, bool $recursive = false, mixed $context = null): bool
     {
         FileSystemSpy::$lastMkdirPermissions = $permissions;
         /** @var resource|null $context */
@@ -54,10 +54,12 @@ namespace Radix\Tests\Api {
 
         public function __construct() {}
 
-        public function info(string $message, array $context = []): void {
+        public function info(string $message, array $context = []): void
+        {
             $this->logs[] = ['msg' => $message, 'ctx' => $context];
         }
-        public function error(string $message, array $context = []): void {
+        public function error(string $message, array $context = []): void
+        {
             $this->logs[] = ['msg' => $message, 'ctx' => $context];
         }
         public function warning(string $message, array $context = []): void {}
@@ -445,7 +447,7 @@ namespace Radix\Tests\Api {
             $this->assertSame(200, $response->getStatusCode());
         }
 
-       public function testHealthReturns200WhenTokenRequiredIsFalseString(): void
+        public function testHealthReturns200WhenTokenRequiredIsFalseString(): void
         {
             putenv('APP_ENV=testing');
             putenv('HEALTH_REQUIRE_TOKEN=false');
@@ -540,7 +542,10 @@ namespace Radix\Tests\Api {
             // Skapa en anonym DatabaseManager som returnerar vår mockade connection
             $dbManager = new class ($dbConn) {
                 public function __construct(private Connection $conn) {}
-                public function connection(): Connection { return $this->conn; }
+                public function connection(): Connection
+                {
+                    return $this->conn;
+                }
             };
             $container->add(\Radix\Database\DatabaseManager::class, fn() => $dbManager);
 
@@ -592,7 +597,10 @@ namespace Radix\Tests\Api {
 
             $dbManager = new class ($dbConn) {
                 public function __construct(private Connection $conn) {}
-                public function connection(): Connection { return $this->conn; }
+                public function connection(): Connection
+                {
+                    return $this->conn;
+                }
             };
             $container->add(\Radix\Database\DatabaseManager::class, fn() => $dbManager);
 
@@ -642,7 +650,10 @@ namespace Radix\Tests\Api {
 
             $dbManager = new class ($dbConn) {
                 public function __construct(private Connection $conn) {}
-                public function connection(): Connection { return $this->conn; }
+                public function connection(): Connection
+                {
+                    return $this->conn;
+                }
             };
             $container->add(\Radix\Database\DatabaseManager::class, fn() => $dbManager);
 
@@ -691,7 +702,7 @@ namespace Radix\Tests\Api {
             if (is_array($firstLogEntry)) {
                 $firstMsg = $firstLogEntry['msg'] ?? '';
             } elseif (is_string($firstLogEntry)) {
-                 $firstMsg = $firstLogEntry;
+                $firstMsg = $firstLogEntry;
             }
 
             if (!is_string($firstMsg)) {
@@ -780,7 +791,10 @@ namespace Radix\Tests\Api {
 
             $dbManager = new class ($dbConn) {
                 public function __construct(private Connection $conn) {}
-                public function connection(): Connection { return $this->conn; }
+                public function connection(): Connection
+                {
+                    return $this->conn;
+                }
             };
 
             $container = ApplicationContainer::get();
@@ -816,7 +830,7 @@ namespace Radix\Tests\Api {
 
             $foundDbLog = false;
             foreach ($spyLogger->logs as $entry) {
-                $msg = is_array($entry) ? ($entry['msg'] ?? '') : (string)$entry;
+                $msg = is_array($entry) ? ($entry['msg'] ?? '') : (string) $entry;
                 if (str_contains($msg, 'db=ok')) {
                     $foundDbLog = true;
                     break;
@@ -880,13 +894,13 @@ namespace Radix\Tests\Api {
                 $this->assertTrue($foundDirInContext, 'Expected "dir" key in context for created_dir log');
 
                 if (DIRECTORY_SEPARATOR === '/') {
-                    $perms = fileperms($healthDir) & 0777;
-                    $this->assertEquals(0755, $perms, sprintf('Directory permissions mismatch. Expected 0755, got 0%o', $perms));
+                    $perms = fileperms($healthDir) & 0o777;
+                    $this->assertEquals(0o755, $perms, sprintf('Directory permissions mismatch. Expected 0755, got 0%o', $perms));
                 }
 
                 $actualPerms = \App\Services\FileSystemSpy::$lastMkdirPermissions;
                 if ($actualPerms !== null) {
-                     $this->assertEquals(0755, $actualPerms, sprintf('mkdir permissions mismatch. Expected 0755, got %d', $actualPerms));
+                    $this->assertEquals(0o755, $actualPerms, sprintf('mkdir permissions mismatch. Expected 0755, got %d', $actualPerms));
                 }
 
             } finally {

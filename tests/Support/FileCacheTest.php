@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Radix\Tests\Support;
 
+use DateInterval;
 use PHPUnit\Framework\TestCase;
 use Radix\Support\FileCache;
 
@@ -69,7 +70,7 @@ final class FileCacheTest extends TestCase
     public function testSetWithDateInterval(): void
     {
         // Testa att använda DateInterval som TTL
-        $ttl = new \DateInterval('PT1H'); // 1 timme
+        $ttl = new DateInterval('PT1H'); // 1 timme
         $this->assertTrue($this->cache->set('interval', 'value_interval', $ttl));
         $this->assertSame('value_interval', $this->cache->get('interval'));
     }
