@@ -1,0 +1,21 @@
+Förslag att överväga framåt:
+- Rate limiting och request logging för API (middleware).
+- Structured logging-format (t.ex. JSON) + korrelerings-ID i logs.
+- Konfigdriven CORS och throttle-policy per route-grupp.
+- Health endpoints: readiness/liveness separerat.
+- Secrets/konfig via dotenv + validering (startup).
+
+
+Ja. Så här skapar du en PR (pull request) mot main:
+- Skapa en branch och pusha:
+    - Git i terminalen:
+        - git checkout -b rate-limiting
+        - Gör dina ändringar, commit: git commit -am "Add rate limiting"
+        - Pusha: git push -u origin rate-limiting
+
+- Öppna PR på GitHub:
+    - Gå till repo på GitHub. Du får en banner “Compare & pull request” för din branch. Klicka den.
+    - Välj base: main och compare: rate-limiting.
+    - Skriv titel/beskrivning och skapa PR.
+
+När PR:en öppnas körs workflows för pull_request. Då dyker status checks “CI / php” och “CI / infection” upp. Efter första körningen kan du lägga till dem som required i Branch protection.
