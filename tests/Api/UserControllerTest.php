@@ -219,6 +219,54 @@ class UserControllerTest extends TestCase
         // Men vi kollar bara att vi fick 1 item i 'data'.
     }
 
+    public function testGetAllowsPerPageEqualTo100(): void
+    {
+        // Skapa minimal användare och token
+        $this->connection->execute('
+            INSERT INTO users (first_name, last_name, email, password)
+            VALUES (:first_name, :last_name, :email, :password)
+        ', [
+            'first_name' => 'Max',
+            'last_name' => 'Allowed',
+            'email' => 'max.allowed@example.com',
+            'password' => password_hash('password123', PASSWORD_BCRYPT),
+        ]);
+
+        /** @var array{id:int} $row */
+        $row = $this->connection->fetchOne('SELECT id FROM users WHERE email = :email', [
+            'email' => 'max.allowed@example.com',
+        ]);
+        $userId = $row['id'];
+
+        $this->connection->execute('
+            INSERT INTO tokens (user_id, value, expires_at)
+            VALUES (:user_id, :value, :expires_at)
+        ', [
+            'user_id' => $userId,
+            'value' => 'perpage-100-token',
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour')),
+        ]);
+
+        $this->controller->setRequest(new \Radix\Http\Request(
+            uri: '/api/users',
+            method: 'GET',
+            get: ['page' => 1, 'perPage' => 100],
+            post: [],
+            files: [],
+            cookie: [],
+            server: ['HTTP_AUTHORIZATION' => 'Bearer perpage-100-token']
+        ));
+
+        $response = $this->controller->index();
+
+        $this->assertEquals(200, $response->getStatusCode(), 'perPage=100 ska vara tillåtet (status 200 förväntas).');
+
+        /** @var array{success:bool,meta:array{per_page:int}} $body */
+        $body = json_decode($response->getBody(), true);
+        $this->assertTrue($body['success']);
+        $this->assertEquals(100, $body['meta']['per_page'], 'Meta per_page ska vara 100 när perPage=100 begärs.');
+    }
+
     public function testGetPaginationDefaultsAndLogics(): void
     {
         // Token

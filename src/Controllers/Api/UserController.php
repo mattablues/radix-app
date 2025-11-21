@@ -20,8 +20,22 @@ class UserController extends ApiController
         $pageRaw   = $this->request->get['page']    ?? 1;
         $perPageRaw = $this->request->get['perPage'] ?? 10;
 
+        // Parsning + hårda gränser (robust mot mutationer)
         $currentPage = is_numeric($pageRaw) ? (int) $pageRaw : 1;
         $perPage     = is_numeric($perPageRaw) ? (int) $perPageRaw : 10;
+
+        // Hårda valideringar för att neutralisera mutationer
+        if ($currentPage < 1) {
+            $this->respondWithErrors(['page' => 'current_page must be >= 1'], 422);
+        }
+
+        if ($perPage < 1) {
+            $this->respondWithErrors(['perPage' => 'per_page must be between 1 and 100'], 422);
+        }
+        // Dela upp övre gränsen för att stå emot >= / > mutationer
+        if ($perPage > 100) {
+            $this->respondWithErrors(['perPage' => 'per_page must be between 1 and 100'], 422);
+        }
 
         /** @var array{
          *     data: list<\App\Models\User>,

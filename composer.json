@@ -9,12 +9,12 @@
         }
     ],
     "scripts": {
-        "stan": "phpstan analyse -c phpstan.neon.dist",
-        "test": "phpunit",
-        "format": "php-cs-fixer fix",
-        "format:check": "php-cs-fixer fix --dry-run --diff",
-        "infect": "infection --threads=4 --min-msi=20 --min-covered-msi=20"
-    },
+      "stan": "phpstan analyse -c phpstan.neon.dist",
+      "test": "php -d xdebug.mode=off vendor/bin/phpunit",
+      "test:cov": "php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-text",
+      "format": "php-cs-fixer fix",
+      "format:check": "php-cs-fixer fix --dry-run --diff",
+      "infect": "php -d xdebug.mode=coverage vendor/bin/infection --threads=4 --min-msi=80 --min-covered-msi=90"    },
     "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
