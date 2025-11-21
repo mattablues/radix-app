@@ -24,7 +24,6 @@ jobs:
           tools: composer
       - run: composer install --no-interaction --prefer-dist --no-progress
 
-      # Frontend build kan stängas av per repo via Repository variables
       - name: Set up Node
         if: env.ENABLE_FRONTEND_BUILD == '1'
         uses: actions/setup-node@v4
@@ -42,7 +41,8 @@ jobs:
       - run: composer test
 
   infection:
-    if: (github.event_name == 'pull_request' && env.ENABLE_INFECTION_ON_PR == '1') || github.event_name == 'schedule'
+    # Använd vars.* här istället för env.*
+    if: (github.event_name == 'pull_request' && (vars.ENABLE_INFECTION_ON_PR || '1') == '1') || github.event_name == 'schedule'
     needs: php
     runs-on: ubuntu-latest
     steps:
