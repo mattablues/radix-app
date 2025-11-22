@@ -38,10 +38,13 @@ jobs:
 
       - run: composer format:check
       - run: composer stan
-      - run: composer test
+
+      # Kör PHPUnit med explicit schema-validering (phpunit validerar automatiskt med xsi:noNamespaceSchemaLocation)
+      - name: Run PHPUnit (deterministic)
+        run: |
+          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices
 
   infection:
-    # Använd vars.* här istället för env.*
     if: (github.event_name == 'pull_request' && (vars.ENABLE_INFECTION_ON_PR || '1') == '1') || github.event_name == 'schedule'
     needs: php
     runs-on: ubuntu-latest
@@ -53,14 +56,29 @@ jobs:
           coverage: xdebug
           tools: composer
       - run: composer install --no-interaction --prefer-dist --no-progress
-      - name: Run Infection (quick on PR)
+
+      # Säkerställ att ren testkörning passerar i samma miljö som Infection
+      - name: Pre-check PHPUnit for Infection
+        env:
+          XDEBUG_MODE: coverage
+        run: |
+          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices
+
+      - name: Run Infection (quick on PR, default order)
         if: github.event_name == 'pull_request'
+        env:
+          XDEBUG_MODE: coverage
+          INFECTION_PHPUNIT_ARGUMENTS: "--execution-order=default"
         run: |
           vendor/bin/infection --threads=$(nproc) --min-msi=80 --min-covered-msi=90 --log-verbosity=default --no-progress
+
       - name: Run Infection (full on schedule)
         if: github.event_name == 'schedule'
+        env:
+          XDEBUG_MODE: coverage
         run: |
           vendor/bin/infection --threads=$(nproc) --min-msi=85 --min-covered-msi=95 --show-mutations --logger-html=infection-report.html
+
       - name: Upload Infection report
         if: always()
         uses: actions/upload-artifact@v4
