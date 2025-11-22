@@ -13,7 +13,7 @@ class SearchController extends ApiController
     public function users(): JsonResponse
     {
         // Validera förfrågan för att säkerställa att rätt data skickas med
-        $this->validateRequest([
+        $this->validateRequestAllowingSession([
             'search.term' => 'required|string|min:1',
             'search.current_page' => 'nullable|integer|min:1',
         ]);
@@ -85,7 +85,7 @@ class SearchController extends ApiController
     public function deletedUsers(): JsonResponse
     {
         // Validera förfrågan för att säkerställa att rätt data skickas med
-        $this->validateRequest([
+        $this->validateRequestAllowingSession([
             'search.term' => 'required|string|min:1',
             'search.current_page' => 'nullable|integer|min:1',
         ]);

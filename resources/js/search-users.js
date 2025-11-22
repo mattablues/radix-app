@@ -13,8 +13,7 @@ export default class SearchUsers extends Search {
             const response = await fetch('/api/v1/search/users', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.token}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     search: {

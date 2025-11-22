@@ -83,9 +83,6 @@ class UserController extends AbstractController
         $user->password = $password;
         $user->save();
 
-        // Skapa en API-token i tokens-tabellen
-        \App\Models\Token::createToken((int) $user->id, 'API Token for user registration');
-
         // Skapa token
         $token = new Token();
         $tokenValue = $token->value();
