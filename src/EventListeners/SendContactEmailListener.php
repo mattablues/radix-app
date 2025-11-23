@@ -20,6 +20,8 @@ readonly class SendContactEmailListener
             throw new RuntimeException('MAIL_EMAIL env-variabeln är inte satt.');
         }
 
+        $senderName = trim($event->firstName . ' ' . $event->lastName) ?: 'Kontaktformulär';
+
         $this->mailManager->send(
             $to, // Mottagarens e-postadress
             'Förfrågan', // E-postämne
@@ -29,12 +31,12 @@ readonly class SendContactEmailListener
                 'data' => [
                     'heading' => 'Message from contact form',
                     'body'  => $event->message,
-                    'name' => $event->firstName . ' ' . $event->lastName,
+                    'name' => $senderName,
                     'email' => $event->email,
                 ], // Template-data
-                'from' => getenv('MAIL_EMAIL'), // Statisk avsändaradress (din server kräver detta)
-                'from_name' => 'Support Team', // Text för avsändare
-                'reply_to' => $event->email, // Registrerarens e-postadress (gör det möjligt att svara till avsändaren)
+                'from' => $to, // Behåll supportens adress för leverans
+                'from_name' => $senderName, // Visa avsändarens namn i "From"
+                'reply_to' => $event->email, // Så att "Svara" går till avsändaren
             ]
         );
     }
