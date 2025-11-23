@@ -60,21 +60,21 @@ jobs:
         env:
           XDEBUG_MODE: coverage
         run: |
-          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices
+          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never
 
       - name: Run Infection (quick on PR, default order from phpunit.xml)
         if: github.event_name == 'pull_request'
         env:
           XDEBUG_MODE: coverage
         run: |
-          vendor/bin/infection --threads=2 --min-msi=80 --min-covered-msi=90 --log-verbosity=default --no-progress
+          vendor/bin/infection --threads=2 --min-msi=80 --min-covered-msi=90 --no-progress --no-interaction --timeout=25 --test-framework-options="--order-by=default"
 
       - name: Run Infection (full on schedule)
         if: github.event_name == 'schedule'
         env:
           XDEBUG_MODE: coverage
         run: |
-          vendor/bin/infection --threads=$(nproc) --min-msi=85 --min-covered-msi=95 --show-mutations --logger-html=infection-report.html
+          vendor/bin/infection --threads=$(nproc) --min-msi=85 --min-covered-msi=95 --show-mutations --logger-html=infection-report.html --no-interaction --timeout=30 --test-framework-options="--order-by=default"
 
       - name: Upload Infection report
         if: always()

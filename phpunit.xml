@@ -5,7 +5,7 @@
          colors="true"
          stopOnFailure="false"
          cacheDirectory=".phpunit.cache"
-         executionOrder="defects,random"
+         executionOrder="default"
          resolveDependencies="true"
          beStrictAboutOutputDuringTests="true"
          failOnRisky="true"
