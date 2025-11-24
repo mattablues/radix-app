@@ -68,18 +68,30 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           XDEBUG_MODE: coverage
-          REQUEST_METHOD: GET
         run: |
-          php -d memory_limit=1G -d zend.enable_gc=1 vendor/bin/infection --no-phpunit-config --threads=1 --min-msi=80 --min-covered-msi=90 --no-progress --no-interaction --test-framework-options="--order-by=default"
+          php -d memory_limit=1G -d zend.enable_gc=1 vendor/bin/infection \
+            --threads=1 \
+            --min-msi=80 \
+            --min-covered-msi=90 \
+            --no-progress \
+            --no-interaction \
+            --test-framework-options="--order-by=default" \
+            --initial-tests-php-options="-d variables_order=EGPCS -d auto_globals_jit=0 -d register_argc_argv=1 -d request_order=GP -d max_execution_time=0 -d memory_limit=1G -d zend.enable_gc=1 -d detect_unicode=0 -d zend.assertions=1 -d assert.exception=0 -d error_reporting=-1 -d display_errors=1 -d display_startup_errors=1 -d log_errors=0 -d default_mimetype=text/html -d default_charset=UTF-8 -d date.timezone=UTC -d sendmail_path=/bin/true -d mail.add_x_header=0 -d short_open_tag=0 -d expose_php=0 -d session.use_cookies=0 -d session.use_only_cookies=0 -d session.use_strict_mode=1 -d session.auto_start=0 -d session.cache_limiter='' -d session.cookie_httponly=1 -d session.cookie_secure=0 -d session.gc_probability=0 -d variables_order=EGPCS -d request.default_method=GET"
 
       - name: Run Infection (full on schedule)
         if: github.event_name == 'schedule'
         env:
           XDEBUG_MODE: coverage
-          REQUEST_METHOD: GET
         run: |
-          php -d memory_limit=1G -d zend.enable_gc=1 vendor/bin/infection --no-phpunit-config --threads=$(nproc) --min-msi=85 --min-covered-msi=95 --show-mutations --logger-html=infection-report.html --no-interaction --test-framework-options="--order-by=default"
-
+          php -d memory_limit=1G -d zend.enable_gc=1 vendor/bin/infection \
+            --threads=$(nproc) \
+            --min-msi=85 \
+            --min-covered-msi=95 \
+            --show-mutations \
+            --logger-html=infection-report.html \
+            --no-interaction \
+            --test-framework-options="--order-by=default" \
+            --initial-tests-php-options="-d variables_order=EGPCS -d auto_globals_jit=0 -d register_argc_argv=1 -d request_order=GP -d max_execution_time=0 -d memory_limit=1G -d zend.enable_gc=1 -d detect_unicode=0 -d zend.assertions=1 -d assert.exception=0 -d error_reporting=-1 -d display_errors=1 -d display_startup_errors=1 -d log_errors=0 -d default_mimetype=text/html -d default_charset=UTF-8 -d date.timezone=UTC -d sendmail_path=/bin/true -d mail.add_x_header=0 -d short_open_tag=0 -d expose_php=0 -d session.use_cookies=0 -d session.use_only_cookies=0 -d session.use_strict_mode=1 -d session.auto_start=0 -d session.cache_limiter='' -d session.cookie_httponly=1 -d session.cookie_secure=0 -d session.gc_probability=0 -d variables_order=EGPCS -d request.default_method=GET"
       - name: Upload Infection report
         if: always()
         uses: actions/upload-artifact@v4
