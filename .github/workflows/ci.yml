@@ -86,10 +86,8 @@ jobs:
           vendor/bin/infection \
             --threads=1 \
             --min-msi=85 --min-covered-msi=95 \
-            --logger-html=infection-report.html \
             --no-interaction \
             --initial-tests-php-options="-d xdebug.mode=coverage -d memory_limit=1G" \
-            --mutant-processes="1" \
             --test-framework-options="--order-by=default"
 
       - name: Upload Infection report
@@ -98,3 +96,4 @@ jobs:
         with:
           name: infection-report
           path: infection-report.html
+          if-no-files-found: ignore
