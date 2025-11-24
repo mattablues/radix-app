@@ -10,10 +10,6 @@
   },
   "mutators": {
     "@default": true,
-    "global-ignore": [
-      "App\\Kernel::bootstrap",
-      "App\\Console\\Kernel::schedule"
-    ],
     "BitwiseOr": {
       "ignore": [
         "App\\Controllers\\Api\\HealthController::index"
