@@ -70,6 +70,26 @@ jobs:
         run: |
           vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default
 
+      # 1) Skapa Infection’s temporära phpunit-config
+      - name: Generate Infection temp config
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
+        env:
+          XDEBUG_MODE: coverage
+        run: |
+          vendor/bin/infection --dry-run --no-progress --test-framework-options="--order-by=default"
+
+      # 2) Kör initialtests med exakt samma kommandorad som Infection använder
+      - name: Reproduce initial tests (same as Infection)
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
+        env:
+          XDEBUG_MODE: coverage
+        run: |
+          vendor/bin/phpunit \
+            --configuration /tmp/infection/phpunitConfiguration.initial.infection.xml \
+            --order-by=default \
+            --coverage-xml=/tmp/infection/coverage-xml \
+            --log-junit=/tmp/infection/junit.xml || true
+
       - name: Run Infection (quick on PR, default order from phpunit.xml)
         if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'pr')
         env:
@@ -84,7 +104,6 @@ jobs:
           INFECTION_TIMEOUT_MULTIPLIER: 10
           SYMFONY_DEPRECATIONS_HELPER: disabled
           GITHUB_ACTIONS: "1"
-          # blockera nätverk i tester via enkla safeguards om ni läser dessa envs i test bootstrap
           DISABLE_HTTP_REQUESTS: "1"
         run: |
           vendor/bin/infection \
