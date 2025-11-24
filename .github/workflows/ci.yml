@@ -56,46 +56,25 @@ jobs:
           tools: composer
       - run: composer install --no-interaction --prefer-dist --no-progress
 
-      # Generera coverage först (stabil ordning + REQUEST_METHOD=GET)
-      - name: Pre-generate coverage for Infection
+      - name: Pre-check PHPUnit for Infection
         env:
           XDEBUG_MODE: coverage
         run: |
-          REQUEST_METHOD=GET php -d memory_limit=1G vendor/bin/phpunit -c phpunit.xml --order-by=default --coverage-xml=coverage-xml --log-junit=junit.xml
+          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never
 
-      # Kör Infection utan initial tests, använd förgenererad coverage
-      - name: Run Infection (quick on PR, using pre-generated coverage)
+      - name: Run Infection (quick on PR, default order from phpunit.xml)
         if: github.event_name == 'pull_request'
         env:
           XDEBUG_MODE: coverage
         run: |
-          REQUEST_METHOD=GET php -d memory_limit=1G -d zend.enable_gc=1 vendor/bin/infection \
-            --configuration=infection.json.dist \
-            --threads=1 \
-            --min-msi=80 \
-            --min-covered-msi=90 \
-            --no-progress \
-            --no-interaction \
-            --test-framework-options="--order-by=default" \
-            --skip-initial-tests \
-            --coverage=coverage-xml
+          vendor/bin/infection --threads=2 --min-msi=80 --min-covered-msi=90 --no-progress --no-interaction --test-framework-options="--order-by=default"
 
-      - name: Run Infection (full on schedule, using pre-generated coverage)
+      - name: Run Infection (full on schedule)
         if: github.event_name == 'schedule'
         env:
           XDEBUG_MODE: coverage
         run: |
-          REQUEST_METHOD=GET php -d memory_limit=1G -d zend.enable_gc=1 vendor/bin/infection \
-            --configuration=infection.json.dist \
-            --threads=$(nproc) \
-            --min-msi=85 \
-            --min-covered-msi=95 \
-            --show-mutations \
-            --logger-html=infection-report.html \
-            --no-interaction \
-            --test-framework-options="--order-by=default" \
-            --skip-initial-tests \
-            --coverage=coverage-xml
+          vendor/bin/infection --threads=$(nproc) --min-msi=85 --min-covered-msi=95 --show-mutations --logger-html=infection-report.html --no-interaction --test-framework-options="--order-by=default"
 
       - name: Upload Infection report
         if: always()

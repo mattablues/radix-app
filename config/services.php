@@ -230,6 +230,13 @@ $container->add(\Radix\Console\Commands\MakeProviderCommand::class, function () 
     return new \Radix\Console\Commands\MakeProviderCommand($providerPath, $templatePath);
 });
 
+$container->add(\Radix\Console\Commands\MakeViewCommand::class, function () {
+    $viewsPath =  ROOT_PATH . '/views';
+    $templatePath =  ROOT_PATH . '/templates';
+
+    return new \Radix\Console\Commands\MakeViewCommand($viewsPath, $templatePath);
+});
+
 $container->add(\Radix\Console\Commands\MakeMigrationCommand::class, function () {
     $migrationPath = ROOT_PATH . '/migrations';
     $templatePath = ROOT_PATH . '/templates/migrations';
@@ -293,6 +300,7 @@ $container->add(\Radix\Console\CommandsRegistry::class, function () {
     $registry->register('make:middleware', Radix\Console\Commands\MakeMiddlewareCommand::class);
     $registry->register('make:service', Radix\Console\Commands\MakeServiceCommand::class);
     $registry->register('make:provider', Radix\Console\Commands\MakeProviderCommand::class);
+    $registry->register('make:view', Radix\Console\Commands\MakeViewCommand::class);
 
     return $registry;
 });

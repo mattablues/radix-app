@@ -1,0 +1,8 @@
+{% extends "layouts/[LAYOUT].ratio.php" %}
+{% block title %}[TITLE]{% endblock %}
+{% block pageId %}[PAGEID]{% endblock %}
+{% block body %}
+    <section>
+        <!-- Content -->
+    </section>
+{% endblock %}
