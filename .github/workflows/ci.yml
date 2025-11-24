@@ -78,6 +78,30 @@ jobs:
         run: |
           vendor/bin/infection --dry-run --no-progress --test-framework-options="--order-by=default"
 
+      - name: List tests from temp config
+        if: github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule'
+        run: |
+          vendor/bin/phpunit --configuration /tmp/infection/phpunitConfiguration.initial.infection.xml --list-tests > tests.list
+
+      - name: Run tests in chunks to find hang
+        if: github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule'
+        env:
+          XDEBUG_MODE: coverage
+        run: |
+          split -l 60 tests.list chunk_
+          i=0
+          for f in chunk_*; do
+            i=$((i+1))
+            echo "== Chunk $i =="
+            # kör varje testnamn rad för rad, logga progress
+            while IFS= read -r t; do
+              echo "Running: $t"
+              php -d xdebug.mode=coverage -d memory_limit=1G vendor/bin/phpunit \
+                --configuration /tmp/infection/phpunitConfiguration.initial.infection.xml \
+                --order-by=default --filter "^${t//\//\\/}$" --testdox --verbose || true
+            done < "$f"
+          done
+
       # 2) Kör initialtests med exakt samma kommandorad som Infection använder
       - name: Reproduce initial tests (same as Infection, verbose)
         if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
@@ -121,4 +145,4 @@ jobs:
         with:
           name: infection-report
           path: infection-report.html
-          if-no-files-found: ignoreg
+          if-no-files-found: ignore
