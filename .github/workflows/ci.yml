@@ -94,16 +94,14 @@ jobs:
           vendor/bin/infection --threads=2 --min-msi=80 --min-covered-msi=90 --no-progress --no-interaction --test-framework-options="--order-by=default"
 
       # Schedule/dispatch: kör utan initial tests så att det inte hänger
-      - name: Run Infection (schedule, no-coverage initial)
+      - name: Run Infection (schedule, skip initial tests)
         if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
-        env:
-          INFECTION_TIMEOUT_MULTIPLIER: 12
         run: |
           vendor/bin/infection \
             --threads=1 \
             --ignore-msi-with-no-mutations \
+            --skip-initial-tests \
             --no-interaction \
-            --initial-tests-php-options="-d xdebug.mode=off -d memory_limit=1G" \
             --test-framework-options="--order-by=default --do-not-cache-result"
 
       - name: Upload Infection report
