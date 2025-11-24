@@ -56,15 +56,15 @@ jobs:
           tools: composer
       - run: composer install --no-interaction --prefer-dist --no-progress
 
-      # Kör samma miljö som Infection kommer använda
-      - name: Pre-check PHPUnit for Infection
+      # Generera coverage först (stabil ordning + REQUEST_METHOD=GET)
+      - name: Pre-generate coverage for Infection
         env:
           XDEBUG_MODE: coverage
         run: |
-          REQUEST_METHOD=GET php -d memory_limit=1G vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default
+          REQUEST_METHOD=GET php -d memory_limit=1G vendor/bin/phpunit -c phpunit.xml --order-by=default --coverage-xml=coverage-xml --log-junit=junit.xml
 
-      # Tvinga deterministisk ordning och default REQUEST_METHOD för att undvika "HEAD->GET"-artefakten
-      - name: Run Infection (quick on PR, default order)
+      # Kör Infection utan initial tests, använd förgenererad coverage
+      - name: Run Infection (quick on PR, using pre-generated coverage)
         if: github.event_name == 'pull_request'
         env:
           XDEBUG_MODE: coverage
@@ -77,9 +77,10 @@ jobs:
             --no-progress \
             --no-interaction \
             --test-framework-options="--order-by=default" \
-            --initial-tests-php-options="-d request.default_method=GET"
+            --skip-initial-tests \
+            --coverage=coverage-xml
 
-      - name: Run Infection (full on schedule)
+      - name: Run Infection (full on schedule, using pre-generated coverage)
         if: github.event_name == 'schedule'
         env:
           XDEBUG_MODE: coverage
@@ -93,7 +94,8 @@ jobs:
             --logger-html=infection-report.html \
             --no-interaction \
             --test-framework-options="--order-by=default" \
-            --initial-tests-php-options="-d request.default_method=GET"
+            --skip-initial-tests \
+            --coverage=coverage-xml
 
       - name: Upload Infection report
         if: always()
