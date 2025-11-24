@@ -49,7 +49,7 @@ jobs:
         run: |
           vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices
 
-  # Nytt: kör PHPUnit i random order för att upptäcka flakiga tester på Actions
+  # Hjälpjobb för att hitta flakiga tester på Actions
   php-random:
     runs-on: ubuntu-latest
     needs: php
@@ -93,8 +93,21 @@ jobs:
         run: |
           vendor/bin/infection --threads=2 --min-msi=80 --min-covered-msi=90 --no-progress --no-interaction --test-framework-options="--order-by=default"
 
-      # Schedule/dispatch: kör utan initial tests så att det inte hänger
-      - name: Run Infection (schedule, skip initial tests)
+      # Schedule/dispatch: generera coverage separat och kör Infection utan initial tests
+      - name: Generate coverage for Infection (schedule)
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
+        env:
+          XDEBUG_MODE: coverage
+        run: |
+          rm -rf build/coverage || true
+          mkdir -p build/coverage
+          vendor/bin/phpunit \
+            -c phpunit.xml \
+            --order-by=default \
+            --coverage-xml=build/coverage/coverage-xml \
+            --log-junit=build/coverage/junit.xml
+
+      - name: Run Infection (schedule, skip initial tests with provided coverage)
         if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
         run: |
           vendor/bin/infection \
@@ -102,6 +115,7 @@ jobs:
             --ignore-msi-with-no-mutations \
             --skip-initial-tests \
             --no-interaction \
+            --coverage=build/coverage \
             --test-framework-options="--order-by=default --do-not-cache-result"
 
       - name: Upload Infection report
