@@ -68,7 +68,7 @@ jobs:
         env:
           XDEBUG_MODE: coverage
         run: |
-          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never
+          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default
 
       - name: Run Infection (quick on PR, default order from phpunit.xml)
         if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'pr')
@@ -81,8 +81,16 @@ jobs:
         if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
         env:
           XDEBUG_MODE: coverage
+          INFECTION_TIMEOUT_MULTIPLIER: 6
         run: |
-          vendor/bin/infection --threads=$(nproc) --min-msi=85 --min-covered-msi=95 --show-mutations --logger-html=infection-report.html --no-interaction --test-framework-options="--order-by=default"
+          vendor/bin/infection \
+            --threads=1 \
+            --min-msi=85 --min-covered-msi=95 \
+            --logger-html=infection-report.html \
+            --no-interaction \
+            --initial-tests-php-options="-d xdebug.mode=coverage -d memory_limit=1G" \
+            --mutant-processes="1" \
+            --test-framework-options="--order-by=default"
 
       - name: Upload Infection report
         if: always()
