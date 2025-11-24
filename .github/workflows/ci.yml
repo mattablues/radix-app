@@ -56,30 +56,33 @@ jobs:
           tools: composer
       - run: composer install --no-interaction --prefer-dist --no-progress
 
+      # Kör samma miljö som Infection kommer använda
       - name: Pre-check PHPUnit for Infection
         env:
           XDEBUG_MODE: coverage
+          REQUEST_METHOD: GET
         run: |
           php -d memory_limit=1G vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default
 
+      # Tvinga deterministisk ordning och default REQUEST_METHOD för att undvika "HEAD->GET"-artefakten
       - name: Run Infection (quick on PR, default order)
         if: github.event_name == 'pull_request'
         env:
           XDEBUG_MODE: coverage
+          REQUEST_METHOD: GET
           PHPUnit_ORDER_BY: default
           INFECTION_KEEP_PHPUNIT_XML: 1
         run: |
-          export REQUEST_METHOD=GET
           php -d memory_limit=1G -d zend.enable_gc=1 vendor/bin/infection --threads=1 --min-msi=80 --min-covered-msi=90 --no-progress --no-interaction --test-framework-options="--order-by=default"
 
       - name: Run Infection (full on schedule)
         if: github.event_name == 'schedule'
         env:
           XDEBUG_MODE: coverage
+          REQUEST_METHOD: GET
           PHPUnit_ORDER_BY: default
           INFECTION_KEEP_PHPUNIT_XML: 1
         run: |
-          export REQUEST_METHOD=GET
           php -d memory_limit=1G -d zend.enable_gc=1 vendor/bin/infection --threads=$(nproc) --min-msi=85 --min-covered-msi=95 --show-mutations --logger-html=infection-report.html --no-interaction --test-framework-options="--order-by=default"
 
       - name: Upload Infection report
