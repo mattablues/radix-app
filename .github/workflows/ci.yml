@@ -6,6 +6,12 @@ on:
   pull_request:
   schedule:
     - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      run_infection_mode:
+        description: "Mode: pr or schedule"
+        required: false
+        default: "schedule"
 
 env:
   ENABLE_FRONTEND_BUILD: ${{ vars.ENABLE_FRONTEND_BUILD || '1' }}
@@ -44,7 +50,9 @@ jobs:
           vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices
 
   infection:
-    if: (github.event_name == 'pull_request' && (vars.ENABLE_INFECTION_ON_PR || '1') == '1') || github.event_name == 'schedule'
+    if: (github.event_name == 'pull_request' && (vars.ENABLE_INFECTION_ON_PR || '1') == '1')
+        || github.event_name == 'schedule'
+        || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
     needs: php
     runs-on: ubuntu-latest
     steps:
@@ -63,14 +71,14 @@ jobs:
           vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never
 
       - name: Run Infection (quick on PR, default order from phpunit.xml)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'pr')
         env:
           XDEBUG_MODE: coverage
         run: |
           vendor/bin/infection --threads=2 --min-msi=80 --min-covered-msi=90 --no-progress --no-interaction --test-framework-options="--order-by=default"
 
       - name: Run Infection (full on schedule)
-        if: github.event_name == 'schedule'
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
         env:
           XDEBUG_MODE: coverage
         run: |
