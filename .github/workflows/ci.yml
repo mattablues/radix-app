@@ -63,7 +63,7 @@ jobs:
       - run: composer install --no-interaction --prefer-dist --no-progress
       - name: PHPUnit random order (no coverage)
         run: |
-          vendor/bin/phpunit -c phpunit.xml --execution-order=defects,random --resolve-dependencies --testdox --verbose
+          vendor/bin/phpunit -c phpunit.xml --order-by=defects,random --resolve-dependencies --testdox --verbose
 
   infection:
     if: (github.event_name == 'pull_request' && (vars.ENABLE_INFECTION_ON_PR || '1') == '1')
