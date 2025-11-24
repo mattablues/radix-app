@@ -51,6 +51,7 @@ jobs:
 
   # Hjälpjobb för att hitta flakiga tester på Actions
   php-random:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     needs: php
     steps:
