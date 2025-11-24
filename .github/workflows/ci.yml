@@ -49,6 +49,22 @@ jobs:
         run: |
           vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices
 
+  # Nytt: kör PHPUnit i random order för att upptäcka flakiga tester på Actions
+  php-random:
+    runs-on: ubuntu-latest
+    needs: php
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: PHPUnit random order (no coverage)
+        run: |
+          vendor/bin/phpunit -c phpunit.xml --execution-order=defects,random --resolve-dependencies --testdox --verbose
+
   infection:
     if: (github.event_name == 'pull_request' && (vars.ENABLE_INFECTION_ON_PR || '1') == '1')
         || github.event_name == 'schedule'
@@ -70,47 +86,6 @@ jobs:
         run: |
           vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default
 
-      # 1) Skapa Infection’s temporära phpunit-config
-      - name: Generate Infection temp config
-        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
-        run: |
-          vendor/bin/infection --dry-run --no-progress --test-framework-options="--order-by=default"
-
-      - name: List tests from temp config
-        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
-        run: |
-          vendor/bin/phpunit --configuration /tmp/infection/phpunitConfiguration.initial.infection.xml --list-tests > tests.list
-
-      - name: Run initial tests in chunks (no coverage, verbose)
-        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
-        run: |
-          split -l 80 tests.list chunk_
-          c=0
-          for f in chunk_*; do
-            c=$((c+1))
-            echo "== Chunk $c =="
-            while IFS= read -r t; do
-              echo "Running: $t"
-              php vendor/bin/phpunit \
-                --configuration /tmp/infection/phpunitConfiguration.initial.infection.xml \
-                --order-by=default --testdox --verbose --filter "^${t//\//\\/}$" || true
-            done < "$f"
-          done
-
-      # 2) Kör initialtests med exakt samma kommandorad som Infection använder
-      - name: Reproduce initial tests (same as Infection, verbose)
-        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
-        env:
-          XDEBUG_MODE: coverage
-        run: |
-          vendor/bin/phpunit \
-            --configuration /tmp/infection/phpunitConfiguration.initial.infection.xml \
-            --order-by=default \
-            --testdox \
-            --verbose \
-            --coverage-xml=/tmp/infection/coverage-xml \
-            --log-junit=/tmp/infection/junit.xml || true
-
       - name: Run Infection (quick on PR, default order from phpunit.xml)
         if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'pr')
         env:
@@ -118,7 +93,8 @@ jobs:
         run: |
           vendor/bin/infection --threads=2 --min-msi=80 --min-covered-msi=90 --no-progress --no-interaction --test-framework-options="--order-by=default"
 
-      - name: Run Infection (full on schedule, relaxed)
+      # Schedule/dispatch: kör utan initial tests så att det inte hänger
+      - name: Run Infection (schedule, skip initial tests)
         if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
         env:
           XDEBUG_MODE: coverage
@@ -127,6 +103,7 @@ jobs:
           vendor/bin/infection \
             --threads=1 \
             --ignore-msi-with-no-mutations \
+            --skip-initial-tests \
             --no-interaction \
             --initial-tests-php-options="-d xdebug.mode=coverage -d memory_limit=1G" \
             --test-framework-options="--order-by=default --do-not-cache-result"
