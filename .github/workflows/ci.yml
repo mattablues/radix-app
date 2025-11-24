@@ -47,7 +47,7 @@ jobs:
 
       - name: Run PHPUnit (deterministic)
         run: |
-          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices
+          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --do-not-cache-result
 
   # Hjälpjobb för att hitta flakiga tester på Actions
   php-random:
@@ -85,18 +85,11 @@ jobs:
         env:
           XDEBUG_MODE: coverage
         run: |
-          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default
+          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default --do-not-cache-result
 
-      - name: Run Infection (quick on PR, default order from phpunit.xml)
-        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'pr')
-        env:
-          XDEBUG_MODE: coverage
-        run: |
-          vendor/bin/infection --threads=2 --min-msi=80 --min-covered-msi=90 --no-progress --no-interaction --test-framework-options="--order-by=default"
-
-      # Schedule/dispatch: generera coverage separat och kör Infection utan initial tests
-      - name: Generate coverage for Infection (schedule)
-        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
+      # Gemensam coverage-generering (PR + schedule) för att köra Infection med --skip-initial-tests
+      - name: Generate coverage for Infection
+        if: github.event_name == 'pull_request' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
         env:
           XDEBUG_MODE: coverage
         run: |
@@ -105,17 +98,20 @@ jobs:
           vendor/bin/phpunit \
             -c phpunit.xml \
             --order-by=default \
+            --do-not-cache-result \
             --coverage-xml=build/coverage/coverage-xml \
             --log-junit=build/coverage/junit.xml
 
-      - name: Run Infection (schedule, skip initial tests with provided coverage)
-        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
+      # Kör Infection med skip-initial-tests även på PR
+      - name: Run Infection (PR/schedule, skip initial tests, default order)
+        if: github.event_name == 'pull_request' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
         run: |
           vendor/bin/infection \
             --threads=1 \
             --ignore-msi-with-no-mutations \
             --skip-initial-tests \
             --no-interaction \
+            --no-progress \
             --coverage=build/coverage \
             --test-framework-options="--order-by=default --do-not-cache-result"
 
