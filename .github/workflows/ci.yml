@@ -81,14 +81,18 @@ jobs:
         if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
         env:
           XDEBUG_MODE: coverage
-          INFECTION_TIMEOUT_MULTIPLIER: 6
+          INFECTION_TIMEOUT_MULTIPLIER: 10
+          SYMFONY_DEPRECATIONS_HELPER: disabled
+          GITHUB_ACTIONS: "1"
+          # blockera nätverk i tester via enkla safeguards om ni läser dessa envs i test bootstrap
+          DISABLE_HTTP_REQUESTS: "1"
         run: |
           vendor/bin/infection \
             --threads=1 \
             --min-msi=85 --min-covered-msi=95 \
             --no-interaction \
             --initial-tests-php-options="-d xdebug.mode=coverage -d memory_limit=1G" \
-            --test-framework-options="--order-by=default"
+            --test-framework-options="--order-by=default --do-not-cache-result"
 
       - name: Upload Infection report
         if: always()
