@@ -67,14 +67,14 @@ jobs:
         env:
           XDEBUG_MODE: coverage
         run: |
-          vendor/bin/infection --threads=2 --min-msi=80 --min-covered-msi=90 --no-progress --no-interaction --timeout=25 --test-framework-options="--order-by=default"
+          vendor/bin/infection --threads=2 --min-msi=80 --min-covered-msi=90 --no-progress --no-interaction --test-framework-options="--order-by=default"
 
       - name: Run Infection (full on schedule)
         if: github.event_name == 'schedule'
         env:
           XDEBUG_MODE: coverage
         run: |
-          vendor/bin/infection --threads=$(nproc) --min-msi=85 --min-covered-msi=95 --show-mutations --logger-html=infection-report.html --no-interaction --timeout=30 --test-framework-options="--order-by=default"
+          vendor/bin/infection --threads=$(nproc) --min-msi=85 --min-covered-msi=95 --show-mutations --logger-html=infection-report.html --no-interaction --test-framework-options="--order-by=default"
 
       - name: Upload Infection report
         if: always()
