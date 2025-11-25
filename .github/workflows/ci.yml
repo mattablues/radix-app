@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RADIX_RUN_ID: "${{ github.run_id }}-${{ github.run_attempt }}"
+      HEALTH_CACHE_PATH: "${{ github.workspace }}/cache/health"
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -31,6 +32,9 @@ jobs:
           extensions: pdo_mysql, pdo_sqlite
           tools: composer
       - run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare health cache dir
+        run: mkdir -p "${{ github.workspace }}/cache/health"
 
       - name: Set up Node
         if: env.ENABLE_FRONTEND_BUILD == '1'
@@ -60,6 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RADIX_RUN_ID: "${{ github.run_id }}-${{ github.run_attempt }}"
+      HEALTH_CACHE_PATH: "${{ github.workspace }}/cache/health"
     needs: php
     steps:
       - uses: actions/checkout@v4
@@ -69,6 +74,10 @@ jobs:
           coverage: none
           tools: composer
       - run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare health cache dir
+        run: mkdir -p "${{ github.workspace }}/cache/health"
+
       - name: PHPUnit random order (no coverage)
         run: |
           vendor/bin/phpunit -c phpunit.xml --order-by=defects,random --resolve-dependencies --testdox
