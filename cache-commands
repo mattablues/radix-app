@@ -1,0 +1,27 @@
+Använd Windows-kommandon i PowerShell eller Cmd.
+PowerShell (rekommenderas):
+- Radera mappar rekursivt och tyst:
+    - Remove-Item -Recurse -Force .phpunit.cache, build\coverage -ErrorAction SilentlyContinue
+
+- Radera fil:
+    - Remove-Item -Force vendor\bin.phpunit.result.cache -ErrorAction SilentlyContinue
+
+- Bygg om autoload:
+    - composer dump-autoload -o
+
+- Kör Infection:
+    - composer infect
+
+Cmd (klassisk):
+- Radera mappar:
+    - rmdir /S /Q .phpunit.cache
+    - rmdir /S /Q build\coverage
+
+- Radera fil:
+    - del /F /Q vendor\bin.phpunit.result.cache
+
+- Bygg om autoload och kör:
+    - composer dump-autoload -o
+    - composer infect
+
+Tips: Kör PowerShell från projektroten: pwsh eller powershell.
