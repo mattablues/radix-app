@@ -141,6 +141,10 @@ namespace Radix\Tests\Api {
         {
             putenv('APP_ENV=testing');
 
+            $projectRoot = dirname(__DIR__, 2);
+            $healthDir = rtrim($projectRoot, "/\\") . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'health';
+            putenv('HEALTH_CACHE_PATH=' . $healthDir);
+
             $router = new Router();
             $router->group(['path' => '/api/v1', 'middleware' => ['request.id']], function (Router $r) {
                 $r->get('/health', [\App\Controllers\Api\HealthController::class, 'index'])->name('api.health.index');
@@ -842,10 +846,11 @@ namespace Radix\Tests\Api {
 
         public function testHealthServiceLogsDirectoryCreation(): void
         {
-            // Använd samma logik som i servicen för att hitta katalogen
             $projectRoot = dirname(__DIR__, 2);
-            // Ingen rtrim i servicen längre
             $healthDir = $projectRoot . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'health';
+            // Normalisera bort eventuell trailing separator så rtrim-mutanter inte ändrar något
+            $healthDir = rtrim($healthDir, "/\\");
+            putenv('HEALTH_CACHE_PATH=' . $healthDir);
 
             // Se till att den är borta innan vi startar
             if (is_dir($healthDir)) {
@@ -857,11 +862,9 @@ namespace Radix\Tests\Api {
                 @rmdir($healthDir);
             }
 
-            // Dubbelkolla att den är borta
             $this->assertDirectoryDoesNotExist($healthDir, 'Failed to cleanup health directory before test');
 
             $spyLogger = new TestSpyLogger();
-
             $oldUmask = umask(0);
 
             try {
@@ -902,9 +905,10 @@ namespace Radix\Tests\Api {
                 if ($actualPerms !== null) {
                     $this->assertEquals(0o755, $actualPerms, sprintf('mkdir permissions mismatch. Expected 0755, got %d', $actualPerms));
                 }
-
             } finally {
                 umask($oldUmask);
+                // Städa env för andra tester
+                putenv('HEALTH_CACHE_PATH');
             }
         }
     }

@@ -45,7 +45,7 @@ foreach ($configFiles as $file) {
 // Registrera den sammanslagna konfigurationen i containern
 /** @var array<string,mixed> $configData */
 $container->add('config', new Config($configData));
-$container->add(\Radix\Support\FileCache::class, fn() => new \Radix\Support\FileCache());
+$container->add(\Radix\Support\FileCache::class, fn() => new \Radix\Support\FileCache(getenv('APP_CACHE_PATH') ?: null));
 
 $container->addShared(\Radix\Support\Logger::class, fn() => new \Radix\Support\Logger('app'));
 
