@@ -82,6 +82,11 @@ namespace Radix\Tests\Api {
             }
             putenv('CACHE_PATH=' . $projectRoot . '/cache/views');
 
+            $healthDir = rtrim($projectRoot, "/\\") . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'health';
+            putenv('HEALTH_CACHE_PATH=' . $healthDir);
+            if (!is_dir($healthDir)) {
+                @mkdir($healthDir, 0o755, true);
+            }
 
             $container = new Container();
 
