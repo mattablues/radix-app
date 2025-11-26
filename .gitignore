@@ -1,22 +1,29 @@
-# Ignorera miljövariabler
+# Miljöfiler
 .env
 .env.test
+
+# Byggade assets
 public/css/app.css
 public/js/app.js
-public/images/user
-# Composer- och npm-relaterade filer
+public/images/user/
 
+# Dependencies
 vendor/
 node_modules/
 
-# PHPUnit-cachefiler
-.phpunit.cache
+# Test/coverage-cache
+.phpunit.cache/
 .phpunit.result.cache
 phpunit.xml.bak
+coverage/
 
-# PhpStorm-specifika filer
+# IDE och diverse cache
 .idea/
 cache/
 storage/
 .php-cs-fixer.cache
 infection-report.html
+
+# Build-artifacts
+build/
+-

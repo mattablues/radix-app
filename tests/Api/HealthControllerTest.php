@@ -8,6 +8,7 @@ namespace App\Services {
     {
         public static ?string $lastFilePath = null;
         public static ?int $lastMkdirPermissions = null;
+        public static bool $forceFilePutContentsFail = false; // NY
     }
 
     /**
@@ -16,6 +17,9 @@ namespace App\Services {
     function file_put_contents(string $filename, mixed $data, int $flags = 0, mixed $context = null): int|false
     {
         FileSystemSpy::$lastFilePath = $filename;
+        if (FileSystemSpy::$forceFilePutContentsFail) {
+            return false; // simulera skriv-fel
+        }
         /** @var resource|null $context */
         return \file_put_contents($filename, $data, $flags, $context);
     }
@@ -82,10 +86,11 @@ namespace Radix\Tests\Api {
             }
             putenv('CACHE_PATH=' . $projectRoot . '/cache/views');
 
-            $healthDir = rtrim($projectRoot, "/\\") . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'health';
-            putenv('HEALTH_CACHE_PATH=' . $healthDir);
-            if (!is_dir($healthDir)) {
-                @mkdir($healthDir, 0o755, true);
+            // Endast temp-baserad, unik katalog för HEALTH_CACHE_PATH
+            $uniqueHealth = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . '.__health__' . uniqid('', true) . DIRECTORY_SEPARATOR . 'sub';
+            putenv('HEALTH_CACHE_PATH=' . $uniqueHealth);
+            if (!is_dir($uniqueHealth)) {
+                @mkdir($uniqueHealth, 0o755, true);
             }
 
             $container = new Container();
@@ -119,27 +124,52 @@ namespace Radix\Tests\Api {
 
         protected function tearDown(): void
         {
-            // Reset spies
             \App\Services\FileSystemSpy::$lastFilePath = null;
             \App\Services\FileSystemSpy::$lastMkdirPermissions = null;
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = false;
 
             putenv('HEALTH_REQUIRE_TOKEN');
-            // Ta bort cache/health-katalogen
+            putenv('HEALTH_CACHE_PATH');
+
             $healthDir = rtrim((string) (defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__, 2)), '/\\') . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'health';
-            if (is_dir($healthDir)) {
-                foreach (scandir($healthDir) as $file) {
-                    if ($file === '.' || $file === '..') {
-                        continue;
-                    }
-                    $path = $healthDir . DIRECTORY_SEPARATOR . $file;
-                    if (is_file($path)) {
-                        @unlink($path);
-                    }
+            $this->rrmdir($healthDir);
+
+            // Rensa alla .__health__* i projektroten rekursivt
+            $projectRoot = defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__, 2);
+            $entries = @scandir($projectRoot) ?: [];
+            foreach ($entries as $entry) {
+                if ($entry === '.' || $entry === '..') {
+                    continue;
                 }
-                @rmdir($healthDir);
+                if (str_starts_with($entry, '.__health__')) {
+                    $this->rrmdir($projectRoot . DIRECTORY_SEPARATOR . $entry);
+                }
             }
 
             parent::tearDown();
+        }
+
+        private function rrmdir(string $path): void
+        {
+            if ($path === '' || !file_exists($path)) {
+                return;
+            }
+            if (is_file($path) || is_link($path)) {
+                @unlink($path);
+                return;
+            }
+            // Lägg till extra skydd och tysta scandir-varningar
+            if (!is_dir($path)) {
+                return;
+            }
+            $items = @scandir($path) ?: [];
+            foreach ($items as $item) {
+                if ($item === '.' || $item === '..') {
+                    continue;
+                }
+                $this->rrmdir($path . DIRECTORY_SEPARATOR . $item);
+            }
+            @rmdir($path);
         }
 
         public function testHealthReturnsOkJsonAndHeaders(): void
@@ -175,6 +205,19 @@ namespace Radix\Tests\Api {
             ];
 
             $container = ApplicationContainer::get();
+
+            // Mocka HealthCheckService så _ok blir true för detta test
+            $mockHealthService = $this->createMock(\App\Services\HealthCheckService::class);
+            $mockHealthService->method('run')->willReturn([
+                '_ok' => true,
+                'php' => PHP_VERSION,
+                'time' => date('c'),
+                'db' => 'ok',
+                'fs' => 'ok',
+            ]);
+            /** @var \Radix\Container\Container $container */
+            $container->add(\App\Services\HealthCheckService::class, fn() => $mockHealthService);
+
             $dispatcher = new Dispatcher($router, $container, $middleware);
 
             $request = new Request(
@@ -195,42 +238,28 @@ namespace Radix\Tests\Api {
             $this->assertArrayHasKey('Content-Type', $headers);
             $this->assertArrayHasKey('X-Request-Id', $headers);
 
-            // Verifiera längden på genererat Request ID (12 bytes * 2 hex chars = 24 chars)
-            // Detta dödar IncrementInteger/DecrementInteger mutationer på random_bytes(12)
             $reqId = $headers['X-Request-Id'];
             $this->assertIsString($reqId);
-            // Om vi inte sätter X-Request-Id i requesten ska den genereras med längd 24
             $this->assertSame(24, strlen($reqId), 'Generated Request ID should be 24 chars long (12 bytes hex)');
 
             $this->assertArrayHasKey('X-Response-Time', $headers);
 
-            // Assert that X-Response-Time is a string and ends with "ms"
             $responseTime = $headers['X-Response-Time'];
             $this->assertIsString($responseTime);
             $this->assertStringEndsWith('ms', $responseTime);
-
-            // Kontrollera formatet (siffror följt av ms) för att döda ConcatOperandRemoval
             $this->assertMatchesRegularExpression('/^\d+ms$/', $responseTime);
 
-            // Döda Multiplication mutant: Kontrollera att värdet är rimligt (inte en timestamp)
             $msValue = (int) substr($responseTime, 0, -2);
             $this->assertLessThan(10000, $msValue, 'Response time should be reasonable (< 10s), not a timestamp');
 
-            // Döda MethodCallRemoval för cache-headers
             $this->assertArrayHasKey('Cache-Control', $headers);
             $this->assertSame('no-store, must-revalidate, max-age=0', $headers['Cache-Control']);
-
             $this->assertArrayHasKey('Pragma', $headers);
             $this->assertSame('no-cache', $headers['Pragma']);
-
             $this->assertArrayHasKey('Expires', $headers);
             $this->assertSame('0', $headers['Expires']);
 
-            /** @var array{
-             *     ok: bool,
-             *     checks: array<string, mixed>
-             * } $body
-             */
+            /** @var array{ok: bool, checks: array<string, mixed>} $body */
             $body = json_decode($response->getBody(), true);
             $this->assertIsArray($body);
 
@@ -238,7 +267,6 @@ namespace Radix\Tests\Api {
             $this->assertArrayHasKey('php', $body['checks']);
             $this->assertArrayHasKey('time', $body['checks']);
             $this->assertSame(JSON_ERROR_NONE, json_last_error());
-
         }
 
         public function testRequestIdMiddlewarePreservesExistingId(): void
@@ -915,6 +943,249 @@ namespace Radix\Tests\Api {
                 // Städa env för andra tester
                 putenv('HEALTH_CACHE_PATH');
             }
+        }
+
+        public function testFsOkWhenRealpathResolves(): void
+        {
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = false;
+
+            $dir = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . 'health-realpath-ok-' . uniqid('', true);
+            @mkdir($dir, 0o777, true);
+            $this->assertIsString(realpath($dir), 'realpath ska resolva när katalogen finns');
+
+            putenv('HEALTH_CACHE_PATH=' . $dir);
+            $spy = new TestSpyLogger();
+
+            (new \App\Services\HealthCheckService($spy))->run();
+
+            $found = false;
+            $ctxDir = null;
+            foreach ($spy->logs as $e) {
+                if (is_array($e)) {
+                    $msg = $e['msg'] ?? '';
+                    if (is_string($msg) && str_contains($msg, 'fs=ok')) {
+                        $ctx = $e['ctx'] ?? [];
+                        if (is_array($ctx)) {
+                            $ctxDir = $ctx['dir'] ?? null;
+                        }
+                        $found = true;
+                        break;
+                    }
+                }
+            }
+            $this->assertTrue($found, 'fs=ok-logg saknas');
+            $this->assertSame(realpath($dir), $ctxDir, 'dir i context ska vara realpath när katalogen finns');
+
+            putenv('HEALTH_CACHE_PATH');
+            if (is_dir($dir)) {
+                foreach (scandir($dir) ?: [] as $f) {
+                    if ($f !== '.' && $f !== '..') {
+                        @unlink($dir . DIRECTORY_SEPARATOR . $f);
+                    }
+                }
+                @rmdir($dir);
+            }
+        }
+
+        public function testProbeFilePathIncludesSeparator(): void
+        {
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = false;
+
+            $dir = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . 'health-probe-sep-' . uniqid('', true);
+            @mkdir($dir, 0o777, true);
+            putenv('HEALTH_CACHE_PATH=' . $dir);
+
+            $spy = new TestSpyLogger();
+            (new \App\Services\HealthCheckService($spy))->run();
+
+            // Bas från fs=ok-loggen
+            $ctxDir = null;
+            foreach ($spy->logs as $e) {
+                if (is_array($e)) {
+                    $msg = $e['msg'] ?? '';
+                    if (is_string($msg) && str_contains($msg, 'fs=ok')) {
+                        $ctx = $e['ctx'] ?? [];
+                        if (is_array($ctx)) {
+                            $ctxDir = $ctx['dir'] ?? null;
+                        }
+                        break;
+                    }
+                }
+            }
+            $this->assertIsString($ctxDir);
+
+            $lastFile = \App\Services\FileSystemSpy::$lastFilePath;
+            $this->assertIsString($lastFile);
+            $this->assertStringStartsWith($ctxDir . DIRECTORY_SEPARATOR, $lastFile, 'Probe-filen ska ligga under bas med separator');
+
+            putenv('HEALTH_CACHE_PATH');
+            if (is_dir($dir)) {
+                foreach (scandir($dir) ?: [] as $f) {
+                    if ($f !== '.' && $f !== '..') {
+                        @unlink($dir . DIRECTORY_SEPARATOR . $f);
+                    }
+                }
+                @rmdir($dir);
+            }
+        }
+
+        public function testFsFailMessageContainsExceptionMessage(): void
+        {
+            // Tvinga skrivfel deterministiskt
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = true;
+
+            $dir = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . 'health-fail-msg-' . uniqid('', true);
+            @mkdir($dir, 0o777, true);
+
+            putenv('HEALTH_CACHE_PATH=' . $dir);
+            $spy = new TestSpyLogger();
+
+            $result = (new \App\Services\HealthCheckService($spy))->run();
+
+            // fs ska vara en sträng som börjar med 'fail: ' och inte vara exakt bara prefixet
+            $this->assertArrayHasKey('fs', $result);
+            $this->assertIsString($result['fs']);
+            $this->assertStringStartsWith('fail: ', $result['fs']);
+            $this->assertGreaterThan(strlen('fail: '), strlen($result['fs']), 'Fail-meddelandet får inte vara bara prefixet'); // dödar ConcatOperandRemoval
+
+            // _ok ska vara false vid fel (säkerhetsnät)
+            $this->assertFalse($result['_ok']);
+
+            // Städa
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = false;
+            putenv('HEALTH_CACHE_PATH');
+            @rmdir($dir);
+        }
+
+        public function testFsFailPathTriggersExceptionHandling(): void
+        {
+            // Tvinga skriv-fel deterministiskt
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = true;
+
+            $dir = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . 'health-unwritable-' . uniqid('', true);
+            @mkdir($dir, 0o777, true);
+
+            putenv('HEALTH_CACHE_PATH=' . $dir);
+            $spy = new TestSpyLogger();
+
+            $result = (new \App\Services\HealthCheckService($spy))->run();
+
+            $this->assertFalse($result['_ok'], 'fs-fel ska sätta _ok=false');
+            $this->assertArrayHasKey('fs', $result);
+            $this->assertIsString($result['fs']);
+            $this->assertStringStartsWith('fail: ', $result['fs'], 'fs-fel ska formateras som "fail: {msg}"');
+
+            // städa
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = false;
+            putenv('HEALTH_CACHE_PATH');
+            @rmdir($dir);
+        }
+
+        public function testFsFailLogsErrorWithContext(): void
+        {
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = true;
+
+            $dir = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . 'health-unwritable2-' . uniqid('', true);
+            @mkdir($dir, 0o777, true);
+
+            putenv('HEALTH_CACHE_PATH=' . $dir);
+            $spy = new TestSpyLogger();
+
+            (new \App\Services\HealthCheckService($spy))->run();
+
+            $foundErrorLog = false;
+            foreach ($spy->logs as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $msg = $entry['msg'] ?? '';
+                if (!is_string($msg)) {
+                    continue;
+                }
+                if (str_contains($msg, 'fs=fail')) {
+                    $ctx = $entry['ctx'] ?? null;
+                    $foundErrorLog = is_array($ctx) && array_key_exists('msg', $ctx) && is_string($ctx['msg']);
+                    if ($foundErrorLog) {
+                        break;
+                    }
+                }
+            }
+            $this->assertTrue($foundErrorLog, 'fs=fail ska logga med context["msg"] som sträng');
+
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = false;
+            putenv('HEALTH_CACHE_PATH');
+            @rmdir($dir);
+        }
+
+        public function testLogErrorIsCalledOnFsFailure(): void
+        {
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = true;
+
+            $dir = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . 'health-unwritable3-' . uniqid('', true);
+            @mkdir($dir, 0o777, true);
+
+            putenv('HEALTH_CACHE_PATH=' . $dir);
+            $spy = new TestSpyLogger();
+
+            (new \App\Services\HealthCheckService($spy))->run();
+
+            $hasError = false;
+            foreach ($spy->logs as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $msg = $entry['msg'] ?? '';
+                if (is_string($msg) && str_contains($msg, 'fs=fail')) {
+                    $hasError = true;
+                    break;
+                }
+            }
+            $this->assertTrue($hasError, 'logError ska anropas vid fs-fel');
+
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = false;
+            putenv('HEALTH_CACHE_PATH');
+            @rmdir($dir);
+        }
+
+        public function testFsGuardRejectsInvalidBase(): void
+        {
+            // Tvinga en situation där realpath blir false och basen måste vara sträng
+            $rel = '.__health__' . uniqid('', true) . DIRECTORY_SEPARATOR . 'sub';
+            putenv('HEALTH_CACHE_PATH=' . $rel);
+
+            $this->expectNotToPerformAssertions(); // i original fall ska det inte kasta
+
+            $spy = new TestSpyLogger();
+            (new \App\Services\HealthCheckService($spy))->run();
+
+            // När mutanten ändrar !== till === blir $base=false -> guarden kastar -> Infection dödar mutanten
+            putenv('HEALTH_CACHE_PATH');
+        }
+
+        public function testFsOkWhenRealpathIsFalse(): void
+        {
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = false;
+
+            $rel = '.__health__' . uniqid('', true) . DIRECTORY_SEPARATOR . 'sub';
+            $this->assertFalse(@realpath($rel));
+
+            putenv('HEALTH_CACHE_PATH=' . $rel);
+            $spy = new TestSpyLogger();
+            (new \App\Services\HealthCheckService($spy))->run();
+
+            $ctxDir = null;
+            foreach ($spy->logs as $e) {
+                if (is_array($e) && isset($e['msg']) && str_contains((string) $e['msg'], 'fs=ok')) {
+                    $ctxDir = $e['ctx']['dir'] ?? null;
+                    break;
+                }
+            }
+            $this->assertIsString($ctxDir);
+            $this->assertNotSame('', $ctxDir, 'dir får inte vara tom');
+            $this->assertTrue(str_ends_with($ctxDir, $rel), 'dir ska sluta med relativ suffix');
+
+            putenv('HEALTH_CACHE_PATH');
+            // ingen katalog skapades i rel-läget här, inget att städa
         }
     }
 }
