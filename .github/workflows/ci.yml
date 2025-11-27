@@ -92,8 +92,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RADIX_RUN_ID: "${{ github.run_id }}-${{ github.run_attempt }}"
-      # Viktigt: absolut och skrivbar path för HealthCheckService i CI
-      HEALTH_CACHE_PATH: "${{ github.workspace }}/cache/health"
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -122,19 +120,38 @@ jobs:
           vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default --do-not-cache-result
 
       # Gemensam coverage-generering (PR + schedule) för att köra Infection med --skip-initial-tests
-      - name: Generate coverage for Infection
+      - name: Generate coverage for Infection (abs path scenario)
         if: github.event_name == 'pull_request' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
         env:
           XDEBUG_MODE: coverage
+          HEALTH_CACHE_PATH: "${{ github.workspace }}/cache/health"
         run: |
           rm -rf build/coverage || true
           mkdir -p build/coverage
+          rm -rf .phpunit.cache vendor/bin.phpunit.result.cache || true
           vendor/bin/phpunit \
             -c phpunit.xml \
             --order-by=default \
             --do-not-cache-result \
             --coverage-xml=build/coverage/coverage-xml \
             --log-junit=build/coverage/junit.xml
+
+      - name: Generate coverage for Infection (relative path scenario to force realpath=false)
+        if: github.event_name == 'pull_request' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
+        env:
+          XDEBUG_MODE: coverage
+          HEALTH_CACHE_PATH: ".__health__${{ github.run_id }}-${{ github.run_attempt }}/sub"
+        run: |
+          # Ny separat coverage-mapp för realpath=false-fallet
+          rm -rf build/coverage_rel || true
+          mkdir -p build/coverage_rel
+          rm -rf .phpunit.cache vendor/bin.phpunit.result.cache || true
+          vendor/bin/phpunit \
+            -c phpunit.xml \
+            --order-by=default \
+            --do-not-cache-result \
+            --coverage-xml=build/coverage_rel/coverage-xml \
+            --log-junit=build/coverage_rel/junit.xml
 
       # Kör Infection med skip-initial-tests även på PR
       - name: Run Infection (PR/schedule, skip initial tests, default order)
@@ -146,7 +163,7 @@ jobs:
             --skip-initial-tests \
             --no-interaction \
             --no-progress \
-            --coverage=build/coverage \
+            --coverage=build/coverage-merged \
             --test-framework-options="--order-by=default --do-not-cache-result"
 
       - name: Upload Infection report
