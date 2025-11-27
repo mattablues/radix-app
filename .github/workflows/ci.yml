@@ -57,8 +57,6 @@ jobs:
         env:
           APP_ENV: development
 
-
-  # Hjälpjobb för att hitta flakiga tester på Actions
   php-random:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -92,6 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RADIX_RUN_ID: "${{ github.run_id }}-${{ github.run_attempt }}"
+      HEALTH_CACHE_PATH: "${{ github.workspace }}/cache/health"
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -101,20 +100,25 @@ jobs:
           tools: composer
       - run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Pre-check PHPUnit for Infection
+      - name: Rensa cache/coverage (som lokalt)
+        run: |
+          rm -rf .phpunit.cache build/coverage || true
+          rm -f vendor/bin.phpunit.result.cache || true
+
+      - name: Bygg om autoload (som lokalt)
+        run: composer dump-autoload -o
+
+      - name: Pre-check PHPUnit för Infection
         env:
           XDEBUG_MODE: coverage
           APP_ENV: development
         run: |
           vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default --do-not-cache-result
 
-      # Gemensam coverage-generering (PR + schedule) för att köra Infection med --skip-initial-tests
-      - name: Generate coverage for Infection
-        if: github.event_name == 'pull_request' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
+      - name: Generera coverage för Infection
         env:
           XDEBUG_MODE: coverage
         run: |
-          rm -rf build/coverage || true
           mkdir -p build/coverage
           vendor/bin/phpunit \
             -c phpunit.xml \
@@ -123,12 +127,10 @@ jobs:
             --coverage-xml=build/coverage/coverage-xml \
             --log-junit=build/coverage/junit.xml
 
-      # Kör Infection med skip-initial-tests även på PR
-      - name: Run Infection (PR/schedule, skip initial tests, default order)
-        if: github.event_name == 'pull_request' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
+      - name: Kör Infection (skip initial tests)
         run: |
           vendor/bin/infection \
-            --threads=1 \
+            --threads=2 \
             --ignore-msi-with-no-mutations \
             --skip-initial-tests \
             --no-interaction \
@@ -136,7 +138,7 @@ jobs:
             --coverage=build/coverage \
             --test-framework-options="--order-by=default --do-not-cache-result"
 
-      - name: Upload Infection report
+      - name: Ladda upp Infection-rapport
         if: always()
         uses: actions/upload-artifact@v4
         with:
