@@ -101,28 +101,31 @@ jobs:
           tools: composer
       - run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Clean caches (matchar lokalt) + dump autoload
-        run: |
-          rm -rf .phpunit.cache build/coverage || true
-          rm -f vendor/bin.phpunit.result.cache || true
-          composer dump-autoload -o
-
-      - name: Generate coverage (force realpath=false scenario)
+      - name: Pre-check PHPUnit for Infection
         env:
           XDEBUG_MODE: coverage
           APP_ENV: development
-          HEALTH_CACHE_PATH: ".__health__${{ github.run_id }}-${{ github.run_attempt }}/sub"
         run: |
+          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default --do-not-cache-result
+
+      # Gemensam coverage-generering (PR + schedule) för att köra Infection med --skip-initial-tests
+      - name: Generate coverage for Infection
+        if: github.event_name == 'pull_request' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
+        env:
+          XDEBUG_MODE: coverage
+        run: |
+          rm -rf build/coverage || true
           mkdir -p build/coverage
           vendor/bin/phpunit \
             -c phpunit.xml \
             --order-by=default \
             --do-not-cache-result \
-            --coverage-xml=build/coverage \
+            --coverage-xml=build/coverage/coverage-xml \
             --log-junit=build/coverage/junit.xml
-          test -f build/coverage/index.xml
 
-      - name: Run Infection (skip initial tests)
+      # Kör Infection med skip-initial-tests även på PR
+      - name: Run Infection (PR/schedule, skip initial tests, default order)
+        if: github.event_name == 'pull_request' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
         run: |
           vendor/bin/infection \
             --threads=1 \

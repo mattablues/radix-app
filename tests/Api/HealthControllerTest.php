@@ -1180,12 +1180,8 @@ namespace Radix\Tests\Api {
                     break;
                 }
             }
-
-            // Typ-säkerhet först
-            $this->assertIsString($ctxDir, 'dir ska vara sträng');
-            // Döda mutanten: får inte vara boolean false
-            $this->assertNotSame(false, $ctxDir, 'dir får inte vara boolean false');
-            // Och den ska sluta med relativt suffix
+            $this->assertIsString($ctxDir);
+            $this->assertNotSame('', $ctxDir, 'dir får inte vara tom');
             $this->assertTrue(str_ends_with($ctxDir, $rel), 'dir ska sluta med relativ suffix');
 
             putenv('HEALTH_CACHE_PATH');
