@@ -101,75 +101,36 @@ jobs:
           tools: composer
       - run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Pre-check PHPUnit for Infection
+      - name: Clean caches (matchar lokalt) + dump autoload
+        run: |
+          rm -rf .phpunit.cache build/coverage || true
+          rm -f vendor/bin.phpunit.result.cache || true
+          composer dump-autoload -o
+
+      - name: Generate coverage (force realpath=false scenario)
         env:
           XDEBUG_MODE: coverage
           APP_ENV: development
-        run: |
-          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default --do-not-cache-result
-
-      - name: Clean caches (matchar lokal körning)
-        run: |
-          rm -rf .phpunit.cache build/coverage_abs build/coverage_rel || true
-          rm -f vendor/bin.phpunit.result.cache || true
-
-      - name: Dump autoload (optimize)
-        run: composer dump-autoload -o
-
-      # 1) Coverage med absolut HEALTH_CACHE_PATH (realpath sannolikt true)
-      - name: Generate coverage (abs path)
-        env:
-          XDEBUG_MODE: coverage
-          HEALTH_CACHE_PATH: "${{ github.workspace }}/cache/health"
-        run: |
-          mkdir -p build/coverage_abs
-          vendor/bin/phpunit \
-            -c phpunit.xml \
-            --order-by=default \
-            --do-not-cache-result \
-            --coverage-xml=build/coverage_abs \
-            --log-junit=build/coverage_abs/junit.xml
-
-      # Kör Infection mot den här coverage-mappen direkt
-      - name: Run Infection on abs coverage
-        run: |
-          test -f build/coverage_abs/index.xml
-          vendor/bin/infection \
-            --threads=1 \
-            --ignore-msi-with-no-mutations \
-            --skip-initial-tests \
-            --no-interaction \
-            --no-progress \
-            --coverage=build/coverage_abs \
-            --test-framework-options="--order-by=default --do-not-cache-result"
-
-      # 2) Coverage med relativ HEALTH_CACHE_PATH för att forcera realpath=false-fallet
-      - name: Generate coverage (relative path -> realpath=false)
-        if: always()
-        env:
-          XDEBUG_MODE: coverage
           HEALTH_CACHE_PATH: ".__health__${{ github.run_id }}-${{ github.run_attempt }}/sub"
         run: |
-          rm -rf .phpunit.cache vendor/bin.phpunit.result.cache || true
-          mkdir -p build/coverage_rel
+          mkdir -p build/coverage
           vendor/bin/phpunit \
             -c phpunit.xml \
             --order-by=default \
             --do-not-cache-result \
-            --coverage-xml=build/coverage_rel \
-            --log-junit=build/coverage_rel/junit.xml
+            --coverage-xml=build/coverage \
+            --log-junit=build/coverage/junit.xml
+          test -f build/coverage/index.xml
 
-      - name: Run Infection on relative coverage
-        if: always()
+      - name: Run Infection (skip initial tests)
         run: |
-          test -f build/coverage_rel/index.xml
           vendor/bin/infection \
             --threads=1 \
             --ignore-msi-with-no-mutations \
             --skip-initial-tests \
             --no-interaction \
             --no-progress \
-            --coverage=build/coverage_rel \
+            --coverage=build/coverage \
             --test-framework-options="--order-by=default --do-not-cache-result"
 
       - name: Upload Infection report
