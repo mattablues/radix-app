@@ -1183,6 +1183,8 @@ namespace Radix\Tests\Api {
             $this->assertIsString($ctxDir);
             $this->assertNotSame('', $ctxDir, 'dir får inte vara tom');
             $this->assertTrue(str_ends_with($ctxDir, $rel), 'dir ska sluta med relativ suffix');
+            // Viktigt för att döda NotIdentical-mutationen: när realpath() === false får "dir" inte vara === false
+            $this->assertNotSame(false, $ctxDir, 'dir får inte vara boolean false');
 
             putenv('HEALTH_CACHE_PATH');
             // ingen katalog skapades i rel-läget här, inget att städa
