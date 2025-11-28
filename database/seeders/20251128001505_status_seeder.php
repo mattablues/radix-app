@@ -6,7 +6,7 @@ final class StatusSeeder
 {
     public function run(): void
     {
-        $user = \App\Models\User::where('email', '=', 'admin@example.com')->first();
+        $user = \App\Models\User::where('email', '=', 'mats@akebrands.se')->first();
         if ($user === null) {
             return;
         }
@@ -23,8 +23,8 @@ final class StatusSeeder
             [
                 'password_reset'   => null,
                 'reset_expires_at' => null,
-                'activation'       => bin2hex(random_bytes(16)),
-                'status'           => 'activate',
+                'activation'       => null,
+                'status'           => 'activated',
                 'active'           => 'offline',
                 'active_at'        => null,
             ]
@@ -33,7 +33,7 @@ final class StatusSeeder
 
     public function down(): void
     {
-        $user = \App\Models\User::where('email', '=', 'admin@example.com')->first();
+        $user = \App\Models\User::where('email', '=', 'mats@akebrands.se')->first();
         if (!$user) return;
 
         // ta bort barn först

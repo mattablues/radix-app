@@ -195,6 +195,13 @@ $container->add(\Radix\Console\Commands\MakeControllerCommand::class, function (
     return new \Radix\Console\Commands\MakeControllerCommand($controllerPath, $templatePath);
 });
 
+$container->add(\Radix\Console\Commands\MakeTestCommand::class, function () {
+    $controllerPath = ROOT_PATH . '/tests';
+    $templatePath = ROOT_PATH . '/templates';
+
+    return new \Radix\Console\Commands\MakeTestCommand($controllerPath, $templatePath);
+});
+
 $container->add(\Radix\Console\Commands\MakeEventCommand::class, function () {
     $eventPath = ROOT_PATH . '/src/Events';
     $templatePath = ROOT_PATH . '/templates';
@@ -322,7 +329,10 @@ $container->add(\Radix\Console\CommandsRegistry::class, function () {
     // Registrera alla CLI-kommandon med det nya namnsystemet
     $registry->register('migrations:migrate', Radix\Console\Commands\MigrationCommand::class);
     $registry->register('migrations:rollback', Radix\Console\Commands\MigrationCommand::class);
+    $registry->register('seeds:run', \Radix\Console\Commands\SeedCommand::class);
+    $registry->register('seeds:rollback', \Radix\Console\Commands\SeedCommand::class);
     $registry->register('make:migration', Radix\Console\Commands\MakeMigrationCommand::class);
+    $registry->register('make:seeder', \Radix\Console\Commands\MakeSeederCommand::class);
     $registry->register('make:model', Radix\Console\Commands\MakeModelCommand::class); // Nytt kommando
     $registry->register('make:controller', Radix\Console\Commands\MakeControllerCommand::class);
     $registry->register('make:event', Radix\Console\Commands\MakeEventCommand::class);
@@ -330,10 +340,8 @@ $container->add(\Radix\Console\CommandsRegistry::class, function () {
     $registry->register('make:middleware', Radix\Console\Commands\MakeMiddlewareCommand::class);
     $registry->register('make:service', Radix\Console\Commands\MakeServiceCommand::class);
     $registry->register('make:provider', Radix\Console\Commands\MakeProviderCommand::class);
+    $registry->register('make:test', Radix\Console\Commands\MakeTestCommand::class);
     $registry->register('make:view', Radix\Console\Commands\MakeViewCommand::class);
-    $registry->register('make:seeder', \Radix\Console\Commands\MakeSeederCommand::class);
-    $registry->register('seeds:run', \Radix\Console\Commands\SeedCommand::class);
-    $registry->register('seeds:rollback', \Radix\Console\Commands\SeedCommand::class);
 
     return $registry;
 });

@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+namespace [Namespace];
+
+use PHPUnit\Framework\TestCase;
+
+class [TestClass] extends TestCase
+{
+    public function testExample(): void
+    {
+        $this->assertTrue(true);
+    }
+}
