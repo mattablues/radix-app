@@ -8,7 +8,7 @@ $finder = (new PhpCsFixer\Finder())
         __DIR__ . '/config',
         __DIR__ . '/routes',
         __DIR__ . '/support',
-        __DIR__ . '/migrations',
+        __DIR__.'/database',
         // Lägg till fler mappar vid behov, t.ex. 'tools' om du vill städa dem
     ])
     ->name('*.php')

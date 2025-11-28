@@ -34,7 +34,9 @@ final class StatusSeeder
     public function down(): void
     {
         $user = \App\Models\User::where('email', '=', 'mats@akebrands.se')->first();
-        if (!$user) return;
+        if (!$user) {
+            return;
+        }
 
         // ta bort barn först
         \App\Models\Status::where('user_id', '=', $user->id)->delete();

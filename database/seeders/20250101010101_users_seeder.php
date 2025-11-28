@@ -25,7 +25,9 @@ final class UsersSeeder
     public function down(): void
     {
         $user = \App\Models\User::where('email', '=', 'mats@akebrands.se')->first();
-        if (!$user) return;
+        if (!$user) {
+            return;
+        }
 
         \App\Models\Status::where('user_id', '=', $user->id)->delete(); // barn först
         $user->forceDelete(); // hård radering, kringgår soft deletes
