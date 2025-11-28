@@ -7,7 +7,6 @@ use Radix\Config\Dotenv;
 use Radix\Console\CommandsRegistry;
 use Radix\Database\DatabaseManager;
 use Radix\Database\Migration\Migrator;
-use Radix\Database\Migration\SeederRunner;
 use Radix\Mailer\MailManager;
 use Radix\Viewer\TemplateViewerInterface;
 
