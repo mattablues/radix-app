@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+final class [ClassName]
+{
+    public function __construct(private readonly PDO $pdo) {}
+
+    public function run(): void
+    {
+        // Exempel:
+        // $stmt = $this->pdo->prepare('INSERT INTO table (col) VALUES (:val)');
+        // $stmt->execute([':val' => 'value']);
+    }
+
+    public function down(): void
+    {
+        // Valfritt: rulla tillbaka seed-data
+    }
+}

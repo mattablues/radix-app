@@ -286,6 +286,36 @@ $container->add(\Radix\Database\Migration\Schema::class, function () use ($conta
     return new \Radix\Database\Migration\Schema($connection);
 });
 
+$container->add(Radix\Database\Migration\SeederRunner::class, function () use ($container) {
+    /** @var \Radix\Database\Connection $connection */
+    $connection = $container->get(\Radix\Database\Connection::class);
+    $seedersPath = ROOT_PATH . '/database/seeders';
+    if (!is_dir($seedersPath)) {
+        mkdir($seedersPath, 0o755, true);
+    }
+    return new Radix\Database\Migration\SeederRunner($seedersPath, $connection);
+});
+
+$container->add(\Radix\Console\Commands\SeedCommand::class, function () use ($container) {
+    /** @var Radix\Database\Migration\SeederRunner $runner */
+    $runner = $container->get(Radix\Database\Migration\SeederRunner::class);
+    return new Radix\Console\Commands\SeedCommand($runner);
+});
+
+$container->add(\Radix\Console\Commands\MakeSeederCommand::class, function () {
+    $seederPath = ROOT_PATH . '/database/seeders';
+    $templatePath = ROOT_PATH . '/templates/seeders';
+
+    if (!is_dir($seederPath)) {
+        mkdir($seederPath, 0o755, true);
+    }
+    if (!is_dir($templatePath)) {
+        mkdir($templatePath, 0o755, true);
+    }
+
+    return new \Radix\Console\Commands\MakeSeederCommand($seederPath, $templatePath);
+});
+
 $container->add(\Radix\Console\CommandsRegistry::class, function () {
     $registry = new CommandsRegistry();
 
@@ -301,6 +331,9 @@ $container->add(\Radix\Console\CommandsRegistry::class, function () {
     $registry->register('make:service', Radix\Console\Commands\MakeServiceCommand::class);
     $registry->register('make:provider', Radix\Console\Commands\MakeProviderCommand::class);
     $registry->register('make:view', Radix\Console\Commands\MakeViewCommand::class);
+    $registry->register('make:seeder', \Radix\Console\Commands\MakeSeederCommand::class);
+    $registry->register('seeds:run', \Radix\Console\Commands\SeedCommand::class);
+    $registry->register('seeds:rollback', \Radix\Console\Commands\SeedCommand::class);
 
     return $registry;
 });
