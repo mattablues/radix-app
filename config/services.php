@@ -171,7 +171,7 @@ $container->add(\Radix\Database\Migration\Migrator::class, function () use ($con
 
     /** @var \Radix\Database\Connection $connection */
 
-    $migrationsPath = ROOT_PATH . '/migrations';
+    $migrationsPath = ROOT_PATH . '/database/migrations';
 
     return new Migrator($connection, $migrationsPath);
 });
@@ -245,7 +245,7 @@ $container->add(\Radix\Console\Commands\MakeViewCommand::class, function () {
 });
 
 $container->add(\Radix\Console\Commands\MakeMigrationCommand::class, function () {
-    $migrationPath = ROOT_PATH . '/migrations';
+    $migrationPath = ROOT_PATH . '/database/migrations';
     $templatePath = ROOT_PATH . '/templates/migrations';
 
     // Säkerställ att katalogerna är tillgängliga
