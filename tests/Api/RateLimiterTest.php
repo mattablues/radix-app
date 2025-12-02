@@ -630,4 +630,46 @@ final class RateLimiterTest extends TestCase
         $this->assertArrayHasKey('c', $payload, 'Cache måste innehålla räknaren.');
         $this->assertArrayHasKey('e', $payload, 'Cache måste innehålla expiration-tiden.');
     }
+
+    public function testRatelimitCachePathEnvOverridesDefaultLocation(): void
+    {
+        // Spara ev. tidigare värde för att kunna återställa
+        $originalEnv = getenv('RATELIMIT_CACHE_PATH') === false
+            ? null
+            : (string) getenv('RATELIMIT_CACHE_PATH');
+
+        // Skapa en unik katalog för detta test
+        $customDir = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'ratelimit_env_test_' . uniqid();
+        @mkdir($customDir, 0o777, true);
+
+        // Sätt env-variabeln så att RateLimiter ska använda denna katalog
+        putenv('RATELIMIT_CACHE_PATH=' . $customDir);
+
+        try {
+            // Använd default-konstruktorn (ingen FileCache injicerad)
+            $mw = new RateLimiter(); // limit=60, window=60, bucket=null => 'default'
+            $handler = $this->makeHandler();
+            $req = $this->makeRequest('203.0.113.42');
+
+            // Trigga minst en skrivning
+            $res = $mw->process($req, $handler);
+            $this->assertSame(200, $res->getStatusCode());
+
+            // Verifiera att katalogen från env används och innehåller minst en .cache-fil
+            $this->assertDirectoryExists($customDir, 'RATELIMIT_CACHE_PATH-katalogen måste existera');
+            $files = glob($customDir . DIRECTORY_SEPARATOR . '*.cache') ?: [];
+            $this->assertNotEmpty(
+                $files,
+                'Ingen cachefil hittades i RATELIMIT_CACHE_PATH-katalogen – env ska override:a default-lokationen'
+            );
+        } finally {
+            // Städa env efter testet
+            if ($originalEnv === null) {
+                putenv('RATELIMIT_CACHE_PATH');
+            } else {
+                putenv('RATELIMIT_CACHE_PATH=' . $originalEnv);
+            }
+        }
+    }
+
 }
