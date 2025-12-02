@@ -1,0 +1,24 @@
+Utveckling (tillåt Vite/localhost):
+CORS_ALLOW_ORIGIN=http://localhost:5173
+CORS_ALLOW_CREDENTIALS=1
+Produktion (en specifik domän, med credentials):
+CORS_ALLOW_ORIGIN=https://app.example.com
+CORS_ALLOW_CREDENTIALS=1
+Öppen (inte rekommenderat med credentials):
+CORS_ALLOW_ORIGIN=*
+CORS_ALLOW_CREDENTIALS=0
+
+
+Globalt för gruppen: ['request.id','api.logger','api.throttle']
+Per route hårdare: ->middleware(['api.throttle.hard'])
+Mindre strikt: ->middleware(['api.throttle.light'])
+
+Sänka kvoten per route? Skapa fler alias (t.ex. api.throttle.light) via containern med andra ctor‑värden.
+Logga svarstid som header globalt? Lägg ett enkelt middleware som sätter X-Response-Time (du har redan X-Response-Time i svaret, så bra).
+Lägga test för 429 och headers? Jag kan skissa ett PHPUnit-test
+
+RequestLogger: ja, använd både på API och webbrutter (ger spårning/fejsökning överallt).
+RateLimiter: primärt på API. På webbrutter endast på “heta” endpoints (t.ex. formulär POST, auth, sök) eller publika sidor som riskerar missbruk. Använd “light” policy för webben.
+Praktiskt:
+API-grupp: ['request.id','api.logger','api.throttle'].
+Webb-grupp: ['request.id','api.logger'] och selektivt lägg till 'api.throttle.light' på specifika rutter (t.ex. POST /login, POST /contact).

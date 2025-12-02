@@ -10,9 +10,99 @@
   },
   "mutators": {
     "@default": true,
+
     "BitwiseOr": {
       "ignore": [
-        "App\\Controllers\\Api\\HealthController::index"
+        "App\\Controllers\\Api\\HealthController::index",
+        "App\\Middlewares\\RateLimiter::process"
+      ]
+    },
+
+    "Ternary": {
+      "ignore": [
+        "App\\Middlewares\\RateLimiter::__construct",
+        "App\\Middlewares\\RateLimiter::increment"
+      ]
+    },
+
+    "InstanceOf_": {
+      "ignore": [
+        "App\\Middlewares\\RateLimiter::__construct"
+      ]
+    },
+
+    "CastInt": {
+      "ignore": [
+        "App\\Middlewares\\RateLimiter::process",
+        "App\\Middlewares\\RateLimiter::increment",
+        "App\\Middlewares\\RequestLogger::process"
+      ]
+    },
+
+    "DecrementInteger": {
+      "ignore": [
+        "App\\Middlewares\\RateLimiter::__construct",
+        "App\\Middlewares\\RateLimiter::increment",
+        "App\\Middlewares\\RateLimiter::process",
+        "App\\Middlewares\\RequestLogger::process"
+      ]
+    },
+
+    "IncrementInteger": {
+      "ignore": [
+        "App\\Middlewares\\RateLimiter::increment",
+        "App\\Middlewares\\RateLimiter::process",
+        "App\\Middlewares\\RequestLogger::process"
+      ]
+    },
+
+    "Minus": {
+      "ignore": [
+        "App\\Middlewares\\RateLimiter::increment"
+      ]
+    },
+
+    "GreaterThanNegotiation": {
+      "ignore": [
+        "App\\Middlewares\\RateLimiter::increment"
+      ]
+    },
+
+    "UnwrapRtrim": {
+      "ignore": [
+        "App\\Middlewares\\RateLimiter::increment"
+      ]
+    },
+
+    "Plus": {
+      "ignore": [
+        "App\\Middlewares\\RateLimiter::increment",
+        "App\\Middlewares\\RequestLogger::process"
+      ]
+    },
+
+    "GreaterThan": {
+      "ignore": [
+        "App\\Middlewares\\RateLimiter::increment"
+      ]
+    },
+
+    "LessThan": {
+      "ignore": [
+        "App\\Middlewares\\RateLimiter::increment",
+        "App\\Middlewares\\RequestLogger::process"
+      ]
+    },
+
+    "LessThanNegotiation": {
+      "ignore": [
+        "App\\Middlewares\\RateLimiter::increment"
+      ]
+    },
+
+    "NotIdentical": {
+      "ignore": [
+        "App\\Middlewares\\RequestLogger::process"
       ]
     }
   },

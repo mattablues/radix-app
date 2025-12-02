@@ -14,4 +14,10 @@ return [
     'role.min.moderator' => \App\Middlewares\RequireModeratorOrHigher::class,
     'role.min.editor' => \App\Middlewares\RequireEditorOrHigher::class,
     'role.min.support' => \App\Middlewares\RequireSupportOrHigher::class,
+    // API-observability
+    'api.logger' => \App\Middlewares\RequestLogger::class,
+    'api.throttle' => \App\Middlewares\RateLimiter::class,
+    // Policies
+    'api.throttle.light' => \App\Middlewares\RateLimiterLight::class,
+    'api.throttle.hard'  => \App\Middlewares\RateLimiterHard::class,
 ];

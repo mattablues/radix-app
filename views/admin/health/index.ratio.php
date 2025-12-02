@@ -23,6 +23,14 @@
               <li><strong>FS:</strong> {{ (isset($checks['fs']) && $checks['fs'] === 'ok') ? 'ok' : 'fail' }}</li>
             </ul>
           </div>
+
+          <div class="p-4 border border-gray-200 rounded-xl">
+            <h2 class="text-xl font-semibold mb-2">CORS</h2>
+            <ul class="space-y-1">
+              <li><strong>CORS_ALLOW_ORIGIN:</strong> {{ getenv('CORS_ALLOW_ORIGIN') ?: '*' }}</li>
+              <li><strong>CORS_ALLOW_CREDENTIALS:</strong> {{ (getenv('CORS_ALLOW_CREDENTIALS') === '1') ? '1' : '0' }}</li>
+            </ul>
+          </div>
         </div>
 
         <div class="mt-6">
