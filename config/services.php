@@ -244,6 +244,10 @@ $container->add(\Radix\Console\Commands\MakeViewCommand::class, function () {
     return new \Radix\Console\Commands\MakeViewCommand($viewsPath, $templatePath);
 });
 
+$container->add(\Radix\Console\Commands\CacheClearCommand::class, function () {
+    return new \Radix\Console\Commands\CacheClearCommand();
+});
+
 $container->add(\Radix\Console\Commands\MakeMigrationCommand::class, function () {
     $migrationPath = ROOT_PATH . '/database/migrations';
     $templatePath = ROOT_PATH . '/templates/migrations';
@@ -342,6 +346,8 @@ $container->add(\Radix\Console\CommandsRegistry::class, function () {
     $registry->register('make:provider', Radix\Console\Commands\MakeProviderCommand::class);
     $registry->register('make:test', Radix\Console\Commands\MakeTestCommand::class);
     $registry->register('make:view', Radix\Console\Commands\MakeViewCommand::class);
+    $registry->register('cache:clear', \Radix\Console\Commands\CacheClearCommand::class);
+
 
     return $registry;
 });
