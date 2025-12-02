@@ -1,3 +1,6 @@
+----------------------------------------------------------------------------------------------
+Cache
+----------------------------------------------------------------------------------------------
 Använd Windows-kommandon i PowerShell eller Cmd.
 PowerShell (rekommenderas):
 - Radera mappar rekursivt och tyst:
@@ -40,7 +43,7 @@ Remove-Item -Recurse -Force "$env:TEMP\radix_ratelimit" -ErrorAction SilentlyCon
 composer dump-autoload -o
 vendor/bin/phpunit -d opcache.enable_cli=0
 vendor/bin/infection --threads=1 --show-mutations --initial-tests-php-options="-d opcache.enable_cli=0"
---------------------------------------------------------------------------------------
+
 Remove-Item -Recurse -Force "$env:TEMP\radix_ratelimit" -ErrorAction SilentlyContinue
 Remove-Item -Recurse -Force .phpunit.cache, build\coverage -ErrorAction SilentlyContinue
 Remove-Item -Force vendor\bin.phpunit.result.cache -ErrorAction SilentlyContinue
@@ -49,3 +52,6 @@ vendor/bin/phpunit -d opcache.enable_cli=0
 vendor/bin/infection --threads=1 --show-mutations --filter=src/Middlewares/RequestLogger.php --initial-tests-php-options="-d opcache.enable_cli=0"
 
 vendor/bin/infection --threads=1 --show-mutations --filter=src/Middlewares/RateLimiter.php --filter=src/Middlewares/RequestLogger.php --initial-tests-php-options="-d opcache.enable_cli=0"
+----------------------------------------------------------------------------------------------
+Cache
+----------------------------------------------------------------------------------------------
