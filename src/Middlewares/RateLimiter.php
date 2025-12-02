@@ -82,8 +82,17 @@ class RateLimiter implements MiddlewareInterface
             return (int) $val;
         }
 
-        $cacheDir = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'radix_ratelimit';
-        $cache = $this->fileCache ?? new FileCache($cacheDir);
+        // Om RATELIMIT_CACHE_PATH är satt: använd alltid den
+        $envPath = getenv('RATELIMIT_CACHE_PATH');
+        if (is_string($envPath) && $envPath !== '') {
+            $cacheDir = rtrim($envPath, '/\\');
+            $cache = new FileCache($cacheDir);
+        } else {
+            // Annars: behåll gamla beteendet (injicerad FileCache eller tempdir)
+            $cacheDir = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'radix_ratelimit';
+            $cache = $this->fileCache ?? new FileCache($cacheDir);
+        }
+
         $now = time();
 
         /** @var array{c:int,e:int}|null $payload */
