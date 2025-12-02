@@ -14,6 +14,8 @@ use Radix\Viewer\TemplateViewerInterface;
 $dotenv = new Dotenv(ROOT_PATH . '/.env', ROOT_PATH);
 $dotenv->load();
 
+(new \Radix\Config\EnvValidator())->validate(ROOT_PATH);
+
 // Skapa containern
 $container = new Radix\Container\Container();
 $container->add(\Psr\Container\ContainerInterface::class, $container);
