@@ -373,3 +373,11 @@ foreach ($users as $user) {
 
     $user->setRelation('roles_with_notes', $activeRolesWithNotes);
 }
+
+----------------------------------------------------------------------------------------------
+CSP Nounce
+----------------------------------------------------------------------------------------------
+
+<script nonce="<?= secure_output(csp_nonce(), true) ?>" src="{{ versioned_file('/js/app.js') }}"></script>
+<!-- ev. inline -->
+<script nonce="<?= secure_output(csp_nonce(), true) ?>">window.App = {};</script>

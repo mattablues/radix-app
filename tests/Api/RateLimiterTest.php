@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Radix\Tests\Api;
 
-use App\Middlewares\RateLimiter;
 use PHPUnit\Framework\TestCase;
 use Radix\Http\Request;
 use Radix\Http\RequestHandlerInterface;
 use Radix\Http\Response;
+use Radix\Middleware\Middlewares\RateLimiter;
 use Radix\Support\FileCache;
 
 final class RateLimiterTest extends TestCase
