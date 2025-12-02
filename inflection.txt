@@ -1,3 +1,6 @@
-composer infect -- --filter=src/Controllers/Api/HealthController.php
+composer infect -- --filter=src/Controllers/Api/HealthController.php   --show-mutations
 
     vendor/bin/infection --threads=1 --min-msi=20 --min-covered-msi=20
+
+
+vendor/bin/infection --threads=1 --show-mutations --filter=src/Middlewares/RateLimiter.php --initial-tests-php-options="-d opcache.enable_cli=0"

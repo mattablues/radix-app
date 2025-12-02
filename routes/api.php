@@ -4,36 +4,42 @@ declare(strict_types=1);
 
 /** @var \Radix\Routing\Router $router */
 
-// API-rutter med versionering
-$router->group(['path' => '/api/v1', 'middleware' => ['request.id']], function (\Radix\Routing\Router $router) {
-    //    // Route för att hämta alla användare
-    $router->get('/users', [\App\Controllers\Api\UserController::class, 'index'])
-        ->name('api.users.index');
-    //
-    //    // Route för att skapa en ny användare
-    //    $router->post('/users', [\App\Controllers\Api\UserController::class, 'store'])
-    //        ->name('api.users.store');
-    //
-    //    // Route för att uppdatera en användares alla fält (PUT)
-    //    $router->put('/users/{id}', [\App\Controllers\Api\UserController::class, 'update'])
-    //        ->name('api.users.update');
-    //
-    //    // Route för att delvis uppdatera en användare (PATCH)
-    //    $router->patch('/users/{id}', [\App\Controllers\Api\UserController::class, 'partialUpdate'])
-    //        ->name('api.users.partialUpdate');
-    //
-    //    // Route för att radera en användare (DELETE)
-    //    $router->delete('/users/{id}', [\App\Controllers\Api\UserController::class, 'delete'])
-    //        ->name('api.users.delete');
-
-    $router->post('/search/users', [\App\Controllers\Api\SearchController::class, 'users'])
-           ->name('api.search.users');
-
-    $router->post('/search/deleted-users', [\App\Controllers\Api\SearchController::class, 'deletedUsers'])
-       ->name('api.search.deleted-users');
-
+// Toppgrupp: request-id + logging på hela API:t (ingen throttle här)
+$router->group(['path' => '/api/v1', 'middleware' => ['request.id', 'api.logger']], function (\Radix\Routing\Router $router) {
+    // Health: endast allowlist, ingen throttling
     $router->get('/health', [\App\Controllers\Api\HealthController::class, 'index'])
-        ->name('api.health.index')->middleware(['ip.allowlist']);
+        ->name('api.health.index')
+        ->middleware(['ip.allowlist']);
+
+    // Undergrupp: throttling på resten (standardpolicy)
+    $router->group(['middleware' => ['api.throttle']], function (\Radix\Routing\Router $router) {
+        // Route för att hämta alla användare
+        $router->get('/users', [\App\Controllers\Api\UserController::class, 'index'])
+            ->name('api.users.index');
+
+        // Route för att skapa en ny användare
+        //        $router->post('/users', [\App\Controllers\Api\UserController::class, 'store'])
+        //            ->name('api.users.store');
+        //
+        //        // Route för att uppdatera en användares alla fält (PUT)
+        //        $router->put('/users/{id}', [\App\Controllers\Api\UserController::class, 'update'])
+        //            ->name('api.users.update');
+        //
+        //        // Route för att delvis uppdatera en användare (PATCH)
+        //        $router->patch('/users/{id}', [\App\Controllers\Api\UserController::class, 'partialUpdate'])
+        //            ->name('api.users.partialUpdate');
+        //
+        //        // Route för att radera en användare (DELETE)
+        //        $router->delete('/users/{id}', [\App\Controllers\Api\UserController::class, 'delete'])
+        //            ->name('api.users.delete');
+        //
+        //        // Sök-endpoints
+        $router->post('/search/users', [\App\Controllers\Api\SearchController::class, 'users'])
+               ->name('api.search.users');
+
+        $router->post('/search/deleted-users', [\App\Controllers\Api\SearchController::class, 'deletedUsers'])
+           ->name('api.search.deleted-users');
+    });
 
     // Preflight (OPTIONS mappas till GET i Dispatcher): returnera 204 endast om originalmetoden var OPTIONS
     $router->get('/{any:.*}', function () {
