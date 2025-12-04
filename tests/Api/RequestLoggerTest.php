@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Radix\Tests\Api;
 
-use App\Middlewares\RequestLogger;
 use PHPUnit\Framework\TestCase;
 use Radix\Http\Request;
 use Radix\Http\RequestHandlerInterface;
 use Radix\Http\Response;
+use Radix\Middleware\Middlewares\RequestLogger;
 use Radix\Session\SessionInterface;
 use Radix\Support\Logger;
 use RuntimeException;

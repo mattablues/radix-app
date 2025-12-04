@@ -201,7 +201,7 @@ namespace Radix\Tests\Api {
             });
 
             $middleware = [
-                'request.id' => \App\Middlewares\RequestId::class,
+                'request.id' => \Radix\Middleware\Middlewares\RequestId::class,
             ];
 
             $container = ApplicationContainer::get();
@@ -282,7 +282,7 @@ namespace Radix\Tests\Api {
                        ->middleware(['request.id']);
 
                 $middleware = [
-                    'request.id' => \App\Middlewares\RequestId::class,
+                    'request.id' => \Radix\Middleware\Middlewares\RequestId::class,
                 ];
 
                 $container = ApplicationContainer::get();

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Middlewares;
+namespace Radix\Middleware\Middlewares;
 
 final class RateLimiterHard extends RateLimiter
 {

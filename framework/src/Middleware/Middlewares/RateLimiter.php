@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Middlewares;
+namespace Radix\Middleware\Middlewares;
 
 use Radix\Http\JsonResponse;
 use Radix\Http\Request;

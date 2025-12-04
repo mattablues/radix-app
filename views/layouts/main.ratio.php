@@ -37,7 +37,7 @@
 
   {% include "components/cookie-consent.ratio.php" %}
   {% yield alpinejs %}
-  <script src="{{ versioned_file('/js/app.js') }}"></script>
+  <script nonce="<?= secure_output(csp_nonce(), true) ?>" src="{{ versioned_file('/js/app.js') }}"></script>
   {% yield script %}
 </body>
 </html>
