@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Radix\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Radix\Config\Config; // lägg till denna rad
 use Radix\EventDispatcher\EventDispatcher;
 use Radix\Http\Event\ResponseEvent;
 use Radix\Http\EventListeners\CacheControlListener;
@@ -51,15 +52,33 @@ class EventListenerTest extends TestCase
 
     public function testCorsListenerSetsHeader(): void
     {
-        putenv('APP_ENV=development');
-        putenv('CORS_ENABLED=1');
-        putenv('CORS_ALLOW_ORIGIN=*');
+        // CORS är nu konfigdrivet – bygg en minimal Config bara för detta test
+        $config = new Config([
+            'cors' => [
+                'enabled' => true,
+                'paths' => ['/'],           // låt allt matcha i detta test
+                'allow_origins' => ['*'],
+                'allow_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+                'allow_headers' => ['Authorization', 'Content-Type', 'X-Requested-With'],
+                'expose_headers' => [],
+                'max_age' => 600,
+                'allow_credentials' => false,
+            ],
+        ]);
 
-        $request = new Request(uri: "/test", method: "GET", get: [], post: [], files: [], cookie: [], server: []);
+        $request = new Request(
+            uri: "/test",
+            method: "GET",
+            get: [],
+            post: [],
+            files: [],
+            cookie: [],
+            server: []
+        );
         $response = new Response();
         $event = new ResponseEvent($request, $response);
 
-        (new CorsListener())($event);
+        (new CorsListener($config))($event);
 
         $this->assertEquals('*', $response->getHeaders()['Access-Control-Allow-Origin']);
     }
@@ -133,17 +152,34 @@ class EventListenerTest extends TestCase
 
     public function testEventDispatcherCallsListeners(): void
     {
-        putenv('APP_ENV=development');
-        putenv('CORS_ENABLED=1');
-        putenv('CORS_ALLOW_ORIGIN=*');
-
         $dispatcher = new EventDispatcher();
         $response = new Response();
-        $request = new Request(uri: "/test", method: "GET", get: [], post: [], files: [], cookie: [], server: []);
+        $request = new Request(
+            uri: "/test",
+            method: "GET",
+            get: [],
+            post: [],
+            files: [],
+            cookie: [],
+            server: []
+        );
         $event = new ResponseEvent($request, $response);
 
+        $config = new Config([
+            'cors' => [
+                'enabled' => true,
+                'paths' => ['/'],
+                'allow_origins' => ['*'],
+                'allow_methods' => ['GET'],
+                'allow_headers' => ['Authorization'],
+                'expose_headers' => [],
+                'max_age' => 0,
+                'allow_credentials' => false,
+            ],
+        ]);
+
         $dispatcher->addListener(ResponseEvent::class, new CacheControlListener());
-        $dispatcher->addListener(ResponseEvent::class, new CorsListener());
+        $dispatcher->addListener(ResponseEvent::class, new CorsListener($config));
         $dispatcher->addListener(ResponseEvent::class, new ContentLengthListener());
 
         $dispatcher->dispatch($event);
