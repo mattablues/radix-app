@@ -36,18 +36,27 @@ class UploadTest extends TestCase
 
     protected function tearDown(): void
     {
-        // Ta bort uppladdningsmappen och dess innehåll
-        $files = glob($this->uploadDirectory . '/*');
+        $this->deleteDir($this->uploadDirectory);
+    }
 
-        if ($files === false) {
-            $files = [];
+    private function deleteDir(string $dir): void
+    {
+        if (!is_dir($dir)) {
+            return;
         }
-
-        foreach ($files as $file) {
-            unlink($file);
+        $items = scandir($dir) ?: [];
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+            $path = $dir . DIRECTORY_SEPARATOR . $item;
+            if (is_dir($path)) {
+                $this->deleteDir($path);
+            } else {
+                @unlink($path);
+            }
         }
-
-        rmdir($this->uploadDirectory);
+        @rmdir($dir);
     }
 
     public function testNullableFileUpload(): void

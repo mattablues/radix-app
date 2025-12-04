@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 return [
     // Sätt säkra headers och nonce först
-    'security.headers' => \Radix\Middleware\Middlewares\SecurityHeadersMiddleware::class,
-    'limit.2mb' => 'middleware.limit.2mb', // byt till klassnamn
-    'csrf' => \App\Middlewares\CsrfMiddleware::class, // byt till klassnamn
+    'csrf' => \App\Middlewares\Csrf::class, // byt till klassnamn
     'auth' => \App\Middlewares\Auth::class,
     'guest' => \App\Middlewares\Guest::class,
     'admin' => \App\Middlewares\Admin::class,

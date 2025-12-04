@@ -14,95 +14,95 @@
     "BitwiseOr": {
       "ignore": [
         "App\\Controllers\\Api\\HealthController::index",
-        "App\\Middlewares\\RateLimiter::process"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::process"
       ]
     },
 
     "Ternary": {
       "ignore": [
-        "App\\Middlewares\\RateLimiter::__construct",
-        "App\\Middlewares\\RateLimiter::increment"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::__construct",
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment"
       ]
     },
 
     "InstanceOf_": {
       "ignore": [
-        "App\\Middlewares\\RateLimiter::__construct"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::__construct"
       ]
     },
 
     "CastInt": {
       "ignore": [
-        "App\\Middlewares\\RateLimiter::process",
-        "App\\Middlewares\\RateLimiter::increment",
-        "App\\Middlewares\\RequestLogger::process"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::process",
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
+        "Radix\\Middleware\\Middlewares\\RequestLogger::process"
       ]
     },
 
     "DecrementInteger": {
       "ignore": [
-        "App\\Middlewares\\RateLimiter::__construct",
-        "App\\Middlewares\\RateLimiter::increment",
-        "App\\Middlewares\\RateLimiter::process",
-        "App\\Middlewares\\RequestLogger::process"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::__construct",
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
+        "Radix\\Middleware\\Middlewares\\RateLimiter::process",
+        "Radix\\Middleware\\Middlewares\\RequestLogger::process"
       ]
     },
 
     "IncrementInteger": {
       "ignore": [
-        "App\\Middlewares\\RateLimiter::increment",
-        "App\\Middlewares\\RateLimiter::process",
-        "App\\Middlewares\\RequestLogger::process"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
+        "Radix\\Middleware\\Middlewares\\RateLimiter::process",
+        "Radix\\Middleware\\Middlewares\\RequestLogger::process"
       ]
     },
 
     "Minus": {
       "ignore": [
-        "App\\Middlewares\\RateLimiter::increment"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment"
       ]
     },
 
     "GreaterThanNegotiation": {
       "ignore": [
-        "App\\Middlewares\\RateLimiter::increment"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment"
       ]
     },
 
     "UnwrapRtrim": {
       "ignore": [
-        "App\\Middlewares\\RateLimiter::increment"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment"
       ]
     },
 
     "Plus": {
       "ignore": [
-        "App\\Middlewares\\RateLimiter::increment",
-        "App\\Middlewares\\RequestLogger::process"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
+        "Radix\\Middleware\\Middlewares\\RequestLogger::process"
       ]
     },
 
     "GreaterThan": {
       "ignore": [
-        "App\\Middlewares\\RateLimiter::increment"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment"
       ]
     },
 
     "LessThan": {
       "ignore": [
-        "App\\Middlewares\\RateLimiter::increment",
-        "App\\Middlewares\\RequestLogger::process"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
+        "Radix\\Middleware\\Middlewares\\RequestLogger::process"
       ]
     },
 
     "LessThanNegotiation": {
       "ignore": [
-        "App\\Middlewares\\RateLimiter::increment"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment"
       ]
     },
 
     "NotIdentical": {
       "ignore": [
-        "App\\Middlewares\\RequestLogger::process"
+        "Radix\\Middleware\\Middlewares\\RequestLogger::process"
       ]
     }
   },

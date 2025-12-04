@@ -10,7 +10,7 @@ use Radix\Http\RequestHandlerInterface;
 use Radix\Http\Response;
 use Radix\Middleware\MiddlewareInterface;
 
-final class CsrfMiddleware implements MiddlewareInterface
+final class Csrf implements MiddlewareInterface
 {
     public function process(Request $request, RequestHandlerInterface $next): Response
     {

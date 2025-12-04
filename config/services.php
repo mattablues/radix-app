@@ -51,16 +51,6 @@ $container->add(\Radix\Support\FileCache::class, fn() => new \Radix\Support\File
 
 $container->addShared(\Radix\Support\Logger::class, fn() => new \Radix\Support\Logger('app'));
 
-$container->addShared('middleware.limit.2mb', function() {
-    return new \Radix\Middleware\Middlewares\RequestSizeLimitMiddleware(2 * 1024 * 1024);
-});
-
-$container->addShared(\Radix\Middleware\Middlewares\SecurityHeadersMiddleware::class, function () use ($container) {
-    /** @var \Radix\Config\Config $config */
-    $config = $container->get('config');
-    return new \Radix\Middleware\Middlewares\SecurityHeadersMiddleware($config);
-});
-
 $container->add(\App\Services\HealthCheckService::class, function () {
     // injicera delad logger, eller skapa kanal-specifik
     $logger = new \Radix\Support\Logger('health');
