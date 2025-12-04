@@ -57,6 +57,17 @@ $container->add(\App\Services\HealthCheckService::class, function () {
     return new \App\Services\HealthCheckService($logger);
 });
 
+$container->addShared(\Radix\Http\EventListeners\CorsListener::class, function () use ($container) {
+    $config = $container->get('config');
+
+    if (!$config instanceof Config) {
+        throw new \RuntimeException('Container returned invalid config instance for CorsListener.');
+    }
+
+    /** @var Config $config */
+    return new \Radix\Http\EventListeners\CorsListener($config);
+});
+
 $container->addShared(\Radix\Database\Connection::class, function () use ($container) {
     $config = $container->get('config');
 
