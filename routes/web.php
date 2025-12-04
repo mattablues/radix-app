@@ -5,7 +5,7 @@ declare(strict_types=1);
 /** @var \Radix\Routing\Router $router */
 
 // Global grupp för web med request-id + logging
-$router->group(['middleware' => ['request.id', 'api.logger','csrf']], function () use ($router) {
+$router->group(['middleware' => ['request.id', 'api.logger','limit.2mb', 'csrf']], function () use ($router) {
     $router->get('/', [
         \App\Controllers\HomeController::class, 'index',
     ])->name('home.index');
