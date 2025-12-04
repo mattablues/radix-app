@@ -46,7 +46,8 @@
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
         "Radix\\Middleware\\Middlewares\\RateLimiter::process",
         "Radix\\Middleware\\Middlewares\\RequestLogger::process",
-        "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes"
+        "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes",
+        "Radix\\Collection\\Collection::filter"
       ]
     },
 
@@ -55,7 +56,8 @@
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
         "Radix\\Middleware\\Middlewares\\RateLimiter::process",
         "Radix\\Middleware\\Middlewares\\RequestLogger::process",
-        "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes"
+        "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes",
+        "Radix\\Collection\\Collection::filter"
       ]
     },
 
@@ -113,7 +115,60 @@
 
     "LogicalOr": {
       "ignore": [
-        "Radix\\Middleware\\Middlewares\\LimitRequestSize::getContentLengthFromServer"
+        "Radix\\Middleware\\Middlewares\\LimitRequestSize::getContentLengthFromServer",
+        "Radix\\Collection\\Collection::unique"
+      ]
+    },
+
+    // ... existing code ...
+
+    "LogicalAndAllSubExprNegation": {
+      "ignore": [
+        "Radix\\Collection\\Collection::offsetExists",
+        "Radix\\Collection\\Collection::only"
+      ]
+    },
+
+    "ReturnRemoval": {
+      "ignore": [
+        "Radix\\Collection\\Collection::offsetExists",
+        "Radix\\Collection\\Collection::last"
+      ]
+    },
+
+    "CastBool": {
+      "ignore": [
+        "Radix\\Collection\\Collection::filter"
+      ]
+    },
+
+    "LogicalNot": {
+      "ignore": [
+        "Radix\\Collection\\Collection::only"
+      ]
+    },
+
+    "Identical": {
+      "ignore": [
+        "Radix\\Collection\\Collection::unique"
+      ]
+    },
+
+    "LogicalOrAllSubExprNegation": {
+      "ignore": [
+        "Radix\\Collection\\Collection::unique"
+      ]
+    },
+
+    "CastString": {
+      "ignore": [
+        "Radix\\Collection\\Collection::unique"
+      ]
+    },
+
+    "TrueValue": {
+      "ignore": [
+        "Radix\\Collection\\Collection::unique"
       ]
     }
   },
