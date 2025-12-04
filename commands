@@ -79,10 +79,20 @@ Remove-Item -Recurse -Force .phpunit.cache, build\coverage -ErrorAction Silently
 Remove-Item -Force vendor\bin.phpunit.result.cache -ErrorAction SilentlyContinue
 composer dump-autoload -o
 vendor/bin/phpunit -d opcache.enable_cli=0
-vendor/bin/infection --threads=1 --show-mutations --filter=src/Middlewares/SecurityHeadersMiddleware.php --initial-tests-php-options="-d opcache.enable_cli=0"
+vendor/bin/infection --threads=1 --show-mutations --filter=framework/src/Middleware/Middlewares/LimitRequestSize.php --initial-tests-php-options="-d opcache.enable_cli=0"
 
 ----------------------------------------------------------------------------------------------
 Cache
 ----------------------------------------------------------------------------------------------
 
 vendor/bin/infection --threads=1 --show-mutations --filter=src/Middlewares/CsrfMiddleware.php --initial-tests-php-options="-d opcache.enable_cli=0"
+
+Remove-Item -Recurse -Force .phpunit.cache, build/coverage -ErrorAction SilentlyContinue
+Remove-Item -Force vendor/bin.phpunit.result.cache -ErrorAction SilentlyContinue
+composer dump-autoload -o
+
+# PHPUnit
+vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --do-not-cache-result
+
+
+XDEBUG_MODE=coverage vendor/bin/phpunit -c phpunit.xml --order-by=default --do-not-cache-result --coverage-xml=build/coverage/coverage-xml --log-junit=build/coverage/junit.xml

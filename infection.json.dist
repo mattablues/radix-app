@@ -35,7 +35,8 @@
       "ignore": [
         "Radix\\Middleware\\Middlewares\\RateLimiter::process",
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
-        "Radix\\Middleware\\Middlewares\\RequestLogger::process"
+        "Radix\\Middleware\\Middlewares\\RequestLogger::process",
+        "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes"
       ]
     },
 
@@ -44,7 +45,8 @@
         "Radix\\Middleware\\Middlewares\\RateLimiter::__construct",
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
         "Radix\\Middleware\\Middlewares\\RateLimiter::process",
-        "Radix\\Middleware\\Middlewares\\RequestLogger::process"
+        "Radix\\Middleware\\Middlewares\\RequestLogger::process",
+        "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes"
       ]
     },
 
@@ -52,7 +54,8 @@
       "ignore": [
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
         "Radix\\Middleware\\Middlewares\\RateLimiter::process",
-        "Radix\\Middleware\\Middlewares\\RequestLogger::process"
+        "Radix\\Middleware\\Middlewares\\RequestLogger::process",
+        "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes"
       ]
     },
 
@@ -83,14 +86,16 @@
 
     "GreaterThan": {
       "ignore": [
-        "Radix\\Middleware\\Middlewares\\RateLimiter::increment"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
+        "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes"
       ]
     },
 
     "LessThan": {
       "ignore": [
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
-        "Radix\\Middleware\\Middlewares\\RequestLogger::process"
+        "Radix\\Middleware\\Middlewares\\RequestLogger::process",
+        "Radix\\Middleware\\Middlewares\\LimitRequestSize::getContentLengthFromServer"
       ]
     },
 
@@ -103,6 +108,12 @@
     "NotIdentical": {
       "ignore": [
         "Radix\\Middleware\\Middlewares\\RequestLogger::process"
+      ]
+    },
+
+    "LogicalOr": {
+      "ignore": [
+        "Radix\\Middleware\\Middlewares\\LimitRequestSize::getContentLengthFromServer"
       ]
     }
   },
