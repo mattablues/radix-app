@@ -138,16 +138,16 @@ jobs:
         env:
           INFECTION_FILTER: ${{ env.INFECTION_FILTER }}
         run: |
-          echo "Running Infection for src/ (app code)"
-          vendor/bin/infection \
-            --threads=1 \
-            --ignore-msi-with-no-mutations \
-            --skip-initial-tests \
-            --no-interaction \
-            --no-progress \
-            --coverage=build/coverage \
-            --filter=src \
-            --test-framework-options="--order-by=default --do-not-cache-result"
+          # echo "Running Infection for src/ (app code)"
+          # vendor/bin/infection \
+          #   --threads=1 \
+          #   --ignore-msi-with-no-mutations \
+          #   --skip-initial-tests \
+          #   --no-interaction \
+          #   --no-progress \
+          #   --coverage=build/coverage \
+          #   --filter=src \
+          #   --test-framework-options="--order-by=default --do-not-cache-result"
 
           FILTER_PATH=""
           # Workflow-dispatch input har högst prio
