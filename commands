@@ -82,9 +82,12 @@ vendor/bin/phpunit -d opcache.enable_cli=0
 vendor/bin/infection --threads=1 --show-mutations --filter=framework/src/Middleware/Middlewares/SecurityHeaders.php --initial-tests-php-options="-d opcache.enable_cli=0"
 
 vendor/bin/phpunit -d opcache.enable_cli=0 --filter=SecurityHeadersMiddlewareTest
+vendor/bin/phpunit -d opcache.enable_cli=0 --filter=ConfigTest
 vendor/bin/infection --threads=1 --show-mutations --filter=framework/src/Middleware/Middlewares/SecurityHeaders.php --initial-tests-php-options="-d opcache.enable_cli=0"
 
 vendor/bin/infection --threads=1 --show-mutations --filter=framework/src/Http/EventListeners --initial-tests-php-options="-d opcache.enable_cli=0"
+
+vendor/bin/infection --threads=1 --show-mutations --filter=framework/src/Container/Resolver.php --initial-tests-php-options="-d opcache.enable_cli=0"
 ----------------------------------------------------------------------------------------------
 Cache
 ----------------------------------------------------------------------------------------------

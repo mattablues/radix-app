@@ -31,6 +31,7 @@
       <directory>src</directory>
       <directory>framework/src/Middleware</directory>
       <directory>framework/src/Collection</directory>
+      <directory>framework/src/Config</directory>
     </include>
     <exclude>
       <directory>vendor</directory>
