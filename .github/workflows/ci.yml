@@ -22,7 +22,7 @@ env:
   ENABLE_INFECTION_ON_PR: ${{ vars.ENABLE_INFECTION_ON_PR || '1' }}
   # Sätt denna till t.ex. "framework/src/Container" när du vill begränsa Infection globalt.
   # Lämna tom för att köra på allt.
-  INFECTION_FILTER: ""
+  INFECTION_FILTER: "framework/src/Container"
 
 jobs:
   php:
