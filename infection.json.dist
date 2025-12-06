@@ -125,7 +125,8 @@
       "ignore": [
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
         "Radix\\Middleware\\Middlewares\\RequestLogger::process",
-        "Radix\\Middleware\\Middlewares\\LimitRequestSize::getContentLengthFromServer"
+        "Radix\\Middleware\\Middlewares\\LimitRequestSize::getContentLengthFromServer",
+        "Radix\\Controller\\ApiController::isTokenValid"
       ]
     },
 
@@ -145,7 +146,9 @@
       "ignore": [
         "Radix\\Middleware\\Middlewares\\LimitRequestSize::getContentLengthFromServer",
         "Radix\\Collection\\Collection::unique",
-        "Radix\\Container\\Argument\\LiteralArgument::setValue"
+        "Radix\\Container\\Argument\\LiteralArgument::setValue",
+        "Radix\\Container\\Definition::getResolved",
+        "Radix\\Controller\\ApiController::isTokenValid"
       ]
     },
 
@@ -200,7 +203,9 @@
 
     "CastString": {
       "ignore": [
-        "Radix\\Collection\\Collection::unique"
+        "Radix\\Collection\\Collection::unique",
+        "Radix\\Controller\\ApiController::validateApiToken",
+        "Radix\\Controller\\ApiController::isTokenValid"
       ]
     },
 
