@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Radix\Tests\Container\Argument\Literal;
 
+use DateTime;
 use PHPUnit\Framework\TestCase;
 use Radix\Container\Argument\Literal\CallableArgument;
 use Radix\Container\Exception\ContainerInvalidArgumentException;
@@ -46,5 +47,14 @@ class CallableArgumentTest extends TestCase
     {
         $callable = new CallableArgument('strlen');
         $this->assertSame('Callable function: strlen', $callable->describe());
+    }
+
+    public function testIsMethodReturnsFalseForStaticCallableArray(): void
+    {
+        // Giltig callable-array men med klassnamn i stället för objekt
+        $callable = [DateTime::class, 'createFromFormat'];
+        $arg = new CallableArgument($callable);
+
+        $this->assertFalse($arg->isMethod());
     }
 }

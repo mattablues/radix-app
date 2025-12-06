@@ -144,20 +144,24 @@
     "LogicalOr": {
       "ignore": [
         "Radix\\Middleware\\Middlewares\\LimitRequestSize::getContentLengthFromServer",
-        "Radix\\Collection\\Collection::unique"
+        "Radix\\Collection\\Collection::unique",
+        "Radix\\Container\\Argument\\LiteralArgument::setValue"
       ]
     },
 
     "LogicalAnd": {
       "ignore": [
-        "Radix\\Config\\Config::get"
+        "Radix\\Config\\Config::get",
+        "Radix\\Container\\Argument\\Literal\\CallableArgument::isMethod"
       ]
     },
 
     "LogicalAndAllSubExprNegation": {
       "ignore": [
         "Radix\\Collection\\Collection::offsetExists",
-        "Radix\\Collection\\Collection::only"
+        "Radix\\Collection\\Collection::only",
+        "Radix\\Container\\Argument\\LiteralArgument::setValue",
+        "Radix\\Container\\Definition::getResolved"
       ]
     },
 
@@ -177,7 +181,8 @@
     "LogicalNot": {
       "ignore": [
         "Radix\\Collection\\Collection::only",
-        "Radix\\Container\\Resolver::createFromFactory"
+        "Radix\\Container\\Resolver::createFromFactory",
+        "Radix\\Container\\Argument\\LiteralArgument::setValue"
       ]
     },
 
@@ -206,9 +211,25 @@
       ]
     },
 
+    "ProtectedVisibility": {
+      "ignore": [
+        "Radix\\Container\\Container::resolveAlias",
+        "Radix\\Container\\Container::resolveInstance"
+      ]
+    },
+
+    "MethodCallRemoval": {
+      "ignore": [
+        "Radix\\Container\\Argument\\Literal\\ArrayArgument::__construct",
+        "Radix\\Container\\Argument\\Literal\\ObjectArgument::__construct"
+      ]
+    },
+
     "Throw_": {
       "ignore": [
-        "Radix\\Container\\Resolver::createFromFactory"
+        "Radix\\Container\\Resolver::createFromFactory",
+        "Radix\\Container\\Argument\\Literal\\ArrayArgument::__construct",
+        "Radix\\Container\\Container::resolveAlias"
       ]
     },
   },

@@ -10,6 +10,20 @@ use Radix\Container\Exception\ContainerInvalidArgumentException;
 
 class ArrayArgumentTest extends TestCase
 {
+    public function testConstructorRejectsEmptyArray(): void
+    {
+        $this->expectException(ContainerInvalidArgumentException::class);
+        $this->expectExceptionMessage('Array cannot be empty.');
+
+        new ArrayArgument([]);
+    }
+
+    public function testConstructorAcceptsNonEmptyArray(): void
+    {
+        $arg = new ArrayArgument(['foo' => 'bar']);
+        $this->assertSame(['foo' => 'bar'], $arg->getValue());
+    }
+
     public function testConstructorValidArray(): void
     {
         $arrayArgument = new ArrayArgument(['key1' => 'value1', 'key2' => 'value2']);

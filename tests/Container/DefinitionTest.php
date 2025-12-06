@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use OutOfBoundsException;
 use PHPUnit\Framework\TestCase;
 use Radix\Container\Definition;
+use stdClass;
 
 class DefinitionTest extends TestCase
 {
@@ -54,5 +55,28 @@ class DefinitionTest extends TestCase
 
         $definition = new Definition('SomeClass');
         $definition->getArgument(10);
+    }
+
+    public function testAddMethodCallCastsArgumentsToArray(): void
+    {
+        $def = new Definition(stdClass::class);
+
+        $def->addMethodCall('setFoo', 'bar');
+
+        $calls = $def->getMethodCalls();
+
+        $this->assertCount(1, $calls);
+        $this->assertSame('setFoo', $calls[0][0]);
+        $this->assertSame(['bar'], $calls[0][1]);
+    }
+
+    public function testSetConcreteRejectsInvalidType(): void
+    {
+        $def = new Definition(stdClass::class);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Concrete must be a class name, an object, or a callable.');
+
+        $def->setConcrete(123);
     }
 }
