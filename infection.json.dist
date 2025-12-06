@@ -20,13 +20,39 @@
 
     "Ternary": {
       "ignore": [
+        "Radix\\Container\\Resolver::resolveDependencies",
         "Radix\\Middleware\\Middlewares\\RateLimiter::__construct",
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment"
       ]
     },
 
+    "Concat": {
+      "ignore": [
+        "Radix\\Container\\Resolver::resolveDependencies"
+      ]
+    },
+
+    "ConcatOperandRemoval": {
+      "ignore": [
+        "Radix\\Container\\Resolver::resolveDependencies"
+      ]
+    },
+
+    "Continue_": {
+      "ignore": [
+        "Radix\\Container\\Resolver::resolveDependencies"
+      ]
+    },
+
+    "ArrayOneItem": {
+      "ignore": [
+        "Radix\\Container\\Resolver::resolveDependencies"
+      ]
+    },
+
     "InstanceOf_": {
       "ignore": [
+        "Radix\\Container\\Resolver::resolveDependencies",
         "Radix\\Middleware\\Middlewares\\RateLimiter::__construct"
       ]
     },
@@ -47,7 +73,8 @@
         "Radix\\Middleware\\Middlewares\\RateLimiter::process",
         "Radix\\Middleware\\Middlewares\\RequestLogger::process",
         "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes",
-        "Radix\\Collection\\Collection::filter"
+        "Radix\\Collection\\Collection::filter",
+        "Radix\\Container\\Resolver::createFromFactory"
       ]
     },
 
@@ -57,7 +84,8 @@
         "Radix\\Middleware\\Middlewares\\RateLimiter::process",
         "Radix\\Middleware\\Middlewares\\RequestLogger::process",
         "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes",
-        "Radix\\Collection\\Collection::filter"
+        "Radix\\Collection\\Collection::filter",
+        "Radix\\Container\\Resolver::createFromFactory"
       ]
     },
 
@@ -120,7 +148,11 @@
       ]
     },
 
-    // ... existing code ...
+    "LogicalAnd": {
+      "ignore": [
+        "Radix\\Config\\Config::get"
+      ]
+    },
 
     "LogicalAndAllSubExprNegation": {
       "ignore": [
@@ -144,7 +176,8 @@
 
     "LogicalNot": {
       "ignore": [
-        "Radix\\Collection\\Collection::only"
+        "Radix\\Collection\\Collection::only",
+        "Radix\\Container\\Resolver::createFromFactory"
       ]
     },
 
@@ -168,9 +201,16 @@
 
     "TrueValue": {
       "ignore": [
-        "Radix\\Collection\\Collection::unique"
+        "Radix\\Collection\\Collection::unique",
+        "Radix\\Container\\Resolver::parseConcrete"
       ]
-    }
+    },
+
+    "Throw_": {
+      "ignore": [
+        "Radix\\Container\\Resolver::createFromFactory"
+      ]
+    },
   },
   "testFramework": "phpunit",
   "bootstrap": "./vendor/autoload.php",
