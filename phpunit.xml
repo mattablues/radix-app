@@ -29,9 +29,7 @@
   <source>
     <include>
       <directory>src</directory>
-      <directory>framework/src/Middleware</directory>
-      <directory>framework/src/Collection</directory>
-      <directory>framework/src/Config</directory>
+      <directory>framework/src</directory>
     </include>
     <exclude>
       <directory>vendor</directory>

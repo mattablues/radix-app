@@ -12,10 +12,17 @@ on:
         description: "Mode: pr or schedule"
         required: false
         default: "schedule"
+      infection_filter:
+        description: "Optional Infection --filter path (e.g. framework/src/Container)"
+        required: false
+        default: ""
 
 env:
   ENABLE_FRONTEND_BUILD: ${{ vars.ENABLE_FRONTEND_BUILD || '1' }}
   ENABLE_INFECTION_ON_PR: ${{ vars.ENABLE_INFECTION_ON_PR || '1' }}
+  # Sätt denna till t.ex. "framework/src/Container" när du vill begränsa Infection globalt.
+  # Lämna tom för att köra på allt.
+  INFECTION_FILTER: ""
 
 jobs:
   php:
@@ -56,7 +63,6 @@ jobs:
           vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --do-not-cache-result
         env:
           APP_ENV: development
-
 
   # Hjälpjobb för att hitta flakiga tester på Actions
   php-random:
@@ -123,10 +129,25 @@ jobs:
             --coverage-xml=build/coverage/coverage-xml \
             --log-junit=build/coverage/junit.xml
 
-      # Kör Infection med skip-initial-tests även på PR
+      # Kör Infection med skip-initial-tests.
+      # Använder --filter om:
+      #  - workflow_dispatch har fått in "infection_filter", annars
+      #  - env.INFECTION_FILTER är satt.
       - name: Run Infection (PR/schedule, skip initial tests, default order)
         if: github.event_name == 'pull_request' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
+        env:
+          INFECTION_FILTER: ${{ env.INFECTION_FILTER }}
         run: |
+          FILTER_OPT=""
+          # Workflow-dispatch input har högst prio
+          if [ -n "${{ github.event.inputs.infection_filter }}" ]; then
+            FILTER_OPT="--filter=${{ github.event.inputs.infection_filter }}"
+          elif [ -n "${INFECTION_FILTER}" ]; then
+            FILTER_OPT="--filter=${INFECTION_FILTER}"
+          fi
+
+          echo "Running Infection with FILTER_OPT='${FILTER_OPT}'"
+
           vendor/bin/infection \
             --threads=1 \
             --ignore-msi-with-no-mutations \
@@ -134,7 +155,8 @@ jobs:
             --no-interaction \
             --no-progress \
             --coverage=build/coverage \
-            --test-framework-options="--order-by=default --do-not-cache-result"
+            --test-framework-options="--order-by=default --do-not-cache-result" \
+            ${FILTER_OPT}
 
       - name: Upload Infection report
         if: always()
@@ -142,4 +164,4 @@ jobs:
         with:
           name: infection-report
           path: infection-report.html
-          if-no-files-found: ignore
+          if-no-files-found: ignores

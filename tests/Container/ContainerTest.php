@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Radix\Tests\Container;
 
 use Countable;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Radix\Container\Container;
 use Radix\Container\Definition;
@@ -32,6 +33,27 @@ class ContainerTest extends TestCase
 
         $this->assertTrue($container->has('test.service'));
         $this->assertFalse($container->has('non.existent.service'));
+    }
+
+    public function testContainerIsRegisteredAsServiceInConstructor(): void
+    {
+        $container = new Container();
+
+        $resolved = $container->get(Container::class);
+
+        $this->assertSame($container, $resolved);
+    }
+
+    public function testAutoRegisterAbstractClassThrowsDependencyInjectionException(): void
+    {
+        $container = new Container();
+
+        $this->expectException(ContainerDependencyInjectionException::class);
+        $this->expectExceptionMessage(
+            sprintf('Cannot auto-register abstract class or interface "%s".', AbstractTestService::class)
+        );
+
+        $container->get(AbstractTestService::class);
     }
 
     public function testGetNonExistentServiceThrowsException(): void
@@ -287,4 +309,45 @@ class ContainerTest extends TestCase
             $this->assertInstanceOf(stdClass::class, $container->get("service_$i"));
         }
     }
+
+    public function testSetConcreteAcceptsValidTypes(): void
+    {
+        $def = new Definition(stdClass::class);
+
+        // Ska inte kasta
+        $def->setConcrete(stdClass::class);
+        $def->setConcrete(new stdClass());
+        $callable = function (): void {};
+        $def->setConcrete($callable);
+
+        // Enkel assertion så att testet inte är "risky"
+        $this->assertSame($callable, $def->getConcrete());
+    }
+
+    public function testSetConcreteRejectsInvalidType(): void
+    {
+        $def = new Definition(stdClass::class);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Concrete must be a class name, an object, or a callable.');
+
+        $def->setConcrete(123); // ogiltig typ
+    }
+
+    public function testSetDefaultsAlwaysCastsValuesToBool(): void
+    {
+        $container = new Container();
+
+        /** @phpstan-ignore-next-line  intentionally pass scalar to test bool casting */
+        $container->setDefaults([
+            'autoregister' => '0',  // sträng "0" → (bool)"0" === false
+        ]);
+
+        $this->assertFalse($container->getDefault('autoregister'));
+    }
+}
+
+abstract class AbstractTestService
+{
+    public function foo(): void {}
 }
