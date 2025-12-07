@@ -7,6 +7,7 @@ namespace Radix\Tests;
 use PHPUnit\Framework\TestCase;
 use Radix\File\Reader;
 use Radix\File\Writer;
+use RuntimeException;
 use SimpleXMLElement;
 
 final class ReaderWriterTest extends TestCase
@@ -35,6 +36,122 @@ final class ReaderWriterTest extends TestCase
 
         $read = Reader::json($path, assoc: true);
         $this->assertSame($data, $read);
+    }
+
+    public function testTextStreamRejectsNonPositiveChunkSize(): void
+    {
+        $path = $this->tmpDir . 'dummy.txt';
+        file_put_contents($path, 'hello');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('chunkSize must be a positive integer');
+
+        Reader::textStream($path, function (string $chunk): void {
+            // ska aldrig nå hit
+        }, 0);
+    }
+
+    public function testCsvReadTrimsCellWhitespace(): void
+    {
+        $path = $this->tmpDir . 'trim.csv';
+
+        // Skriv manuellt en enkel CSV med extra mellanslag runt värden
+        $content = "id, name , city \n"
+            . "1,  Alice  ,  Stockholm  \n"
+            . "2,  Bob  ,  Göteborg  \n";
+
+        file_put_contents($path, $content);
+
+        $rows = Reader::csv($path, delimiter: ',', hasHeader: true);
+
+        $this->assertSame(
+            [
+                ['id' => 1, 'name' => 'Alice', 'city' => 'Stockholm'],
+                ['id' => 2, 'name' => 'Bob', 'city' => 'Göteborg'],
+            ],
+            $rows
+        );
+    }
+
+    public function testXmlWriteAndReadAssocWithMultipleTopLevelKeys(): void
+    {
+        $path = $this->tmpDir . 'data-multi.xml';
+        $data = [
+            'user' => [
+                'id' => 1,
+                'name' => 'Anna',
+            ],
+            'meta' => [
+                'version' => '1.0',
+                'env' => 'test',
+            ],
+        ];
+
+        Writer::xml($path, $data, rootName: 'root');
+
+        $arr = Reader::xml($path, assoc: true);
+
+        $this->assertSame(
+            [
+                'user' => [
+                    'id' => '1',
+                    'name' => 'Anna',
+                ],
+                'meta' => [
+                    'version' => '1.0',
+                    'env' => 'test',
+                ],
+            ],
+            $arr
+        );
+    }
+
+    public function testCsvDelimiterAutodetectWithManyLines(): void
+    {
+        $path = $this->tmpDir . 'multi_lines.csv';
+
+        // Bygg en fil där:
+        // - Första 9 data-raderna använder ';' (korrekt delimiter)
+        // - Rad 10 har massor av ',' (för att trigga Assignment-mutanten)
+        // - Raderna efteråt har ännu fler ',' (för att trigga lines--‑mutanten)
+        $lines = [];
+
+        // Header + 9 rader med ';'
+        $lines[] = "id;n\n";
+        for ($i = 1; $i <= 9; $i++) {
+            $lines[] = $i . ';A' . $i . "\n";
+        }
+
+        // Rad 10: många kommatecken, men fortfarande semikolon som riktig separator
+        $lines[] = "10;A10,extra,commas,here\n";
+
+        // Massor av rader med kommatecken efter de 10 första raderna
+        for ($i = 11; $i <= 40; $i++) {
+            $lines[] = "x{$i},y{$i},z{$i}\n";
+        }
+
+        file_put_contents($path, implode('', $lines));
+
+        $rows = Reader::csv($path, delimiter: null, hasHeader: true);
+
+        // Kontrollera i alla fall de första få raderna efter headern.
+        // Med korrekt autodetektering (';') ska de mappas snyggt till ['id' => ..., 'n' => ...].
+        // Om detectDelimiter väljer ',' (mutanter 43 eller 44) blir headern "id;n"
+        // och raderna får felaktiga nycklar/värden, så dessa asserter failar.
+        $this->assertGreaterThanOrEqual(3, count($rows));
+
+        $this->assertSame(
+            ['id' => 1, 'n' => 'A1'],
+            $rows[0],
+        );
+        $this->assertSame(
+            ['id' => 2, 'n' => 'A2'],
+            $rows[1],
+        );
+        $this->assertSame(
+            ['id' => 9, 'n' => 'A9'],
+            $rows[8],
+        );
     }
 
     public function testCsvReadWriteWithHeaders(): void
@@ -75,6 +192,65 @@ final class ReaderWriterTest extends TestCase
                 ['id' => 3, 'val' => 'v3'],
             ],
             $collected
+        );
+    }
+
+    public function testCsvUsesEnsureParentDir(): void
+    {
+        // Skapa en FIL där katalogen borde vara
+        $fileAsDir = $this->tmpDir . 'foo';
+        file_put_contents($fileAsDir, 'x');
+
+        $path = $fileAsDir . DIRECTORY_SEPARATOR . 'data.csv';
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Kunde inte skapa katalog: ' . $fileAsDir);
+
+        Writer::csv($path, [
+            ['id' => 1, 'name' => 'Alice'],
+        ]);
+    }
+
+    public function testCsvSerializesNestedArraysToJsonStrings(): void
+    {
+        $path = $this->tmpDir . 'nested.csv';
+
+        $rows = [
+            ['id' => 1, 'meta' => ['x' => 1, 'y' => 2]],
+        ];
+
+        Writer::csv($path, $rows, headers: null, delimiter: ',');
+
+        $read = Reader::csv($path, delimiter: ',', hasHeader: true);
+
+        $this->assertSame(
+            [
+                ['id' => 1, 'meta' => '{"x":1,"y":2}'],
+            ],
+            $read
+        );
+    }
+
+    public function testCsvStreamSkipsEmptyLinesAndContinues(): void
+    {
+        $path = $this->tmpDir . 'with_empty_line.csv';
+
+        // Header + rad 1 + TOM rad + rad 2
+        $content = "id,name\n"
+            . "1,Alice\n"
+            . "\n"
+            . "2,Bob\n";
+
+        file_put_contents($path, $content);
+
+        $rows = Reader::csv($path, delimiter: ',', hasHeader: true);
+
+        $this->assertSame(
+            [
+                ['id' => 1, 'name' => 'Alice'],
+                ['id' => 2, 'name' => 'Bob'],
+            ],
+            $rows
         );
     }
 

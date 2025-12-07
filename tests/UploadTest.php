@@ -4,10 +4,25 @@ declare(strict_types=1);
 
 namespace Radix\Tests;
 
+final class UploadMkdirSpy
+{
+    public static ?int $lastPermissions = null;
+
+    /** @var list<string> */
+    public static array $failPaths = [];
+
+    public static function reset(): void
+    {
+        self::$lastPermissions = null;
+        self::$failPaths = [];
+    }
+}
+
 use PHPUnit\Framework\TestCase;
 use Radix\File\Upload;
 use Radix\Support\Validator;
 use Radix\Tests\Support\TestableValidator;
+use RuntimeException;
 
 class UploadTest extends TestCase
 {
@@ -34,6 +49,25 @@ class UploadTest extends TestCase
         imagedestroy($image);
     }
 
+    /**
+     * Mocka Radix\File\mkdir för att kunna spåra rättigheter och simulera fel.
+     */
+    protected function mockUploadMkdir(): void
+    {
+        UploadMkdirSpy::reset();
+
+        if (!function_exists('Radix\File\mkdir')) {
+            eval('namespace Radix\File; function mkdir($directory, $permissions = 0777, $recursive = false, $context = null) {
+                \\Radix\\Tests\\UploadMkdirSpy::$lastPermissions = $permissions;
+                if (in_array($directory, \\Radix\\Tests\\UploadMkdirSpy::$failPaths, true)) {
+                    return false;
+                }
+                /** @var resource|null $context */
+                return \\mkdir($directory, $permissions, $recursive, $context);
+            }');
+        }
+    }
+
     protected function tearDown(): void
     {
         $this->deleteDir($this->uploadDirectory);
@@ -57,6 +91,146 @@ class UploadTest extends TestCase
             }
         }
         @rmdir($dir);
+    }
+
+    public function testConstructorCreatesUploadDirectoryWith0755PermissionsWhenMissing(): void
+    {
+        $this->mockUploadMkdir();
+
+        $dir = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'upload_perm_' . uniqid('', true);
+
+        // Säkerställ att katalogen inte finns innan
+        if (is_dir($dir)) {
+            @rmdir($dir);
+        }
+
+        $file = [
+            'name' => 'dummy.txt',
+            'type' => 'text/plain',
+            'tmp_name' => '',
+            'error' => UPLOAD_ERR_OK,
+            'size' => 0,
+        ];
+
+        $upload = new Upload($file, $dir);
+        $this->assertInstanceOf(Upload::class, $upload);
+        $this->assertDirectoryExists($dir, 'Katalogen ska ha skapats av konstruktorn.');
+
+        // På Unix kan vi också verifiera rättigheter och permissions-argumentet
+        if (DIRECTORY_SEPARATOR === '/') {
+            $perms = fileperms($dir) & 0o777;
+            $this->assertSame(0o755, $perms, sprintf('Katalogrättigheter ska vara 0755, fick 0%o', $perms));
+            $this->assertSame(0o755, UploadMkdirSpy::$lastPermissions, 'mkdir() ska ha anropats med 0755.');
+        }
+    }
+
+    public function testGenerateFileNameUsesBaseNameAndLowercasedExtension(): void
+    {
+        $file = [
+            'name' => 'My IMAGE.JPG',
+            'type' => 'image/jpeg',
+            'tmp_name' => $this->uploadDirectory . '/test_image.jpg',
+            'error' => UPLOAD_ERR_OK,
+            'size' => 102400,
+        ];
+
+        $upload = new class ($file, $this->uploadDirectory) extends Upload {
+            /**
+             * @param array<string,mixed> $file
+             */
+            public function __construct(array $file, string $uploadDirectory)
+            {
+                parent::__construct($file, $uploadDirectory);
+            }
+
+            public function exposedGenerateFileName(): string
+            {
+                return $this->generateFileName();
+            }
+        };
+
+        $generated = $upload->exposedGenerateFileName();
+
+        // Ska sluta med .jpg (lowercased extension)
+        $this->assertStringEndsWith('.jpg', $generated, 'Filen ska använda lowercased extension.');
+
+        // Hitta sista punkten och separera bas/extension
+        $lastDot = strrpos($generated, '.');
+        $this->assertNotFalse($lastDot, 'Filen ska innehålla en punkt innan extensionen.');
+
+        $base = substr($generated, 0, $lastDot);
+        $ext  = substr($generated, $lastDot + 1);
+
+        $this->assertSame('jpg', $ext, 'Extension ska vara exakt "jpg".');
+        $this->assertNotSame('', $base, 'Basdelen av filnamnet får inte vara tom.');
+    }
+
+    public function testGenerateFileNameFallsBackWhenNameMissingOrNotString(): void
+    {
+        // Fall 1: tom sträng
+        $fileEmpty = [
+            'name' => '',
+            'type' => 'image/jpeg',
+            'tmp_name' => $this->uploadDirectory . '/test_image.jpg',
+            'error' => UPLOAD_ERR_OK,
+            'size' => 102400,
+        ];
+
+        $uploadEmpty = new class ($fileEmpty, $this->uploadDirectory) extends Upload {
+            /**
+             * @param array<string,mixed> $file
+             */
+            public function __construct(array $file, string $uploadDirectory)
+            {
+                parent::__construct($file, $uploadDirectory);
+            }
+
+            public function exposedGenerateFileName(): string
+            {
+                return $this->generateFileName();
+            }
+        };
+
+        $nameEmpty = $uploadEmpty->exposedGenerateFileName();
+
+        // Fallback: inget namn => inget bild-extension-suffix
+        $this->assertDoesNotMatchRegularExpression(
+            '/\.(jpg|jpeg|png|gif|webp)$/i',
+            $nameEmpty,
+            'Fallback-filen ska inte sluta med bild-extension när name är tom.'
+        );
+
+        // Fall 2: icke-sträng name
+        $fileNonString = [
+            'name' => 123, // ogiltig typ
+            'type' => 'image/jpeg',
+            'tmp_name' => $this->uploadDirectory . '/test_image.jpg',
+            'error' => UPLOAD_ERR_OK,
+            'size' => 102400,
+        ];
+
+        $uploadNonString = new class ($fileNonString, $this->uploadDirectory) extends Upload {
+            /**
+             * @param array<string,mixed> $file
+             */
+            public function __construct(array $file, string $uploadDirectory)
+            {
+                parent::__construct($file, $uploadDirectory);
+            }
+
+            public function exposedGenerateFileName(): string
+            {
+                return $this->generateFileName();
+            }
+        };
+
+        $nameNonString = $uploadNonString->exposedGenerateFileName();
+
+        $this->assertDoesNotMatchRegularExpression(
+            '/\.(jpg|jpeg|png|gif|webp)$/i',
+            $nameNonString,
+            'Fallback-filen ska inte sluta med bild-extension när name inte är sträng.'
+        );
     }
 
     public function testNullableFileUpload(): void
@@ -205,6 +379,33 @@ class UploadTest extends TestCase
         $this->assertFileExists($savedPath, 'Filen ska sparas korrekt på målplatsen.');
     }
 
+    public function testSaveUsesTrimmedUploadDirectoryWithSingleDirectorySeparator(): void
+    {
+        $this->mockMoveUploadedFile();
+
+        // Lägg till trailing slash i uploadDirectory för att testa rtrim-logiken
+        $dirWithSlash = rtrim($this->uploadDirectory, '/\\') . '/';
+
+        $file = [
+            'name' => 'explicit_name.jpg',
+            'type' => 'image/jpeg',
+            'tmp_name' => $this->uploadDirectory . '/test_image.jpg',
+            'error' => UPLOAD_ERR_OK,
+            'size' => 102400,
+        ];
+
+        $upload = new Upload($file, $dirWithSlash);
+
+        $savedPath = $upload->save('myfile.jpg');
+
+        // Upload::save använder alltid '/' som separator internt
+        $expected = rtrim($dirWithSlash, '/\\') . '/myfile.jpg';
+
+        // UnwrapRtrim-mutanter och ConcatOperandRemoval ger fel sökväg (saknar/duplicerar separator)
+        $this->assertSame($expected, $savedPath, 'save() ska använda rtrim(uploadDirectory) + "/" + filnamn.');
+        $this->assertFileExists($savedPath);
+    }
+
     public function testErrorHandling(): void
     {
         $this->mockMoveUploadedFile();
@@ -227,5 +428,25 @@ class UploadTest extends TestCase
         $this->assertFalse($isValid, 'Valideringen ska misslyckas om ingen giltig fil laddas upp.');
 
         $this->assertNotEmpty($upload->getErrors(), 'Felmeddelanden ska genereras.');
+    }
+
+    public function testSaveThrowsOnInvalidTmpNameWhenNotString(): void
+    {
+        $this->mockMoveUploadedFile();
+
+        $file = [
+            'name' => 'test_image.jpg',
+            'type' => 'image/jpeg',
+            'tmp_name' => 123, // ogiltig typ
+            'error' => UPLOAD_ERR_OK,
+            'size' => 102400,
+        ];
+
+        $upload = new Upload($file, $this->uploadDirectory);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Ogiltigt tmp_name för uppladdad fil.');
+
+        $upload->save();
     }
 }

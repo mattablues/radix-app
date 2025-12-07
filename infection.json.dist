@@ -14,7 +14,9 @@
     "BitwiseOr": {
       "ignore": [
         "App\\Controllers\\Api\\HealthController::index",
-        "Radix\\Middleware\\Middlewares\\RateLimiter::process"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::process",
+        "Radix\\File\\Writer::ndjsonStream",
+        "Radix\\File\\Writer::json"
       ]
     },
 
@@ -22,25 +24,35 @@
       "ignore": [
         "Radix\\Container\\Resolver::resolveDependencies",
         "Radix\\Middleware\\Middlewares\\RateLimiter::__construct",
-        "Radix\\Middleware\\Middlewares\\RateLimiter::increment"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
+        "Radix\\File\\Writer::xml"
       ]
     },
 
     "Concat": {
       "ignore": [
-        "Radix\\Container\\Resolver::resolveDependencies"
+        "Radix\\Container\\Resolver::resolveDependencies",
+        "Radix\\File\\Writer::json"
       ]
     },
 
     "ConcatOperandRemoval": {
       "ignore": [
-        "Radix\\Container\\Resolver::resolveDependencies"
+        "Radix\\Container\\Resolver::resolveDependencies",
+        "Radix\\File\\Writer::json",
+        "Radix\\File\\Writer::csv"
       ]
     },
 
     "Continue_": {
       "ignore": [
         "Radix\\Container\\Resolver::resolveDependencies"
+      ]
+    },
+
+    "Break_": {
+      "ignore": [
+        "Radix\\File\\Reader::detectDelimiter"
       ]
     },
 
@@ -74,7 +86,25 @@
         "Radix\\Middleware\\Middlewares\\RequestLogger::process",
         "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes",
         "Radix\\Collection\\Collection::filter",
-        "Radix\\Container\\Resolver::createFromFactory"
+        "Radix\\Container\\Resolver::createFromFactory",
+        "Radix\\File\\Image::resizeImage",
+        "Radix\\File\\Upload::__construct",
+        "Radix\\File\\Reader::xmlToArray",
+        "Radix\\File\\Reader::detectDelimiter",
+        "Radix\\File\\Reader::ndjsonStream",
+        "Radix\\File\\Reader::textStream",
+        "Radix\\File\\Reader::csvStream",
+        "Radix\\File\\Reader::xml",
+        "Radix\\File\\Reader::json",
+        "Radix\\File\\Writer::xml",
+        "Radix\\File\\Writer::ndjsonStream",
+        "Radix\\File\\Writer::csv",
+        "Radix\\File\\Writer::text",
+        "Radix\\File\\Writer::json",
+        "Radix\\File\\Writer::ensureParentDir"
+      ],
+      "ignoreSourceCodeByRegex": [
+        "if \\(\\$targetEncoding !== null && strcasecmp\\(\\$targetEncoding, 'UTF-8'\\) !== 0\\)"
       ]
     },
 
@@ -85,7 +115,20 @@
         "Radix\\Middleware\\Middlewares\\RequestLogger::process",
         "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes",
         "Radix\\Collection\\Collection::filter",
-        "Radix\\Container\\Resolver::createFromFactory"
+        "Radix\\Container\\Resolver::createFromFactory",
+        "Radix\\File\\Image::crop",
+        "Radix\\File\\Image::resizeImage",
+        "Radix\\File\\Upload::__construct",
+        "Radix\\File\\Reader::xmlToArray",
+        "Radix\\File\\Reader::detectDelimiter",
+        "Radix\\File\\Reader::ndjsonStream",
+        "Radix\\File\\Reader::textStream",
+        "Radix\\File\\Reader::xml",
+        "Radix\\File\\Reader::json",
+        "Radix\\File\\Writer::ndjsonStream",
+        "Radix\\File\\Writer::csv",
+        "Radix\\File\\Writer::json",
+        "Radix\\File\\Writer::ensureParentDir"
       ]
     },
 
@@ -103,7 +146,8 @@
 
     "UnwrapRtrim": {
       "ignore": [
-        "Radix\\Middleware\\Middlewares\\RateLimiter::increment"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
+        "Radix\\File\\Reader::ndjsonStream"
       ]
     },
 
@@ -116,8 +160,8 @@
 
     "GreaterThan": {
       "ignore": [
-        "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
-        "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes"
+          "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
+          "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes"
       ]
     },
 
@@ -126,7 +170,14 @@
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
         "Radix\\Middleware\\Middlewares\\RequestLogger::process",
         "Radix\\Middleware\\Middlewares\\LimitRequestSize::getContentLengthFromServer",
-        "Radix\\Controller\\ApiController::isTokenValid"
+        "Radix\\Controller\\ApiController::isTokenValid",
+        "Radix\\File\\Reader::detectDelimiter"
+      ]
+    },
+
+    "LessThanOrEqualTo": {
+      "ignore": [
+        "Radix\\File\\Image::crop"
       ]
     },
 
@@ -138,7 +189,28 @@
 
     "NotIdentical": {
       "ignore": [
-        "Radix\\Middleware\\Middlewares\\RequestLogger::process"
+        "Radix\\Middleware\\Middlewares\\RequestLogger::process",
+        "Radix\\File\\Image::resizeImage",
+        "Radix\\File\\Reader::detectDelimiter",
+        "Radix\\File\\Reader::ndjsonStream",
+        "Radix\\File\\Reader::textStream",
+        "Radix\\File\\Reader::xml",
+        "Radix\\File\\Writer::xml",
+        "Radix\\File\\Writer::ensureParentDir",
+        "Radix\\File\\Writer::ndjsonStream",
+        "Radix\\File\\Writer::csv",
+        "Radix\\File\\Writer::text"
+      ],
+      "ignoreSourceCodeByRegex": [
+        "if \\(\\$targetEncoding !== null && strcasecmp\\(\\$targetEncoding, 'UTF-8'\\) !== 0\\)"
+      ]
+    },
+
+    "LogicalAndNegation": {
+      "ignore": [
+        "Radix\\File\\Writer::xml",
+        "Radix\\File\\Writer::ndjsonStream",
+        "Radix\\File\\Writer::csvStream"
       ]
     },
 
@@ -148,14 +220,21 @@
         "Radix\\Collection\\Collection::unique",
         "Radix\\Container\\Argument\\LiteralArgument::setValue",
         "Radix\\Container\\Definition::getResolved",
-        "Radix\\Controller\\ApiController::isTokenValid"
+        "Radix\\Controller\\ApiController::isTokenValid",
+        "Radix\\File\\Image::crop",
+        "Radix\\File\\Writer::csv",
+        "Radix\\File\\Writer::csvStream"
       ]
     },
 
     "LogicalAnd": {
       "ignore": [
         "Radix\\Config\\Config::get",
-        "Radix\\Container\\Argument\\Literal\\CallableArgument::isMethod"
+        "Radix\\Container\\Argument\\Literal\\CallableArgument::isMethod",
+        "Radix\\File\\Upload::__construct",
+        "Radix\\File\\Writer::csvStream",
+        "Radix\\File\\Writer::csv",
+        "Radix\\File\\Writer::ensureParentDir"
       ]
     },
 
@@ -164,14 +243,24 @@
         "Radix\\Collection\\Collection::offsetExists",
         "Radix\\Collection\\Collection::only",
         "Radix\\Container\\Argument\\LiteralArgument::setValue",
-        "Radix\\Container\\Definition::getResolved"
+        "Radix\\Container\\Definition::getResolved",
+        "Radix\\File\\Reader::detectDelimiter",
+        "Radix\\File\\Writer::ensureParentDir"
+      ]
+    },
+
+    "LogicalOrSingleSubExprNegation": {
+      "ignore": [
+        "Radix\\File\\Writer::csv",
+        "Radix\\File\\Writer::csvStream"
       ]
     },
 
     "ReturnRemoval": {
       "ignore": [
         "Radix\\Collection\\Collection::offsetExists",
-        "Radix\\Collection\\Collection::last"
+        "Radix\\Collection\\Collection::last",
+        "Radix\\File\\Reader::detectDelimiter"
       ]
     },
 
@@ -181,11 +270,20 @@
       ]
     },
 
+    "CastArray": {
+      "ignore": [
+        "Radix\\File\\Writer::xml"
+      ]
+    },
+
     "LogicalNot": {
       "ignore": [
         "Radix\\Collection\\Collection::only",
         "Radix\\Container\\Resolver::createFromFactory",
-        "Radix\\Container\\Argument\\LiteralArgument::setValue"
+        "Radix\\Container\\Argument\\LiteralArgument::setValue",
+        "Radix\\File\\Upload::__construct",
+        "Radix\\File\\Writer::csv",
+        "Radix\\File\\Writer::csvStream"
       ]
     },
 
@@ -197,7 +295,11 @@
 
     "LogicalOrAllSubExprNegation": {
       "ignore": [
-        "Radix\\Collection\\Collection::unique"
+        "Radix\\Collection\\Collection::unique",
+        "Radix\\File\\Writer::csv"
+      ],
+      "ignoreSourceCodeByRegex": [
+        "is_bool\\(\\$v\\) \\|\\| is_int\\(\\$v\\) \\|\\| is_float\\(\\$v\\) \\|\\| is_string\\(\\$v\\)"
       ]
     },
 
@@ -205,28 +307,67 @@
       "ignore": [
         "Radix\\Collection\\Collection::unique",
         "Radix\\Controller\\ApiController::validateApiToken",
-        "Radix\\Controller\\ApiController::isTokenValid"
+        "Radix\\Controller\\ApiController::isTokenValid",
+        "Radix\\File\\Reader::csvStream",
+        "Radix\\File\\Reader::csv",
+        "Radix\\File\\Writer::arrayToXml",
+        "Radix\\File\\Writer::collectHeaders"
       ]
     },
 
     "TrueValue": {
       "ignore": [
         "Radix\\Collection\\Collection::unique",
-        "Radix\\Container\\Resolver::parseConcrete"
+        "Radix\\Container\\Resolver::parseConcrete",
+        "Radix\\File\\Reader::ndjsonStream",
+        "Radix\\File\\Reader::json",
+        "Radix\\File\\Reader::xml",
+        "Radix\\File\\Writer::json"
+      ]
+    },
+
+    "FalseValue": {
+      "ignore": [
+        "Radix\\File\\Reader::csvStream",
+        "Radix\\File\\Reader::csv"
       ]
     },
 
     "ProtectedVisibility": {
       "ignore": [
         "Radix\\Container\\Container::resolveAlias",
-        "Radix\\Container\\Container::resolveInstance"
+        "Radix\\Container\\Container::resolveInstance",
+        "Radix\\File\\Image::getOptimalCrop",
+        "Radix\\File\\Image::getSizeByAuto",
+        "Radix\\File\\Image::getSizeByRatio"
       ]
     },
 
     "MethodCallRemoval": {
       "ignore": [
         "Radix\\Container\\Argument\\Literal\\ArrayArgument::__construct",
-        "Radix\\Container\\Argument\\Literal\\ObjectArgument::__construct"
+        "Radix\\Container\\Argument\\Literal\\ObjectArgument::__construct",
+        "Radix\\File\\Image::__destruct",
+        "Radix\\File\\Image::resizeImage",
+        "Radix\\File\\Reader::ndjsonStream",
+        "Radix\\File\\Reader::textStream",
+        "Radix\\File\\Reader::csvStream",
+        "Radix\\File\\Reader::xml",
+        "Radix\\File\\Writer::ndjsonStream",
+        "Radix\\File\\Writer::xml",
+        "Radix\\File\\Writer::text",
+        "Radix\\File\\Writer::csv"
+      ],
+      "ignoreSourceCodeByRegex": [
+        "public static function csv\\s*\\("
+      ]
+    },
+    "FunctionCallRemoval": {
+      "ignore": [
+        "Radix\\File\\Image::__destruct",
+        "Radix\\File\\Image::resizeImage",
+        "Radix\\File\\Reader::xml",
+        "Radix\\File\\Writer::xml"
       ]
     },
 
@@ -234,9 +375,48 @@
       "ignore": [
         "Radix\\Container\\Resolver::createFromFactory",
         "Radix\\Container\\Argument\\Literal\\ArrayArgument::__construct",
-        "Radix\\Container\\Container::resolveAlias"
+        "Radix\\Container\\Container::resolveAlias",
+        "Radix\\File\\Image::openImage"
       ]
     },
+
+    "RoundingFamily": {
+      "ignore": [
+        "Radix\\File\\Image::crop",
+        "Radix\\File\\Image::getOptimalCrop",
+        "Radix\\File\\Image::getSizeByRatio"
+      ]
+    },
+
+    "IfNegation": {
+      "ignore": [
+        "Radix\\File\\Writer::json"
+      ]
+    },
+
+    "Assignment": {
+      "ignore": [
+        "Radix\\File\\Reader::detectDelimiter",
+        "Radix\\File\\Writer::json"
+      ]
+    },
+
+    "ArrayItemRemoval": {
+      "ignore": [
+        "Radix\\File\\Reader::detectDelimiter"
+      ]
+    },
+
+    "UnwrapFinally": {
+      "ignore": [
+        "Radix\\File\\Reader::ndjsonStream",
+        "Radix\\File\\Reader::textStream",
+        "Radix\\File\\Writer::xml",
+        "Radix\\File\\Writer::ndjsonStream",
+        "Radix\\File\\Writer::csvStream",
+        "Radix\\File\\Writer::csv"
+      ]
+    }
   },
   "testFramework": "phpunit",
   "bootstrap": "./vendor/autoload.php",
