@@ -23,7 +23,7 @@ env:
   # Ändra denna när du vill jobba på en viss del av framework/src, t.ex:
   # "framework/src/Container" eller "framework/src/Config".
   # Lämna tom för att hoppa över framework-körningen.
-  INFECTION_FILTER: "framework/src/File"
+  INFECTION_FILTER: "framework/src/Http"
 
 jobs:
   php:

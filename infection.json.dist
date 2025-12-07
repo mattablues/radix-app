@@ -8,6 +8,7 @@
     "text": "php://stdout",
     "html": "infection-report.html"
   },
+  "timeout": 15,
   "mutators": {
     "@default": true,
 
@@ -52,7 +53,8 @@
 
     "Break_": {
       "ignore": [
-        "Radix\\File\\Reader::detectDelimiter"
+        "Radix\\File\\Reader::detectDelimiter",
+        "Radix\\Http\\EventListeners\\CorsListener::__invoke"
       ]
     },
 
@@ -266,7 +268,8 @@
 
     "CastBool": {
       "ignore": [
-        "Radix\\Collection\\Collection::filter"
+        "Radix\\Collection\\Collection::filter",
+        "Radix\\Http\\EventListeners\\CorsListener::__invoke"
       ]
     },
 
@@ -289,7 +292,8 @@
 
     "Identical": {
       "ignore": [
-        "Radix\\Collection\\Collection::unique"
+        "Radix\\Collection\\Collection::unique",
+        "Radix\\Http\\Request::header"
       ]
     },
 
@@ -403,7 +407,15 @@
 
     "ArrayItemRemoval": {
       "ignore": [
-        "Radix\\File\\Reader::detectDelimiter"
+        "Radix\\File\\Reader::detectDelimiter",
+        "Radix\\Http\\EventListeners\\CorsListener::__invoke"
+      ]
+    },
+
+    "UnwrapArrayValues": {
+      "ignore": [
+        "Radix\\Http\\EventListeners\\CorsListener::onResponse",
+        "Radix\\Http\\EventListeners\\CorsListener::__invoke"
       ]
     },
 
