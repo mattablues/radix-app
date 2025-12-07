@@ -47,7 +47,8 @@
 
     "Continue_": {
       "ignore": [
-        "Radix\\Container\\Resolver::resolveDependencies"
+        "Radix\\Container\\Resolver::resolveDependencies",
+        "Radix\\Routing\\Dispatcher::handle"
       ]
     },
 
@@ -60,7 +61,16 @@
 
     "ArrayOneItem": {
       "ignore": [
-        "Radix\\Container\\Resolver::resolveDependencies"
+        "Radix\\Container\\Resolver::resolveDependencies",
+        "Radix\\Routing\\Dispatcher::actionArguments",
+        "Radix\\Routing\\Dispatcher::middlewares"
+      ]
+    },
+
+    "Foreach_": {
+      "ignore": [
+        "Radix\\Routing\\Dispatcher::actionArguments",
+        "Radix\\Routing\\Dispatcher::handle"
       ]
     },
 
@@ -103,7 +113,8 @@
         "Radix\\File\\Writer::csv",
         "Radix\\File\\Writer::text",
         "Radix\\File\\Writer::json",
-        "Radix\\File\\Writer::ensureParentDir"
+        "Radix\\File\\Writer::ensureParentDir",
+        "Radix\\Routing\\Dispatcher::handle"
       ],
       "ignoreSourceCodeByRegex": [
         "if \\(\\$targetEncoding !== null && strcasecmp\\(\\$targetEncoding, 'UTF-8'\\) !== 0\\)"
@@ -130,7 +141,21 @@
         "Radix\\File\\Writer::ndjsonStream",
         "Radix\\File\\Writer::csv",
         "Radix\\File\\Writer::json",
-        "Radix\\File\\Writer::ensureParentDir"
+        "Radix\\File\\Writer::ensureParentDir",
+        "Radix\\Routing\\Router::extractRoute",
+        "Radix\\Routing\\Dispatcher::handle"
+      ]
+    },
+
+    "Coalesce": {
+      "ignore": [
+        "Radix\\Routing\\Router::group"
+      ]
+    },
+
+    "UnwrapTrim": {
+      "ignore": [
+        "Radix\\Routing\\Router::group"
       ]
     },
 
@@ -149,7 +174,23 @@
     "UnwrapRtrim": {
       "ignore": [
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
-        "Radix\\File\\Reader::ndjsonStream"
+        "Radix\\File\\Reader::ndjsonStream",
+        "Radix\\Routing\\Router::add",
+        "Radix\\Routing\\Router::addRoute"
+      ]
+    },
+
+    "UnwrapLtrim": {
+      "ignore": [
+        "Radix\\Routing\\Router::add",
+        "Radix\\Routing\\Router::addRoute"
+      ]
+    },
+
+    "MBString": {
+      "ignore": [
+        "Radix\\Routing\\Router::addRoute",
+        "Radix\\Routing\\Router::match"
       ]
     },
 
@@ -201,7 +242,8 @@
         "Radix\\File\\Writer::ensureParentDir",
         "Radix\\File\\Writer::ndjsonStream",
         "Radix\\File\\Writer::csv",
-        "Radix\\File\\Writer::text"
+        "Radix\\File\\Writer::text",
+        "Radix\\Routing\\Router::group"
       ],
       "ignoreSourceCodeByRegex": [
         "if \\(\\$targetEncoding !== null && strcasecmp\\(\\$targetEncoding, 'UTF-8'\\) !== 0\\)"
@@ -225,7 +267,9 @@
         "Radix\\Controller\\ApiController::isTokenValid",
         "Radix\\File\\Image::crop",
         "Radix\\File\\Writer::csv",
-        "Radix\\File\\Writer::csvStream"
+        "Radix\\File\\Writer::csvStream",
+        "Radix\\Routing\\Router::addRoute",
+        "Radix\\Routing\\Dispatcher::handle"
       ]
     },
 
@@ -247,14 +291,29 @@
         "Radix\\Container\\Argument\\LiteralArgument::setValue",
         "Radix\\Container\\Definition::getResolved",
         "Radix\\File\\Reader::detectDelimiter",
-        "Radix\\File\\Writer::ensureParentDir"
+        "Radix\\File\\Writer::ensureParentDir",
+        "Radix\\Routing\\Router::group",
+        "Radix\\Routing\\Dispatcher::handle"
       ]
     },
 
     "LogicalOrSingleSubExprNegation": {
       "ignore": [
         "Radix\\File\\Writer::csv",
-        "Radix\\File\\Writer::csvStream"
+        "Radix\\File\\Writer::csvStream",
+        "Radix\\Routing\\Dispatcher::handle"
+      ]
+    },
+
+    "PregMatchRemoveCaret": {
+      "ignore": [
+        "Radix\\Routing\\Dispatcher::handle"
+      ]
+    },
+
+    "LogicalAndSingleSubExprNegation": {
+      "ignore": [
+        "Radix\\Routing\\Dispatcher::handle"
       ]
     },
 
@@ -293,14 +352,16 @@
     "Identical": {
       "ignore": [
         "Radix\\Collection\\Collection::unique",
-        "Radix\\Http\\Request::header"
+        "Radix\\Http\\Request::header",
+        "Radix\\Routing\\Dispatcher::handle"
       ]
     },
 
     "LogicalOrAllSubExprNegation": {
       "ignore": [
         "Radix\\Collection\\Collection::unique",
-        "Radix\\File\\Writer::csv"
+        "Radix\\File\\Writer::csv",
+        "Radix\\Routing\\Dispatcher::handle"
       ],
       "ignoreSourceCodeByRegex": [
         "is_bool\\(\\$v\\) \\|\\| is_int\\(\\$v\\) \\|\\| is_float\\(\\$v\\) \\|\\| is_string\\(\\$v\\)"
@@ -360,7 +421,8 @@
         "Radix\\File\\Writer::ndjsonStream",
         "Radix\\File\\Writer::xml",
         "Radix\\File\\Writer::text",
-        "Radix\\File\\Writer::csv"
+        "Radix\\File\\Writer::csv",
+        "Radix\\Routing\\Dispatcher::handle"
       ],
       "ignoreSourceCodeByRegex": [
         "public static function csv\\s*\\("
@@ -371,7 +433,8 @@
         "Radix\\File\\Image::__destruct",
         "Radix\\File\\Image::resizeImage",
         "Radix\\File\\Reader::xml",
-        "Radix\\File\\Writer::xml"
+        "Radix\\File\\Writer::xml",
+        "Radix\\Routing\\Dispatcher::handle"
       ]
     },
 
@@ -394,7 +457,8 @@
 
     "IfNegation": {
       "ignore": [
-        "Radix\\File\\Writer::json"
+        "Radix\\File\\Writer::json",
+        "Radix\\Routing\\Dispatcher::handle"
       ]
     },
 
