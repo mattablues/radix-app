@@ -90,6 +90,9 @@ vendor/bin/infection --threads=1 --show-mutations --filter=framework/src/Http/Ev
 vendor/bin/infection --threads=1 --show-mutations --filter=framework/src/Container/Resolver.php --initial-tests-php-options="-d opcache.enable_cli=0"
 
 php -d xdebug.mode=coverage vendor/bin/phpunit -c phpunit.xml --coverage-xml=build/coverage/coverage-xml --log-junit=build/coverage/junit.xml
+
+Remove-Item .infection.cache* -ErrorAction SilentlyContinue
 ----------------------------------------------------------------------------------------------
 Cache
 ----------------------------------------------------------------------------------------------
+vendor/bin/infection --threads=1 --filter=framework/src/File --initial-tests-php-options="-d opcache.enable_cli=0"
