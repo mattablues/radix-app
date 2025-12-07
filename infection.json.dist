@@ -114,7 +114,9 @@
         "Radix\\File\\Writer::text",
         "Radix\\File\\Writer::json",
         "Radix\\File\\Writer::ensureParentDir",
-        "Radix\\Routing\\Dispatcher::handle"
+        "Radix\\Routing\\Dispatcher::handle",
+        "Radix\\Session\\RadixSessionHandler::write",
+        "Radix\\Session\\RadixSessionHandler::__construct"
       ],
       "ignoreSourceCodeByRegex": [
         "if \\(\\$targetEncoding !== null && strcasecmp\\(\\$targetEncoding, 'UTF-8'\\) !== 0\\)"
@@ -143,13 +145,16 @@
         "Radix\\File\\Writer::json",
         "Radix\\File\\Writer::ensureParentDir",
         "Radix\\Routing\\Router::extractRoute",
-        "Radix\\Routing\\Dispatcher::handle"
+        "Radix\\Routing\\Dispatcher::handle",
+        "Radix\\Session\\RadixSessionHandler::write",
+        "Radix\\Session\\RadixSessionHandler::__construct"
       ]
     },
 
     "Coalesce": {
       "ignore": [
-        "Radix\\Routing\\Router::group"
+        "Radix\\Routing\\Router::group",
+        "Radix\\Session\\RadixSessionHandler::__construct"
       ]
     },
 
@@ -176,7 +181,11 @@
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
         "Radix\\File\\Reader::ndjsonStream",
         "Radix\\Routing\\Router::add",
-        "Radix\\Routing\\Router::addRoute"
+        "Radix\\Routing\\Router::addRoute",
+        "Radix\\Session\\RadixSessionHandler::gc",
+        "Radix\\Session\\RadixSessionHandler::destroy",
+        "Radix\\Session\\RadixSessionHandler::write",
+        "Radix\\Session\\RadixSessionHandler::read"
       ]
     },
 
@@ -197,7 +206,8 @@
     "Plus": {
       "ignore": [
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
-        "Radix\\Middleware\\Middlewares\\RequestLogger::process"
+        "Radix\\Middleware\\Middlewares\\RequestLogger::process",
+        "Radix\\Session\\RadixSessionHandler::write"
       ]
     },
 
@@ -214,7 +224,7 @@
         "Radix\\Middleware\\Middlewares\\RequestLogger::process",
         "Radix\\Middleware\\Middlewares\\LimitRequestSize::getContentLengthFromServer",
         "Radix\\Controller\\ApiController::isTokenValid",
-        "Radix\\File\\Reader::detectDelimiter"
+        "Radix\\Session\\RadixSessionHandler::gc"
       ]
     },
 
@@ -254,7 +264,8 @@
       "ignore": [
         "Radix\\File\\Writer::xml",
         "Radix\\File\\Writer::ndjsonStream",
-        "Radix\\File\\Writer::csvStream"
+        "Radix\\File\\Writer::csvStream",
+        "Radix\\Session\\RadixSessionHandler::__construct"
       ]
     },
 
@@ -280,7 +291,8 @@
         "Radix\\File\\Upload::__construct",
         "Radix\\File\\Writer::csvStream",
         "Radix\\File\\Writer::csv",
-        "Radix\\File\\Writer::ensureParentDir"
+        "Radix\\File\\Writer::ensureParentDir",
+        "Radix\\Session\\RadixSessionHandler::__construct"
       ]
     },
 
@@ -293,7 +305,8 @@
         "Radix\\File\\Reader::detectDelimiter",
         "Radix\\File\\Writer::ensureParentDir",
         "Radix\\Routing\\Router::group",
-        "Radix\\Routing\\Dispatcher::handle"
+        "Radix\\Routing\\Dispatcher::handle",
+        "Radix\\Session\\RadixSessionHandler::__construct"
       ]
     },
 
@@ -345,7 +358,9 @@
         "Radix\\Container\\Argument\\LiteralArgument::setValue",
         "Radix\\File\\Upload::__construct",
         "Radix\\File\\Writer::csv",
-        "Radix\\File\\Writer::csvStream"
+        "Radix\\File\\Writer::csvStream",
+        "Radix\\Session\\RadixSessionHandler::write",
+        "Radix\\Session\\RadixSessionHandler::__construct"
       ]
     },
 
@@ -376,7 +391,8 @@
         "Radix\\File\\Reader::csvStream",
         "Radix\\File\\Reader::csv",
         "Radix\\File\\Writer::arrayToXml",
-        "Radix\\File\\Writer::collectHeaders"
+        "Radix\\File\\Writer::collectHeaders",
+        "Radix\\Session\\RadixSessionHandler::read",
       ]
     },
 
@@ -458,7 +474,8 @@
     "IfNegation": {
       "ignore": [
         "Radix\\File\\Writer::json",
-        "Radix\\Routing\\Dispatcher::handle"
+        "Radix\\Routing\\Dispatcher::handle",
+        "Radix\\Session\\RadixSessionHandler::write"
       ]
     },
 
