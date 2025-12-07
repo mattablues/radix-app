@@ -63,6 +63,22 @@ final class RadixSessionHandlerFileTest extends TestCase
         $this->assertFileDoesNotExist($file);
     }
 
+    public function testDestroyReturnsTrueWhenFileDoesNotExist(): void
+    {
+        $sid  = 'non-existing';
+        $file = $this->tmpDir . "sess_{$sid}";
+
+        // Säkerställ att filen verkligen inte finns
+        if (file_exists($file)) {
+            @unlink($file);
+        }
+        $this->assertFileDoesNotExist($file);
+
+        // destroy() ska fortfarande returnera true när fil saknas
+        $ok = $this->handler->destroy($sid);
+        $this->assertTrue($ok, 'destroy() ska returnera true även om filen inte finns');
+    }
+
     public function testGcRemovesExpiredFiles(): void
     {
         // Skapa två sessioner: en gammal, en ny
@@ -77,7 +93,11 @@ final class RadixSessionHandlerFileTest extends TestCase
         @touch($old, $past);
 
         $deleted = $this->handler->gc(10);
+
+        // Ska returnera ett heltal och exakt en raderad fil
         $this->assertIsInt($deleted);
+        $this->assertSame(1, $deleted, 'gc() ska rapportera exakt en raderad sessionfil');
+
         $this->assertFileDoesNotExist($old, 'Gammal sessionfil ska ha raderats');
         $this->assertFileExists($new, 'Ny sessionfil ska finnas kvar');
     }
