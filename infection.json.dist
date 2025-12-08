@@ -8,7 +8,7 @@
     "text": "php://stdout",
     "html": "infection-report.html"
   },
-  "timeout": 15,
+  "timeout": 25,
   "mutators": {
     "@default": true,
 
@@ -26,14 +26,20 @@
         "Radix\\Container\\Resolver::resolveDependencies",
         "Radix\\Middleware\\Middlewares\\RateLimiter::__construct",
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
-        "Radix\\File\\Writer::xml"
+        "Radix\\File\\Writer::xml",
+        "Radix\\Support\\FileCache::__construct",
+        "Radix\\Support\\Logger::__construct",
+        "Radix\\Support\\Validator::getErrorMessage"
       ]
     },
 
     "Concat": {
       "ignore": [
         "Radix\\Container\\Resolver::resolveDependencies",
-        "Radix\\File\\Writer::json"
+        "Radix\\File\\Writer::json",
+        "Radix\\Support\\FileCache::__construct",
+        "Radix\\Support\\Logger::resolveWritableFile",
+        "Radix\\Support\\Logger::__construct"
       ]
     },
 
@@ -41,7 +47,12 @@
       "ignore": [
         "Radix\\Container\\Resolver::resolveDependencies",
         "Radix\\File\\Writer::json",
-        "Radix\\File\\Writer::csv"
+        "Radix\\File\\Writer::csv",
+        "Radix\\Support\\FileCache::__construct",
+        "Radix\\Support\\Logger::contextToString",
+        "Radix\\Support\\Logger::resolveWritableFile",
+        "Radix\\Support\\Logger::__construct",
+        "Radix\\Support\\Validator::applyRule"
       ]
     },
 
@@ -55,7 +66,8 @@
     "Break_": {
       "ignore": [
         "Radix\\File\\Reader::detectDelimiter",
-        "Radix\\Http\\EventListeners\\CorsListener::__invoke"
+        "Radix\\Http\\EventListeners\\CorsListener::__invoke",
+        "Radix\\Support\\Validator::validateRequiredWith"
       ]
     },
 
@@ -86,7 +98,11 @@
         "Radix\\Middleware\\Middlewares\\RateLimiter::process",
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
         "Radix\\Middleware\\Middlewares\\RequestLogger::process",
-        "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes"
+        "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes",
+        "Radix\\Support\\FileCache::ttlToExpires",
+        "Radix\\Support\\FileCache::get",
+        "Radix\\Support\\Validator::validateMax",
+        "Radix\\Support\\Validator::validateMin"
       ]
     },
 
@@ -116,7 +132,14 @@
         "Radix\\File\\Writer::ensureParentDir",
         "Radix\\Routing\\Dispatcher::handle",
         "Radix\\Session\\RadixSessionHandler::write",
-        "Radix\\Session\\RadixSessionHandler::__construct"
+        "Radix\\Session\\RadixSessionHandler::__construct",
+        "Radix\\Support\\FileCache::get",
+        "Radix\\Support\\FileCache::set",
+        "Radix\\Support\\FileCache::__construct",
+        "Radix\\Support\\Logger::cleanupOldLogs",
+        "Radix\\Support\\Logger::resolveWritableFile",
+        "Radix\\Support\\Logger::__construct",
+        "Radix\\Support\\Validator::validateUnique"
       ],
       "ignoreSourceCodeByRegex": [
         "if \\(\\$targetEncoding !== null && strcasecmp\\(\\$targetEncoding, 'UTF-8'\\) !== 0\\)"
@@ -147,20 +170,40 @@
         "Radix\\Routing\\Router::extractRoute",
         "Radix\\Routing\\Dispatcher::handle",
         "Radix\\Session\\RadixSessionHandler::write",
-        "Radix\\Session\\RadixSessionHandler::__construct"
+        "Radix\\Session\\RadixSessionHandler::__construct",
+        "Radix\\Support\\FileCache::set",
+        "Radix\\Support\\FileCache::__construct",
+        "Radix\\Support\\Logger::cleanupOldLogs",
+        "Radix\\Support\\Logger::resolveWritableFile",
+        "Radix\\Support\\Logger::__construct",
+        "Radix\\Support\\Validator::validateUnique",
+        "Radix\\Support\\Validator::applyRule"
+      ]
+    },
+
+    "Increment": {
+      "ignore": [
+        "Radix\\Support\\Logger::resolveWritableFile"
       ]
     },
 
     "Coalesce": {
       "ignore": [
         "Radix\\Routing\\Router::group",
-        "Radix\\Session\\RadixSessionHandler::__construct"
+        "Radix\\Session\\RadixSessionHandler::__construct",
+        "Radix\\Support\\Validator::getErrorMessage"
       ]
     },
 
     "UnwrapTrim": {
       "ignore": [
         "Radix\\Routing\\Router::group"
+      ]
+    },
+
+    "Multiplication": {
+      "ignore": [
+        "Radix\\Support\\Logger::__construct"
       ]
     },
 
@@ -185,7 +228,10 @@
         "Radix\\Session\\RadixSessionHandler::gc",
         "Radix\\Session\\RadixSessionHandler::destroy",
         "Radix\\Session\\RadixSessionHandler::write",
-        "Radix\\Session\\RadixSessionHandler::read"
+        "Radix\\Session\\RadixSessionHandler::read",
+        "Radix\\Support\\FileCache::__construct",
+        "Radix\\Support\\Logger::__construct",
+        "Radix\\Support\\Validator::getErrorMessage"
       ]
     },
 
@@ -214,7 +260,8 @@
     "GreaterThan": {
       "ignore": [
           "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
-          "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes"
+          "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes",
+          "Radix\\Support\\Logger::resolveWritableFile"
       ]
     },
 
@@ -224,7 +271,9 @@
         "Radix\\Middleware\\Middlewares\\RequestLogger::process",
         "Radix\\Middleware\\Middlewares\\LimitRequestSize::getContentLengthFromServer",
         "Radix\\Controller\\ApiController::isTokenValid",
-        "Radix\\Session\\RadixSessionHandler::gc"
+        "Radix\\Session\\RadixSessionHandler::gc",
+        "Radix\\Support\\Logger::cleanupOldLogs",
+        "Radix\\Support\\Logger::resolveWritableFile"
       ]
     },
 
@@ -253,7 +302,8 @@
         "Radix\\File\\Writer::ndjsonStream",
         "Radix\\File\\Writer::csv",
         "Radix\\File\\Writer::text",
-        "Radix\\Routing\\Router::group"
+        "Radix\\Routing\\Router::group",
+        "Radix\\Support\\Validator::getErrorMessage"
       ],
       "ignoreSourceCodeByRegex": [
         "if \\(\\$targetEncoding !== null && strcasecmp\\(\\$targetEncoding, 'UTF-8'\\) !== 0\\)"
@@ -265,7 +315,10 @@
         "Radix\\File\\Writer::xml",
         "Radix\\File\\Writer::ndjsonStream",
         "Radix\\File\\Writer::csvStream",
-        "Radix\\Session\\RadixSessionHandler::__construct"
+        "Radix\\Session\\RadixSessionHandler::__construct",
+        "Radix\\Support\\Validator::getErrorMessage",
+        "Radix\\Support\\Validator::applyRule",
+        "Radix\\Support\\Validator::addError"
       ]
     },
 
@@ -280,7 +333,10 @@
         "Radix\\File\\Writer::csv",
         "Radix\\File\\Writer::csvStream",
         "Radix\\Routing\\Router::addRoute",
-        "Radix\\Routing\\Dispatcher::handle"
+        "Radix\\Routing\\Dispatcher::handle",
+        "Radix\\Support\\Logger::resolveWritableFile",
+        "Radix\\Support\\Validator::validateUnique",
+        "Radix\\Support\\Validator::applyRule"
       ]
     },
 
@@ -292,7 +348,10 @@
         "Radix\\File\\Writer::csvStream",
         "Radix\\File\\Writer::csv",
         "Radix\\File\\Writer::ensureParentDir",
-        "Radix\\Session\\RadixSessionHandler::__construct"
+        "Radix\\Session\\RadixSessionHandler::__construct",
+        "Radix\\Support\\StringHelper::pluralize",
+        "Radix\\Support\\Validator::validateFileSize",
+        "Radix\\Support\\Validator::getErrorMessage"
       ]
     },
 
@@ -306,7 +365,8 @@
         "Radix\\File\\Writer::ensureParentDir",
         "Radix\\Routing\\Router::group",
         "Radix\\Routing\\Dispatcher::handle",
-        "Radix\\Session\\RadixSessionHandler::__construct"
+        "Radix\\Session\\RadixSessionHandler::__construct",
+        "Radix\\Support\\Validator::getErrorMessage"
       ]
     },
 
@@ -314,7 +374,8 @@
       "ignore": [
         "Radix\\File\\Writer::csv",
         "Radix\\File\\Writer::csvStream",
-        "Radix\\Routing\\Dispatcher::handle"
+        "Radix\\Routing\\Dispatcher::handle",
+        "Radix\\Support\\Validator::applyRule"
       ]
     },
 
@@ -326,7 +387,10 @@
 
     "LogicalAndSingleSubExprNegation": {
       "ignore": [
-        "Radix\\Routing\\Dispatcher::handle"
+        "Radix\\Routing\\Dispatcher::handle",
+        "Radix\\Support\\Validator::getErrorMessage",
+        "Radix\\Support\\Validator::applyRule",
+        "Radix\\Support\\Validator::addError"
       ]
     },
 
@@ -334,7 +398,12 @@
       "ignore": [
         "Radix\\Collection\\Collection::offsetExists",
         "Radix\\Collection\\Collection::last",
-        "Radix\\File\\Reader::detectDelimiter"
+        "Radix\\File\\Reader::detectDelimiter",
+        "Radix\\Support\\FileCache::get",
+        "Radix\\Support\\Logger::contextToString",
+        "Radix\\Support\\Validator::getValueForDotNotation",
+        "Radix\\Support\\Validator::getErrorMessage",
+        "Radix\\Support\\Validator::applyRule"
       ]
     },
 
@@ -342,6 +411,13 @@
       "ignore": [
         "Radix\\Collection\\Collection::filter",
         "Radix\\Http\\EventListeners\\CorsListener::__invoke"
+      ]
+    },
+
+    "CastFloat": {
+      "ignore": [
+        "Radix\\Support\\Validator::validateMax",
+        "Radix\\Support\\Validator::validateMin"
       ]
     },
 
@@ -360,7 +436,9 @@
         "Radix\\File\\Writer::csv",
         "Radix\\File\\Writer::csvStream",
         "Radix\\Session\\RadixSessionHandler::write",
-        "Radix\\Session\\RadixSessionHandler::__construct"
+        "Radix\\Session\\RadixSessionHandler::__construct",
+        "Radix\\Support\\Logger::__construct",
+        "Radix\\Support\\Validator::applyRule"
       ]
     },
 
@@ -368,7 +446,9 @@
       "ignore": [
         "Radix\\Collection\\Collection::unique",
         "Radix\\Http\\Request::header",
-        "Radix\\Routing\\Dispatcher::handle"
+        "Radix\\Routing\\Dispatcher::handle",
+        "Radix\\Support\\Validator::getErrorMessage",
+        "Radix\\Support\\Validator::applyRule"
       ]
     },
 
@@ -376,10 +456,17 @@
       "ignore": [
         "Radix\\Collection\\Collection::unique",
         "Radix\\File\\Writer::csv",
-        "Radix\\Routing\\Dispatcher::handle"
+        "Radix\\Routing\\Dispatcher::handle",
+        "Radix\\Support\\Validator::applyRule"
       ],
       "ignoreSourceCodeByRegex": [
         "is_bool\\(\\$v\\) \\|\\| is_int\\(\\$v\\) \\|\\| is_float\\(\\$v\\) \\|\\| is_string\\(\\$v\\)"
+      ]
+    },
+
+    "LogicalOrNegation": {
+      "ignore": [
+        "Radix\\Support\\Validator::applyRule"
       ]
     },
 
@@ -393,6 +480,8 @@
         "Radix\\File\\Writer::arrayToXml",
         "Radix\\File\\Writer::collectHeaders",
         "Radix\\Session\\RadixSessionHandler::read",
+        "Radix\\Support\\Logger::interpolate",
+        "Radix\\Support\\Validator::getErrorMessage"
       ]
     },
 
@@ -420,7 +509,50 @@
         "Radix\\Container\\Container::resolveInstance",
         "Radix\\File\\Image::getOptimalCrop",
         "Radix\\File\\Image::getSizeByAuto",
-        "Radix\\File\\Image::getSizeByRatio"
+        "Radix\\File\\Image::getSizeByRatio",
+        "Radix\\Support\\Validator::getValueForDotNotation",
+        "Radix\\Support\\Validator::validateIp",
+        "Radix\\Support\\Validator::validateConfirmed",
+        "Radix\\Support\\Validator::validateEndsWith",
+        "Radix\\Support\\Validator::validateStartsWith",
+        "Radix\\Support\\Validator::validateDateFormat",
+        "Radix\\Support\\Validator::validateUnique",
+        "Radix\\Support\\Validator::validateDate",
+        "Radix\\Support\\Validator::validateBoolean",
+        "Radix\\Support\\Validator::validateIn",
+        "Radix\\Support\\Validator::validateRegex",
+        "Radix\\Support\\Validator::validateNotIn",
+        "Radix\\Support\\Validator::validateAlphanumeric",
+        "Radix\\Support\\Validator::validateNumeric",
+        "Radix\\Support\\Validator::validateMax",
+        "Radix\\Support\\Validator::validateNullable",
+        "Radix\\Support\\Validator::validateEmail",
+        "Radix\\Support\\Validator::validateMin",
+        "Radix\\Support\\Validator::validateSometimes",
+        "Radix\\Support\\Validator::validateRequired",
+        "Radix\\Support\\Validator::validateString",
+        "Radix\\Support\\Validator::validateRequiredWith",
+        "Radix\\Support\\Validator::validateInteger",
+        "Radix\\Support\\Validator::getErrorMessage",
+        "Radix\\Support\\Validator::applyRule"
+      ]
+    },
+
+    "UnwrapStrReplace": {
+      "ignore": [
+        "Radix\\Support\\Validator::getErrorMessage"
+      ]
+    },
+
+    "UnwrapStrToLower": {
+      "ignore": [
+        "Radix\\Support\\Validator::applyRule"
+      ]
+    },
+
+    "UnwrapUcWords": {
+      "ignore": [
+        "Radix\\Support\\Validator::applyRule"
       ]
     },
 
@@ -475,7 +607,9 @@
       "ignore": [
         "Radix\\File\\Writer::json",
         "Radix\\Routing\\Dispatcher::handle",
-        "Radix\\Session\\RadixSessionHandler::write"
+        "Radix\\Session\\RadixSessionHandler::write",
+        "Radix\\Support\\Validator::validateUnique",
+        "Radix\\Support\\Validator::getErrorMessage"
       ]
     },
 
@@ -489,7 +623,8 @@
     "ArrayItemRemoval": {
       "ignore": [
         "Radix\\File\\Reader::detectDelimiter",
-        "Radix\\Http\\EventListeners\\CorsListener::__invoke"
+        "Radix\\Http\\EventListeners\\CorsListener::__invoke",
+        "Radix\\Support\\Validator::getErrorMessage"
       ]
     },
 
