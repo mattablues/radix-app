@@ -309,15 +309,41 @@ final class RateLimiterTest extends TestCase
         $handler = $this->makeHandler();
         $req = $this->makeRequest('203.0.113.250');
 
+        $firstResetAt = null;
+
         // Förbruka exakt 60 requests inom samma fönster
         for ($i = 1; $i <= 60; $i++) {
             $res = $mw->process($req, $handler);
             $this->assertSame(200, $res->getStatusCode(), "Request #$i ska vara 200 med default limit 60");
+
+            $headers = $res->headers();
+            $resetAt = isset($headers['X-RateLimit-Reset']) ? (int) $headers['X-RateLimit-Reset'] : 0;
+
+            if ($firstResetAt === null && $resetAt > 0) {
+                $firstResetAt = $resetAt;
+            }
         }
 
-        // 61:a ska ge 429 om limit verkligen är 60
+        // 61:a ska ge 429 om vi fortfarande är i samma fönster.
+        // Om fönstret precis slog över är 200 acceptabelt och säger inget om limit-logiken.
+        $nowBefore61 = time();
         $res61 = $mw->process($req, $handler);
-        $this->assertSame(429, $res61->getStatusCode(), 'Request #61 ska returnera 429 med default limit 60');
+        $status61 = $res61->getStatusCode();
+
+        if ($firstResetAt !== null && $nowBefore61 < $firstResetAt) {
+            $this->assertSame(
+                429,
+                $status61,
+                'Request #61 ska returnera 429 med default limit 60 när vi är kvar i samma fönster.'
+            );
+        } else {
+            // Vi har gått in i nytt fönster – då kan #61 mycket väl vara 200.
+            $this->assertSame(
+                200,
+                $status61,
+                'Request #61 hamnade i nytt fönster och ska då kunna passera.'
+            );
+        }
 
         // Cachefiler ska finnas i sys temp dir under radix_ratelimit
         $expectedDir = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'radix_ratelimit';

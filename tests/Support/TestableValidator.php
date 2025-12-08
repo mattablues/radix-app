@@ -17,4 +17,9 @@ class TestableValidator extends Validator
     {
         return $this->validateFileSize($value, $parameter);
     }
+
+    public function getDotValue(string $field): mixed
+    {
+        return $this->getValueForDotNotation($field);
+    }
 }
