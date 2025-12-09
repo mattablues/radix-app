@@ -29,6 +29,72 @@ class BlueprintTest extends TestCase
         $this->assertEquals($expectedSql, $blueprint->toSql());
     }
 
+    public function testCustomFloatTypeWithPrecisionIsAcceptedCaseInsensitive(): void
+    {
+        $blueprint = new Blueprint('prices');
+
+        // Små bokstäver och mellanslag – ska godkännas av /^FLOAT(...)/i
+        $blueprint->addColumn('float(10, 2)', 'amount');
+
+        $expectedSql = "CREATE TABLE `prices` ("
+            . "`amount` float(10, 2) NOT NULL"
+            . ") DEFAULT CHARSET=utf8mb4;";
+
+        $this->assertEquals($expectedSql, $blueprint->toSql());
+    }
+
+    public function testInvalidFloatTypeWithTrailingGarbageIsRejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Unsupported column type: 'foo FLOAT(10, 2)'");
+
+        $blueprint = new Blueprint('users');
+        // Ska inte godkännas – bara exakt FLOAT(...) är giltigt.
+        $blueprint->addColumn('foo FLOAT(10, 2)', 'col');
+    }
+
+    public function testInvalidFloatTypeWithLeadingGarbageIsRejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Unsupported column type: 'FLOAT(10, 2) foo'");
+
+        $blueprint = new Blueprint('users');
+        $blueprint->addColumn('FLOAT(10, 2) foo', 'col');
+    }
+
+    public function testCustomEnumTypeIsAcceptedCaseInsensitive(): void
+    {
+        $blueprint = new Blueprint('statuses');
+
+        // lowercase 'enum' – ska godkännas av /^(ENUM|SET)...$/i
+        $enumType = "enum('draft','published')";
+        $blueprint->addColumn($enumType, 'status');
+
+        $expectedSql = "CREATE TABLE `statuses` ("
+            . "`status` $enumType NOT NULL"
+            . ") DEFAULT CHARSET=utf8mb4;";
+
+        $this->assertEquals($expectedSql, $blueprint->toSql());
+    }
+
+    public function testInvalidEnumTypeWithTrailingGarbageIsRejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Unsupported column type: 'ENUM('A','B') extra'");
+
+        $blueprint = new Blueprint('users');
+        $blueprint->addColumn("ENUM('A','B') extra", 'col');
+    }
+
+    public function testInvalidEnumTypeWithLeadingGarbageIsRejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Unsupported column type: 'foo ENUM('A','B')'");
+
+        $blueprint = new Blueprint('users');
+        $blueprint->addColumn("foo ENUM('A','B')", 'col');
+    }
+
     public function testTableOptions(): void
     {
         $blueprint = new Blueprint('posts');
@@ -43,6 +109,55 @@ class BlueprintTest extends TestCase
             . "`title` VARCHAR(255) NOT NULL, "
             . "`content` TEXT NOT NULL"
             . ") ENGINE=InnoDB AUTO_INCREMENT=10 COMMENT = 'Blog posts table.' DEFAULT CHARSET=utf8mb4;";
+
+        $this->assertEquals($expectedSql, $blueprint->toSql());
+    }
+
+    public function testInvalidColumnTypeWithTrailingValidTypeIsRejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Unsupported column type: 'foo INT'");
+
+        $blueprint = new Blueprint('users');
+        // 'foo INT' ska inte godkännas – får bara vara exakt en typ som matchar regexen.
+        $blueprint->addColumn('foo INT', 'col');
+    }
+
+    public function testInvalidColumnTypeWithLeadingValidTypeIsRejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Unsupported column type: 'INT foo'");
+
+        $blueprint = new Blueprint('users');
+        // 'INT foo' ska inte godkännas – bara 'INT' är giltigt.
+        $blueprint->addColumn('INT foo', 'col');
+    }
+
+    public function testDefaultPathLikeStringIsNotUppercased(): void
+    {
+        $blueprint = new Blueprint('paths');
+
+        $path = '/var/www/app/storage';
+        $blueprint->string('config_path', 255, ['default' => $path]);
+
+        $expectedSql = "CREATE TABLE `paths` ("
+            . "`config_path` VARCHAR(255) NOT NULL DEFAULT '" . addslashes($path) . "'"
+            . ") DEFAULT CHARSET=utf8mb4;";
+
+        $this->assertEquals($expectedSql, $blueprint->toSql());
+    }
+
+    public function testDefaultNonPathStringWithSlashIsUppercased(): void
+    {
+        $blueprint = new Blueprint('non_path');
+
+        // Innehåller '/', men är inte en path eftersom den inte börjar med / eller drive eller http://
+        $value = 'foo/bar';
+        $blueprint->string('slug', 255, ['default' => $value]);
+
+        $expectedSql = "CREATE TABLE `non_path` ("
+            . "`slug` VARCHAR(255) NOT NULL DEFAULT '" . addslashes(strtoupper($value)) . "'"
+            . ") DEFAULT CHARSET=utf8mb4;";
 
         $this->assertEquals($expectedSql, $blueprint->toSql());
     }
@@ -63,6 +178,114 @@ class BlueprintTest extends TestCase
             . "UNIQUE INDEX `unique_order_number` (`order_number`), "
             . "INDEX `index_customer_id` (`customer_id`), "
             . "FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE ON UPDATE CASCADE"
+            . ") DEFAULT CHARSET=utf8mb4;";
+
+        $this->assertEquals($expectedSql, $blueprint->toSql());
+    }
+
+    public function testDatetimeHelperIsPublicAndGeneratesDatetimeColumn(): void
+    {
+        $blueprint = new Blueprint('events');
+
+        $blueprint->datetime('starts_at', ['nullable' => true]);
+
+        $expectedSql = "CREATE TABLE `events` ("
+            . "`starts_at` DATETIME NULL"
+            . ") DEFAULT CHARSET=utf8mb4;";
+
+        $this->assertEquals($expectedSql, $blueprint->toSql());
+    }
+
+    public function testRollbackMultipleAddColumnsProcessesAllInReverseOrder(): void
+    {
+        $blueprint = new Blueprint('users', true);
+
+        // Lägg till flera kolumner i följd
+        $blueprint->addColumn('string', 'nickname', ['nullable' => true]);
+        $blueprint->addColumn('string', 'bio', ['nullable' => true]);
+
+        $rollbackSql = $blueprint->toRollbackSql();
+
+        // Korrekt beteende:
+        // - alla ADD COLUMN-operationer ska rollbackas
+        // - i omvänd ordning (senast tillagd kolumn droppas först)
+        $expectedRollback = [
+            "ALTER TABLE `users` DROP COLUMN `bio`;",
+            "ALTER TABLE `users` DROP COLUMN `nickname`;",
+        ];
+
+        $this->assertSame($expectedRollback, $rollbackSql);
+    }
+
+    public function testFloatUsesDefaultPrecisionAndScale(): void
+    {
+        $blueprint = new Blueprint('float_defaults');
+
+        // Använd standardargumenten (total=8, places=2)
+        $blueprint->float('rating');
+
+        $expectedSql = "CREATE TABLE `float_defaults` ("
+            . "`rating` FLOAT(8, 2) NOT NULL"
+            . ") DEFAULT CHARSET=utf8mb4;";
+
+        $this->assertEquals($expectedSql, $blueprint->toSql());
+    }
+
+    public function testDefaultStringValueIsUppercased(): void
+    {
+        $blueprint = new Blueprint('status_table');
+
+        // Default-värde som inte är en path ska göras till versaler
+        $blueprint->string('status', 20, ['default' => 'active']);
+
+        $expectedSql = "CREATE TABLE `status_table` ("
+            . "`status` VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'"
+            . ") DEFAULT CHARSET=utf8mb4;";
+
+        $this->assertEquals($expectedSql, $blueprint->toSql());
+    }
+
+    public function testAutoIncrementOptionAddsAndOmitsAutoIncrementExactly(): void
+    {
+        // Fall 1: autoIncrement = true ska lägga till AUTO_INCREMENT
+        $blueprint = new Blueprint('ai_true');
+        $blueprint->integer('id', true, ['autoIncrement' => true]);
+
+        $sqlTrue = $blueprint->toSql();
+        $this->assertStringContainsString('`id` INT UNSIGNED NOT NULL AUTO_INCREMENT', $sqlTrue);
+
+        // Fall 2: autoIncrement = false ska INTE lägga till AUTO_INCREMENT
+        $blueprint2 = new Blueprint('ai_false');
+        $blueprint2->integer('id', true, ['autoIncrement' => false]);
+
+        $sqlFalse = $blueprint2->toSql();
+        $this->assertStringContainsString('`id` INT UNSIGNED NOT NULL', $sqlFalse);
+        $this->assertStringNotContainsString('AUTO_INCREMENT', $sqlFalse);
+    }
+
+    public function testTinyIntegerDefaultIsSignedWhenUnsignedNotPassed(): void
+    {
+        $blueprint = new Blueprint('tiny_default');
+
+        // Använd default-argumentet ($unsigned = false)
+        $blueprint->tinyInteger('flag');
+
+        $expectedSql = "CREATE TABLE `tiny_default` ("
+            . "`flag` TINYINT NOT NULL"
+            . ") DEFAULT CHARSET=utf8mb4;";
+
+        $this->assertEquals($expectedSql, $blueprint->toSql());
+    }
+
+    public function testBigIntegerDefaultIsSignedWhenUnsignedNotPassed(): void
+    {
+        $blueprint = new Blueprint('big_default');
+
+        // Använd default-argumentet ($unsigned = false)
+        $blueprint->bigInteger('counter');
+
+        $expectedSql = "CREATE TABLE `big_default` ("
+            . "`counter` BIGINT NOT NULL"
             . ") DEFAULT CHARSET=utf8mb4;";
 
         $this->assertEquals($expectedSql, $blueprint->toSql());
