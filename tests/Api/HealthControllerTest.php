@@ -1151,7 +1151,11 @@ namespace Radix\Tests\Api {
         {
             // Tvinga en situation där realpath blir false och basen måste vara sträng
             $rel = '.__health__' . uniqid('', true) . DIRECTORY_SEPARATOR . 'sub';
-            putenv('HEALTH_CACHE_PATH=' . $rel);
+
+            // Bygg en full path under systemets temp-katalog så vi inte skräpar ned projektroten
+            $base = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . $rel;
+
+            putenv('HEALTH_CACHE_PATH=' . $base);
 
             $this->expectNotToPerformAssertions(); // i original fall ska det inte kasta
 
@@ -1167,9 +1171,14 @@ namespace Radix\Tests\Api {
             \App\Services\FileSystemSpy::$forceFilePutContentsFail = false;
 
             $rel = '.__health__' . uniqid('', true) . DIRECTORY_SEPARATOR . 'sub';
+
+            // realpath på den RELATIVA sökvägen från projektroten ska vara false
             $this->assertFalse(@realpath($rel));
 
-            putenv('HEALTH_CACHE_PATH=' . $rel);
+            // Men vi låter själva HEALTH_CACHE_PATH peka på en plats under sys_get_temp_dir()
+            $base = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . $rel;
+            putenv('HEALTH_CACHE_PATH=' . $base);
+
             $spy = new TestSpyLogger();
             (new \App\Services\HealthCheckService($spy))->run();
 
@@ -1185,7 +1194,7 @@ namespace Radix\Tests\Api {
             $this->assertTrue(str_ends_with($ctxDir, $rel), 'dir ska sluta med relativ suffix');
 
             putenv('HEALTH_CACHE_PATH');
-            // ingen katalog skapades i rel-läget här, inget att städa
+            // ingen katalog skapas i projektroten här, bara under systemets temp
         }
     }
 }

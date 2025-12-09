@@ -6,6 +6,7 @@ namespace Radix\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Radix\Config\Config; // lägg till denna rad
+use Radix\EventDispatcher\Event;
 use Radix\EventDispatcher\EventDispatcher;
 use Radix\Http\Event\ResponseEvent;
 use Radix\Http\EventListeners\CacheControlListener;
@@ -13,6 +14,12 @@ use Radix\Http\EventListeners\ContentLengthListener;
 use Radix\Http\EventListeners\CorsListener;
 use Radix\Http\Request;
 use Radix\Http\Response;
+
+final class TestStoppableEvent extends Event
+{
+    /** @var list<string> */
+    public array $log = [];
+}
 
 class EventListenerTest extends TestCase
 {
@@ -148,6 +155,58 @@ class EventListenerTest extends TestCase
             '15', // Det tidigare värdet ska inte ha ändrats
             $response->getHeaders()['Content-Length']
         );
+    }
+
+    public function testEventDispatcherStopsPropagationForStoppableEvent(): void
+    {
+        $dispatcher = new EventDispatcher();
+        $event      = new TestStoppableEvent();
+
+        // Första lyssnaren loggar och stoppar propagation
+        $dispatcher->addListener(TestStoppableEvent::class, function (TestStoppableEvent $e): void {
+            $e->log[] = 'first';
+            $e->stopPropagation();
+        });
+
+        // Andra lyssnaren ska ALDRIG anropas om stopPropagation fungerar
+        $dispatcher->addListener(TestStoppableEvent::class, function (TestStoppableEvent $e): void {
+            $e->log[] = 'second';
+        });
+
+        /** @var TestStoppableEvent $result */
+        $result = $dispatcher->dispatch($event);
+
+        $this->assertSame(
+            ['first'],
+            $result->log,
+            'När propagation stoppas ska efterföljande lyssnare inte anropas.'
+        );
+    }
+
+    public function testGetListenersForEventReturnsRegisteredListeners(): void
+    {
+        $dispatcher = new EventDispatcher();
+        $event      = new TestStoppableEvent();
+
+        $listener1 = function (TestStoppableEvent $e): void {
+            $e->log[] = 'one';
+        };
+        $listener2 = function (TestStoppableEvent $e): void {
+            $e->log[] = 'two';
+        };
+
+        $dispatcher->addListener(TestStoppableEvent::class, $listener1);
+        $dispatcher->addListener(TestStoppableEvent::class, $listener2);
+
+        $listeners = $dispatcher->getListenersForEvent($event);
+
+        // $listeners är redan typad som iterable i EventDispatcher, så en extra
+        // assertIsIterable() ger ingen ny information för PHPStan.
+        $listenersArray = is_array($listeners) ? $listeners : iterator_to_array($listeners, false);
+
+        $this->assertCount(2, $listenersArray);
+        $this->assertSame($listener1, $listenersArray[0]);
+        $this->assertSame($listener2, $listenersArray[1]);
     }
 
     public function testEventDispatcherCallsListeners(): void

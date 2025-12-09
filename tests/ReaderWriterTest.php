@@ -38,6 +38,106 @@ final class ReaderWriterTest extends TestCase
         $this->assertSame($data, $read);
     }
 
+    public function testCsvDelimiterAutodetectRespectsTenLineLimit(): void
+    {
+        $path = $this->tmpDir . 'limit_10.csv';
+
+        $lines = [];
+
+        // Header + 9 rader med exakt EN ';' och inga kommatecken
+        $lines[] = "id;n\n";
+        for ($i = 1; $i <= 9; $i++) {
+            $lines[] = $i . ';A' . $i . "\n";
+        }
+
+        // Rad 11 från filens början: MASSOR av kommatecken, men ingen ';'
+        // (rad-ordning: 1 header + 9 semikolonrader = 10 rader, sedan denna = rad 11)
+        $lines[] = str_repeat('x,', 200) . "end\n";
+
+        file_put_contents($path, implode('', $lines));
+
+        $rows = Reader::csv($path, delimiter: null, hasHeader: true);
+
+        // Om detectDelimiter läser fler än 10 rader (mutanten <=),
+        // kommer ',' vinna och headern mappas fel → dessa asserter faller.
+        $this->assertGreaterThanOrEqual(2, \count($rows));
+
+        $this->assertSame(['id' => 1, 'n' => 'A1'], $rows[0]);
+        $this->assertSame(['id' => 2, 'n' => 'A2'], $rows[1]);
+    }
+
+    public function testCsvCreatesMissingParentDirectories(): void
+    {
+        $nestedDir = $this->tmpDir . 'deep' . DIRECTORY_SEPARATOR . 'sub';
+        $path = $nestedDir . DIRECTORY_SEPARATOR . 'data.csv';
+
+        $this->assertDirectoryDoesNotExist($nestedDir);
+
+        $rows = [
+            ['id' => 1, 'name' => 'Alice'],
+            ['id' => 2, 'name' => 'Bob'],
+        ];
+
+        // Korrekt implementation (med ensureParentDir) ska skapa katalogerna
+        // och skriva filen utan undantag.
+        Writer::csv($path, $rows, headers: ['id', 'name'], delimiter: ',');
+
+        $this->assertDirectoryExists($nestedDir);
+        $this->assertFileExists($path);
+
+        // Dubbelkolla att innehållet går att läsa tillbaka
+        $read = Reader::csv($path, delimiter: ',', hasHeader: true);
+        $this->assertSame($rows, $read);
+    }
+
+    public function testCsvNormalizesNonScalarValuesToJsonInFile(): void
+    {
+        $path = $this->tmpDir . 'nested_raw.csv';
+
+        $rows = [
+            ['id' => 1, 'meta' => ['x' => 1, 'y' => 2]],
+        ];
+
+        Writer::csv($path, $rows, headers: ['id', 'meta'], delimiter: ',');
+
+        $raw = (string) file_get_contents($path);
+
+        // fputcsv citerar fältet och escapear dubbla citationstecken, så
+        // vi förväntar oss exakt den här formen.
+        $this->assertStringContainsString(
+            '"{""x"":1,""y"":2}"',
+            $raw,
+            'Icke-skalära värden ska serialiseras till JSON och skrivas som citerad sträng i CSV.'
+        );
+
+        // Och vi vill uttryckligen INTE se PHPs default-stringifiering av array
+        $this->assertStringNotContainsString(
+            'Array',
+            $raw,
+            'PHP:s standard "Array"-sträng får inte skrivas ut för icke-skalära värden.'
+        );
+    }
+
+    public function testCsvWithUtf8TargetEncodingDoesNotAlterBytes(): void
+    {
+        $path = $this->tmpDir . 'utf8_target_bytes.csv';
+
+        // Sträng med ogiltig UTF-8-byte i början
+        $invalid = "\x80" . "foo";
+        $rows = [
+            ['id' => 1, 'val' => $invalid],
+        ];
+
+        // targetEncoding = 'UTF-8' ska *inte* trigga konverteringen
+        Writer::csv($path, $rows, headers: ['id', 'val'], delimiter: ',', targetEncoding: 'UTF-8');
+
+        $raw = (string) file_get_contents($path);
+
+        // Säkerställ att den ogiltiga byte-sekvensen finns kvar i filen.
+        // Om mutanten vänder villkoret så iconv körs, försvinner eller ändras den här byten.
+        $this->assertStringContainsString($invalid, $raw, 'Bytesen ska inte ha ändrats när targetEncoding är UTF-8.');
+    }
+
     public function testTextStreamRejectsNonPositiveChunkSize(): void
     {
         $path = $this->tmpDir . 'dummy.txt';
@@ -272,6 +372,39 @@ final class ReaderWriterTest extends TestCase
         );
     }
 
+    public function testCsvDelimiterAutodetectIgnoresNoiseAfterFirstTenLines(): void
+    {
+        $path = $this->tmpDir . 'semi_noise_after_10.csv';
+
+        $lines = [];
+
+        // Header + 10 rader med ';' som korrekt delimiter
+        $lines[] = "id;n\n";
+        for ($i = 1; $i <= 10; $i++) {
+            $lines[] = $i . ';A' . $i . "\n";
+        }
+
+        // Rad 11: massor av kommatecken (ska INTE påverka korrekt implementation)
+        $lines[] = "garbage,with,many,commas,that,should,not,affect,delimiter\n";
+
+        // Några fler rader med kommatecken bara för att förstärka "bruset"
+        for ($i = 12; $i <= 30; $i++) {
+            $lines[] = "x{$i},y{$i},z{$i}\n";
+        }
+
+        file_put_contents($path, implode('', $lines));
+
+        $rows = Reader::csv($path, delimiter: null, hasHeader: true);
+
+        // Om detectDelimiter läser fler än 10 rader (mutanten lines <= 10)
+        // riskerar den att välja ',' som delimiter, och då blir mappningen fel.
+        $this->assertGreaterThanOrEqual(3, count($rows));
+
+        $this->assertSame(['id' => 1, 'n' => 'A1'], $rows[0]);
+        $this->assertSame(['id' => 2, 'n' => 'A2'], $rows[1]);
+        $this->assertSame(['id' => 10, 'n' => 'A10'], $rows[9]);
+    }
+
     public function testNdjsonStreamReadWrite(): void
     {
         $path = $this->tmpDir . 'data.ndjson';
@@ -315,6 +448,25 @@ final class ReaderWriterTest extends TestCase
         );
     }
 
+    public function testTargetEncodingUtf8DoesNotStripInvalidBytes(): void
+    {
+        $path = $this->tmpDir . 'utf8_invalid.csv';
+
+        // Bygg en sträng med ogiltiga UTF-8-byte (t.ex. 0x80) som ska behållas
+        $invalid = "\x80" . "foo";
+        $rows = [
+            ['id' => 1, 'val' => $invalid],
+        ];
+
+        // Skriv med targetEncoding = 'UTF-8' – korrekt implementation ska INTE
+        // gå igenom konverteringsloopen och därmed inte köra iconv på $invalid.
+        Writer::csv($path, $rows, headers: ['id', 'val'], delimiter: ',', targetEncoding: 'UTF-8');
+
+        $raw = (string) file_get_contents($path);
+        // Säkerställ att den ogiltiga byten finns kvar i filen
+        $this->assertStringContainsString($invalid, $raw, 'Ogiltiga UTF-8-byte ska inte ha filtrerats bort när targetEncoding är UTF-8.');
+    }
+
     public function testTextStreamAndWrite(): void
     {
         $path = $this->tmpDir . 'big.txt';
@@ -327,6 +479,23 @@ final class ReaderWriterTest extends TestCase
         }, 4096);
 
         $this->assertSame($content, $buf);
+    }
+
+    public function testTextWriterCreatesMissingParentDirectories(): void
+    {
+        $nestedDir = $this->tmpDir . 'nested' . DIRECTORY_SEPARATOR . 'sub';
+        $path = $nestedDir . DIRECTORY_SEPARATOR . 'file.txt';
+
+        // För säkerhets skull: katalogen ska inte finnas innan
+        $this->assertDirectoryDoesNotExist($nestedDir);
+
+        // Korrekt implementation ska skapa katalogerna via ensureParentDir()
+        // och lyckas skriva filen utan undantag.
+        Writer::text($path, 'hello world');
+
+        $this->assertDirectoryExists($nestedDir);
+        $this->assertFileExists($path);
+        $this->assertSame('hello world', file_get_contents($path));
     }
 
     private function deleteDirectory(string $dir): void

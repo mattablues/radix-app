@@ -29,22 +29,40 @@
         "Radix\\File\\Writer::xml",
         "Radix\\Support\\FileCache::__construct",
         "Radix\\Support\\Logger::__construct",
-        "Radix\\Support\\Validator::getErrorMessage"
+        "Radix\\Support\\Validator::getErrorMessage",
+        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::render",
+        "Radix\\Viewer\\RadixTemplateViewer::__construct"
       ]
     },
 
     "Concat": {
       "ignore": [
+        "Radix\\Viewer\\RadixTemplateViewer::__construct",
         "Radix\\Container\\Resolver::resolveDependencies",
         "Radix\\File\\Writer::json",
         "Radix\\Support\\FileCache::__construct",
         "Radix\\Support\\Logger::resolveWritableFile",
-        "Radix\\Support\\Logger::__construct"
+        "Radix\\Support\\Logger::__construct",
+        "Radix\\Viewer\\RadixTemplateViewer::evaluateTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::replaceVariableOutput",
+        "Radix\\Viewer\\RadixTemplateViewer::replacePlaceholders",
+        "Radix\\Viewer\\RadixTemplateViewer::getFilterKey",
+        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey",
+        "Radix\\Viewer\\RadixTemplateViewer::minifyPHP",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::mergeData",
+        "Radix\\Viewer\\RadixTemplateViewer::extractNamedSlots",
+        "Radix\\Viewer\\RadixTemplateViewer::renderComponent",
+        "Radix\\Viewer\\RadixTemplateViewer::shared",
+        "Radix\\Viewer\\RadixTemplateViewer::render"
       ]
     },
 
     "ConcatOperandRemoval": {
       "ignore": [
+       "Radix\\Viewer\\RadixTemplateViewer::__construct",
         "Radix\\Container\\Resolver::resolveDependencies",
         "Radix\\File\\Writer::json",
         "Radix\\File\\Writer::csv",
@@ -52,7 +70,19 @@
         "Radix\\Support\\Logger::contextToString",
         "Radix\\Support\\Logger::resolveWritableFile",
         "Radix\\Support\\Logger::__construct",
-        "Radix\\Support\\Validator::applyRule"
+        "Radix\\Support\\Validator::applyRule",
+        "Radix\\Viewer\\RadixTemplateViewer::evaluateTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::replaceVariableOutput",
+        "Radix\\Viewer\\RadixTemplateViewer::replacePlaceholders",
+        "Radix\\Viewer\\RadixTemplateViewer::getFilterKey",
+        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey",
+        "Radix\\Viewer\\RadixTemplateViewer::minifyPHP",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::mergeData",
+        "Radix\\Viewer\\RadixTemplateViewer::extractNamedSlots",
+        "Radix\\Viewer\\RadixTemplateViewer::renderComponent",
+        "Radix\\Viewer\\RadixTemplateViewer::shared",
+        "Radix\\Viewer\\RadixTemplateViewer::render"
       ]
     },
 
@@ -75,14 +105,18 @@
       "ignore": [
         "Radix\\Container\\Resolver::resolveDependencies",
         "Radix\\Routing\\Dispatcher::actionArguments",
-        "Radix\\Routing\\Dispatcher::middlewares"
+        "Radix\\Routing\\Dispatcher::middlewares",
+        "Radix\\Viewer\\RadixTemplateViewer::getBlocks"
       ]
     },
 
     "Foreach_": {
       "ignore": [
         "Radix\\Routing\\Dispatcher::actionArguments",
-        "Radix\\Routing\\Dispatcher::handle"
+        "Radix\\Routing\\Dispatcher::handle",
+        "Radix\\Viewer\\RadixTemplateViewer::replaceYields",
+        "Radix\\Viewer\\RadixTemplateViewer::minifyPHP",
+        "Radix\\Viewer\\RadixTemplateViewer::loadIncludes"
       ]
     },
 
@@ -102,7 +136,8 @@
         "Radix\\Support\\FileCache::ttlToExpires",
         "Radix\\Support\\FileCache::get",
         "Radix\\Support\\Validator::validateMax",
-        "Radix\\Support\\Validator::validateMin"
+        "Radix\\Support\\Validator::validateMin",
+        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey"
       ]
     },
 
@@ -139,7 +174,14 @@
         "Radix\\Support\\Logger::cleanupOldLogs",
         "Radix\\Support\\Logger::resolveWritableFile",
         "Radix\\Support\\Logger::__construct",
-        "Radix\\Support\\Validator::validateUnique"
+        "Radix\\Support\\Validator::validateUnique",
+        "Radix\\Viewer\\RadixTemplateViewer::replaceVariableOutput",
+        "Radix\\Viewer\\RadixTemplateViewer::replacePlaceholders",
+        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::evaluateTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::render",
+        "Radix\\Viewer\\RadixTemplateViewer::__construct"
       ],
       "ignoreSourceCodeByRegex": [
         "if \\(\\$targetEncoding !== null && strcasecmp\\(\\$targetEncoding, 'UTF-8'\\) !== 0\\)"
@@ -177,7 +219,16 @@
         "Radix\\Support\\Logger::resolveWritableFile",
         "Radix\\Support\\Logger::__construct",
         "Radix\\Support\\Validator::validateUnique",
-        "Radix\\Support\\Validator::applyRule"
+        "Radix\\Support\\Validator::applyRule",
+        "Radix\\Viewer\\RadixTemplateViewer::replaceYields",
+        "Radix\\Viewer\\RadixTemplateViewer::replaceVariableOutput",
+        "Radix\\Viewer\\RadixTemplateViewer::replacePlaceholders",
+        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey",
+        "Radix\\Viewer\\RadixTemplateViewer::minifyPHP",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::evaluateTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::render",
+        "Radix\\Viewer\\RadixTemplateViewer::__construct"
       ]
     },
 
@@ -191,13 +242,20 @@
       "ignore": [
         "Radix\\Routing\\Router::group",
         "Radix\\Session\\RadixSessionHandler::__construct",
-        "Radix\\Support\\Validator::getErrorMessage"
+        "Radix\\Support\\Validator::getErrorMessage",
+        "Radix\\Viewer\\RadixTemplateViewer::replaceVariableOutput",
+        "Radix\\Viewer\\RadixTemplateViewer::replaceYields",
+        "Radix\\Viewer\\RadixTemplateViewer::replacePlaceholders"
       ]
     },
 
     "UnwrapTrim": {
       "ignore": [
-        "Radix\\Routing\\Router::group"
+        "Radix\\Routing\\Router::group",
+        "Radix\\Viewer\\RadixTemplateViewer::minifyPHP",
+        "Radix\\Viewer\\RadixTemplateViewer::renderComponent",
+        "Radix\\Viewer\\RadixTemplateViewer::replacePlaceholders",
+        "Radix\\Viewer\\RadixTemplateViewer::parseAttributes"
       ]
     },
 
@@ -231,14 +289,18 @@
         "Radix\\Session\\RadixSessionHandler::read",
         "Radix\\Support\\FileCache::__construct",
         "Radix\\Support\\Logger::__construct",
-        "Radix\\Support\\Validator::getErrorMessage"
+        "Radix\\Support\\Validator::getErrorMessage",
+        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::__construct"
       ]
     },
 
     "UnwrapLtrim": {
       "ignore": [
         "Radix\\Routing\\Router::add",
-        "Radix\\Routing\\Router::addRoute"
+        "Radix\\Routing\\Router::addRoute",
+        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey"
       ]
     },
 
@@ -291,6 +353,7 @@
 
     "NotIdentical": {
       "ignore": [
+        "Radix\\Viewer\\RadixTemplateViewer::__construct",
         "Radix\\Middleware\\Middlewares\\RequestLogger::process",
         "Radix\\File\\Image::resizeImage",
         "Radix\\File\\Reader::detectDelimiter",
@@ -336,7 +399,8 @@
         "Radix\\Routing\\Dispatcher::handle",
         "Radix\\Support\\Logger::resolveWritableFile",
         "Radix\\Support\\Validator::validateUnique",
-        "Radix\\Support\\Validator::applyRule"
+        "Radix\\Support\\Validator::applyRule",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate"
       ]
     },
 
@@ -381,7 +445,8 @@
 
     "PregMatchRemoveCaret": {
       "ignore": [
-        "Radix\\Routing\\Dispatcher::handle"
+        "Radix\\Routing\\Dispatcher::handle",
+        "Radix\\Viewer\\RadixTemplateViewer::processExtends"
       ]
     },
 
@@ -403,7 +468,9 @@
         "Radix\\Support\\Logger::contextToString",
         "Radix\\Support\\Validator::getValueForDotNotation",
         "Radix\\Support\\Validator::getErrorMessage",
-        "Radix\\Support\\Validator::applyRule"
+        "Radix\\Support\\Validator::applyRule",
+        "Radix\\Viewer\\RadixTemplateViewer::applyFilters",
+        "Radix\\Viewer\\RadixTemplateViewer::minifyPHP"
       ]
     },
 
@@ -438,7 +505,8 @@
         "Radix\\Session\\RadixSessionHandler::write",
         "Radix\\Session\\RadixSessionHandler::__construct",
         "Radix\\Support\\Logger::__construct",
-        "Radix\\Support\\Validator::applyRule"
+        "Radix\\Support\\Validator::applyRule",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate"
       ]
     },
 
@@ -448,7 +516,9 @@
         "Radix\\Http\\Request::header",
         "Radix\\Routing\\Dispatcher::handle",
         "Radix\\Support\\Validator::getErrorMessage",
-        "Radix\\Support\\Validator::applyRule"
+        "Radix\\Support\\Validator::applyRule",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::__construct"
       ]
     },
 
@@ -457,7 +527,9 @@
         "Radix\\Collection\\Collection::unique",
         "Radix\\File\\Writer::csv",
         "Radix\\Routing\\Dispatcher::handle",
-        "Radix\\Support\\Validator::applyRule"
+        "Radix\\Support\\Validator::applyRule",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::__construct"
       ],
       "ignoreSourceCodeByRegex": [
         "is_bool\\(\\$v\\) \\|\\| is_int\\(\\$v\\) \\|\\| is_float\\(\\$v\\) \\|\\| is_string\\(\\$v\\)"
@@ -466,7 +538,9 @@
 
     "LogicalOrNegation": {
       "ignore": [
-        "Radix\\Support\\Validator::applyRule"
+        "Radix\\Support\\Validator::applyRule",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::__construct"
       ]
     },
 
@@ -481,7 +555,11 @@
         "Radix\\File\\Writer::collectHeaders",
         "Radix\\Session\\RadixSessionHandler::read",
         "Radix\\Support\\Logger::interpolate",
-        "Radix\\Support\\Validator::getErrorMessage"
+        "Radix\\Support\\Validator::getErrorMessage",
+        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::replacePHPDirectives",
+        "Radix\\Viewer\\RadixTemplateViewer::__construct"
       ]
     },
 
@@ -540,19 +618,54 @@
 
     "UnwrapStrReplace": {
       "ignore": [
-        "Radix\\Support\\Validator::getErrorMessage"
+        "Radix\\Support\\Validator::getErrorMessage",
+        "Radix\\Viewer\\RadixTemplateViewer::replaceYields",
+        "Radix\\Viewer\\RadixTemplateViewer::minifyPHP",
+        "Radix\\Viewer\\RadixTemplateViewer::replacePlaceholders"
       ]
     },
 
     "UnwrapStrToLower": {
       "ignore": [
-        "Radix\\Support\\Validator::applyRule"
+        "Radix\\Support\\Validator::applyRule",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::render"
       ]
     },
 
     "UnwrapUcWords": {
       "ignore": [
         "Radix\\Support\\Validator::applyRule"
+      ]
+    },
+
+    "UnwrapSubstr": {
+      "ignore": [
+        "Radix\\Viewer\\RadixTemplateViewer::render"
+      ]
+    },
+
+    "UnwrapArrayMerge": {
+      "ignore": [
+        "Radix\\Viewer\\RadixTemplateViewer::processExtends"
+      ]
+    },
+
+    "UnwrapArrayMap": {
+      "ignore": [
+        "Radix\\Viewer\\RadixTemplateViewer::renderComponent"
+      ]
+    },
+
+    "PregMatchMatches": {
+      "ignore": [
+        "Radix\\Viewer\\RadixTemplateViewer::processExtends"
+      ]
+    },
+
+    "While_": {
+      "ignore": [
+        "Radix\\Viewer\\RadixTemplateViewer::processExtends"
       ]
     },
 
@@ -570,7 +683,16 @@
         "Radix\\File\\Writer::xml",
         "Radix\\File\\Writer::text",
         "Radix\\File\\Writer::csv",
-        "Radix\\Routing\\Dispatcher::handle"
+        "Radix\\Routing\\Dispatcher::handle",
+        "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::mergeData",
+        "Radix\\Viewer\\RadixTemplateViewer::evaluateTemplate",
+        "Radix\\Viewer\\RadixTemplateViewer::extractNamedSlots",
+        "Radix\\Viewer\\RadixTemplateViewer::renderComponent",
+        "Radix\\Viewer\\RadixTemplateViewer::replacePlaceholders",
+        "Radix\\Viewer\\RadixTemplateViewer::shared",
+        "Radix\\Viewer\\RadixTemplateViewer::render",
+        "Radix\\Viewer\\RadixTemplateViewer::invalidateCache"
       ],
       "ignoreSourceCodeByRegex": [
         "public static function csv\\s*\\("
@@ -582,7 +704,9 @@
         "Radix\\File\\Image::resizeImage",
         "Radix\\File\\Reader::xml",
         "Radix\\File\\Writer::xml",
-        "Radix\\Routing\\Dispatcher::handle"
+        "Radix\\Routing\\Dispatcher::handle",
+        "Radix\\Viewer\\RadixTemplateViewer::replaceYields",
+        "Radix\\Viewer\\RadixTemplateViewer::render"
       ]
     },
 
@@ -591,7 +715,8 @@
         "Radix\\Container\\Resolver::createFromFactory",
         "Radix\\Container\\Argument\\Literal\\ArrayArgument::__construct",
         "Radix\\Container\\Container::resolveAlias",
-        "Radix\\File\\Image::openImage"
+        "Radix\\File\\Image::openImage",
+        "Radix\\Viewer\\RadixTemplateViewer::render"
       ]
     },
 
@@ -609,7 +734,8 @@
         "Radix\\Routing\\Dispatcher::handle",
         "Radix\\Session\\RadixSessionHandler::write",
         "Radix\\Support\\Validator::validateUnique",
-        "Radix\\Support\\Validator::getErrorMessage"
+        "Radix\\Support\\Validator::getErrorMessage",
+        "Radix\\Viewer\\RadixTemplateViewer::resolveTemplatePath"
       ]
     },
 
@@ -624,7 +750,14 @@
       "ignore": [
         "Radix\\File\\Reader::detectDelimiter",
         "Radix\\Http\\EventListeners\\CorsListener::__invoke",
-        "Radix\\Support\\Validator::getErrorMessage"
+        "Radix\\Support\\Validator::getErrorMessage",
+        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey"
+      ]
+    },
+
+    "ArrayItem": {
+      "ignore": [
+        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey"
       ]
     },
 
