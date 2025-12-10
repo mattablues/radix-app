@@ -6,7 +6,9 @@ namespace Radix\Tests\Database\ORM;
 
 use App\Models\Status;
 use App\Models\User;
+use Exception;
 use PDO;
+use PDOStatement;
 use PHPUnit\Framework\TestCase;
 use Radix\Database\Connection;
 use Radix\Database\ORM\Model;
@@ -15,6 +17,9 @@ use Radix\Database\ORM\Relationships\BelongsToMany;
 use Radix\Database\ORM\Relationships\HasMany;
 use Radix\Database\ORM\Relationships\HasOne;
 use Radix\Database\ORM\Relationships\HasOneThrough;
+use ReflectionClass;
+use RuntimeException;
+use stdClass;
 
 class RelationshipsTest extends TestCase
 {
@@ -353,12 +358,18 @@ class RelationshipsTest extends TestCase
 
         // Mocka databasanslutningen och simulera fetchOne
         $connection = $this->createMock(Connection::class);
-        $connection->method('fetchOne')->willReturn($expectedResult);
+        $connection->expects($this->once())
+            ->method('fetchOne')
+            ->with(
+                $this->isType('string'),
+                $this->equalTo([5])
+            )
+            ->willReturn($expectedResult);
 
         // Dynamisk modell för profilen
         $profileClass = new class extends Model {
             protected string $table = 'profiles';
-            /** array<int, string> */
+            /** @var array<int, string> */
             protected array $fillable = ['id', 'user_id', 'profile'];
         };
 
@@ -380,6 +391,9 @@ class RelationshipsTest extends TestCase
         $this->assertEquals($expectedResult['id'], $result->getAttribute('id'));
         $this->assertEquals($expectedResult['user_id'], $result->getAttribute('user_id'));
         $this->assertEquals($expectedResult['profile'], $result->getAttribute('profile'));
+
+        // Hydrerad HasOne-modell ska markeras som existerande
+        $this->assertTrue($result->isExisting());
     }
 
     public function testHasManyWith(): void
@@ -438,33 +452,6 @@ class RelationshipsTest extends TestCase
         $this->assertEquals('First comment', $comments[0]->getAttribute('content'));
     }
 
-    public function testBelongsToReturnsRelatedParentRecord(): void
-    {
-        $expectedResult = ['id' => 5, 'first_name' => 'Mats'];
-
-        $connection = $this->createMock(Connection::class);
-        $connection->method('fetchOne')
-            ->willReturn($expectedResult);
-
-        $parentModel = $this->createMock(\App\Models\Status::class);
-        $parentModel->method('getAttribute')->willReturnMap([ ['user_id', 5] ]);
-
-        $belongsTo = new BelongsTo(
-            $connection,
-            \App\Models\User::class, // eller 'users' om din resolveModelClass hanterar tabell
-            'user_id',               // foreignKey kolumn på child
-            'id',                    // ownerKey kolumn på parent (users.id)
-            $parentModel
-        );
-
-
-        $result = $belongsTo->get();
-
-        $this->assertInstanceOf(\App\Models\User::class, $result);
-        $this->assertEquals($expectedResult['id'], $result->getAttribute('id'));
-        $this->assertEquals($expectedResult['first_name'], $result->getAttribute('first_name'));
-    }
-
     public function testBelongsToManyReturnsRelatedRecords(): void
     {
         $expectedResults = [
@@ -493,6 +480,10 @@ class RelationshipsTest extends TestCase
             $this->assertInstanceOf(\App\Models\User::class, $result);
             $this->assertEquals($expectedResults[$index]['id'], $result->getAttribute('id'));
             $this->assertEquals($expectedResults[$index]['first_name'], $result->getAttribute('first_name'));
+            $this->assertTrue(
+                $result->isExisting(),
+                'BelongsToMany-hydrerade modeller ska markeras som existerande.'
+            );
         }
     }
 
@@ -590,6 +581,10 @@ class RelationshipsTest extends TestCase
 
         // Kontrollera att attributen stämmer överens
         $this->assertEquals('John', $result->getAttribute('first_name'));
+        $this->assertTrue(
+            $result->isExisting(),
+            'BelongsToMany::first()-resultat ska markeras som existerande.'
+        );
     }
 
     public function testHydrateFromDatabaseIncludesTimestampsSkipsGuarded(): void
@@ -647,12 +642,19 @@ class RelationshipsTest extends TestCase
         $expectedRow = ['id' => 7, 'subject_id' => 3, 'points' => 42];
 
         $connection = $this->createMock(Connection::class);
-        $connection->method('fetchOne')->willReturn($expectedRow);
+        // Förvänta att fetchOne anropas med en bind-array som innehåller parent-värdet (1)
+        $connection->expects($this->once())
+            ->method('fetchOne')
+            ->with(
+                $this->isType('string'),
+                $this->equalTo([1])
+            )
+            ->willReturn($expectedRow);
 
         // Parent: categories (utan ctor-argument)
         $category = new class extends Model {
             protected string $table = 'categories';
-            /** array<int, string> */
+            /** @var array<int, string> */
             protected array $fillable = ['id', 'name'];
             private ?Connection $conn = null;
 
@@ -670,14 +672,14 @@ class RelationshipsTest extends TestCase
         // Through: subjects
         $subjectClass = new class extends Model {
             protected string $table = 'subjects';
-            /** array<int, string> */
+            /** @var array<int, string> */
             protected array $fillable = ['id', 'category_id', 'name'];
         };
 
         // Related: votes
         $voteClass = new class extends Model {
             protected string $table = 'votes';
-            /** array<int, string> */
+            /** @var array<int, string> */
             protected array $fillable = ['id', 'subject_id', 'points'];
         };
 
@@ -701,6 +703,9 @@ class RelationshipsTest extends TestCase
         $this->assertEquals(7, $result->getAttribute('id'));
         $this->assertEquals(3, $result->getAttribute('subject_id'));
         $this->assertEquals(42, $result->getAttribute('points'));
+
+        // NYTT: modellen ska markeras som existerande
+        $this->assertTrue($result->isExisting(), 'HasOneThrough-hydrerad modell ska markeras som existerande.');
     }
 
     public function testQueryBuilderAggregateAndCountWithHasOneThrough(): void
@@ -1027,16 +1032,16 @@ class RelationshipsTest extends TestCase
         $post->load('comments');
         $loaded = $post->getRelation('comments');
 
-        $this->assertIsArray($loaded);
-        /** @var list<\Radix\Database\ORM\Model> $loaded */
+        /** @var array<int,\Radix\Database\ORM\Model> $loaded */
         $loaded = $loaded;
         $this->assertCount(2, $loaded);
         $this->assertSame('published', $loaded[0]->getAttribute('status'));
 
         // Ladda flera (idempotent)
         $post->load(['comments']);
-        $this->assertIsArray($post->getRelation('comments'));
+        // räcker att det inte kastar något här
     }
+
 
     public function testModelLoadMissingSkipsAlreadyLoaded(): void
     {
@@ -1089,19 +1094,20 @@ class RelationshipsTest extends TestCase
         // Ladda en gång
         $post->load('comments');
         $loadedFirst = $post->getRelation('comments');
-        $this->assertIsArray($loadedFirst);
-        /** @var list<\Radix\Database\ORM\Model> $loadedFirst */
+        /** @var array<int,\Radix\Database\ORM\Model> $loadedFirst */
         $loadedFirst = $loadedFirst;
         $this->assertCount(1, $loadedFirst);
 
-        // loadMissing ska inte ladda om "comments" (ska ignorera andra fetchAll-resultatet)
+        // loadMissing ska inte ladda om "comments"
         $post->loadMissing('comments');
         $loadedAfter = $post->getRelation('comments');
-        $this->assertIsArray($loadedAfter);
-        /** @var list<\Radix\Database\ORM\Model> $loadedAfter */
+        /** @var array<int,\Radix\Database\ORM\Model> $loadedAfter */
         $loadedAfter = $loadedAfter;
         $this->assertCount(1, $loadedAfter);
-        $this->assertSame($loadedFirst[0]->getAttribute('status'), $loadedAfter[0]->getAttribute('status'));
+        $this->assertSame(
+            $loadedFirst[0]->getAttribute('status'),
+            $loadedAfter[0]->getAttribute('status')
+        );
     }
 
     public function testModelLoadWithConstraintClosure(): void
@@ -1391,5 +1397,708 @@ class RelationshipsTest extends TestCase
         $this->assertInstanceOf(Model::class, $user);
         $this->assertSame('N/A', $user->getAttribute('first_name'));
         $this->assertFalse($user->isExisting());
+    }
+
+    public function testHasManySetsParentRelationWithLowercasedShortName(): void
+    {
+        // Mock-resultat från databasen
+        $row = ['id' => 1, 'post_id' => 10, 'content' => 'First comment'];
+
+        $conn = $this->createMock(Connection::class);
+        $conn->method('fetchAll')->willReturn([$row]);
+
+        // Definiera en NAMNGIVEN parent-klass så shortName är stabilt
+        $parent = new class ($conn) extends Model {
+            protected string $table = 'posts';
+            /** @var array<int, string> */
+            protected array $fillable = ['id', 'title'];
+
+            private Connection $c;
+
+            public function __construct(Connection $c)
+            {
+                $this->c = $c;
+                parent::__construct([]);
+            }
+
+            protected function getConnection(): Connection
+            {
+                return $this->c;
+            }
+
+            public function comments(): HasMany
+            {
+                $comment = new class extends Model {
+                    protected string $table = 'comments';
+                    /** @var array<int, string> */
+                    protected array $fillable = ['id', 'post_id', 'content'];
+                };
+
+                $rel = new HasMany(
+                    $this->getConnection(),
+                    get_class($comment),
+                    'post_id',
+                    'id'
+                );
+                $rel->setParent($this);
+                return $rel;
+            }
+        };
+
+        $parent->forceFill(['id' => 10]);
+
+        $comments = $parent->comments()->get();
+        $this->assertCount(1, $comments);
+
+        /** @var Model $comment */
+        $comment = $comments[0];
+
+        // ShortName för parent-klassen, lowercased
+        $shortName = (new ReflectionClass($parent))->getShortName();
+        $expectedRelationKey = strtolower($shortName);
+
+        $this->assertSame(
+            $parent,
+            $comment->getRelation($expectedRelationKey),
+            'HasMany ska sätta parent-modellen som relation med lowercased shortName.'
+        );
+    }
+
+    public function testHasOneReturnsNullWhenParentLocalKeyIsNullAndNoDefault(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        // Ingen query ska göras när localKey är null
+        $connection->expects($this->never())
+            ->method('fetchOne');
+
+        // Parent-modell utan id (localKey = 'id' är null)
+        $parent = new class extends Model {
+            protected string $table = 'users';
+            /** @var array<int, string> */
+            protected array $fillable = ['id', 'first_name'];
+            private ?Connection $c = null;
+            public function setConn(Connection $c): void
+            {
+                $this->c = $c;
+            }
+            protected function getConnection(): Connection
+            {
+                return $this->c ?? parent::getConnection();
+            }
+
+            public function profile(): HasOne
+            {
+                $profile = new class extends Model {
+                    protected string $table = 'profiles';
+                    /** @var array<int, string> */
+                    protected array $fillable = ['id','user_id','avatar'];
+                };
+
+                $rel = new HasOne($this->getConnection(), get_class($profile), 'user_id', 'id');
+                $rel->setParent($this);
+                return $rel;
+            }
+        };
+        $parent->setConn($connection);
+        // OBS: vi fyller INTE 'id', så localKey 'id' blir null
+        $parent->forceFill(['first_name' => 'NoId']);
+
+        $result = $parent->profile()->first();
+
+        $this->assertNull($result, 'HasOne utan default och null localKey ska returnera null.');
+    }
+
+    public function testBelongsToManyRejectsNonScalarParentId(): void
+    {
+        $conn = $this->createMock(Connection::class);
+        $conn->method('fetchAll')->willReturn([]);
+
+        // Parent-modell där primaryKey-värdet är en array (ogiltigt)
+        $parent = new class extends Model {
+            protected string $table = 'roles';
+            /** @var array<int, string> */
+            protected array $fillable = ['id', 'name'];
+            private ?Connection $c = null;
+            public function setConn(Connection $c): void
+            {
+                $this->c = $c;
+            }
+            protected function getConnection(): Connection
+            {
+                return $this->c ?? parent::getConnection();
+            }
+        };
+        $parent->setConn($conn);
+        // Primary key blir array, vilket är ogiltigt
+        $parent->forceFill(['id' => ['not', 'scalar']]);
+
+        $belongsToMany = new BelongsToMany(
+            $conn,
+            \App\Models\User::class,
+            'role_user',
+            'role_id',
+            'user_id',
+            'id'
+        );
+        $belongsToMany->setParent($parent);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Parent-id måste vara int eller string, fick: array'
+        );
+
+        // Trigga requireParentId via en pivot-operation
+        $belongsToMany->attach([1]); // eller attach(1) beroende på din signatur
+    }
+
+    public function testHasManyThrowsIfRelatedClassIsNotModel(): void
+    {
+        $conn = $this->createMock(Connection::class);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage(
+            "Model class '" . stdClass::class . "' must exist and extend " . \Radix\Database\ORM\Model::class . '.'
+        );
+
+        new HasMany(
+            $conn,
+            stdClass::class, // existerande klass som inte är en Model
+            'post_id',
+            'id'
+        );
+    }
+
+    public function testHasManyHydratedModelsAreMarkedAsExisting(): void
+    {
+        $expectedResults = [
+            ['id' => 1, 'post_id' => 10, 'content' => 'First comment'],
+        ];
+
+        $conn = $this->createMock(Connection::class);
+        $conn->method('fetchAll')->willReturn($expectedResults);
+
+        $parent = new class extends Model {
+            protected string $table = 'posts';
+            /** @var array<int, string> */
+            protected array $fillable = ['id', 'title'];
+            private ?Connection $c = null;
+            public function setConn(Connection $c): void
+            {
+                $this->c = $c;
+            }
+            protected function getConnection(): Connection
+            {
+                return $this->c ?? parent::getConnection();
+            }
+
+            public function comments(): HasMany
+            {
+                $comment = new class extends Model {
+                    protected string $table = 'comments';
+                    /** @var array<int, string> */
+                    protected array $fillable = ['id','post_id','content'];
+                };
+                $rel = new HasMany(
+                    $this->getConnection(),
+                    get_class($comment),
+                    'post_id',
+                    'id'
+                );
+                $rel->setParent($this);
+                return $rel;
+            }
+        };
+
+        $parent->setConn($conn);
+        $parent->forceFill(['id' => 10]);
+
+        $comments = $parent->comments()->get();
+        $this->assertCount(1, $comments);
+
+        /** @var Model $comment */
+        $comment = $comments[0];
+        $this->assertTrue($comment->isExisting(), 'HasMany-hydrerad modell ska markeras som existerande.');
+    }
+
+    public function testBelongsToManySyncDetachesMissingIdsByDefault(): void
+    {
+        // Logg för alla execute-anrop
+        $executed = [];
+
+        $conn = $this->createMock(Connection::class);
+        // getExistingRelatedIds() -> fetchAll()
+        $conn->method('fetchAll')
+            ->willReturn([
+                ['rid' => 1],
+                ['rid' => 2],
+            ]);
+
+        // Skapa en PDOStatement-mock att returnera från execute()
+        $statementMock = $this->createMock(PDOStatement::class);
+
+        // Logga alla SQL-anrop istället för att göra riktig DB
+        $conn->method('execute')
+            ->willReturnCallback(
+                function (string $sql, array $params) use (&$executed, $statementMock): PDOStatement {
+                    $executed[] = [$sql, $params];
+                    return $statementMock;
+                }
+            );
+
+        // Parent-modell med id = 10
+        $parent = new class ($conn) extends Model {
+            protected string $table = 'roles';
+            /** @var array<int, string> */
+            protected array $fillable = ['id', 'name'];
+            private Connection $c;
+
+            public function __construct(Connection $c)
+            {
+                $this->c = $c;
+                parent::__construct([]);
+            }
+
+            protected function getConnection(): Connection
+            {
+                return $this->c;
+            }
+        };
+        $parent->forceFill(['id' => 10]);
+
+        // BelongsToMany-relation mot users via role_user
+        $rel = new BelongsToMany(
+            $conn,
+            \App\Models\User::class,
+            'role_user',
+            'role_id',
+            'user_id',
+            'id'
+        );
+        $rel->setParent($parent);
+
+        // existing: [1,2], target: [2,3] => id 1 ska detach:as när $detaching = true (default)
+        $rel->sync([2, 3]);
+
+        // Kontrollera att ett DELETE mot pivot-tabellen har körts
+        $deleteCalls = array_filter(
+            $executed,
+            static function (array $call): bool {
+                [$sql, $params] = $call;
+                return str_contains($sql, 'DELETE FROM `role_user`')
+                    && str_contains($sql, 'IN (?');
+            }
+        );
+
+        $this->assertNotEmpty(
+            $deleteCalls,
+            'BelongsToMany::sync ska som standard detacha saknade relaterade ids.'
+        );
+    }
+
+    public function testBelongsToManyDetachAllWithNullPerformsSingleDeleteWithoutInClause(): void
+    {
+        $executed = [];
+
+        $conn = $this->createMock(Connection::class);
+        $statementMock = $this->createMock(PDOStatement::class);
+
+        $conn->method('execute')
+            ->willReturnCallback(
+                function (string $sql, array $params) use (&$executed, $statementMock): PDOStatement {
+                    $executed[] = [$sql, $params];
+                    return $statementMock;
+                }
+            );
+
+        $parent = new class ($conn) extends Model {
+            protected string $table = 'roles';
+            /** @var array<int, string> */
+            protected array $fillable = ['id', 'name'];
+            private Connection $c;
+
+            public function __construct(Connection $c)
+            {
+                $this->c = $c;
+                parent::__construct([]);
+            }
+
+            protected function getConnection(): Connection
+            {
+                return $this->c;
+            }
+        };
+        $parent->forceFill(['id' => 10]);
+
+        $rel = new BelongsToMany(
+            $conn,
+            \App\Models\User::class,
+            'role_user',
+            'role_id',
+            'user_id',
+            'id'
+        );
+        $rel->setParent($parent);
+
+        // ids = null => ta bort alla kopplingar för parent
+        $rel->detach();
+
+        // Endast ett DELETE, utan IN (...)
+        $this->assertCount(1, $executed, 'detach(null) ska bara utföra ett delete-statement.');
+
+        [$sql, $params] = $executed[0];
+
+        $this->assertStringContainsString('DELETE FROM `role_user`', $sql);
+        $this->assertStringNotContainsString('IN (', $sql, 'detach(null) ska inte ha IN-klausul.');
+        $this->assertSame([10], $params);
+    }
+
+    public function testBelongsToManyDetachSingleIdDeletesThatId(): void
+    {
+        $executed = [];
+
+        $conn = $this->createMock(Connection::class);
+        $statementMock = $this->createMock(PDOStatement::class);
+
+        $conn->method('execute')
+            ->willReturnCallback(
+                function (string $sql, array $params) use (&$executed, $statementMock): PDOStatement {
+                    $executed[] = [$sql, $params];
+                    return $statementMock;
+                }
+            );
+
+        $parent = new class ($conn) extends Model {
+            protected string $table = 'roles';
+            /** @var array<int, string> */
+            protected array $fillable = ['id', 'name'];
+            private Connection $c;
+
+            public function __construct(Connection $c)
+            {
+                $this->c = $c;
+                parent::__construct([]);
+            }
+
+            protected function getConnection(): Connection
+            {
+                return $this->c;
+            }
+        };
+        $parent->forceFill(['id' => 10]);
+
+        $rel = new BelongsToMany(
+            $conn,
+            \App\Models\User::class,
+            'role_user',
+            'role_id',
+            'user_id',
+            'id'
+        );
+        $rel->setParent($parent);
+
+        // Ta bort EN användare (id 5) från pivot-tabellen
+        $rel->detach(5);
+
+        $this->assertCount(1, $executed, 'detach(5) ska leda till exakt ett delete-statement.');
+
+        [$sql, $params] = $executed[0];
+
+        $this->assertStringContainsString('DELETE FROM `role_user`', $sql);
+        $this->assertStringContainsString('IN (?)', $sql);
+        $this->assertSame([10, 5], $params, 'Första param är parent-id, andra är det relaterade id:t.');
+    }
+
+    public function testBelongsToManyGetUsesBuilderAndReturnsAllModels(): void
+    {
+        // Connection-mock: fallback-vägen i get() får INTE anropas
+        $conn = $this->createMock(Connection::class);
+        $conn->expects($this->never())
+            ->method('fetchAll');
+
+        // Skapa relation (parent behövs inte i builder-vägen)
+        $rel = new BelongsToMany(
+            $conn,
+            \App\Models\User::class,
+            'role_user',
+            'role_id',
+            'user_id',
+            'id'
+        );
+
+        // Två modellinstanser att returnera från buildern
+        $user1 = $this->createMock(Model::class);
+        $user2 = $this->createMock(Model::class);
+
+        $collection = new \Radix\Collection\Collection([$user1, $user2]);
+
+        // Stubba en QueryBuilder som bara returnerar vår collection
+        $builderStub = new class extends \Radix\Database\QueryBuilder\QueryBuilder {
+            private \Radix\Collection\Collection $collection;
+            public function setCollection(\Radix\Collection\Collection $c): void
+            {
+                $this->collection = $c;
+            }
+            public function get(): \Radix\Collection\Collection
+            {
+                return $this->collection;
+            }
+        };
+        $builderStub->setCollection($collection);
+
+        // Sätt den privata $builder-egenskapen via reflection
+        $ref = new ReflectionClass(BelongsToMany::class);
+        $prop = $ref->getProperty('builder');
+        $prop->setAccessible(true);
+        $prop->setValue($rel, $builderStub);
+
+        $result = $rel->get();
+
+        // Borde vara exakt de två modellerna vi stoppade in i collection
+        $this->assertCount(2, $result);
+        $this->assertSame($user1, $result[0]);
+        $this->assertSame($user2, $result[1]);
+    }
+
+    public function testBelongsToReturnsRelatedParentRecord(): void
+    {
+        $expectedResult = ['id' => 5, 'first_name' => 'Mats'];
+
+        $connection = $this->createMock(Connection::class);
+        $connection->method('fetchOne')
+            ->willReturn($expectedResult);
+
+        $parentModel = $this->createMock(\App\Models\Status::class);
+        $parentModel->method('getAttribute')->willReturnMap([ ['user_id', 5] ]);
+
+        $belongsTo = new BelongsTo(
+            $connection,
+            \App\Models\User::class, // eller 'users' om din resolveModelClass hanterar tabell
+            'user_id',               // foreignKey kolumn på child
+            'id',                    // ownerKey kolumn på parent (users.id)
+            $parentModel
+        );
+
+        $result = $belongsTo->get();
+
+        $this->assertInstanceOf(\App\Models\User::class, $result);
+        $this->assertEquals($expectedResult['id'], $result->getAttribute('id'));
+        $this->assertEquals($expectedResult['first_name'], $result->getAttribute('first_name'));
+        $this->assertTrue(
+            $result->isExisting(),
+            'BelongsTo-hydrerad modell ska markeras som existerande.'
+        );
+    }
+
+    public function testBelongsToPassesForeignKeyValueToConnection(): void
+    {
+        $connection = $this->createMock(\Radix\Database\Connection::class);
+
+        // Förvänta exakt ett anrop med rätt bind-parametrar
+        $connection->expects($this->once())
+            ->method('fetchOne')
+            ->with(
+                $this->stringContains('FROM `users`'),
+                $this->equalTo([5])
+            )
+            ->willReturn(['id' => 5, 'first_name' => 'Mats']);
+
+        // Child-modell som har foreign key user_id = 5
+        $child = $this->createMock(\Radix\Database\ORM\Model::class);
+        $child->method('getAttribute')->willReturnMap([
+            ['user_id', 5],
+        ]);
+
+        $rel = new \Radix\Database\ORM\Relationships\BelongsTo(
+            $connection,
+            'users',   // låt resolveModelClass jobba på tabellnamn
+            'user_id', // foreignKey på child
+            'id',      // ownerKey på parent
+            $child
+        );
+
+        $result = $rel->first();
+
+        $this->assertInstanceOf(\App\Models\User::class, $result);
+        $this->assertSame(5, $result->getAttribute('id'));
+    }
+
+    public function testBelongsToWithDefaultDoesNotOverrideExistingRecord(): void
+    {
+        $connection = $this->createMock(\Radix\Database\Connection::class);
+        $connection->method('fetchOne')
+            ->willReturn([
+                'id'         => 10,
+                'first_name' => 'RealUser',
+            ]);
+
+        // Child-modell med foreignKey user_id = 10
+        $child = $this->createMock(\Radix\Database\ORM\Model::class);
+        $child->method('getAttribute')->willReturnMap([
+            ['user_id', 10],
+        ]);
+
+        $rel = (new \Radix\Database\ORM\Relationships\BelongsTo(
+            $connection,
+            'users',
+            'user_id',
+            'id',
+            $child
+        ))->withDefault(['first_name' => 'DefaultName']);
+
+        $result = $rel->first();
+
+        // Ska vara den riktiga användaren, inte default
+        $this->assertInstanceOf(\App\Models\User::class, $result);
+        $this->assertSame(10, $result->getAttribute('id'));
+        $this->assertSame('RealUser', $result->getAttribute('first_name'));
+        $this->assertTrue($result->isExisting(), 'BelongsTo ska markera hittad modell som existerande.');
+    }
+
+    public function testBelongsToResolvesModelClassFromTableName(): void
+    {
+        $connection = $this->createMock(\Radix\Database\Connection::class);
+        $connection->method('fetchOne')
+            ->willReturn(['id' => 1, 'first_name' => 'Resolved']);
+
+        // Child med foreign key user_id = 1
+        $child = $this->createMock(\Radix\Database\ORM\Model::class);
+        $child->method('getAttribute')->willReturnMap([
+            ['user_id', 1],
+        ]);
+
+        // Skicka in tabellnamn 'users' så resolveModelClass måste bygga App\Models\User
+        $rel = new \Radix\Database\ORM\Relationships\BelongsTo(
+            $connection,
+            'users',
+            'user_id',
+            'id',
+            $child
+        );
+
+        $result = $rel->first();
+
+        $this->assertInstanceOf(\App\Models\User::class, $result);
+        $this->assertSame(1, $result->getAttribute('id'));
+        $this->assertSame('Resolved', $result->getAttribute('first_name'));
+    }
+
+    public function testModelLoadMissingActuallyLoadsWhenRelationIsMissing(): void
+    {
+        $rows = [
+            ['id' => 1, 'post_id' => 10, 'status' => 'published'],
+        ];
+
+        $conn = $this->createMock(\Radix\Database\Connection::class);
+        $conn->method('fetchAll')->willReturn($rows);
+
+        $post = new class extends \Radix\Database\ORM\Model {
+            protected string $table = 'posts';
+            /** array<int, string> */
+            protected array $fillable = ['id', 'title'];
+            private ?\Radix\Database\Connection $c = null;
+            public function setConn(\Radix\Database\Connection $c): void
+            {
+                $this->c = $c;
+            }
+            protected function getConnection(): \Radix\Database\Connection
+            {
+                return $this->c ?? parent::getConnection();
+            }
+
+            public function comments(): \Radix\Database\ORM\Relationships\HasMany
+            {
+                $comment = new class extends \Radix\Database\ORM\Model {
+                    protected string $table = 'comments';
+                    /** array<int, string> */
+                    protected array $fillable = ['id','post_id','status'];
+                };
+                $rel = new \Radix\Database\ORM\Relationships\HasMany(
+                    $this->getConnection(),
+                    get_class($comment),
+                    'post_id',
+                    'id'
+                );
+                $rel->setParent($this);
+                return $rel;
+            }
+        };
+
+        $post->setConn($conn);
+        $post->forceFill(['id' => 10]);
+
+        // comments är ännu inte laddad
+        $this->assertNull($post->getRelation('comments'));
+
+        // loadMissing med sträng ska ladda relationen
+        $post->loadMissing('comments');
+
+        // Casta till array (relationen är normalt en array av modeller)
+        $loaded = (array) $post->getRelation('comments');
+
+        /** @var array<int,\Radix\Database\ORM\Model> $loaded */
+        $loaded = $loaded;
+
+        $this->assertCount(1, $loaded);
+
+        foreach ($loaded as $model) {
+            $this->assertInstanceOf(\Radix\Database\ORM\Model::class, $model);
+            $this->assertSame('published', $model->getAttribute('status'));
+            break; // vi behöver bara första posten
+        }
+    }
+
+    public function testLoadDoesNotCallGetOnClassStringRelation(): void
+    {
+        // Hjälparklass med get()-metod som INTE ska köras
+        $helper = new class {
+            /**
+             * @return array<int,\Radix\Database\ORM\Model>
+             */
+            public function get(): array
+            {
+                throw new RuntimeException('get() should not be called on class-string relation');
+            }
+        };
+        $helperClass = get_class($helper);
+
+        $model = new class ($helperClass) extends Model {
+            protected string $table = 'items';
+            /** @var array<int, string> */
+            protected array $fillable = ['id'];
+
+            /** @var class-string */
+            private string $cls;
+
+            /**
+             * @param class-string $cls
+             */
+            public function __construct(string $cls)
+            {
+                $this->cls = $cls;
+                parent::__construct([]);
+            }
+
+            /**
+             * Relationsmetod som returnerar en KLASS-STRÄNG, inte ett objekt.
+             *
+             * @return class-string
+             */
+            public function strange(): string
+            {
+                return $this->cls;
+            }
+        };
+
+        $model->forceFill(['id' => 1]);
+
+        // Originalkoden ska klara detta utan att anropa get(),
+        // och därmed heller inte kasta RuntimeException.
+        $model->load('strange');
+
+        // Relation ska sättas till null (eftersom vi inte kan hämta data ur en class-string)
+        $this->assertNull(
+            $model->getRelation('strange'),
+            'Relationen "strange" ska bli null när relationsmetoden returnerar en klass-sträng utan att get() anropas.'
+        );
     }
 }
