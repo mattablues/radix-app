@@ -184,7 +184,7 @@ class BelongsToManyPivotTest extends TestCase
         /** @var array<int, array{role_id:int, user_id:int, note: ?string}> $rows */
         $rows = $this->conn->fetchAll("SELECT * FROM role_user WHERE role_id = 1");
         $this->assertCount(1, $rows);
-        $this->assertSame(2, (int) $rows[0]['user_id']);
+        $this->assertSame(2, $rows[0]['user_id']);
 
         // Ta bort alla kvar
         $rel->detach();
@@ -219,9 +219,9 @@ class BelongsToManyPivotTest extends TestCase
         /** @var array<int, array{role_id:int, user_id:int, note: ?string}> $rows */
         $rows = $this->conn->fetchAll("SELECT * FROM role_user WHERE role_id = 2 ORDER BY user_id ASC");
         $this->assertCount(2, $rows);
-        $this->assertSame(2, (int) $rows[0]['user_id']);
+        $this->assertSame(2, $rows[0]['user_id']);
         $this->assertSame('new2', $rows[0]['note']);
-        $this->assertSame(3, (int) $rows[1]['user_id']);
+        $this->assertSame(3, $rows[1]['user_id']);
         $this->assertSame('new3', $rows[1]['note']);
     }
 
@@ -251,9 +251,9 @@ class BelongsToManyPivotTest extends TestCase
         /** @var array<int, array{role_id:int, user_id:int, note: ?string}> $rows */
         $rows = $this->conn->fetchAll("SELECT * FROM role_user WHERE role_id = 1 ORDER BY user_id ASC");
         $this->assertCount(2, $rows);
-        $this->assertSame(1, (int) $rows[0]['user_id']);
+        $this->assertSame(1, $rows[0]['user_id']);
         $this->assertSame('updated', $rows[0]['note']);
-        $this->assertSame(2, (int) $rows[1]['user_id']);
+        $this->assertSame(2, $rows[1]['user_id']);
         $this->assertSame('added', $rows[1]['note']);
     }
 
@@ -280,5 +280,96 @@ class BelongsToManyPivotTest extends TestCase
         $this->assertNotNull($first);
         $this->assertInstanceOf($this->makeUserModel()::class, $first);
         $this->assertNotNull($first->getAttribute('id'));
+    }
+
+    public function testAttachIgnoresDuplicatesByDefault(): void
+    {
+        // Role Admin (id=1)
+        $role = $this->makeRoleModel();
+        $role->forceFill(['id' => 1])->markAsExisting();
+
+        $rel = new BelongsToMany(
+            $this->conn,
+            get_class($this->makeUserModel()),
+            'role_user',
+            'role_id',
+            'user_id',
+            'id'
+        );
+        $rel->setParent($role);
+
+        // Första attach
+        $rel->attach(1);
+        // Försök att attach:a samma user igen utan extra attribut
+        $rel->attach(1);
+
+        $rows = $this->conn->fetchAll("SELECT * FROM role_user WHERE role_id = 1");
+        $this->assertCount(1, $rows, 'attach() ska som default inte skapa dubletter i pivot-tabellen.');
+        $this->assertSame(1, $rows[0]['user_id']);
+    }
+
+    public function testAttachSkipsExistingButContinuesWithRemainingIds(): void
+    {
+        // Role Admin (id=1)
+        $role = $this->makeRoleModel();
+        $role->forceFill(['id' => 1])->markAsExisting();
+
+        $rel = new BelongsToMany(
+            $this->conn,
+            get_class($this->makeUserModel()),
+            'role_user',
+            'role_id',
+            'user_id',
+            'id'
+        );
+        $rel->setParent($role);
+
+        // Skapa en initial rad för user_id = 1
+        $rel->attach(1);
+
+        // Nu finns redan 1, men 2 och 3 ska fortfarande läggas till
+        $rel->attach([1, 2, 3]);
+
+        $rows = $this->conn->fetchAll("SELECT user_id FROM role_user WHERE role_id = 1 ORDER BY user_id ASC");
+        /** @var array<int, array{user_id:int}> $rows */
+        $rows = $rows;
+
+        $this->assertCount(
+            3,
+            $rows,
+            'När en av ids redan finns ska attach() ändå fortsätta med resterande ids.'
+        );
+
+        $userIds = array_map(
+            static fn(array $r): int => $r['user_id'],
+            $rows
+        );
+        $this->assertSame([1, 2, 3], $userIds);
+    }
+
+    public function testBelongsToManyQueryIncludesPivotColumnsWhenUsingWithPivot(): void
+    {
+        $role = $this->makeRoleModel();
+        $role->forceFill(['id' => 1])->markAsExisting();
+
+        $rel = (new BelongsToMany(
+            $this->conn,
+            get_class($this->makeUserModel()),
+            'role_user',
+            'role_id',
+            'user_id',
+            'id'
+        ))->setParent($role)
+          ->withPivot('note');
+
+        // query() ska bygga en SELECT som inkluderar pivot.`note` AS `pivot_note`
+        $qb  = $rel->query();
+        $sql = $qb->toSql();
+
+        $this->assertStringContainsString(
+            'pivot.`note` AS `pivot_note`',
+            $sql,
+            'BelongsToMany::query() ska inkludera pivot-kolumner när withPivot() använts.'
+        );
     }
 }
