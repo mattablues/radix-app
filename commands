@@ -50,7 +50,7 @@ Remove-Item -Force vendor\bin.phpunit.result.cache -ErrorAction SilentlyContinue
 composer dump-autoload -o
 vendor/bin/phpunit -d opcache.enable_cli=0
 vendor/bin/infection --threads=1 --show-mutations --filter=src/Middlewares/RequestLogger.php --initial-tests-php-options="-d opcache.enable_cli=0"
-vendor/bin/infection --threads=1 --show-mutations --filter=src/Middlewares/SecurityHeadersMiddleware.php --initial-tests-php-options="-d opcache.enable_cli=0"
+vendor/bin/infection --threads=1 --show-mutations --filter=src/Services/HealthCheckService.php --initial-tests-php-options="-d opcache.enable_cli=0"
 
 vendor/bin/infection --threads=1 --show-mutations --filter=src/Middlewares/RateLimiter.php --filter=src/Middlewares/RequestLogger.php --initial-tests-php-options="-d opcache.enable_cli=0"
 vendor/bin/infection --threads=1 --show-mutations  --filter=src/Middlewares/RequestSizeLimitMiddleware.php --initial-tests-php-options="-d opcache.enable_cli=0"
@@ -166,3 +166,9 @@ vendor/bin/infection --configuration=infection.json.dist --threads=1 --show-muta
 
 Remove-Item .infection.cache* -ErrorAction SilentlyContinue
 vendor/bin/infection --configuration=infection.json.dist --threads=1 --show-mutations --filter="/AbstractQueryBuilder\.php$/"
+
+  vendor/bin/infection -vvv --no-progress --threads=1 --show-mutations --initial-tests-php-options="-d opcache.enable_cli=0"
+
+   vendor/bin/infection -vvv --no-progress --threads=1 --show-mutations --filter="framework/src/Middleware/Middlewares/" --initial-tests-php-options="-d opcache.enable_cli=0"
+
+vendor/bin/infection -vvv --no-progress --threads=1 --show-mutations --initial-tests-php-options="-d opcache.enable_cli=0"
