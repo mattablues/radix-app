@@ -172,6 +172,58 @@ namespace Radix\Tests\Api {
             @rmdir($path);
         }
 
+        public function testProbeUsesResolvedRealpathWhenAvailable(): void
+        {
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = false;
+            \App\Services\FileSystemSpy::$lastFilePath = null;
+
+            $realDir = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . 'health-realpath-' . uniqid('', true);
+            @mkdir($realDir, 0o777, true);
+
+            $envDir = $realDir . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . basename($realDir);
+
+            $resolved = realpath($envDir);
+            self::assertNotFalse($resolved);
+
+            /** @var non-empty-string $resolved */
+            self::assertSame(realpath($realDir), $resolved);
+            self::assertNotSame($envDir, $resolved, 'Testet kräver att realpath() faktiskt normaliserar sökvägen.');
+
+            putenv('HEALTH_CACHE_PATH=' . $envDir);
+
+            $spy = new TestSpyLogger();
+            (new \App\Services\HealthCheckService($spy))->run();
+
+            $lastFile = (string) \App\Services\FileSystemSpy::$lastFilePath;
+            self::assertNotSame('', $lastFile, 'Expected FileSystemSpy::$lastFilePath to be set to a non-empty string.');
+
+            $expectedProbe = $resolved . DIRECTORY_SEPARATOR . 'probe.txt';
+
+            // Viktigt: dödar mutanten där $base blir kvar som $envDir (med ".." i sig)
+            self::assertSame(
+                $expectedProbe,
+                $lastFile,
+                'Probe-filen ska skrivas till exakt realpath()-normaliserad sökväg.'
+            );
+
+            self::assertStringNotContainsString(
+                DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR,
+                $lastFile,
+                'Probe-path får inte innehålla ".." om realpath() har använts.'
+            );
+
+            putenv('HEALTH_CACHE_PATH');
+
+            if (is_dir($realDir)) {
+                foreach (scandir($realDir) ?: [] as $f) {
+                    if ($f !== '.' && $f !== '..') {
+                        @unlink($realDir . DIRECTORY_SEPARATOR . $f);
+                    }
+                }
+                @rmdir($realDir);
+            }
+        }
+
         public function testHealthReturnsOkJsonAndHeaders(): void
         {
             putenv('APP_ENV=testing');

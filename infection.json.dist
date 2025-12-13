@@ -415,9 +415,6 @@
         "Radix\\Routing\\Router::group",
         "Radix\\Support\\Validator::getErrorMessage",
         "Radix\\Database\\ORM\\Model::load"
-      ],
-      "ignoreSourceCodeByRegex": [
-        "if \\(\\$targetEncoding !== null && strcasecmp\\(\\$targetEncoding, 'UTF-8'\\) !== 0\\)"
       ]
     },
 

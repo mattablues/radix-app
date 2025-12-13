@@ -60,6 +60,23 @@ final class LimitRequestSizeMiddlewareTest extends TestCase
         self::assertSame(413, $response->getStatusCode());
     }
 
+    public function testNonStringContentLengthIsIgnoredAndPassesThrough(): void
+    {
+        // CONTENT_LENGTH ska vara string enligt RFC / server-API,
+        // men om något skickar fel typ ska middleware INTE börja tolka det som storlek.
+        $server = [
+            'CONTENT_LENGTH' => [1], // icke-string (avvikande input), icke-tom array => (int) blir 1 om mutanten lever
+        ];
+
+        // Om getContentLengthFromServer() korrekt returnerar null så ska requesten alltid släppas igenom.
+        // ReturnRemoval-mutanten gör att koden fortsätter och kan cast:a array -> int (här 1),
+        // vilket med maxBytes=0 då ger 413 och dödar mutanten.
+        $response = $this->runMiddleware($server, 0);
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('OK', $response->getBody());
+    }
+
     public function testRequestUnderLimitPassesThrough(): void
     {
         $server = [

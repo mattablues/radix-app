@@ -27,6 +27,68 @@ final class ReaderWriterTest extends TestCase
         parent::tearDown();
     }
 
+    public function testCsvStreamCreatesMissingParentDirectories(): void
+    {
+        $nestedDir = $this->tmpDir . 'stream' . DIRECTORY_SEPARATOR . 'deep' . DIRECTORY_SEPARATOR . 'sub';
+        $path = $nestedDir . DIRECTORY_SEPARATOR . 'data.csv';
+
+        $this->assertDirectoryDoesNotExist($nestedDir);
+
+        Writer::csvStream($path, function (callable $write): void {
+            $write([1, 'Alice']);
+        }, ['id', 'name'], ',');
+
+        $this->assertDirectoryExists($nestedDir);
+        $this->assertFileExists($path);
+    }
+
+    public function testCsvStreamNormalizesNonScalarValuesToJsonInFile(): void
+    {
+        $path = $this->tmpDir . 'stream_nested.csv';
+
+        Writer::csvStream($path, function (callable $write): void {
+            $write([1, ['x' => 1, 'y' => 2]]);
+        }, ['id', 'meta'], ',');
+
+        $raw = (string) file_get_contents($path);
+
+        $this->assertStringContainsString(
+            '"{""x"":1,""y"":2}"',
+            $raw,
+            'Icke-skalära värden ska serialiseras till JSON och skrivas som citerad sträng i CSV (även i csvStream).'
+        );
+
+        $this->assertStringNotContainsString(
+            'Array',
+            $raw,
+            'PHP:s standard "Array"-sträng får inte skrivas ut för icke-skalära värden (csvStream).'
+        );
+    }
+
+    public function testCsvStreamWithUtf8TargetEncodingDoesNotAlterBytes(): void
+    {
+        $path = $this->tmpDir . 'stream_utf8_target_bytes.csv';
+
+        // Sträng med ogiltig UTF-8-byte i början
+        $invalid = "\x80" . "foo";
+
+        // targetEncoding = 'UTF-8' ska *inte* trigga konverteringen (villkoret ska vara false)
+        Writer::csvStream(
+            $path,
+            function (callable $write) use ($invalid): void {
+                $write([1, $invalid]);
+            },
+            ['id', 'val'],
+            ',',
+            'UTF-8'
+        );
+
+        $raw = (string) file_get_contents($path);
+
+        // Om mutanten vänder villkoret så konvertering körs, kan byten försvinna/ändras.
+        $this->assertStringContainsString($invalid, $raw, 'Bytesen ska inte ha ändrats när targetEncoding är UTF-8 (csvStream).');
+    }
+
     public function testJsonReadWrite(): void
     {
         $path = $this->tmpDir . 'data.json';
