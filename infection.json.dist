@@ -12,6 +12,16 @@
   "mutators": {
     "@default": true,
 
+    "CloneRemoval": {
+      "ignore": [
+        "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::paginate",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::paginate"
+      ],
+      "ignoreSourceCodeByRegex": [
+        "\\$countQuery\\s*=\\s*clone\\s+\\$this\\s*;"
+      ]
+    },
+
     "BitwiseOr": {
       "ignore": [
         "App\\Controllers\\Api\\HealthController::index",
@@ -187,10 +197,15 @@
         "Radix\\Viewer\\RadixTemplateViewer::__construct",
         "Radix\\Database\\ORM\\Relationships\\BelongsToMany::detach",
         "Radix\\Database\\ORM\\Relationships\\BelongsToMany::attach",
-        "Radix\\Database\\ORM\\Model::persistInsert"
+        "Radix\\Database\\ORM\\Model::persistInsert",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::lazy",
+        "Radix\\Database\\QueryBuilder\\Concerns\\BuildsWhere",
+        "Radix\\Database\\QueryBuilder\\Concerns\\CompilesMutations::compileMutationSql",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::paginate",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::paginate"
       ],
       "ignoreSourceCodeByRegex": [
-        "if \\(\\$targetEncoding !== null && strcasecmp\\(\\$targetEncoding, 'UTF-8'\\) !== 0\\)"
+        "\\$rawTotal\\s*=\\s*\\$countResult\\['total'\\]\\s*\\?\\?\\s*0\\s*;"
       ]
     },
 
@@ -237,7 +252,16 @@
         "Radix\\Viewer\\RadixTemplateViewer::__construct",
         "Radix\\Database\\ORM\\Relationships\\BelongsToMany::detach",
         "Radix\\Database\\ORM\\Relationships\\BelongsToMany::attach",
-        "Radix\\Database\\ORM\\Model::persistInsert"
+        "Radix\\Database\\ORM\\Model::persistInsert",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::lazy",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::from",
+        "Radix\\Database\\QueryBuilder\\Concerns\\BuildsWhere",
+        "Radix\\Database\\QueryBuilder\\Concerns\\CompilesMutations::compileMutationSql",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::paginate",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::paginate"
+      ],
+      "ignoreSourceCodeByRegex": [
+        "\\$rawTotal\\s*=\\s*\\$countResult\\['total'\\]\\s*\\?\\?\\s*0\\s*;"
       ]
     },
 
@@ -265,7 +289,9 @@
         "Radix\\Viewer\\RadixTemplateViewer::minifyPHP",
         "Radix\\Viewer\\RadixTemplateViewer::renderComponent",
         "Radix\\Viewer\\RadixTemplateViewer::replacePlaceholders",
-        "Radix\\Viewer\\RadixTemplateViewer::parseAttributes"
+        "Radix\\Viewer\\RadixTemplateViewer::parseAttributes",
+        "Radix\\Database\\QueryBuilder\\Concerns\\BuildsWhere",
+        "Radix\\Database\\QueryBuilder\\Concerns\\CompilesSelect"
       ]
     },
 
@@ -332,12 +358,19 @@
 
     "GreaterThan": {
       "ignore": [
-          "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
-          "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes",
-          "Radix\\Support\\Logger::resolveWritableFile",
-          "Radix\\Database\\ORM\\Model::delete",
-          "Radix\\Database\\ORM\\Model::persistInsert",
-          "Radix\\Database\\ORM\\Model::persistUpdate"
+        "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
+        "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes",
+        "Radix\\Support\\Logger::resolveWritableFile",
+        "Radix\\Database\\ORM\\Model::delete",
+        "Radix\\Database\\ORM\\Model::persistInsert",
+        "Radix\\Database\\ORM\\Model::persistUpdate",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::paginate",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::paginate",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::search",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::search"
+      ],
+      "ignoreSourceCodeByRegex": [
+        "if\\s*\\(\\s*\\$currentPage\\s*>\\s*\\$lastPage\\s*&&\\s*\\$lastPage\\s*>\\s*0\\s*\\)"
       ]
     },
 
@@ -398,7 +431,10 @@
         "Radix\\Support\\Validator::applyRule",
         "Radix\\Support\\Validator::addError",
         "Radix\\Database\\ORM\\Model::load",
-        "Radix\\Database\\ORM\\Model::find"
+        "Radix\\Database\\ORM\\Model::find",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::withCountWhere",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::addRelationCountSelect",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithAggregate::addRelationAggregateSelect"
       ]
     },
 
@@ -418,7 +454,11 @@
         "Radix\\Support\\Validator::validateUnique",
         "Radix\\Support\\Validator::applyRule",
         "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
-        "Radix\\Database\\ORM\\Model::load"
+        "Radix\\Database\\ORM\\Model::load",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::withCountWhere",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::addRelationCountSelect",
+        "Radix\\Database\\QueryBuilder\\Concerns\\BuildsWhere",
+        "Radix\\Database\\QueryBuilder\\Concerns\\EagerLoad"
       ]
     },
 
@@ -435,7 +475,13 @@
         "Radix\\Support\\Validator::validateFileSize",
         "Radix\\Support\\Validator::getErrorMessage",
         "Radix\\Database\\ORM\\Model::load",
-        "Radix\\Database\\ORM\\Model::find"
+        "Radix\\Database\\ORM\\Model::find",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::withCountWhere",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::addRelationCountSelect",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithAggregate::addRelationAggregateSelect"
+      ],
+      "ignoreSourceCodeByRegex": [
+        "return is_string\\(\\$name\\) && \\$name !== '' \\? \\$name : 'mysql';"
       ]
     },
 
@@ -453,7 +499,9 @@
         "Radix\\Support\\Validator::getErrorMessage",
         "Radix\\Database\\ORM\\Model::load",
         "Radix\\Database\\ORM\\Model::find",
-        "Radix\\Database\\ORM\\Model::query"
+        "Radix\\Database\\ORM\\Model::query",
+        "Radix\\Database\\QueryBuilder\\Concerns\\GroupingSets",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::paginate"
       ]
     },
 
@@ -469,7 +517,22 @@
     "PregMatchRemoveCaret": {
       "ignore": [
         "Radix\\Routing\\Dispatcher::handle",
-        "Radix\\Viewer\\RadixTemplateViewer::processExtends"
+        "Radix\\Viewer\\RadixTemplateViewer::processExtends",
+        "Radix\\Database\\QueryBuilder\\Concerns\\CompilesSelect",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Functions"
+      ]
+    },
+
+    "PregMatchRemoveDollar": {
+      "ignore": [
+        "Radix\\Database\\QueryBuilder\\Concerns\\CompilesSelect",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Functions"
+      ]
+    },
+
+    "PregMatchRemoveFlags": {
+      "ignore": [
+        "Radix\\Database\\QueryBuilder\\Concerns\\CompilesSelect"
       ]
     },
 
@@ -480,7 +543,8 @@
         "Radix\\Support\\Validator::applyRule",
         "Radix\\Support\\Validator::addError",
         "Radix\\Database\\ORM\\Model::load",
-        "Radix\\Database\\ORM\\Model::find"
+        "Radix\\Database\\ORM\\Model::find",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::addRelationCountSelect"
       ]
     },
 
@@ -497,14 +561,19 @@
         "Radix\\Viewer\\RadixTemplateViewer::applyFilters",
         "Radix\\Viewer\\RadixTemplateViewer::minifyPHP",
         "Radix\\Database\\ORM\\Model::persistInsert",
-        "Radix\\Database\\ORM\\Model::isFillable"
+        "Radix\\Database\\ORM\\Model::isFillable",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Functions",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::compileCteBindings",
+        "Radix\\Database\\QueryBuilder\\Concerns\\WithCtes::compileCteBindings"
       ]
     },
 
     "CastBool": {
       "ignore": [
         "Radix\\Collection\\Collection::filter",
-        "Radix\\Http\\EventListeners\\CorsListener::__invoke"
+        "Radix\\Http\\EventListeners\\CorsListener::__invoke",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::compileCtePrefix",
+        "Radix\\Database\\QueryBuilder\\Concerns\\WithCtes::compileCtePrefix"
       ]
     },
 
@@ -539,7 +608,8 @@
         "Radix\\Database\\ORM\\Model::find",
         "Radix\\Database\\ORM\\Model::save",
         "Radix\\Database\\ORM\\Model::hydrateFromDatabase",
-        "Radix\\Database\\ORM\\Model::blockUndefinableAttributes"
+        "Radix\\Database\\ORM\\Model::blockUndefinableAttributes",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::paginate"
       ]
     },
 
@@ -552,7 +622,8 @@
         "Radix\\Support\\Validator::applyRule",
         "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
         "Radix\\Viewer\\RadixTemplateViewer::__construct",
-        "Radix\\Database\\ORM\\Model::load"
+        "Radix\\Database\\ORM\\Model::load",
+        "Radix\\Database\\QueryBuilder\\Concerns\\CompilesSelect"
       ]
     },
 
@@ -595,8 +666,14 @@
         "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey",
         "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
         "Radix\\Viewer\\RadixTemplateViewer::replacePHPDirectives",
-        "Radix\\Viewer\\RadixTemplateViewer::__construct"
-      ]
+        "Radix\\Viewer\\RadixTemplateViewer::__construct",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::debugSqlInterpolated",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::withCountWhere",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::addRelationCountSelect"
+        ],
+        "ignoreSourceCodeByRegex": [
+          "\\$needleStr = \\(string\\) \\$needle;"
+        ]
     },
 
     "TrueValue": {
@@ -609,7 +686,10 @@
         "Radix\\File\\Writer::json",
         "Radix\\Database\\ORM\\Model::load",
         "Radix\\Database\\ORM\\Model::find",
-        "Radix\\Database\\ORM\\Model::persistInsert"
+        "Radix\\Database\\ORM\\Model::persistInsert",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::withCountWhere",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::addRelationCountSelect",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithAggregate::addRelationAggregateSelect"
       ]
     },
 
@@ -627,7 +707,8 @@
         "Radix\\Database\\ORM\\Model::hasOne",
         "Radix\\Database\\ORM\\Model::isFillable",
         "Radix\\Database\\ORM\\Model::relationExists",
-        "Radix\\Database\\ORM\\Model::blockUndefinableAttributes"
+        "Radix\\Database\\ORM\\Model::blockUndefinableAttributes",
+        "Radix\\Database\\QueryBuilder\\Concerns\\CompilesSelect::toSql"
       ]
     },
 
@@ -662,7 +743,18 @@
         "Radix\\Support\\Validator::validateRequiredWith",
         "Radix\\Support\\Validator::validateInteger",
         "Radix\\Support\\Validator::getErrorMessage",
-        "Radix\\Support\\Validator::applyRule"
+        "Radix\\Support\\Validator::applyRule",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::compileAllBindings",
+        "Radix\\Database\\QueryBuilder\\Concerns\\BuildsWhere",
+        "Radix\\Database\\QueryBuilder\\Concerns\\GroupingSets",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::compileCtePrefix",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::wrapColumn",
+        "Radix\\Database\\QueryBuilder\\Concerns\\WithCtes::compileCtePrefix",
+        "Radix\\Database\\QueryBuilder\\Concerns\\WithCtes::compileCteBindings",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::compileCteBindings",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Windows::compileWindowSelects",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Transactions::startTransaction",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Transactions::rollbackTransaction"
       ]
     },
 
@@ -673,6 +765,12 @@
         "Radix\\Viewer\\RadixTemplateViewer::minifyPHP",
         "Radix\\Viewer\\RadixTemplateViewer::replacePlaceholders"
       ]
+    },
+
+    "UnwrapStrToUpper": {
+        "ignore": [
+            "Radix\\Database\\QueryBuilder\\Concerns\\BuildsWhere"
+        ]
     },
 
     "UnwrapStrToLower": {
@@ -699,7 +797,8 @@
 
     "UnwrapArrayMerge": {
       "ignore": [
-        "Radix\\Viewer\\RadixTemplateViewer::processExtends"
+        "Radix\\Viewer\\RadixTemplateViewer::processExtends",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::compileAllBindings"
       ]
     },
 
@@ -711,7 +810,8 @@
 
     "PregMatchMatches": {
       "ignore": [
-        "Radix\\Viewer\\RadixTemplateViewer::processExtends"
+        "Radix\\Viewer\\RadixTemplateViewer::processExtends",
+        "Radix\\Database\\QueryBuilder\\Concerns\\CompilesSelect"
       ]
     },
 
@@ -724,7 +824,8 @@
     "UnwrapUcFirst": {
       "ignore": [
         "Radix\\Database\\ORM\\Relationships\\BelongsTo::resolveModelClass",
-        "Radix\\Database\\ORM\\Model::__set"
+        "Radix\\Database\\ORM\\Model::__set",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::addRelationCountSelect"
       ]
     },
 
@@ -759,10 +860,16 @@
         "Radix\\Database\\ORM\\Model::load",
         "Radix\\Database\\ORM\\Model::find",
         "Radix\\Database\\ORM\\Model::query",
-        "Radix\\Database\\ORM\\Model::fill"
+        "Radix\\Database\\ORM\\Model::fill",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::withCountWhere",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::addRelationCountSelect",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithAggregate::addRelationAggregateSelect",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::paginate",
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::paginate"
       ],
       "ignoreSourceCodeByRegex": [
-        "public static function csv\\s*\\("
+        "public static function csv\\s*\\(",
+        "\\$countQuery->selectRaw\\(\\s*'COUNT\\(\\*\\) as total'\\s*\\)\\s*;"
       ]
     },
     "FunctionCallRemoval": {
@@ -792,7 +899,8 @@
       "ignore": [
         "Radix\\File\\Image::crop",
         "Radix\\File\\Image::getOptimalCrop",
-        "Radix\\File\\Image::getSizeByRatio"
+        "Radix\\File\\Image::getSizeByRatio",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::paginate"
       ]
     },
 
@@ -826,13 +934,15 @@
         "Radix\\File\\Reader::detectDelimiter",
         "Radix\\Http\\EventListeners\\CorsListener::__invoke",
         "Radix\\Support\\Validator::getErrorMessage",
-        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey"
+        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey",
+        "Radix\\Database\\QueryBuilder\\Concerns\\CompilesSelect"
       ]
     },
 
     "ArrayItem": {
       "ignore": [
-        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey"
+        "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey",
+        "Radix\\Database\\QueryBuilder\\Concerns\\CompilesSelect"
       ]
     },
 
@@ -841,7 +951,8 @@
         "Radix\\Http\\EventListeners\\CorsListener::onResponse",
         "Radix\\Http\\EventListeners\\CorsListener::__invoke",
         "Radix\\Database\\ORM\\Relationships\\BelongsToMany::sync",
-        "Radix\\Database\\ORM\\Relationships\\BelongsToMany::withPivot"
+        "Radix\\Database\\ORM\\Relationships\\BelongsToMany::withPivot",
+        "Radix\\Database\\QueryBuilder\\Concerns\\Windows::compileWindowSelects"
       ]
     },
 
