@@ -23,7 +23,7 @@ env:
   # Ändra denna när du vill jobba på en viss del av framework/src, t.ex:
   # "framework/src/Container" eller "framework/src/Config".
   # Lämna tom för att hoppa över framework-körningen.
-  INFECTION_FILTER: "framework/src/Database/ORM"
+  INFECTION_FILTER: "framework/src/Database/QueryBuilder"
 
 jobs:
   php:
@@ -138,17 +138,6 @@ jobs:
         env:
           INFECTION_FILTER: ${{ env.INFECTION_FILTER }}
         run: |
-          # echo "Running Infection for src/ (app code)"
-          # vendor/bin/infection \
-          #   --threads=1 \
-          #   --ignore-msi-with-no-mutations \
-          #   --skip-initial-tests \
-          #   --no-interaction \
-          #   --no-progress \
-          #   --coverage=build/coverage \
-          #   --filter=src \
-          #   --test-framework-options="--order-by=default --do-not-cache-result"
-
           FILTER_PATH=""
           # Workflow-dispatch input har högst prio
           if [ -n "${{ github.event.inputs.infection_filter }}" ]; then
@@ -160,6 +149,7 @@ jobs:
           if [ -n "${FILTER_PATH}" ]; then
             echo "Running Infection for framework/src with filter='${FILTER_PATH}'"
             vendor/bin/infection \
+              --configuration=infection.json.dist \
               --threads=1 \
               --ignore-msi-with-no-mutations \
               --skip-initial-tests \
