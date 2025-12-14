@@ -15,18 +15,6 @@ PowerShell (rekommenderas):
 - Kör Infection:
     - composer infect
 
-Cmd (klassisk):
-- Radera mappar:
-    - rmdir /S /Q .phpunit.cache
-    - rmdir /S /Q build\coverage
-
-- Radera fil:
-    - del /F /Q vendor\bin.phpunit.result.cache
-
-- Bygg om autoload och kör:
-    - composer dump-autoload -o
-    - composer infect
-
 Tips: Kör PowerShell från projektroten: pwsh eller powershell.
 
 composer dump-autoload -o

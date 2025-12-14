@@ -42,6 +42,22 @@ final class ReaderWriterTest extends TestCase
         $this->assertFileExists($path);
     }
 
+    public function testTextWriteWithUtf8TargetEncodingDoesNotAlterBytes(): void
+    {
+        $path = $this->tmpDir . 'text_utf8_target_bytes.txt';
+
+        // Sträng med ogiltig UTF-8-byte i början (ska behållas)
+        $invalid = "\x80" . "foo";
+
+        // targetEncoding = 'UTF-8' ska INTE trigga iconv-konverteringen i Writer::text()
+        Writer::text($path, $invalid, 'UTF-8');
+
+        $raw = (string) file_get_contents($path);
+
+        // Om mutanten vänder villkoret så iconv körs, kan byten försvinna/ändras.
+        $this->assertSame($invalid, $raw, 'Bytesen ska inte ha ändrats när targetEncoding är UTF-8 (Writer::text).');
+    }
+
     public function testCsvStreamNormalizesNonScalarValuesToJsonInFile(): void
     {
         $path = $this->tmpDir . 'stream_nested.csv';

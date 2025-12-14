@@ -31,8 +31,10 @@ class UploadTest extends TestCase
 
     protected function setUp(): void
     {
-        // Skapa tillfällig uppladdningsmapp
-        $this->uploadDirectory = __DIR__ . '/uploads';
+        // Skapa tillfällig uppladdningsmapp UTANFÖR repot (för att undvika skräpfiler i tests/)
+        $baseTmp = rtrim(sys_get_temp_dir(), '/\\');
+        $this->uploadDirectory = $baseTmp . DIRECTORY_SEPARATOR . 'radix_upload_tests_' . uniqid('', true);
+
         if (!is_dir($this->uploadDirectory)) {
             mkdir($this->uploadDirectory, 0o755, true);
         }
@@ -46,8 +48,13 @@ class UploadTest extends TestCase
         }
 
         imagefill($image, 0, 0, $color); // Röd bild
-        imagejpeg($image, $this->uploadDirectory . '/test_image.jpg');
+
+        $ok = imagejpeg($image, $this->uploadDirectory . DIRECTORY_SEPARATOR . 'test_image.jpg');
         imagedestroy($image);
+
+        if ($ok === false) {
+            $this->fail('Kunde inte skriva testbilden till temporär katalog.');
+        }
     }
 
     /**

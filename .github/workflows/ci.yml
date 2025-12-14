@@ -17,15 +17,48 @@ on:
         required: false
         default: ""
 
+permissions:
+  contents: read
+  pull-requests: read
+
 env:
   ENABLE_FRONTEND_BUILD: ${{ vars.ENABLE_FRONTEND_BUILD || '1' }}
   ENABLE_INFECTION_ON_PR: ${{ vars.ENABLE_INFECTION_ON_PR || '1' }}
-  # Ändra denna när du vill jobba på en viss del av framework/src, t.ex:
-  # "framework/src/Container" eller "framework/src/Config".
-  # Lämna tom för att hoppa över framework-körningen.
-  INFECTION_FILTER: "framework/src/Database/QueryBuilder"
+  ENABLE_INFECTION_ON_CI_CHANGES: ${{ vars.ENABLE_INFECTION_ON_CI_CHANGES || '0' }}
+  ENABLE_INFECTION_ON_PUSH_MAIN: ${{ vars.ENABLE_INFECTION_ON_PUSH_MAIN || '0' }}
+  INFECTION_FILTER: ""
 
 jobs:
+  changes:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      infection_core: ${{ steps.filter.outputs.infection_core }}
+      infection_ci: ${{ steps.filter.outputs.infection_ci }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          list-files: shell
+          filters: |
+            infection_core:
+              - 'framework/src/**'
+              - 'src/**'
+              - 'tests/**'
+              - 'infection.json'
+              - 'infection.json.dist'
+              - 'phpunit.xml'
+              - 'phpunit.xml.dist'
+              - 'phpstan.neon'
+              - 'phpstan.neon.dist'
+              - 'composer.json'
+              - 'composer.lock'
+            infection_ci:
+              - '.github/workflows/**'
+              - 'tools/**'
+
   php:
     runs-on: ubuntu-latest
     env:
@@ -65,36 +98,122 @@ jobs:
         env:
           APP_ENV: development
 
-  # Hjälpjobb för att hitta flakiga tester på Actions
-  php-random:
-    if: github.event_name == 'workflow_dispatch'
+  # PR-jobb: finns alltid på PR (så det kan vara "required"), men skippar snabbt om det inte är relevant.
+  infection:
+    if: github.event_name == 'pull_request' && (vars.ENABLE_INFECTION_ON_PR || '1') == '1'
+    needs: [php, changes]
     runs-on: ubuntu-latest
     env:
       RADIX_RUN_ID: "${{ github.run_id }}-${{ github.run_attempt }}"
-      HEALTH_CACHE_PATH: "${{ github.workspace }}/cache/health"
-    needs: php
     steps:
+      - name: Decide if Infection should run on this PR
+        id: decide
+        run: |
+          RUN="false"
+
+          if [ "${{ needs.changes.outputs.infection_core }}" = "true" ]; then
+            RUN="true"
+          elif [ "${{ needs.changes.outputs.infection_ci }}" = "true" ] && [ "${{ vars.ENABLE_INFECTION_ON_CI_CHANGES || '0' }}" = "1" ]; then
+            RUN="true"
+          fi
+
+          echo "run_infection=${RUN}" >> "${GITHUB_OUTPUT}"
+          echo "Decision: run_infection=${RUN}"
+
+      - name: Skip Infection (not relevant)
+        if: steps.decide.outputs.run_infection != 'true'
+        run: |
+          echo "Infection skipped: no relevant changes in framework/src, src, tests, or tooling config."
+          exit 0
+
       - uses: actions/checkout@v4
+        if: steps.decide.outputs.run_infection == 'true'
+
       - uses: shivammathur/setup-php@v2
+        if: steps.decide.outputs.run_infection == 'true'
         with:
           php-version: '8.3'
-          coverage: none
+          coverage: xdebug
           tools: composer
-      - run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Prepare health cache dir
-        run: mkdir -p "${{ github.workspace }}/cache/health"
+      - if: steps.decide.outputs.run_infection == 'true'
+        run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: PHPUnit random order (no coverage)
-        run: |
-          vendor/bin/phpunit -c phpunit.xml --order-by=defects,random --resolve-dependencies --testdox
+      - name: Pre-check PHPUnit for Infection
+        if: steps.decide.outputs.run_infection == 'true'
         env:
+          XDEBUG_MODE: coverage
           APP_ENV: development
+        run: |
+          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default --do-not-cache-result
 
-  infection:
-    if: (github.event_name == 'pull_request' && (vars.ENABLE_INFECTION_ON_PR || '1') == '1')
-        || github.event_name == 'schedule'
-        || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
+      - name: Generate coverage for Infection
+        if: steps.decide.outputs.run_infection == 'true'
+        env:
+          XDEBUG_MODE: coverage
+        run: |
+          rm -rf build/coverage || true
+          mkdir -p build/coverage
+          vendor/bin/phpunit \
+            -c phpunit.xml \
+            --order-by=default \
+            --do-not-cache-result \
+            --coverage-xml=build/coverage/coverage-xml \
+            --log-junit=build/coverage/junit.xml
+
+      - name: Run Infection (skip initial tests)
+        if: steps.decide.outputs.run_infection == 'true'
+        env:
+          INFECTION_FILTER: ${{ env.INFECTION_FILTER }}
+        run: |
+          FILTER_PATH=""
+          if [ -n "${INFECTION_FILTER}" ]; then
+            FILTER_PATH="${INFECTION_FILTER}"
+          fi
+
+          if [ -n "${FILTER_PATH}" ]; then
+            echo "Running Infection with filter='${FILTER_PATH}'"
+            vendor/bin/infection \
+              --configuration=infection.json.dist \
+              --threads=1 \
+              --ignore-msi-with-no-mutations \
+              --skip-initial-tests \
+              --no-interaction \
+              --no-progress \
+              --coverage=build/coverage \
+              --filter="${FILTER_PATH}" \
+              --test-framework-options="--order-by=default --do-not-cache-result"
+          else
+            echo "Running Infection without filter (full config scope)"
+            vendor/bin/infection \
+              --configuration=infection.json.dist \
+              --threads=1 \
+              --ignore-msi-with-no-mutations \
+              --skip-initial-tests \
+              --no-interaction \
+              --no-progress \
+              --coverage=build/coverage \
+              --test-framework-options="--order-by=default --do-not-cache-result"
+          fi
+
+      - name: Upload Infection report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: infection-report
+          path: infection-report.html
+          if-no-files-found: ignore
+
+  # Nattligt/manuellt/säkerhetsnät: kör oberoende av PR-pathfilter.
+  infection-schedule:
+    if: |
+      github.event_name == 'schedule'
+      || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
+      || (
+        github.event_name == 'push'
+        && (vars.ENABLE_INFECTION_ON_PUSH_MAIN || '0') == '1'
+        && (github.ref_name == 'main' || github.ref_name == 'master' || github.ref_name == 'develop')
+      )
     needs: php
     runs-on: ubuntu-latest
     env:
@@ -115,9 +234,7 @@ jobs:
         run: |
           vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default --do-not-cache-result
 
-      # Gemensam coverage-generering (PR + schedule) för att köra Infection med --skip-initial-tests
       - name: Generate coverage for Infection
-        if: github.event_name == 'pull_request' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
         env:
           XDEBUG_MODE: coverage
         run: |
@@ -130,16 +247,11 @@ jobs:
             --coverage-xml=build/coverage/coverage-xml \
             --log-junit=build/coverage/junit.xml
 
-      # Kör Infection med skip-initial-tests.
-      # 1) Alltid mot src/
-      # 2) Dessutom mot valfri del av framework/src om filter är satt.
-      - name: Run Infection (PR/schedule, skip initial tests, default order)
-        if: github.event_name == 'pull_request' || github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_infection_mode == 'schedule')
+      - name: Run Infection (skip initial tests)
         env:
           INFECTION_FILTER: ${{ env.INFECTION_FILTER }}
         run: |
           FILTER_PATH=""
-          # Workflow-dispatch input har högst prio
           if [ -n "${{ github.event.inputs.infection_filter }}" ]; then
             FILTER_PATH="${{ github.event.inputs.infection_filter }}"
           elif [ -n "${INFECTION_FILTER}" ]; then
@@ -147,7 +259,7 @@ jobs:
           fi
 
           if [ -n "${FILTER_PATH}" ]; then
-            echo "Running Infection for framework/src with filter='${FILTER_PATH}'"
+            echo "Running Infection with filter='${FILTER_PATH}'"
             vendor/bin/infection \
               --configuration=infection.json.dist \
               --threads=1 \
@@ -159,7 +271,16 @@ jobs:
               --filter="${FILTER_PATH}" \
               --test-framework-options="--order-by=default --do-not-cache-result"
           else
-            echo "No framework/src Infection filter set; skipping framework run."
+            echo "Running Infection without filter (full config scope)"
+            vendor/bin/infection \
+              --configuration=infection.json.dist \
+              --threads=1 \
+              --ignore-msi-with-no-mutations \
+              --skip-initial-tests \
+              --no-interaction \
+              --no-progress \
+              --coverage=build/coverage \
+              --test-framework-options="--order-by=default --do-not-cache-result"
           fi
 
       - name: Upload Infection report
