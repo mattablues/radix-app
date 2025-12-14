@@ -163,5 +163,5 @@ Observera: Inte alla funktioner kanske stöds av varje databasdialekt; använd d
 - Påverkas relationer av Collection? Nej. Relationernas returtyper är oförändrade (arrays för “many”, Model|null för “one”) för bakåtkompatibilitet.
 
 ## Licens
-MIT (eller den licens du använder för projektet).
+MIT (den licens du använder för projektet).
 

@@ -1,0 +1,67 @@
+## Preset 1: “Snabbt nybörjarläge” (rekommenderas när du startar nytt)
+Målet: CI ska vara snabb, förutsägbar och inte bråka innan testsviten sitter.
+Sätt **Actions → Variables** så här:``` text
+ENABLE_FRONTEND_BUILD=0
+ENABLE_INFECTION_ON_PR=0
+ENABLE_INFECTION_ON_CI_CHANGES=0
+ENABLE_INFECTION_ON_PUSH_MAIN=0
+```
+
+Effekt:
+PHPUnit / phpstan / format-check kör (bra grundkvalitet)
+Infection kör inte på PR (snabbare CI)
+Inga “överraskningskörningar” på main
+När du är redo senare:
+slå på ENABLE_FRONTEND_BUILD=1 om du har frontend
+slå på ENABLE_INFECTION_ON_PR=1 när du vill att mutation testing ska bli en kvalitetsgrind
+ 
+Preset 2: “Strikt kvalitet” (när projektet är moget)
+Målet: stoppa regressions tidigt, och acceptera längre CI-tider.``` text
+ENABLE_FRONTEND_BUILD=1
+ENABLE_INFECTION_ON_PR=1
+ENABLE_INFECTION_ON_CI_CHANGES=0
+ENABLE_INFECTION_ON_PUSH_MAIN=0
+```
+
+Effekt:
+Frontend byggs alltid (om ni använder den)
+Infection körs på PR när core-filer ändras (src/**, framework/src/**, tests/**, composer/phpunit/phpstan/infection-config)
+CI-ändringar triggar inte Infection (bra, annars blir det “dyrt” i onödan)
+Variant (extra strikt, bara om ni vill)
+Om ni vill ha ett “säkerhetsnät” på main också:``` text
+ENABLE_INFECTION_ON_PUSH_MAIN=1
+```
+Det här kan bli tungt, så jag skulle bara slå på det om ni verkligen vill betala tiden.
+## Var sätter du dem?
+GitHub → **Settings** → **Secrets and variables** → **Actions** → fliken **Variables** → “New repository variable”.
+Om du säger om ditt nya template-projekt _har frontend eller inte_, kan jag säga vilket preset som passar bäst direkt.
+
+Preset A: “Snabbt men frontend på” (min rekommendation för nytt projekt med frontend)``` text
+ENABLE_FRONTEND_BUILD=1
+ENABLE_INFECTION_ON_PR=0
+ENABLE_INFECTION_ON_CI_CHANGES=0
+ENABLE_INFECTION_ON_PUSH_MAIN=0
+```
+
+Varför: du får med att bygga frontend (så du upptäcker trasiga builds tidigt), men du slipper att Infection bromsar varje PR innan testsviten är mogen.
+Preset B: “Strikt med frontend” (när ni är redo att kvalitetssäkra hårdare)``` text
+ENABLE_FRONTEND_BUILD=1
+ENABLE_INFECTION_ON_PR=1
+ENABLE_INFECTION_ON_CI_CHANGES=0
+ENABLE_INFECTION_ON_PUSH_MAIN=0
+```
+
+Varför: Infection kör när du ändrar kod/tester/config som räknas som core, vilket är bra när ni har bra testtäckning.
+Sätt nästan aldrig detta direkt i ett nytt projekt``` text
+ENABLE_INFECTION_ON_PUSH_MAIN=1
+```
+
+Det gör att Infection kan börja köras på main-pushar (om ni också har det påslaget i workflow-villkoret), vilket ofta blir “dyrt” och segt utan att ge mest värde i början.
+
+Min konkreta rekommendation till dig nu
+Börja med Preset A. När ni känner att:
+phpunit är stabilt,
+CI-tiden känns okej,
+och ni vill ha mutation-testing som grind,
+…då ändrar du bara ENABLE_INFECTION_ON_PR från 0 till 1.
+Vill du ha Infection på PR redan nu men bara för en del av koden (t.ex. src/ men inte tests/), så kan vi justera path-filtret också.
