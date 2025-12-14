@@ -172,3 +172,11 @@ vendor/bin/infection --configuration=infection.json.dist --threads=1 --show-muta
    vendor/bin/infection -vvv --no-progress --threads=1 --show-mutations --filter="framework/src/Middleware/Middlewares/" --initial-tests-php-options="-d opcache.enable_cli=0"
 
 vendor/bin/infection -vvv --no-progress --threads=1 --show-mutations --initial-tests-php-options="-d opcache.enable_cli=0"
+
+
+php vendor/bin/infection --configuration=infection.json.dist --threads=1 --no-progress --show-mutations --log-verbosity=all --filter="framework/src" --debug --filter="csv\\("
+
+php vendor/bin/infection --configuration=infection.json.dist --threads=1 --no-progress --show-mutations --filter='/JsonFunctions\.php$/' --test-framework-options='--filter=GetDriverNameFallbackTest'
+
+// Detta
+php vendor/bin/infection --configuration=infection.json.dist --threads=1 --no-progress --show-mutations

@@ -16,9 +16,6 @@
       "ignore": [
         "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::paginate",
         "Radix\\Database\\QueryBuilder\\QueryBuilder::paginate"
-      ],
-      "ignoreSourceCodeByRegex": [
-        "\\$countQuery\\s*=\\s*clone\\s+\\$this\\s*;"
       ]
     },
 
@@ -203,9 +200,6 @@
         "Radix\\Database\\QueryBuilder\\Concerns\\CompilesMutations::compileMutationSql",
         "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::paginate",
         "Radix\\Database\\QueryBuilder\\QueryBuilder::paginate"
-      ],
-      "ignoreSourceCodeByRegex": [
-        "\\$rawTotal\\s*=\\s*\\$countResult\\['total'\\]\\s*\\?\\?\\s*0\\s*;"
       ]
     },
 
@@ -259,9 +253,6 @@
         "Radix\\Database\\QueryBuilder\\Concerns\\CompilesMutations::compileMutationSql",
         "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::paginate",
         "Radix\\Database\\QueryBuilder\\QueryBuilder::paginate"
-      ],
-      "ignoreSourceCodeByRegex": [
-        "\\$rawTotal\\s*=\\s*\\$countResult\\['total'\\]\\s*\\?\\?\\s*0\\s*;"
       ]
     },
 
@@ -368,9 +359,6 @@
         "Radix\\Database\\QueryBuilder\\QueryBuilder::paginate",
         "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::search",
         "Radix\\Database\\QueryBuilder\\QueryBuilder::search"
-      ],
-      "ignoreSourceCodeByRegex": [
-        "if\\s*\\(\\s*\\$currentPage\\s*>\\s*\\$lastPage\\s*&&\\s*\\$lastPage\\s*>\\s*0\\s*\\)"
       ]
     },
 
@@ -476,9 +464,6 @@
         "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::withCountWhere",
         "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::addRelationCountSelect",
         "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithAggregate::addRelationAggregateSelect"
-      ],
-      "ignoreSourceCodeByRegex": [
-        "return is_string\\(\\$name\\) && \\$name !== '' \\? \\$name : 'mysql';"
       ]
     },
 
@@ -633,9 +618,6 @@
         "Radix\\Viewer\\RadixTemplateViewer::cacheTemplate",
         "Radix\\Viewer\\RadixTemplateViewer::__construct",
         "Radix\\Database\\ORM\\Model::load"
-      ],
-      "ignoreSourceCodeByRegex": [
-        "is_bool\\(\\$v\\) \\|\\| is_int\\(\\$v\\) \\|\\| is_float\\(\\$v\\) \\|\\| is_string\\(\\$v\\)"
       ]
     },
 
@@ -666,10 +648,8 @@
         "Radix\\Viewer\\RadixTemplateViewer::__construct",
         "Radix\\Database\\QueryBuilder\\QueryBuilder::debugSqlInterpolated",
         "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::withCountWhere",
-        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::addRelationCountSelect"
-        ],
-        "ignoreSourceCodeByRegex": [
-          "\\$needleStr = \\(string\\) \\$needle;"
+        "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::addRelationCountSelect",
+        "Radix\\Database\\QueryBuilder\\Concerns\\JsonFunctions::whereJsonContains"
         ]
     },
 
@@ -863,10 +843,6 @@
         "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithAggregate::addRelationAggregateSelect",
         "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::paginate",
         "Radix\\Database\\QueryBuilder\\QueryBuilder::paginate"
-      ],
-      "ignoreSourceCodeByRegex": [
-        "public static function csv\\s*\\(",
-        "\\$countQuery->selectRaw\\(\\s*'COUNT\\(\\*\\) as total'\\s*\\)\\s*;"
       ]
     },
     "FunctionCallRemoval": {
