@@ -10,6 +10,7 @@ use Radix\Http\RequestHandlerInterface;
 use Radix\Http\Response;
 use Radix\Middleware\Middlewares\RateLimiter;
 use Radix\Support\FileCache;
+use ReflectionClass;
 
 final class RateLimiterTest extends TestCase
 {
@@ -39,6 +40,21 @@ final class RateLimiterTest extends TestCase
         $req->method('ip')->willReturn($ip);
 
         return $req;
+    }
+
+    public function testDefaultWindowSecondsIsExactly60(): void
+    {
+        $mw = new RateLimiter(); // default-konstruktorn
+
+        $ref = new ReflectionClass($mw);
+        $prop = $ref->getProperty('windowSeconds');
+        $prop->setAccessible(true);
+
+        $this->assertSame(
+            60,
+            $prop->getValue($mw),
+            'Default windowSeconds måste vara exakt 60 (dödar IncrementInteger-mutanten 60->61).'
+        );
     }
 
     public function testAllowsRequestsUntilLimitAndSetsHeaders(): void
