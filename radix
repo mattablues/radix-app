@@ -20,7 +20,10 @@ $app = new ConsoleApplication();
 
 // Dynamiskt registrera alla kommandon från DI-container
 foreach ($container->get(Radix\Console\CommandsRegistry::class)->getCommands() as $name => $commandClass) {
-    $app->addCommand($name, fn(array $args) => $container->get($commandClass)->__invoke(array_merge(['_command' => $name], $args)));
+    $app->addCommand(
+        $name,
+        fn(array $args) => $container->get($commandClass)->__invoke(array_merge($args, ['_command' => $name]))
+    );
 }
 
 // Kör Console-appen
