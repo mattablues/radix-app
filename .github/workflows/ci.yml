@@ -98,7 +98,6 @@ jobs:
         env:
           APP_ENV: development
 
-  # PR-jobb: finns alltid på PR (så det kan vara "required"), men skippar snabbt om det inte är relevant.
   infection:
     if: github.event_name == 'pull_request' && (vars.ENABLE_INFECTION_ON_PR || '1') == '1'
     needs: [php, changes]
@@ -177,6 +176,8 @@ jobs:
               --configuration=infection.json.dist \
               --threads=1 \
               --ignore-msi-with-no-mutations \
+              --min-msi=80 \
+              --min-covered-msi=90 \
               --skip-initial-tests \
               --no-interaction \
               --no-progress \
@@ -185,15 +186,7 @@ jobs:
               --test-framework-options="--order-by=default --do-not-cache-result"
           else
             echo "Running Infection without filter (full config scope)"
-            vendor/bin/infection \
-              --configuration=infection.json.dist \
-              --threads=1 \
-              --ignore-msi-with-no-mutations \
-              --skip-initial-tests \
-              --no-interaction \
-              --no-progress \
-              --coverage=build/coverage \
-              --test-framework-options="--order-by=default --do-not-cache-result"
+            composer infect:cov
           fi
 
       - name: Upload Infection report
@@ -204,7 +197,6 @@ jobs:
           path: infection-report.html
           if-no-files-found: ignore
 
-  # Nattligt/manuellt/säkerhetsnät: kör oberoende av PR-pathfilter.
   infection-schedule:
     if: |
       github.event_name == 'schedule'
@@ -264,6 +256,8 @@ jobs:
               --configuration=infection.json.dist \
               --threads=1 \
               --ignore-msi-with-no-mutations \
+              --min-msi=80 \
+              --min-covered-msi=90 \
               --skip-initial-tests \
               --no-interaction \
               --no-progress \
@@ -276,6 +270,8 @@ jobs:
               --configuration=infection.json.dist \
               --threads=1 \
               --ignore-msi-with-no-mutations \
+              --min-msi=80 \
+              --min-covered-msi=90 \
               --skip-initial-tests \
               --no-interaction \
               --no-progress \

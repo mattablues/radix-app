@@ -15,7 +15,7 @@
       "format": "php-cs-fixer fix",
       "format:check": "php-cs-fixer fix --dry-run --diff",
       "infect": "php -d xdebug.mode=coverage vendor/bin/infection --configuration=infection.json.dist --threads=4 --min-msi=80 --min-covered-msi=90",
-      "infect:cov": "php -d xdebug.mode=coverage vendor/bin/infection --configuration=infection.json.dist --threads=4 --skip-initial-tests --coverage=build/coverage"
+      "infect:cov": "php -d xdebug.mode=coverage vendor/bin/infection --configuration=infection.json.dist --threads=4 --min-msi=80 --min-covered-msi=90 --skip-initial-tests --coverage=build/coverage"
     },
     "minimum-stability": "dev",
     "autoload": {
