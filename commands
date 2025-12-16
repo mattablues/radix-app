@@ -157,7 +157,7 @@ vendor/bin/infection --configuration=infection.json.dist --threads=1 --show-muta
 
   vendor/bin/infection -vvv --no-progress --threads=1 --show-mutations --initial-tests-php-options="-d opcache.enable_cli=0"
 
-   vendor/bin/infection -vvv --no-progress --threads=1 --show-mutations --filter="framework/src/Middleware/Middlewares/" --initial-tests-php-options="-d opcache.enable_cli=0"
+   vendor/bin/infection -vvv --no-progress --threads=1 --show-mutations --filter="framework/src/Console/" --initial-tests-php-options="-d opcache.enable_cli=0"
 
 vendor/bin/infection -vvv --no-progress --threads=1 --show-mutations --initial-tests-php-options="-d opcache.enable_cli=0"
 
