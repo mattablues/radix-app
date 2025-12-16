@@ -14,7 +14,7 @@ node_modules/
 /tests/uploads*.jpg
 /tests/uploads*.jpeg
 /tests/uploads*.png
-tests/uploads*.webp
+/tests/uploads*.webp
 
 # Test/coverage-cache
 .phpunit.cache/
