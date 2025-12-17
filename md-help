@@ -1,0 +1,34 @@
+``` markdown
+Ja — här är en formulering du kan kopiera rakt av nästa gång (den är “exakt” och brukar fungera):
+
+> **Jag vill ha hela innehållet i EN enda kodruta, så att jag kan kopiera allt i ett svep.**
+> Kodrutan ska innehålla **själva markdown-källkoden**, inklusive inre code fences.
+> Dvs: använd en “yttre” fenced code block (gärna ```text) som omsluter allt, och inuti ska det stå ```markdown … ``` exakt som jag ska klistra in i filen.
+
+Ett kortare sätt:
+
+> **Svara med en enda kodruta som innehåller markdown-source (inkl. ```-blocken). Ingen text utanför kodrutan.**
+
+Och om du vill vara extra tydlig kan du lägga till:
+
+> **Använd “fyra backticks” runt hela svaret så att de inre ```blocken inte förstör formateringen.**
+
+Exempel på hur du menar (som mall):
+```
+
+`text``` markdown
+Här är min .md text…
+
+```text
+RAD 1
+RAD 2
+```
+```
+```
+
+````
+
+Om du skriver precis så nästa gång kommer jag förstå direkt och inte försöka “formatera snyggt” med vanliga markdown-block som blir fel vid kopiering.
+```
+```
+
