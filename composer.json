@@ -54,7 +54,8 @@
         "ext-fileinfo": "*",
         "ext-iconv": "*",
         "ext-simplexml": "*",
-        "ext-libxml": "*"
+        "ext-libxml": "*",
+        "ext-redis": "*"
     },
     "config": {
         "allow-plugins": {
