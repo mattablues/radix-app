@@ -11,6 +11,10 @@ public/images/user/
 vendor/
 node_modules/
 
+# Förhindra att skriptfiler hamnar i källkoden
+framework/src/**/*.sh
+*.sh
+
 /tests/uploads*.jpg
 /tests/uploads*.jpeg
 /tests/uploads*.png
