@@ -126,12 +126,6 @@ vendor/bin/infection -vvv --no-progress --threads=1 --show-mutations --filter=fr
 
 vendor/bin/infection -vvv --no-progress --threads=1 --show-mutations --filter="framework/src/Database/QueryBuilder/AbstractQueryBuilder.php" --initial-tests-php-options="-d opcache.enable_cli=0"
 
-
-$env:TEMP = "$env:LOCALAPPDATA\Temp"
-$env:TMP  = "$env:LOCALAPPDATA\Temp"
-$env:INFECTION_TEMP_DIR = "$env:LOCALAPPDATA\Temp\infection"
-New-Item -ItemType Directory -Force $env:INFECTION_TEMP_DIR | Out-Null
-
 vendor/bin/infection -vvv --no-progress --threads=1 --show-mutations `
   --filter="framework/src/Database/QueryBuilder/AbstractQueryBuilder.php" `
   --initial-tests-php-options="-d opcache.enable_cli=0"

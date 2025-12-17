@@ -14,18 +14,21 @@ permissions:
   contents: read
 
 env:
-  ENABLE_INFECTION_SCHEDULE: ${{ vars.ENABLE_INFECTION_SCHEDULE || '0' }}
   INFECTION_FILTER: ""
 
 jobs:
   infection:
-    if: |
-      github.event_name == 'workflow_dispatch'
-      || (github.event_name == 'schedule' && env.ENABLE_INFECTION_SCHEDULE == '1')
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     env:
       RADIX_RUN_ID: "${{ github.run_id }}-${{ github.run_attempt }}"
     steps:
+      - name: Skip schedule run unless enabled
+        if: github.event_name == 'schedule' && (vars.ENABLE_INFECTION_SCHEDULE || '0') != '1'
+        run: |
+          echo "Schedule disabled (ENABLE_INFECTION_SCHEDULE != 1). Exiting successfully."
+          exit 0
+
       - uses: actions/checkout@v4
 
       - uses: shivammathur/setup-php@v2
