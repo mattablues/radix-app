@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       infection_filter:
-        description: "Optional Infection --filter path (e.g. framework/src/Container)"
+        description: "Optional Infection --filter path (e.g. src/Models)"
         required: false
         default: ""
 
@@ -14,6 +14,7 @@ permissions:
   contents: read
 
 env:
+  # Standard i templated projekt: bara "src". Ändra till "" för full körning.
   INFECTION_FILTER: ""
 
 jobs:
@@ -59,42 +60,33 @@ jobs:
             --coverage-xml=build/coverage/coverage-xml \
             --log-junit=build/coverage/junit.xml
 
-      - name: Run Infection (skip initial tests)
-        env:
-          INFECTION_FILTER: ${{ env.INFECTION_FILTER }}
+      - name: Run Infection
         run: |
-          FILTER_PATH=""
-          if [ -n "${{ github.event.inputs.infection_filter }}" ]; then
-            FILTER_PATH="${{ github.event.inputs.infection_filter }}"
-          elif [ -n "${INFECTION_FILTER}" ]; then
-            FILTER_PATH="${INFECTION_FILTER}"
+          RAW_FILTER="${{ github.event.inputs.infection_filter || env.INFECTION_FILTER }}"
+          CONFIG_FILE="infection.json.dist"
+          
+          if [ "$RAW_FILTER" = "src" ]; then
+            echo "Limited Mode: Rebuilding config to include ONLY src/ directory..."
+            jq '.source.directories = ["src"]' infection.json.dist > infection.project.json
+            CONFIG_FILE="infection.project.json"
+            FILTER_ARG=""
+          elif [ -n "$RAW_FILTER" ]; then
+            echo "Custom filter mode: $RAW_FILTER"
+            FILTER_ARG="--filter=$RAW_FILTER"
+          else
+            echo "Full scope mode (Radix style)"
+            FILTER_ARG=""
           fi
 
-          if [ -n "${FILTER_PATH}" ]; then
-            echo "Running Infection with filter='${FILTER_PATH}'"
-            vendor/bin/infection \
-              --configuration=infection.json.dist \
-              --threads=1 \
-              --ignore-msi-with-no-mutations \
-              --min-msi=80 \
-              --min-covered-msi=90 \
-              --skip-initial-tests \
-              --no-interaction \
-              --no-progress \
-              --coverage=build/coverage \
-              --filter="${FILTER_PATH}" \
-              --test-framework-options="--order-by=default --do-not-cache-result"
-          else
-            echo "Running Infection without filter (full config scope)"
-            vendor/bin/infection \
-              --configuration=infection.json.dist \
-              --threads=1 \
-              --ignore-msi-with-no-mutations \
-              --min-msi=80 \
-              --min-covered-msi=90 \
-              --skip-initial-tests \
-              --no-interaction \
-              --no-progress \
-              --coverage=build/coverage \
-              --test-framework-options="--order-by=default --do-not-cache-result"
-          fi
+          vendor/bin/infection \
+            --configuration=$CONFIG_FILE \
+            --threads=1 \
+            --ignore-msi-with-no-mutations \
+            --min-msi=80 \
+            --min-covered-msi=90 \
+            --skip-initial-tests \
+            --no-interaction \
+            --no-progress \
+            --coverage=build/coverage \
+            $FILTER_ARG \
+            --test-framework-options="--order-by=default --do-not-cache-result"

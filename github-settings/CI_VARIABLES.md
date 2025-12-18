@@ -13,7 +13,7 @@ GitHub → **Settings** → **Secrets and variables** → **Actions** → fliken
 | `ENABLE_INFECTION_ON_PR` | Kör inte Infection på PR | Kör Infection på PR (när core-filer ändras) | `0` i början, `1` när testsviten är stabil |
 | `ENABLE_INFECTION_ON_CI_CHANGES` | CI-ändringar triggar inte Infection | CI-ändringar kan trigga Infection | `0` |
 | `ENABLE_INFECTION_ON_PUSH_MAIN` | Kör inte Infection på push till main | Kör Infection på push till main (om workflow-villkoret matchar) | `0` |
-| `ENABLE_INFECTION_SCHEDULE` | Kör inte schemalagd Infection (cron) | Kör schemalagd Infection (cron) | `0` |
+| `ENABLE_INFECTION_SCHEDULE` | Kör inte schemalagd Infection | Kör schemalagd Infection (cron) | `0` |
 
 **Obs:** Infection på PR styrs också av path-filter. Den kör bara när PR:n ändrar t.ex. `src/**`, `framework/src/**`, `tests/**` eller vissa configfiler.
 
@@ -65,6 +65,10 @@ Infection kör på PR när:
 - PR:n ändrar t.ex. `src/**`, `framework/src/**`, `tests/**` eller vissa configfiler (`composer.*`, `phpunit.xml*`, `phpstan.neon*`, `infection.json*`).
 
 Om du bara ändrar t.ex. `README.md` eller andra filer utanför dessa mappar så kommer Infection-jobbet skippa snabbt (det är medvetet).
+
+### Varför kör Infection bara mot src/?
+Som standard är CI konfigurerat att bara köra mutation testing mot applikationskoden (`src/`). 
+Detta för att snabba upp CI och fokusera på koden du faktiskt jobbar med. Om du vill inkludera frameworket, ändra `INFECTION_FILTER` i workflow-filen till `""` (tom sträng).
 
 ### Varför kör Infection ändå ibland när jag bara ändrat CI-filer?
 Om du ändrar `.github/workflows/**` eller `tools/**` räknas det som “CI-ändringar”. Då kör Infection bara om:
@@ -160,5 +164,4 @@ Remove-Item -Recurse -Force "$env:TEMP\radix_ratelimit" -ErrorAction SilentlyCon
 
 ## Tips för stabila tester (särskilt i CI/Infection)
 - Undvik att bero på exakt “nu” i sekunder om du kan (tid kan bli flakigt med Xdebug/Infection).
-- När du måste testa defaultvärden/konstanter: använd deterministiska asserts (t.ex. reflection) istället för tidsbaserade sleeps.
-- Lägg testdata i tempkatalog (`sys_get_temp_dir()`) och städa i `tearDown()`.
+- När du måste testa defaultvärden/konstanter

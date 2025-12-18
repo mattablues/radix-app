@@ -13,7 +13,7 @@ on:
         required: false
         default: "schedule"
       infection_filter:
-        description: "Optional Infection --filter path (e.g. framework/src/Container)"
+        description: "Optional Infection --filter path"
         required: false
         default: ""
 
@@ -26,6 +26,8 @@ env:
   ENABLE_INFECTION_ON_PR: ${{ vars.ENABLE_INFECTION_ON_PR || '1' }}
   ENABLE_INFECTION_ON_CI_CHANGES: ${{ vars.ENABLE_INFECTION_ON_CI_CHANGES || '0' }}
   ENABLE_INFECTION_ON_PUSH_MAIN: ${{ vars.ENABLE_INFECTION_ON_PUSH_MAIN || '0' }}
+  # I nya projekt (som akebrands): Sätt denna variabel till "src" på GitHub (Settings -> Variables)
+  # I Radix: Låt den vara tom ""
   INFECTION_FILTER: ""
 
 jobs:
@@ -109,21 +111,16 @@ jobs:
         id: decide
         run: |
           RUN="false"
-
           if [ "${{ needs.changes.outputs.infection_core }}" = "true" ]; then
             RUN="true"
           elif [ "${{ needs.changes.outputs.infection_ci }}" = "true" ] && [ "${{ vars.ENABLE_INFECTION_ON_CI_CHANGES || '0' }}" = "1" ]; then
             RUN="true"
           fi
-
           echo "run_infection=${RUN}" >> "${GITHUB_OUTPUT}"
-          echo "Decision: run_infection=${RUN}"
 
       - name: Skip Infection (not relevant)
         if: steps.decide.outputs.run_infection != 'true'
-        run: |
-          echo "Infection skipped: no relevant changes in framework/src, src, tests, or tooling config."
-          exit 0
+        run: exit 0
 
       - uses: actions/checkout@v4
         if: steps.decide.outputs.run_infection == 'true'
@@ -160,34 +157,38 @@ jobs:
             --coverage-xml=build/coverage/coverage-xml \
             --log-junit=build/coverage/junit.xml
 
-      - name: Run Infection (skip initial tests)
+      - name: Run Infection
         if: steps.decide.outputs.run_infection == 'true'
-        env:
-          INFECTION_FILTER: ${{ env.INFECTION_FILTER }}
         run: |
-          FILTER_PATH=""
-          if [ -n "${INFECTION_FILTER}" ]; then
-            FILTER_PATH="${INFECTION_FILTER}"
+          RAW_FILTER="${{ github.event.inputs.infection_filter || env.INFECTION_FILTER }}"
+          CONFIG_FILE="infection.json.dist"
+          
+          # Om filtret är inställt på "src", skriv om JSON-filen så att framework inte ens finns med
+          if [ "$RAW_FILTER" = "src" ] || [ "$RAW_FILTER" = "src/" ]; then
+            echo "Akebrands Mode: Rebuilding config to include ONLY src/ directory..."
+            jq '.source.directories = ["src"]' infection.json.dist > infection.project.json
+            CONFIG_FILE="infection.project.json"
+            FILTER_ARG=""
+          elif [ -n "$RAW_FILTER" ]; then
+            echo "Custom filter mode: $RAW_FILTER"
+            FILTER_ARG="--filter=$RAW_FILTER"
+          else
+            echo "Radix Mode: Full scope (src + framework)"
+            FILTER_ARG=""
           fi
 
-          if [ -n "${FILTER_PATH}" ]; then
-            echo "Running Infection with filter='${FILTER_PATH}'"
-            vendor/bin/infection \
-              --configuration=infection.json.dist \
-              --threads=1 \
-              --ignore-msi-with-no-mutations \
-              --min-msi=80 \
-              --min-covered-msi=90 \
-              --skip-initial-tests \
-              --no-interaction \
-              --no-progress \
-              --coverage=build/coverage \
-              --filter="${FILTER_PATH}" \
-              --test-framework-options="--order-by=default --do-not-cache-result"
-          else
-            echo "Running Infection without filter (full config scope)"
-            composer infect:cov
-          fi
+          vendor/bin/infection \
+            --configuration=$CONFIG_FILE \
+            --threads=1 \
+            --ignore-msi-with-no-mutations \
+            --min-msi=80 \
+            --min-covered-msi=90 \
+            --skip-initial-tests \
+            --no-interaction \
+            --no-progress \
+            --coverage=build/coverage \
+            $FILTER_ARG \
+            --test-framework-options="--order-by=default --do-not-cache-result"
 
       - name: Upload Infection report
         if: always()
