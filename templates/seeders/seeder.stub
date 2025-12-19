@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 final class [ClassName]
 {
-    public function __construct(private readonly PDO $pdo) {}
-
     public function run(): void
     {
         // Exempel:
-        // $stmt = $this->pdo->prepare('INSERT INTO table (col) VALUES (:val)');
-        // $stmt->execute([':val' => 'value']);
+        // $user = new \App\Models\User();
+        // $user->fill(['first_name' => 'Mats']);
+        // $user->save();
+
     }
 
     public function down(): void
     {
         // Valfritt: rulla tillbaka seed-data
+        // Exempel:
+        // \App\Models\Status::where('user_id', '=', $user->id)->delete(); // barn först
+        // $user->forceDelete(); // hård radering, kringgår soft deletes
+
     }
 }
