@@ -63,7 +63,7 @@
   }
   @media (min-width: 1024px) {
     .layout-aside-left {
-      grid-template-columns: var(--aside-w, 300px) 1fr;
+      grid-template-columns: var(--aside-left-w, var(--aside-w, 300px)) 1fr;
       grid-template-areas: "aside-left content";
       align-items: start;
       overflow: visible;
@@ -80,7 +80,7 @@
   }
   @media (min-width: 1024px) {
     .layout-aside-right {
-      grid-template-columns: 1fr var(--aside-w, 300px);
+      grid-template-columns: 1fr var(--aside-right-w, var(--aside-w, 300px));
       grid-template-areas: "content aside-right";
       align-items: start;
       overflow: visible;
