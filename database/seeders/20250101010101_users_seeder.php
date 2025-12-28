@@ -6,7 +6,7 @@ final class UsersSeeder
 {
     public function run(): void
     {
-        $user = \App\Models\User::where('email', '=', 'admin@example.com')->first();
+        $user = \App\Models\User::where('email', '=', 'mats@akebrands.se')->first();
         if ($user) {
             return;
         }

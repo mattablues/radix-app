@@ -25,7 +25,7 @@
           x-transition:leave-start="opacity-100 translate-x-0"
           x-transition:leave-end="opacity-0 translate-x-full"
           x-on:click.away="menu = false"
-          class="fixed inset-0 bg-white z-[60] flex flex-col items-center justify-center space-y-4 text-xl font-light text-slate-200 transform"
+          class="fixed inset-0 bg-white z-60 flex flex-col items-center justify-center space-y-4 text-xl font-light text-slate-200 transform"
           x-cloak>
           <button class="absolute top-4 right-4 text-gray-900 cursor-pointer" x-on:click="menu = false" aria-label="Stäng meny">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7">

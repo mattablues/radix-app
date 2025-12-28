@@ -26,7 +26,7 @@
   </header>
 {% include "components/flash.ratio.php" %}
 {% include "components/noscript.ratio.php" %}
-  <main class="flex-grow flex justify-center items-center">
+  <main class="grow flex justify-center items-center">
     {% yield body %}
   </main>
 

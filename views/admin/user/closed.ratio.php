@@ -26,7 +26,7 @@
                 </thead>
                 <tbody class="[&_tr:nth-child(odd)]:bg-white [&_tr:nth-child(even)]:bg-gray-50">
 {% foreach($users['data'] as $user) : %}
-                  <tr class="[&:not(:last-child)]:border-b border-gray-200 hover:bg-blue-50/50 transition-colors">
+                  <tr class="not-last:border-b border-gray-200 hover:bg-blue-50/50 transition-colors">
                     <td data-cell="id" class="px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap max-md:hidden">{{ $user->getAttribute('id') }}</td>
                     <td data-cell="namn" class="px-3 py-2.5 text-sm">
                       <a href="{{ route('user.show', ['id' => $user->getAttribute('id')]) }}" class="font-medium text-gray-900 underline decoration-gray-300 hover:decoration-transparent">

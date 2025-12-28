@@ -45,7 +45,7 @@
       </div>
 
       <!-- Sök: centrerad på md+, nedfällbar på mobil -->
-      <div class="relative md:absolute md:left-1/2 md:-translate-x-1/2 md:top-1/2 md:-translate-y-1/2 z-[60]">
+      <div class="relative md:absolute md:left-1/2 md:-translate-x-1/2 md:top-1/2 md:-translate-y-1/2 z-60">
         <div id="search-wrap" class="hidden md:block md:static md:translate-x-0 md:translate-y-0 md:mt-0 mt-2">
           <div class="relative">
             <div class="p-2.5 px-4 flex items-center rounded-md bg-gray-700">
@@ -58,7 +58,7 @@
             </div>
 
             <div id="search-dropdown"
-                 class="absolute left-0 mt-1 w-full md:w-[420px] max-h-[60vh] overflow-auto bg-white text-gray-900 rounded-md shadow-lg border border-gray-200 hidden z-[70]">
+                 class="absolute left-0 mt-1 w-full md:w-[420px] max-h-[60vh] overflow-auto bg-white text-gray-900 rounded-md shadow-lg border border-gray-200 hidden z-70">
               <div class="result-container"></div>
             </div>
           </div>
@@ -67,8 +67,8 @@
     </div>
   </header>
 
-  <div class="sidebar h-screen fixed top-0 lg:left-0 py-13 px-2 w-[var(--sidebar-w)] transition-all duration-200 overflow-y-auto text-center bg-gray-900 shadow hide-scrollbar z-40"
-    :class="openSidebar ? 'left-[0]' : 'left-[var(--sidebar-w-neg)]'"
+  <div class="sidebar h-screen fixed top-0 lg:left-0 py-13 px-2 w-(--sidebar-w) transition-all duration-200 overflow-y-auto text-center bg-gray-900 shadow hide-scrollbar z-40"
+    :class="openSidebar ? 'left-0' : 'left-(--sidebar-w-neg)'"
   >
     <div class="text-gray-100">
       <hr class="my-2 text-gray-600">
@@ -111,7 +111,7 @@
             x-transition:leave="transition-all duration-200 ease-in"
             x-transition:leave-start="translate-y-0 opacity-100"
             x-transition:leave-end="-translate-y-5 opacity-0"
-            class="leading-7 text-left text-sm font-thin mt-2 w-4/5 mx-auto border-l-1 border-gray-700"
+            class="leading-7 text-left text-sm font-thin mt-2 w-4/5 mx-auto border-l border-gray-700"
           >
             <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
               <a href="{{ route('user.index') }}" class="w-full inline-block py-2 px-8">Visa konto</a>
@@ -158,7 +158,7 @@
             x-transition:leave="transition-all duration-200 ease-in"
             x-transition:leave-start="translate-y-0 opacity-100"
             x-transition:leave-end="-translate-y-5 opacity-0"
-            class="leading-7 text-left text-sm font-thin mt-2 w-4/5 mx-auto border-l-1 border-gray-700"
+            class="leading-7 text-left text-sm font-thin mt-2 w-4/5 mx-auto border-l border-gray-700"
           >
             <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
               <a href="{{ route('admin.user.index') }}" class="w-full inline-block py-2 px-8">Visa konton</a>
@@ -203,7 +203,7 @@
             x-transition:leave="transition-all duration-200 ease-in"
             x-transition:leave-start="translate-y-0 opacity-100"
             x-transition:leave-end="-translate-y-5 opacity-0"
-            class="leading-7 text-left text-sm font-thin mt-2 w-4/5 mx-auto border-l-1 border-gray-700"
+            class="leading-7 text-left text-sm font-thin mt-2 w-4/5 mx-auto border-l border-gray-700"
           >
             <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
               <a href="{{ route('admin.health.index') }}" class="w-full inline-block py-2 px-8">Status</a>
@@ -230,7 +230,7 @@
     {% include "components/modal-close.ratio.php" %}
     {% include "components/modal-delete.ratio.php" %}
   <main
-    class="xl:max-w-[1140px] lg:ml-[var(--sidebar-w)] pt-4 px-3 md-px-5 lg:px-7 pb-2 min-h-[calc(100vh-108px)]"
+    class="xl:max-w-[1140px] lg:ml-(--sidebar-w) pt-4 px-3 md-px-5 lg:px-7 pb-2 min-h-[calc(100vh-108px)]"
     x-on:click="if (openSidebar) openSidebar = false"
   >
     {% include "components/flash-box.ratio.php" %}
