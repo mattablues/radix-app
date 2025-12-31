@@ -141,6 +141,20 @@ namespace Radix\Tests\Database\ORM {
             $this->assertNull($user->getAttribute('password')); // Skyddat av `guarded`
         }
 
+        public function testConstructorMassFillsAttributes(): void
+        {
+            // Här skickar vi data direkt till konstruktorn
+            $user = new User([
+                'first_name' => 'MutationKiller',
+                'email' => 'killer@example.com',
+            ]);
+
+            // Om modellen kör mb_strtolower (vilket din verkar göra),
+            // ändra förväntat värde till små bokstäver: 'Mutationkiller'
+            $this->assertSame('Mutationkiller', $user->getAttribute('first_name'));
+            $this->assertSame('killer@example.com', $user->getAttribute('email'));
+        }
+
         public function testAllAttributesGuarded(): void
         {
             $user = new User();
@@ -516,7 +530,14 @@ namespace Radix\Tests\Database\ORM {
 
         public function testUserJsonSerialization(): void
         {
-            $user = new User(['id' => 1, 'first_name' => 'John', 'email' => 'john.doe@example.com']);
+            // Skapa en tom modell och använd forceFill för all data
+            // Detta garanterar att ordningen på nycklarna blir som du förväntar dig
+            $user = new User();
+            $user->forceFill([
+                'id' => 1,
+                'first_name' => 'John',
+                'email' => 'john.doe@example.com',
+            ]);
 
             // Mocka `Post`-instanser med `toArray` och `jsonSerialize`-stöd
             $post1 = $this->createMock(Model::class);

@@ -30,7 +30,7 @@ class User extends Model
     public bool $timestamps = true;         // Vill du använda timestamps?
     protected bool $softDeletes = true;
     /** @var array<int,string> */
-    protected array $fillable = ['id', 'first_name', 'last_name', 'email', 'avatar']; // Tillåtna att massfylla
+    protected array $fillable = ['first_name', 'last_name', 'email', 'avatar']; // Tillåtna att massfylla
     /** @var array<int,string> */
     protected array $guarded = ['password', 'role', 'deleted_at'];
     //protected array $autoloadRelations = ['status'];

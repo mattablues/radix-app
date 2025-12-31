@@ -24,7 +24,7 @@ class Token extends Model
 
     // Tillåtna fält för mass assignment
     /** @var array<int,string> */
-    protected array $fillable = ['id', 'user_id', 'value', 'description', 'expires_at'];
+    protected array $fillable = ['user_id', 'value', 'description', 'expires_at'];
 
     /**
      * Kontrollera om token är giltig.
