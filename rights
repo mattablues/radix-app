@@ -1,0 +1,8 @@
+Kör detta i din projektmapp:
+
+# Skapa mapparna om de saknas
+mkdir -p cache/views cache/app cache/health cache/ratelimit
+
+# Ge din användare och webbservern rättigheter
+sudo chown -R $USER:www-data cache
+chmod -R 775 cache
