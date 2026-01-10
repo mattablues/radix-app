@@ -1,0 +1,47 @@
+1. Grundläggande ägarskap
+Gör dig själv till ägare men sätt webbservern som grupp.
+# Ersätt 'radix' med ditt projektnamn
+sudo chown -R $USER:www-data /var/www/radix
+
+2. Sätt rättighetsmask (SetGID)
+Detta är det viktigaste steget. Genom att använda 2775 på mappar ser vi till att alla nya filer som skapas automatiskt tillhör gruppen www-data.
+# Alla mappar: Du och webbservern får göra allt. Nya filer ärver gruppen.
+find /var/www/radix -type d -exec sudo chmod 2775 {} \;
+
+# Alla filer: Du och webbservern får läsa och skriva.
+find /var/www/radix -type f -exec sudo chmod 664 {} \;
+
+3. Lägg till din användare i webbserver-gruppen
+Gör detta en gång per server så att din användare har rätt att hantera filer som webbservern skapat (t.ex. loggar/cache).
+sudo usermod -aG www-data $USER
+
+(Du kan behöva logga ut och in igen för att detta ska aktiveras helt).
+4. Hantera Git "Dubious Ownership"
+Om Git klagar på att du inte äger mappen (eftersom den ligger i /var/www):
+git config --global --add safe.directory /var/www/radix
+
+5. Kod-justering för Cache/Filer
+I din PHP-kod, se till att filer skapas med grupp-skrivrättigheter så att både CLI (du) och Webb (Apache) kan uppdatera samma filer.
+I din FileCache.php eller liknande:
+$ok = @file_put_contents($file, $payload) !== false;
+
+// Om vi är på Linux, sätt 0664 (ägare+grupp får skriva)
+if ($ok && DIRECTORY_SEPARATOR === '/') {
+    @chmod($file, 0o664);
+}
+
+Varför gör vi detta?
+Säkerhet: Vi använder inte 777 (vilket ger alla tillgång).
+Smidighet: Du kan köra composer install och npm run build utan sudo.
+Stabilitet: Webbservern kan skriva cache och loggar utan att krascha med "Permission Denied".
+Portabilitet: DIRECTORY_SEPARATOR-kollen gör att koden inte går sönder om du flyttar projektet till Windows.
+
+# 1. Mappar (2775 är bra för alla mappar)
+find /var/www/radix -type d -exec sudo chmod 2775 {} \;
+
+# 2. Filer (Sätt 664 på allt utom node_modules och vendor)
+find /var/www/radix -type f -not -path "*/node_modules/*" -not -path "*/vendor/*" -exec sudo chmod 664 {} \;
+
+# 3. Återställ binärer (Om du råkat köra på hela mappen)
+chmod -R +x /var/www/radix/node_modules/.bin/
+chmod -R +x /var/www/radix/vendor/bin/

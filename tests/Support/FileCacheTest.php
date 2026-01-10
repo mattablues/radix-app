@@ -141,6 +141,28 @@ namespace Radix\Tests\Support {
             $this->assertNull($this->cache->get('k'));
         }
 
+        public function testSetAppliesCorrectPermissionsOnLinux(): void
+        {
+            if (DIRECTORY_SEPARATOR !== '/') {
+                $this->markTestSkipped('Permissions test only applies to POSIX systems.');
+            }
+
+            $key = 'perm_test_' . uniqid();
+            $this->cache->set($key, 'data', 60);
+
+            // Hitta den faktiska filen på disken
+            $safeKey = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $key);
+            $file = $this->tmpDir . DIRECTORY_SEPARATOR . $safeKey . '.cache';
+
+            $this->assertFileExists($file);
+
+            // Hämta filrättigheter (t.ex. 0664)
+            $perms = fileperms($file) & 0o777;
+
+            // Vi förväntar oss 0664. Om rtrim eller logic muteras kommer detta faila.
+            $this->assertSame(0o664, $perms, sprintf('Filen borde ha rättigheter 0664, men har 0%o', $perms));
+        }
+
         /**
          * Dödar TrueValue-mutanten i delete():
          * is_file ? unlink : true  ->  is_file ? unlink : false
