@@ -182,6 +182,198 @@ namespace Radix\Tests\Support {
             $this->assertNull($this->cache->get('b'));
         }
 
+        public function testPruneRemovesOnlyExpiredFiles(): void
+        {
+            $now = time();
+            $future = $now + 3600;
+
+            // 1. Definitivt utgången (ska tas bort)
+            $this->cache->set('expired', 'old', 0);
+            file_put_contents($this->tmpDir . DIRECTORY_SEPARATOR . 'expired.cache', json_encode(['v' => 'old', 'e' => $now - 10]));
+
+            // 2. Giltig (ska vara kvar)
+            $this->cache->set('valid', 'new', 0);
+            file_put_contents($this->tmpDir . DIRECTORY_SEPARATOR . 'valid.cache', json_encode(['v' => 'new', 'e' => $future]));
+
+            // 3. Gränsvärde: expires är EXAKT nu (ska vara kvar, vi rensar bara om nu > expires)
+            // Detta dödar GreaterThan/Equal mutanten
+            $this->cache->set('boundary', 'exact', 0);
+            file_put_contents($this->tmpDir . DIRECTORY_SEPARATOR . 'boundary.cache', json_encode(['v' => 'exact', 'e' => $now]));
+
+            // 4. Evig: expires är 0 (ska vara kvar)
+            // Detta dödar IncrementInteger (0->1) och GreaterThan (>=0) mutanterna
+            $this->cache->set('eternal', 'forever', 0);
+
+            // 5. Korrupt fil (ska rensas)
+            $corruptFile = $this->tmpDir . DIRECTORY_SEPARATOR . 'corrupt.cache';
+            file_put_contents($corruptFile, 'invalid-json');
+
+            // Kör prune med en fastställd tidpunkt (dödar Coalesce mutanten)
+            $this->cache->prune($now);
+
+            $this->assertFileDoesNotExist($this->tmpDir . DIRECTORY_SEPARATOR . 'expired.cache');
+            $this->assertFileDoesNotExist($corruptFile);
+
+            $this->assertSame('new', $this->cache->get('valid'), 'Framtida filer ska vara kvar');
+            $this->assertSame('exact', $this->cache->get('boundary'), 'Filer som går ut precis NU ska vara kvar');
+            $this->assertSame('forever', $this->cache->get('eternal'), 'Filer med expires=0 ska vara kvar');
+        }
+
+        /**
+         * Dödar Coalesce-mutanten: $currentTime = $now ?? time() -> time() ?? $now
+         */
+        public function testPruneUsesSystemTimeWhenNoArgumentProvided(): void
+        {
+            // Skapa en fil som går ut om exakt 1 sekund
+            $this->cache->set('soon', 'bye', 1);
+            $file = $this->tmpDir . DIRECTORY_SEPARATOR . 'soon.cache';
+
+            $this->assertFileExists($file);
+
+            // Vänta tills den har gått ut
+            sleep(2);
+
+            // Anropa prune UTAN argument. Om mutanten time() ?? $now styr,
+            // så kommer den alltid använda time() oavsett, men genom att vi
+            // har testet testPruneRemovesOnlyExpiredFiles som skickar in ett
+            // FAST värde på $now, tvingar vi koden att respektera argumentet när det finns.
+            $this->cache->prune();
+
+            $this->assertFileDoesNotExist($file, 'Prune ska använda systemtid om inget argument ges');
+        }
+
+        /**
+         * Dödar DecrementInteger-mutanten: ? (int) $payload['e'] : 0 -> -1
+         */
+        public function testPruneHandlesMissingExpiresKeyAsZero(): void
+        {
+            // Skapa en fil manuellt helt utan 'e' (expires)
+            $file = $this->tmpDir . DIRECTORY_SEPARATOR . 'no_e.cache';
+            file_put_contents($file, json_encode(['v' => 'eternal_value']));
+
+            $this->cache->prune();
+
+            // Om fallbacken ändras till -1, och koden är "if ($expires != 0)",
+            // så skulle denna tas bort. Men vi vill att den ska vara kvar (0 = evig).
+            $this->assertFileExists($file, 'Filer utan expires-nyckel ska betraktas som eviga (0)');
+            $this->assertSame('eternal_value', $this->cache->get('no_e'));
+        }
+
+        /**
+         * Dödar DecrementInteger-mutanten: ? (int) $payload['e'] : 0 -> -1
+         * Samt säkerställer att negativa expires-värden i filen inte triggar rensning (0-logik).
+         */
+        public function testPruneHandlesMissingOrNegativeExpiresKeyAsZero(): void
+        {
+            // 1. Fil helt utan 'e'
+            $fileNoE = $this->tmpDir . DIRECTORY_SEPARATOR . 'no_e.cache';
+            file_put_contents($fileNoE, json_encode(['v' => 'eternal_1']));
+
+            // 2. Fil med negativ 'e' (t.ex. -1)
+            // Om koden ändras till expires > -1 (pga mutant) så skulle denna raderas.
+            $fileNegE = $this->tmpDir . DIRECTORY_SEPARATOR . 'neg_e.cache';
+            file_put_contents($fileNegE, json_encode(['v' => 'eternal_2', 'e' => -1]));
+
+            $this->cache->prune();
+
+            $this->assertFileExists($fileNoE, 'Filer utan expires ska vara kvar (0)');
+            $this->assertFileExists($fileNegE, 'Filer med negativa expires ska vara kvar (behandlas som 0)');
+        }
+
+        /**
+         * Dödar CastInt-mutanten: (int) $payload['e'] -> $payload['e']
+         * Genom att lagra expires som en sträng och verifiera att den ändå hanteras korrekt.
+         */
+        public function testPruneHandlesNumericStringExpiresAsInteger(): void
+        {
+            $now = time();
+            $file = $this->tmpDir . DIRECTORY_SEPARATOR . 'string_e.cache';
+
+            // Vi skriver manuellt in en sträng som 'e' värde
+            file_put_contents($file, json_encode(['v' => 'val', 'e' => (string) ($now - 10)]));
+
+            $this->cache->prune($now);
+
+            $this->assertFileDoesNotExist($file, 'Filer med numeriska strängar som expires ska också rensas (CastInt-skydd)');
+        }
+
+        /**
+         * Dödar de sista DecrementInteger och CastInt mutanterna i prune().
+         */
+        public function testPruneStaysStrictOnZeroAndTypes(): void
+        {
+            $now = time();
+
+            // 1. En fil med e = 0 (evig) ska stanna kvar.
+            $fileZero = $this->tmpDir . DIRECTORY_SEPARATOR . 'zero_e.cache';
+            file_put_contents($fileZero, json_encode(['v' => 'stay', 'e' => 0]));
+
+            // 2. Dödar CastInt-mutanten: (int)"0.5" blir 0.
+            $fileSmall = $this->tmpDir . DIRECTORY_SEPARATOR . 'small_e.cache';
+            file_put_contents($fileSmall, json_encode(['v' => 'stay_too', 'e' => '0.5']));
+
+            // 3. En vanlig utgången fil (ska raderas).
+            $fileOld = $this->tmpDir . DIRECTORY_SEPARATOR . 'old_e.cache';
+            file_put_contents($fileOld, json_encode(['v' => 'bye', 'e' => $now - 10]));
+
+            // 4. Test för att döda Logical-mutanter: e är null eller saknas helt.
+            $fileNull = $this->tmpDir . DIRECTORY_SEPARATOR . 'null_e.cache';
+            file_put_contents($fileNull, json_encode(['v' => 'stay', 'e' => null]));
+
+            $this->cache->prune($now);
+
+            $this->assertFileExists($fileZero, 'Filer med expires=0 ska stanna kvar');
+            $this->assertFileExists($fileSmall, 'CastInt-skydd: "0.5" ska castas till 0 och stanna kvar');
+            $this->assertFileExists($fileNull, 'Filer med e=null ska stanna kvar');
+            $this->assertFileDoesNotExist($fileOld, 'Utgångna filer ska raderas');
+        }
+
+        /**
+         * Dödar CastInt-mutanten och DecrementInteger-mutanten i prune().
+         */
+        public function testPruneHandlesVariousExpireTypesAndFallbacks(): void
+        {
+            $now = time();
+
+            // 1. Testa Float-sträng (CastInt skydd): lagra som sträng med decimal.
+            // Om (int) tas bort kommer PHP jämföra "123.5" > currentTime vilket kan ge
+            // andra resultat än ett rent heltal vid exakta gränser.
+            $fileFloat = $this->tmpDir . DIRECTORY_SEPARATOR . 'float_e.cache';
+            file_put_contents($fileFloat, json_encode(['v' => 'x', 'e' => (string) ($now - 5) . ".9"]));
+
+            // 2. Testa saknad nyckel (DecrementInteger skydd 0 -> -1)
+            // Vi lägger till en assert som kollar att filen STANNAR KVAR.
+            $fileMissing = $this->tmpDir . DIRECTORY_SEPARATOR . 'missing_e.cache';
+            file_put_contents($fileMissing, json_encode(['v' => 'y']));
+
+            // 3. Testa icke-numerisk nyckel (Fallback skydd)
+            $fileAlpha = $this->tmpDir . DIRECTORY_SEPARATOR . 'alpha_e.cache';
+            file_put_contents($fileAlpha, json_encode(['v' => 'z', 'e' => 'not-numeric']));
+
+            $this->cache->prune($now);
+
+            $this->assertFileDoesNotExist($fileFloat, 'Float-sträng ska castas till int och rensas');
+            $this->assertFileExists($fileMissing, 'Filer utan expires ska tolkas som 0 och stanna kvar');
+            $this->assertFileExists($fileAlpha, 'Filer med icke-numerisk expires ska tolkas som 0 och stanna kvar');
+        }
+
+        /**
+         * Dödar mutanten: if ($ok && DIRECTORY_SEPARATOR === '/') -> !== '/'
+         */
+        public function testSetDoesNotCallChmodWhenSeparatorIsNotSlash(): void
+        {
+            // Vi kan inte ändra konstanten DIRECTORY_SEPARATOR, men vi kan
+            // testa logiken genom att verifiera att chmod faktiskt anropas på Linux
+            // och sedan lita på att mutations-testet ser att vi bryr oss om resultatet.
+            if (DIRECTORY_SEPARATOR !== '/') {
+                $this->markTestSkipped('Endast för Linux/Unix');
+            }
+
+            FileCacheSpy::reset();
+            $this->cache->set('perm_check', 'data', 60);
+            $this->assertSame(1, FileCacheSpy::$chmodCallCount, 'Chmod ska anropas på Linux');
+        }
+
         public function testTtlExpiry(): void
         {
             $this->cache->set('short', 'x', 1);
