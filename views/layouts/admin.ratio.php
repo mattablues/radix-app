@@ -230,7 +230,7 @@
     {% include "components/modal-close.ratio.php" %}
     {% include "components/modal-delete.ratio.php" %}
   <main
-    class="xl:max-w-[1140px] lg:ml-(--sidebar-w) pt-4 px-3 md-px-5 lg:px-7 pb-2 min-h-[calc(100vh-108px)]"
+    class="xl:max-w-[1660px] lg:ml-(--sidebar-w) pt-4 px-3 md-px-5 lg:px-7 pb-2 min-h-[calc(100vh-108px)]"
     x-on:click="if (openSidebar) openSidebar = false"
   >
     {% include "components/flash-box.ratio.php" %}
