@@ -28,7 +28,7 @@
       </aside>
 
      <!-- Main: lämna plats för fixed sidebar på lg+ -->
-      <main class="xl:max-w-[1700px] min-h-[calc(100vh-108px)]  transition-[margin] duration-200 lg:ml-(--sidebar-aside-w)">
+      <main class="xl:max-w-[1220px] min-h-[calc(100vh-108px)]  transition-[margin] duration-200 lg:ml-(--sidebar-aside-w)">
         <div class="container-base pt-4 pb-8">
           {% include "components/flash.ratio.php" %}
           {% include "components/noscript.ratio.php" %}

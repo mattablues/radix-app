@@ -1,4 +1,4 @@
-      <a href="{{ route('home.index') }}" class="flex items-center gap-2">
+      <a href="{{ route('home.index') }}" class="flex items-center gap-2 z-70">
         <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-10">
         <span class="text-xl text-gray-900">{{ getenv('APP_NAME') }}</span>
       </a>
