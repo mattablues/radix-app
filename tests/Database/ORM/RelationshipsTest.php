@@ -351,6 +351,14 @@ namespace Radix\Tests\Database\ORM {
             $this->assertTrue($model->isExisting());
         }
 
+        public function testHasOneThroughGetCallsFirst(): void
+        {
+            $rel = $this->createPartialMock(\Radix\Database\ORM\Relationships\HasOneThrough::class, ['first']);
+            $rel->expects($this->once())->method('first');
+
+            $rel->get();
+        }
+
         public function testHasManyReturnsRelatedRecords(): void
         {
             // Förvänta oss att dessa värden returneras från databasen
