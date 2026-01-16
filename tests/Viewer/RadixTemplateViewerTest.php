@@ -121,6 +121,48 @@ class RadixTemplateViewerTest extends TestCase
         );
     }
 
+    public function testItInjectsBlocksIntoDataArray(): void
+    {
+        // 1. Skapa en layout som använder variablerna
+        $layoutPath = $this->tempViewsPath . 'layout.ratio.php';
+        file_put_contents($layoutPath, 'ID:{{ $pageId }} CLASS:{{ $pageClass }} SEARCH:{{ $searchId }}');
+
+        // 2. Skapa en mall som ärver layouten och definierar blocken med extra mellanslag/radbrytningar
+        $templatePath = $this->tempViewsPath . 'inject-test.ratio.php';
+        file_put_contents(
+            $templatePath,
+            '{% extends "layout.ratio.php" %}
+             {% block pageId %}
+                777 
+             {% endblock %}
+             {% block pageClass %}  my-class  {% endblock %}
+             {% block searchId %}	search-99	{% endblock %}'
+        );
+
+        $result = $this->viewer->render('inject-test');
+
+        // Verifiera att värdena injicerats korrekt OCH att de har trimmats.
+        // Om trim() tas bort kommer strängen innehålla radbrytningar och tabbar,
+        // vilket gör att denna assertion failar.
+        $this->assertStringContainsString('ID:777 CLASS:my-class SEARCH:search-99', $result);
+    }
+
+    public function testItSetsDefaultEmptyStringForMissingInjectableBlocks(): void
+    {
+        // En mall utan block och utan extends (så vi slipper syntaxfel från kvarlämnade block)
+        $templatePath = $this->tempViewsPath . 'empty-inject.ratio.php';
+        file_put_contents(
+            $templatePath,
+            'VALUES:{{ $pageId }}{{ $pageClass }}{{ $searchId }}'
+        );
+
+        $result = $this->viewer->render('empty-inject');
+
+        // Detta dödar LogicalNot-mutanten.
+        // Om variablerna inte sätts till '' kommer eval() kasta ett fel (Undefined variable).
+        $this->assertStringContainsString('VALUES:', $result);
+    }
+
     public function testComponentWithNamedSlotsAndDynamicAttributes(): void
     {
         $componentPath = "{$this->tempViewsPath}components/card_with_slots.ratio.php";
