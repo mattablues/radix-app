@@ -1,64 +1,78 @@
 <!doctype html>
-<html lang="<?= getenv('APP_LANG'); ?>">
+<html lang="<?= secure_output((string) getenv('APP_LANG')); ?>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>500 - Ett fel uppstod</title>
-  <link rel="stylesheet" href="/css/app.css">
+  <title>500 - Systemfel | Radix Engine</title>
+  <link rel="stylesheet" href="<?= versioned_file('/css/app.css') ?>">
   <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png">
 </head>
-<body class="bg-slate-50 text-slate-600 antialiased min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-600 antialiased min-h-screen flex flex-col font-sans">
 
-  <header class="w-full bg-white border-b border-gray-200">
-    <div class="container-centered mx-auto px-4 sm:px-6">
+  <!-- Header: Enhetlig Radix-profil -->
+  <header class="w-full bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
+    <div class="container-centered mx-auto px-6">
       <div class="h-16 flex justify-between items-center">
-        <a href="<?= getenv('APP_URL') ?>" class="flex items-center gap-2 transition-opacity hover:opacity-80">
-          <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-10 grayscale opacity-50">
-          <span class="text-xl font-bold text-slate-900 tracking-tight"><?= getenv('APP_NAME'); ?></span>
+        <a href="<?= route('home.index') ?>" class="flex items-center gap-2.5 group">
+          <div class="relative size-8">
+            <div class="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-0.5 transform -rotate-12 group-hover:rotate-0 transition-transform duration-500">
+              <div class="bg-blue-600 rounded-tl-sm rounded-br-[1px]"></div>
+              <div class="bg-slate-200 rounded-tr-sm rounded-bl-[1px]"></div>
+              <div class="bg-slate-300 rounded-bl-sm rounded-tr-[1px]"></div>
+              <div class="bg-slate-900 rounded-br-sm rounded-tl-[1px]"></div>
+            </div>
+          </div>
+          <span class="text-lg font-black text-slate-900 tracking-tighter italic">Radix</span>
         </a>
-        <a href="<?= getenv('APP_URL') ?>" class="p-2 rounded-full text-slate-400 hover:text-indigo-600 transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-            <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z" />
-            <path d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z" />
+
+        <a href="<?= route('home.index') ?>" class="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all group" title="Gå hem">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
           </svg>
         </a>
       </div>
     </div>
   </header>
 
-  <main class="grow flex items-center justify-center p-6">
+  <!-- Main Content -->
+  <main class="grow flex items-center justify-center p-6 relative overflow-hidden">
+    <!-- Bakgrundsdekor: Kritisk ton (Red/Slate) -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[500px] bg-red-50/50 rounded-full blur-3xl -z-10"></div>
+
     <div class="max-w-md w-full text-center">
-      <div class="relative mb-4">
-        <span class="text-[120px] font-black text-red-50 select-none leading-none">500</span>
-        <div class="absolute inset-0 flex items-center justify-center">
-            <h1 class="text-3xl font-black text-slate-800 uppercase tracking-tight">Ojdå!</h1>
+      <div class="relative mb-8">
+        <span class="text-[140px] font-black text-slate-200 select-none leading-none tracking-tighter opacity-50">500</span>
+        <div class="absolute inset-0 flex items-center justify-center pt-8">
+            <h1 class="text-2xl font-black text-red-600 uppercase tracking-[0.2em]">Runtime Error</h1>
         </div>
       </div>
 
-      <div class="bg-white border border-gray-200 p-8 rounded-2xl shadow-xl relative z-10">
-        <h2 class="text-xl font-bold text-gray-900 mb-3">Ett tekniskt fel uppstod</h2>
-        <p class="text-slate-500 mb-8 leading-relaxed">
-          Något gick snett på servern. Vi har blivit informerade och jobbar på att lösa det. Prova att ladda om sidan.
+      <div class="bg-white border border-gray-100 p-10 rounded-[2.5rem] shadow-2xl shadow-red-900/5 relative z-10 text-left">
+        <h2 class="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide text-center">Systemavbrott detekterat</h2>
+        <p class="text-sm text-slate-500 mb-8 leading-relaxed text-center">
+          Ett oväntat undantag inträffade under exekveringen av din begäran. Loggningsmotorn har registrerat händelsen för vidare analys.
         </p>
 
-        <div class="flex flex-col gap-3">
-            <button onclick="location.reload()" class="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-100 hover:bg-red-700 transition-all active:scale-[0.98] cursor-pointer">
-                Ladda om sidan
+        <div class="flex flex-col gap-4">
+            <button onclick="location.reload()" class="inline-flex items-center justify-center px-8 py-4 bg-red-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-red-500/20 hover:bg-red-700 transition-all active:scale-[0.98] cursor-pointer">
+                Försök återansluta
             </button>
-            <a href="<?= getenv('APP_URL') ?>" class="text-sm font-semibold text-slate-400 hover:text-slate-600 transition-colors py-2">
-                Eller gå tillbaka till hem
+            <a href="<?= route('home.index') ?>" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 text-center uppercase tracking-widest transition-colors py-2">
+                Återgå till säker miljö
             </a>
         </div>
       </div>
     </div>
   </main>
 
-  <footer class="py-8">
-    <p class="text-xs text-slate-400 font-medium text-center italic tracking-wide">
-        &copy; <?= copyright(getenv('APP_COPY'), getenv('APP_COPY_YEAR')); ?>
+  <!-- Footer -->
+  <footer class="py-10 border-t border-gray-100 bg-white">
+    <p class="text-[10px] font-bold text-slate-400 text-center uppercase tracking-[0.3em]">
+        &copy; <?= copyright((string) getenv('APP_COPY'), (string) getenv('APP_COPY_YEAR')); ?> | Radix Kernel
     </p>
   </footer>
+
 </body>
 </html>

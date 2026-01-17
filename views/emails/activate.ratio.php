@@ -1,39 +1,41 @@
 {% extends "layouts/email.ratio.php" %}
-{% block title %}Aktivera ditt konto{% endblock %}
+{% block title %}Verifiera ditt konto{% endblock %}
 
 {% block body %}
-  <style>
-    @media only screen and (max-width:600px) {
-      .body-text { font-size:16px !important; line-height:1.65 !important; }
-    }
-  </style>
+  <p style="margin:0 0 16px 0; color:#0f172a; font-weight: 700;">Välkommen till Radix Engine</p>
 
-  <p class="body-text" style="margin:0 0 8px 0; color:#111827;">Hej {{ $firstName }} {{ $lastName }},</p>
-  <p class="body-text" style="margin:0 0 12px 0; color:#4B5563;">
-    {{ $introText }}
+  <p style="margin:0 0 12px 0; color:#334155; line-height: 1.6;">
+    Hej {{ $firstName }} {{ $lastName }},
   </p>
 
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+  <p style="margin:0 0 24px 0; color:#475569; line-height: 1.6;">
+    {{ $introText }} För att få full tillgång till systemets funktioner och kontrollpanel behöver du verifiera din e-postadress.
+  </p>
+
+  <!-- Åtgärdsknapp -->
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
-      <td style="padding: 12px 0;">
-        <a href="{{ $url }}" class="btn" style="display:inline-block; background:#2563EB; color:#ffffff; font-weight:700; font-size:15px; padding:14px 20px; border-radius:6px; text-decoration:none;">
-          Aktivera konto
+      <td align="center" style="padding: 16px 0 32px 0;">
+        <a href="{{ $url }}" class="btn-primary">
+          Aktivera mitt konto
         </a>
       </td>
     </tr>
   </table>
 
-  <p class="muted" style="font-size:12px; color:#6B7280; margin:12px 0 4px 0;">
-    Om knappen inte fungerar, kopiera och klistra in länken nedan i din webbläsare:
-  </p>
-  <p class="body-text" style="word-break: break-all; color:#111827; font-size:12px; margin:0 0 12px 0; text-decoration:underline;">
-    {{ $url }}
-  </p>
+  <!-- Fallback länk -->
+  <div style="background-color: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+    <p style="margin:0 0 8px 0; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Säkerhetskopia av länk</p>
+    <p style="margin:0; word-break: break-all; color: #2563eb; font-size: 12px; font-family: monospace;">
+      {{ $url }}
+    </p>
+  </div>
 
-  <table role="presentation" width="100%" style="margin: 16px 0;">
-    <tr><td style="border-top:1px solid #E5E7EB; height:1px; line-height:1px; font-size:0;">&nbsp;</td></tr>
-  </table>
+  <div style="border-top: 1px solid #e2e8f0; padding-top: 20px;">
+    <p style="margin:0; color:#64748b; font-size: 14px; line-height: 1.6;">{{ $body }}</p>
+  </div>
 
-  <p class="body-text" style="margin:0; color:#4B5563;">{{ $body }}</p>
-  <p class="muted" style="margin-top:16px; font-size:12px; color:#6B7280;">Skickat {{ date('Y-m-d H:i') }}</p>
+  <p style="margin-top: 32px; font-size: 11px; color: #94a3b8; text-align: center; font-style: italic;">
+    Systemutsändning via Radix Auth: {{ date('Y-m-d H:i') }}
+  </p>
 {% endblock %}
