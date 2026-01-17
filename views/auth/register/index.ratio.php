@@ -65,7 +65,7 @@
           </div>
 
           <div class="relative pt-2">
-            <button type="submit" class="w-full py-4 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all duration-300 transform active:scale-[0.98] cursor-pointer">
+            <button type="submit" class="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all duration-300 transform active:scale-[0.98] cursor-pointer">
               Registrera konto
             </button>
 

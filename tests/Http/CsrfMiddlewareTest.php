@@ -175,15 +175,10 @@ final class CsrfMiddlewareTest extends TestCase
         $resp2 = $this->runMw($req2, $sessionToken);
         $this->assertSame(200, $resp2->getStatusCode());
 
-        // För felvägen: kapsla i output buffering och stäng själv
+        // För felvägen: ErrorResponder sköter nu sin egen buffering internt
         $req3 = $this->makeReq('POST', [], ['HTTP_X_CSRF_TOKEN' => 'WRONG']);
-        ob_start();
-        try {
-            $resp3 = $this->runMw($req3, $sessionToken);
-            $this->assertSame(419, $resp3->getStatusCode());
-        } finally {
-            ob_end_clean();
-        }
+        $resp3 = $this->runMw($req3, $sessionToken);
+        $this->assertSame(419, $resp3->getStatusCode());
     }
 
     public function testLowercaseMethodIsStillProtectedViaUppercase(): void
@@ -193,13 +188,7 @@ final class CsrfMiddlewareTest extends TestCase
 
         // Metod i gemener, men fel token → ska fortfarande skyddas (419)
         $req = $this->makeReq('post', ['csrf_token' => $badToken]);
-
-        ob_start();
-        try {
-            $resp = $this->runMw($req, $sessionToken);
-            $this->assertSame(419, $resp->getStatusCode());
-        } finally {
-            ob_end_clean();
-        }
+        $resp = $this->runMw($req, $sessionToken);
+        $this->assertSame(419, $resp->getStatusCode());
     }
 }

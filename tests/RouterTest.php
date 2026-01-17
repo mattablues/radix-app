@@ -38,6 +38,23 @@ class RouterTest extends TestCase
         $this->assertEquals('GET', $params['method']);
     }
 
+    public function testRoutePathByNameThrowsExceptionIfRouteNotFound(): void
+    {
+        // Rensa statiska routeNames för ett rent test
+        $ref = new ReflectionClass(Router::class);
+        $namesProp = $ref->getProperty('routeNames');
+        $namesProp->setAccessible(true);
+        $namesProp->setValue(null, []);
+
+        $routeName = 'non.existent.route';
+
+        // Vi kräver exakt matchning på felmeddelandet för att döda Concat-mutanter
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Route name ' . $routeName . ' does not exist');
+
+        Router::routePathByName($routeName);
+    }
+
     public function testCanMatchSimpleParameterRoute(): void
     {
         $this->router->get('/user/{id}', function () {
