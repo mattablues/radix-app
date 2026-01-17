@@ -18,10 +18,24 @@
   <header class="sticky top-0 z-50 w-full bg-gray-900 shadow-lg">
     <div class="container-base relative">
       <div class="h-16 flex items-center justify-between">
-        <a href="{{ route('home.index') }}" class="flex items-center gap-2.5 group transition-all">
-          <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-9 grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
-          <span class="text-xl font-black text-white tracking-tighter italic">{{ getenv('APP_NAME') }}</span>
-        </a>
+<a href="{{ route('home.index') }}" class="flex items-center gap-3 group transition-all">
+  <div class="relative size-9">
+    <!-- Kub-loggan optimerad för Admin-vyn -->
+    <div class="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-0.5 transform -rotate-12 group-hover:rotate-0 transition-transform duration-500">
+      <div class="bg-blue-500 rounded-tl-md rounded-br-[1px] shadow-sm"></div>
+      <div class="bg-slate-500 rounded-tr-md rounded-bl-[1px] opacity-80 group-hover:opacity-100 transition-opacity"></div>
+      <div class="bg-slate-600 rounded-bl-md rounded-tr-[1px] opacity-80 group-hover:opacity-100 transition-opacity"></div>
+      <div class="bg-slate-400 rounded-br-md rounded-tl-[1px] shadow-md group-hover:bg-blue-400 transition-colors"></div>
+    </div>
+    <!-- Liten status-glimt -->
+    <div class="absolute top-1 left-1 size-1 bg-white/40 rounded-full"></div>
+  </div>
+
+  <div class="flex flex-col -space-y-1">
+    <span class="text-xl font-black text-white tracking-tighter italic">Radix</span>
+    <span class="text-[8px] font-bold uppercase tracking-[0.4em] text-blue-400/80 group-hover:text-blue-400 transition-colors">Control</span>
+  </div>
+</a>
 
         <div class="flex items-center gap-4">
           <!-- Mobil: sökikon -->

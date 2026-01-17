@@ -3,15 +3,6 @@
 {% block pageId %}register{% endblock %}
 {% block body %}
     <div class="w-full max-w-xl px-4 py-8">
-        <!-- Logo / Header -->
-        <div class="flex flex-col items-center mb-8">
-            <a href="{{ route('home.index') }}" class="mb-4 transition-transform hover:scale-105">
-                <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-16">
-            </a>
-            <h1 class="text-2xl font-bold text-gray-900">Skapa ett konto</h1>
-            <p class="text-sm text-gray-500 mt-1">Gör som många andra, bli en del av oss idag!</p>
-        </div>
-
         <form action="{{ route('auth.register.create') }}" method="post" class="bg-white border border-gray-200 p-6 md:p-10 rounded-2xl shadow-xl">
           {{ csrf_field()|raw }}
           {{ honeypot_field()|raw }}

@@ -3,15 +3,6 @@
 {% block pageId %}login{% endblock %}
 {% block body %}
     <div class="w-full max-w-md px-4">
-        <!-- Logo / Header ovanför kortet -->
-        <div class="flex flex-col items-center mb-8">
-            <a href="{{ route('home.index') }}" class="mb-4 transition-transform hover:scale-105">
-                <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-16">
-            </a>
-            <h1 class="text-2xl font-bold text-gray-900">Välkommen tillbaka</h1>
-            <p class="text-sm text-gray-500 mt-1">Logga in på ditt konto för att fortsätta</p>
-        </div>
-
         <form action="{{ route('auth.login.create') }}" method="post" class="bg-white border border-gray-200 p-8 rounded-2xl shadow-xl">
           {{ csrf_field()|raw }}
 

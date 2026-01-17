@@ -3,15 +3,6 @@
 {% block pageId %}password-reset{% endblock %}
 {% block body %}
     <div class="w-full max-w-xl px-4 py-8">
-        <!-- Logo / Header ovanför kortet -->
-        <div class="flex flex-col items-center mb-8">
-            <a href="{{ route('home.index') }}" class="mb-4 transition-transform hover:scale-105">
-                <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-16">
-            </a>
-            <h1 class="text-2xl font-bold text-gray-900">Välj nytt lösenord</h1>
-            <p class="text-sm text-gray-500 mt-1 text-center px-4">Ange ditt nya lösenord nedan för att säkra ditt konto.</p>
-        </div>
-
         <form action="{{ route('auth.password-reset.create', ['token' => $token]) }}" method="post" class="bg-white border border-gray-200 p-6 md:p-10 rounded-2xl shadow-xl">
           {{ csrf_field()|raw }}
           <input type="hidden" name="token" value="{{ $token }}">

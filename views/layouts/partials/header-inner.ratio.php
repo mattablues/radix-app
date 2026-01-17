@@ -1,8 +1,30 @@
 
 <!-- Logo -->
-<a href="{{ route('home.index') }}" class="flex items-center gap-2.5 z-70 group">
-  <img src="/images/graphics/logo.png" alt="Radix Logo" class="w-auto h-9 transition-transform group-hover:scale-105">
-  <span class="text-xl font-black text-slate-900 tracking-tighter italic">Radix</span>
+<a href="{{ route('home.index') }}" class="flex items-center gap-3 z-70 group">
+  <div class="relative size-10">
+    <!-- Kub-ikonen uppbyggd av geometriska block -->
+    <div class="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-0.5 transform -rotate-12 group-hover:rotate-0 transition-transform duration-500">
+      <!-- Topp-vänster: Kärnan (Radix) -->
+      <div class="bg-blue-600 rounded-tl-md rounded-br-[2px] shadow-sm"></div>
+      <!-- Topp-höger: Struktur -->
+      <div class="bg-slate-300 rounded-tr-md rounded-bl-[2px] group-hover:bg-slate-400 transition-colors"></div>
+      <!-- Botten-vänster: Stabilitet -->
+      <div class="bg-slate-400 rounded-bl-md rounded-tr-[2px] group-hover:bg-slate-500 transition-colors"></div>
+      <!-- Botten-höger: Tillväxt -->
+      <div class="bg-slate-900 rounded-br-md rounded-tl-[2px] shadow-md"></div>
+    </div>
+
+    <!-- En liten "glimt" effekt i det blå blocket -->
+    <div class="absolute top-1 left-1 size-1.5 bg-white/30 rounded-full blur-[1px]"></div>
+  </div>
+
+  <div class="flex flex-col -space-y-1">
+    <div class="flex items-center gap-1">
+      <span class="text-xl font-black text-slate-900 tracking-tighter italic">Radix</span>
+      <span class="size-1.5 bg-blue-600 rounded-full animate-pulse mt-1"></span>
+    </div>
+    <span class="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-400 group-hover:text-blue-600 transition-colors">Framework</span>
+  </div>
 </a>
 
 <!-- Desktop Navigation -->
