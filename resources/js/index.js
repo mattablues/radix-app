@@ -4,7 +4,6 @@ import Ajax from "@imacrayon/alpine-ajax";
 import Ui from "@alpinejs/ui";
 import Focus from "@alpinejs/focus";
 import { addTableAria } from "./addTableAria";
-import { handleCookiesBanner } from "./cookies";
 import SearchUsers from './search-users';
 import SearchDeletedUsers from './search-deleted-users';
 
@@ -18,7 +17,6 @@ Alpine.start();
 
 // Kör dina funktioner
 addTableAria();
-handleCookiesBanner();
 
 document.addEventListener('DOMContentLoaded', () => {
     const tokenMeta = document.querySelector('meta[name="Authorization"]');

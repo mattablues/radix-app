@@ -1,51 +1,84 @@
 {% extends "layouts/admin.ratio.php" %}
 {% block title %}Visa konto{% endblock %}
-{% block pageId %}user{% endblock %}
+{% block pageId %}user-index{% endblock %}
 {% block searchId %}search-users{% endblock %}
 {% block body %}
-        <section>
-          <h1 class="text-3xl font-semibold mb-8">Konto</h1>
+    <section>
+      <div class="mb-8">
+        <h1 class="text-3xl font-semibold mb-2">Profil</h1>
+        <p class="text-gray-600">Detaljerad information om användarkontot.</p>
+      </div>
 
-          <h3 class="text-[20px] font-semibold mb-3">Kontoinformation</h3>
+      <div class="w-full max-w-3xl">
+        <!-- Huvudkort -->
+        <div class="overflow-hidden border border-gray-200 rounded-2xl bg-white shadow-sm">
+          <div class="flex flex-col md:flex-row items-stretch">
 
-          <div class="w-full max-w-2xl">
-            <div class="flex flex-col sm:flex-row items-stretch gap-4 border border-gray-200 rounded-xl bg-white/70 backdrop-blur-sm">
-              <figure class="flex items-center justify-center rounded-t-xl sm:rounded-t-none sm:rounded-l-xl sm:justify-start p-4 bg-gray-50">
-                <div class="relative">
-                  <img src="{{ versioned_file($currentUser->getAttribute('avatar')) }}" alt="Avatar" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-2 ring-gray-100">
-                  <span class="sr-only">Profilbild</span>
+            <!-- Vänster sida: Avatar -->
+            <figure class="flex flex-col items-center justify-center p-8 bg-slate-50 border-b md:border-b-0 md:border-r border-gray-100 min-w-[200px]">
+              <div class="relative">
+                <img src="{{ versioned_file($currentUser->getAttribute('avatar')) }}" alt="Avatar" class="w-32 h-32 rounded-full object-cover ring-4 ring-white shadow-md">
+                <div class="absolute bottom-1 right-1 w-5 h-5 border-4 border-white rounded-full {{ $currentUser->isOnline() ? 'bg-green-500' : 'bg-gray-300' }}"></div>
+              </div>
+              <figcaption class="mt-4 text-center">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wider {{ $currentUser->isAdmin() ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-800' }}">
+                  {{ $currentUser->fetchGuardedAttribute('role') }}
+                </span>
+              </figcaption>
+            </figure>
+
+            <!-- Höger sida: Information -->
+            <div class="flex-1 p-6 md:p-8">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-6">
+                <div>
+                  <dt class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Namn</dt>
+                  <dd class="text-base font-semibold text-gray-900">{{ $currentUser->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</dd>
                 </div>
-              </figure>
-              <div class="flex-1 p-4 sm:px-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-3">
-                  <dl>
-                    <dt class="text-xs uppercase tracking-wide text-gray-500">Namn</dt>
-                    <dd class="text-sm text-gray-900">{{ $currentUser->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</dd>
-                  </dl>
-                  <dl>
-                    <dt class="text-xs uppercase tracking-wide text-gray-500">E‑post</dt>
-                    <dd class="text-sm text-gray-900 break-all">{{ $currentUser->getAttribute('email') }}</dd>
-                  </dl>
-                  <dl>
-                    <dt class="text-xs uppercase tracking-wide text-gray-500">Behörighet</dt>
-                    <dd class="text-sm text-gray-900">{{ $currentUser->fetchGuardedAttribute('role') }}</dd>
-                  </dl>
-                  <dl>
-                    <dt class="text-xs uppercase tracking-wide text-gray-500">Skapat</dt>
-                    <dd class="text-sm text-gray-900">{{ $currentUser->getAttribute('created_at') }}</dd>
-                  </dl>
-                  <dl>
-                    <dt class="text-xs uppercase tracking-wide text-gray-500">Uppdaterat</dt>
-                    <dd class="text-sm text-gray-900">{{ $currentUser->getAttribute('updated_at') }}</dd>
-                  </dl>
+
+                <div>
+                  <dt class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">E‑postadress</dt>
+                  <dd class="text-base text-gray-900 break-all">{{ $currentUser->getAttribute('email') }}</dd>
+                </div>
+
+                <div>
+                  <dt class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Medlem sedan</dt>
+                  <dd class="text-sm text-gray-600">{{ $currentUser->getAttribute('created_at') }}</dd>
+                </div>
+
+                <div>
+                  <dt class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Senast uppdaterad</dt>
+                  <dd class="text-sm text-gray-600">{{ $currentUser->getAttribute('updated_at') }}</dd>
+                </div>
+              </div>
+
+              <!-- Status-indikator -->
+              <div class="mt-8 pt-6 border-t border-gray-50 flex items-center gap-4">
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Kontostatus</span>
+                    <span class="inline-flex items-center text-sm font-medium">
+                        <span class="w-2 h-2 rounded-full mr-2 {{ $currentUser->getRelation('status')->getAttribute('status') === 'activated' ? 'bg-green-500' : 'bg-red-500' }}"></span>
+                        {{ $currentUser->getRelation('status')->translateStatus($currentUser->getRelation('status')->getAttribute('status')) }}
+                    </span>
                 </div>
               </div>
             </div>
-            <div class="flex flex-wrap gap-2 justify-end px-1 sm:px-0 mt-3">
-              <a href="{{ route('user.edit') }}" class="inline-flex items-center text-sm border border-transparent bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 active:bg-blue-800 transition-colors rounded-md">
-                Redigera
-              </a>
-            </div>
           </div>
-        </section>
+        </div>
+
+        <!-- Åtgärder nedanför kortet -->
+        <div class="flex items-center justify-between mt-6 px-2">
+          <a href="{{ route('admin.user.index') }}" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Tillbaka till listan
+          </a>
+          <div class="flex gap-3">
+            <a href="{{ route('user.edit') }}" class="inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all rounded-lg shadow-md shadow-indigo-100">
+              Redigera profil
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
 {% endblock %}

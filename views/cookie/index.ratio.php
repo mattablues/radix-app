@@ -1,51 +1,81 @@
 {% extends "layouts/main.ratio.php" %}
-{% block title %}Cookies{% endblock %}
+{% block title %}Cookies och Systemets Säkerhet{% endblock %}
 {% block pageId %}cookies{% endblock %}
 {% block body %}
-        <section class="py-6">
-          <div class="container-centered-sm">
-            <h1 class="text-3xl font-semibold mb-6">Cookies</h1>
+    <section class="py-12 bg-slate-50">
+      <div class="container-centered-sm">
+        <div class="mb-12 text-center">
+            <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-4">Integritet & Säkerhet</h1>
+            <div class="h-1.5 w-20 bg-blue-600 rounded-full mx-auto mb-6"></div>
+            <p class="text-lg text-slate-500 leading-relaxed">
+                Radix Systemet är byggt med din integritet som högsta prioritet. Här beskriver vi hur vi använder modern teknik för att hålla din session säker.
+            </p>
+        </div>
 
-            <article class="mb-6">
-              <h3 class="text-xl font-semibold mb-2">Vad använder vi cookies till?</h3>
-              <p class="mb-2 text-gray-700">Den här webbplatsen innehåller cookies för att ge dig tillgång till alla funktioner på webbplatsen, anpassa din användarupplevelse och göra analyser av hur väl webbplatsen fungerar. Till exempel genom att mäta antalet besökare på webbplatsen.</p>
-              <p class="text-gray-700">Vi använder temporära sessionscookies samt en vanlig cookie för att spara undan login och lösenord om besökaren vill. Det som sparas i denna cookie är inte själva lösenordet utan en unik identitet som ej kan användas för att ta reda på lösenord.</p>
+        <div class="space-y-8">
+            <!-- Sektion 1: Systemets motor -->
+            <article class="bg-white border border-gray-200 p-8 rounded-3xl shadow-sm">
+                <h3 class="text-xl font-bold text-slate-800 mb-4">Hur fungerar Radix-sessions?</h3>
+                <p class="text-slate-600 leading-relaxed mb-4">
+                    Radix använder cookies uteslutande för att upprätthålla en säker koppling mellan din webbläsare och vår server. Utan dessa små textfiler skulle systemet inte kunna verifiera din identitet vid navigering, vilket krävs för att komma åt administrativa verktyg eller personliga inställningar.
+                </p>
+                <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl">
+                    <p class="text-sm text-blue-900 font-medium italic">
+                        <strong>Teknisk notering:</strong> Vi lagrar aldrig känslig information eller lösenord i cookies. Vi använder kryptografiskt säkra sessions-nycklar som genereras unikt för varje användare och session.
+                    </p>
+                </div>
             </article>
 
-            <article class="mb-6">
-              <h3 class="text-xl font-semibold mb-2">Vad är cookies?</h3>
+            <!-- Sektion 2: Kategorier -->
+            <article class="bg-white border border-gray-200 p-8 rounded-3xl shadow-sm">
+                <h3 class="text-xl font-bold text-slate-800 mb-6">Systemkritiska mekanismer</h3>
 
-              <p class="mb-2 text-gray-700">En cookie är en liten textfil som skickas från vår webbserver och som sparas av din webbläsare. Det finns två typer av cookies, vanliga cookies och session cookies. Sessionscookies försvinner när du stänger din webbläsare och sparas därför inte, medan vanliga cookies lagras på din dator under en längre tid.</p>
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="text-sm font-black uppercase tracking-widest text-blue-600 mb-2">Autentisering & Session</h4>
+                        <p class="text-sm text-slate-600">
+                            Hanterar din inloggningsstatus. Denna cookie är temporär och raderas normalt när du stänger din webbläsare eller loggar ut från systemet.
+                        </p>
+                    </div>
 
-              <p class="mb-2 text-gray-700">Vissa cookies är valfria och vissa cookies är nödvändiga för att webbplatsen ska fungera. Cookies delas ofta in i fyra kategorier:</p>
+                    <div class="pt-4 border-t border-gray-50">
+                        <h4 class="text-sm font-black uppercase tracking-widest text-blue-600 mb-2">CSRF-skydd</h4>
+                        <p class="text-sm text-slate-600">
+                            En obligatorisk säkerhetsåtgärd i Radix som förhindrar "Cross-Site Request Forgery". Det garanterar att det faktiskt är du som utför de handlingar (som t.ex. att spara data) som skickas till systemet.
+                        </p>
+                    </div>
 
-              <h6 class="text-lg font-medium mb-0.5">Strikt nödvändiga cookies</h6>
-              <p class="mb-2 text-gray-700">Dessa cookies är nödvändiga för att användaren ska kunna surfa på webbplatsen och för att kunna använda dess funktioner, såsom att spara varor i kassan.</p>
-
-              <h6 class="text-lg font-medium mb-0.5">Funktionella cookies</h6>
-              <p class="mb-2 text-gray-700">Cookies som gör det möjligt för webbplatsen att tillhandahålla förbättrad funktionalitet och personalisering är funktionella cookies. Dessa cookies kommer att tillåta en webbplats att till exempel komma ihåg val som användaren har gjort tidigare.</p>
-
-              <h6 class="text-lg font-medium mb-0.5">Analytiska cookies</h6>
-              <p class="mb-2 text-gray-700">Även kända som prestandacookies, dessa cookies samlar in information om hur användare använder en webbplats, som vilka sidor de besöker och vilka länkar de klickade på. Deras enda syfte är att förbättra webbplatsens funktioner.</p>
-
-              <h6 class="text-lg font-medium mb-0.5">Marknadsföringscookies</h6>
-              <p class="text-gray-700">Dessa cookies spårar besökares onlineaktivitet för att hjälpa annonsörer att leverera mer relevant reklam eller för att begränsa hur många gånger de ser en annons.</p>
+                    <div class="pt-4 border-t border-gray-50">
+                        <h4 class="text-sm font-black uppercase tracking-widest text-slate-400 mb-2">Inställningar</h4>
+                        <p class="text-sm text-slate-600">
+                            Kommer ihåg dina personliga preferenser i gränssnittet, såsom valda filter i listvyer eller om du har accepterat systemets villkor.
+                        </p>
+                    </div>
+                </div>
             </article>
 
-            <article>
-              <h3 class="text-xl font-semibold mb-2">Så kan du undvika cookies</h3>
-              <h6 class="text-lg font-medium mb-0.5">Inställningar i din webbläsare</h6>
-              <p class="mb-2 text-gray-700">Genom att använda webbläsarinställningarna kan du blockera cookies. Det kan dock påverka webbplatsernas beteende. Här är länkar till information om hur du gör detta i några av de vanligaste webbläsarna:</p>
+            <!-- Sektion 3: Hantering -->
+            <article class="bg-white border border-gray-200 p-8 rounded-3xl shadow-sm">
+                <h3 class="text-xl font-bold text-slate-800 mb-4">Webbläsarinställningar</h3>
+                <p class="text-sm text-slate-600 mb-6">
+                    Radix kräver att cookies är aktiverade för att du ska kunna logga in. Du kan dock rensa din historik och dina cookies när som helst via din webbläsares inställningar.
+                </p>
 
-              <ul class="list-disc list-inside space-y-1 text-gray-700">
-                <li><a href="https://support.microsoft.com/sv-se/microsoft-edge/ta-bort-cookies-i-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09" target="_blank" class="text-blue-600 hover:text-blue-800 transition-colors">Microsoft Edge</a></li>
-                <li><a href="https://support.google.com/chrome/answer/95647?hl=sv" target="_blank" class="text-blue-600 hover:text-blue-800 transition-colors">Google Chrome</a></li>
-                <li><a href="https://support.mozilla.org/sv/kb/kakor-information-webbplatser-lagrar-pa-din-dator" target="_blank" class="text-blue-600 hover:text-blue-800 transition-colors">Mozilla Firefox</a></li>
-                <li><a href="https://support.apple.com/sv-se/guide/safari/sfri11471/mac" target="_blank" class="text-blue-600 hover:text-blue-800 transition-colors">Safari</a></li>
-              </ul>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <a href="https://support.google.com/chrome/answer/95647?hl=sv" target="_blank" class="flex items-center justify-center p-3 border border-gray-100 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 hover:text-blue-600 transition-all">Chrome</a>
+                    <a href="https://support.mozilla.org/sv/kb/kakor-information-webbplatser-lagrar-pa-din-dator" target="_blank" class="flex items-center justify-center p-3 border border-gray-100 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 hover:text-blue-600 transition-all">Firefox</a>
+                    <a href="https://support.apple.com/sv-se/guide/safari/safari-manage-cookies-and-website-data-sfri11471/mac" target="_blank" class="flex items-center justify-center p-3 border border-gray-100 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 hover:text-blue-600 transition-all">Safari</a>
+                    <a href="https://support.microsoft.com/sv-se/microsoft-edge/ta-bort-cookies-i-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09" target="_blank" class="flex items-center justify-center p-3 border border-gray-100 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 hover:text-blue-600 transition-all">Edge</a>
+                </div>
             </article>
 
-            <p class="my-3 text-gray-700">Läs mer om lagen om elektronisk kommunikation på <a href="https://www.pts.se/" class="text-blue-600 hover:text-blue-800 transition-colors" target="_blank">www.pts.se</a>.</p>
-          </div>
-        </section>
+            <div class="text-center pt-8">
+                <p class="text-sm text-slate-400 italic">
+                    Radix Engine följer gällande regler för elektronisk kommunikation. Läs mer på
+                    <a href="https://www.pts.se/" class="text-blue-500 hover:underline" target="_blank">Post- och telestyrelsen</a>.
+                </p>
+            </div>
+        </div>
+      </div>
+    </section>
 {% endblock %}

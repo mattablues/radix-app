@@ -27,11 +27,11 @@
   </main>
   {% endyield content %}
 
-  <footer class="text-center [--footer-h:60px]">
+  <footer class="bg-white border-t border-slate-100 pt-16 pb-8">
     {% yield footerContainer %}
-    <div class="container-centered py-4">
-    {% include "layouts/partials/footer-inner.ratio.php" %}
-    </div>
+      <div class="container-centered">
+        {% include "layouts/partials/footer-inner.ratio.php" %}
+      </div>
     {% endyield footerContainer %}
   </footer>
 

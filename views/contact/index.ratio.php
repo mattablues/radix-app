@@ -1,102 +1,108 @@
 {% extends "layouts/main.ratio.php" %}
-{% block title %}Kontakta oss{% endblock %}
+{% block title %}Kontakt | Radix System{% endblock %}
 {% block pageId %}contact{% endblock %}
 {% block body %}
-    <section>
+    <section class="py-8">
       <div class="container-centered layout-aside-both [--aside-left-w:250px] [--aside-right-w:250px]">
-        <aside class="area-aside-left sticky-top pt-5 lg:py-5">
-          <div class="lg:mb-4 width-[250px]">
-            <ul class="flex flex-col gap-3">
-              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
-                <h4 class="mb-2 text-[18px]">Sidebar left</h4>
-                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Beatae cumque distinctio exercitationem ipsa officiis porro quae quis recusandae.</p>
-              </li>
-              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
-                <h4 class="mb-2 text-[18px]">Sidebar left</h4>
-                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Architecto facilis labore porro quam? Accusamus ad aliquam laudantium velit.</p>
-              </li>
-              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
-                <h4 class="mb-2 text-[18px]">Sidebar left</h4>
-                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusamus itaque, laborum minus molestiae!</p>
-              </li>
-            </ul>
+
+        <!-- Vänster Sidebar: Systemstatus & Info -->
+        <aside class="area-aside-left sticky-top lg:pt-4">
+          <div class="space-y-4">
+            <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
+              <h4 class="font-bold text-slate-800 mb-2 uppercase text-[10px] tracking-widest text-blue-600">Teknisk Support</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Ärenden rörande frameworket eller databasen hanteras prioriterat under vardagar.</p>
+            </div>
+            <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm border-l-4 border-l-blue-500">
+              <h4 class="font-bold text-slate-800 mb-2 uppercase text-[10px] tracking-widest">Utvecklar-tips</h4>
+              <p class="text-xs text-slate-500 leading-relaxed">Bifoga gärna miljövariabler eller PHP-version om ditt ärende gäller en specifik miljö.</p>
+            </div>
           </div>
         </aside>
 
-        <div class="area-content">
-          <h1 class="text-3xl font-semibold my-6">Kontakta oss</h1>
+        <!-- Huvudinnehåll (Formulär) -->
+        <div class="area-content lg:px-6">
+          <div class="mb-8">
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Kontakta Radix</h1>
+            <p class="text-slate-500">Frågor om licensering, partnerskap eller teknisk assistans? Vi är bara ett meddelande bort.</p>
+          </div>
 
-          <form action="{{ route('contact.create') }}" method="post" class="w-full bg-white max-w-xl">
+          <form action="{{ route('contact.create') }}" method="post" class="bg-white border border-gray-200 p-6 md:p-8 rounded-[2rem] shadow-xl">
             {{ csrf_field()|raw }}
             {{ honeypot_field()|raw }}
 
-            <div class="flex gap-2">
-              <div class="relative mb-2 w-full">
-                <label for="first-name" class="block text-sm text-slate-600 mb-1.5 ml-1">Förnamn</label>
-                <input type="text" name="first_name" id="first-name" value="{{ old('first_name') }}" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 focus:ring-indigo-500 transition duration-300 ease-in">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div class="relative">
+                <label for="first-name" class="block text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Förnamn</label>
+                <input type="text" name="first_name" id="first-name" value="{{ old('first_name') }}"
+                       placeholder="Mats"
+                       class="w-full px-4 py-3 text-sm border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition duration-300 shadow-sm">
                 {% if (error($errors, 'first_name')) : %}
-                <span class="block right-1 absolute -bottom-4 text-xxs text-red-600">{{ error($errors, 'first_name') }}</span>
+                  <span class="block absolute -bottom-5 left-1 text-xxs text-red-600 font-medium">{{ error($errors, 'first_name') }}</span>
                 {% endif %}
               </div>
 
-              <div class="relative mb-2 w-full">
-                <label for="last-name" class="block text-sm text-slate-600 mb-1.5 ml-1">Efternamn</label>
-                <input type="text" name="last_name" id="last-name" value="{{ old('last_name') }}" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 focus:ring-indigo-500 transition duration-300 ease-in">
+              <div class="relative">
+                <label for="last-name" class="block text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Efternamn</label>
+                <input type="text" name="last_name" id="last-name" value="{{ old('last_name') }}"
+                       placeholder="Åkebrand"
+                       class="w-full px-4 py-3 text-sm border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition duration-300 shadow-sm">
                 {% if (error($errors, 'last_name')) : %}
-                <span class="block right-1 absolute -bottom-4 text-xxs text-red-600">{{ error($errors, 'last_name') }}</span>
+                  <span class="block absolute -bottom-5 left-1 text-xxs text-red-600 font-medium">{{ error($errors, 'last_name') }}</span>
                 {% endif %}
               </div>
             </div>
 
-            <div class="relative mb-2">
-              <label for="email" class="block text-sm text-slate-600 mb-1.5 ml-1">E-postadress</label>
-              <input type="text" name="email" id="email" value="{{ old('email') }}" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 focus:ring-indigo-500 transition duration-300 ease-in">
+            <div class="relative mb-6">
+              <label for="email" class="block text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">E-postadress</label>
+              <input type="text" name="email" id="email" value="{{ old('email') }}"
+                     placeholder="mats@radix.se"
+                     class="w-full px-4 py-3 text-sm border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition duration-300 shadow-sm">
               {% if (error($errors, 'email')) : %}
-              <span class="block right-1 absolute -bottom-4 text-xxs text-red-600">{{ error($errors, 'email') }}</span>
-              {% endif %}
-            </div>
-
-            <div class="relative mb-3">
-              <label for="message" class="block text-sm text-slate-600 mb-1 ml-1">Meddelande</label>
-              <textarea name="message" id="message" cols="30" rows="10" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-0 focus:ring-indigo-500 transition duration-300 ease-in">{{ old('message') }}</textarea>
-              {% if (error($errors, 'message')) : %}
-              <span class="block right-1 absolute -bottom-2.5 text-xxs text-red-600">{{ error($errors, 'message') }}</span>
+                <span class="block absolute -bottom-5 left-1 text-xxs text-red-600 font-medium">{{ error($errors, 'email') }}</span>
               {% endif %}
             </div>
 
             <div class="relative mb-8">
-              <div class="flex gap-2 items-center">
-                <button class="text-sm whitespace-nowrap py-2 px-3 border border-blue-600 bg-blue-600 hover:bg-blue-700  transition-all duration-300 text-white rounded-lg cursor-pointer">Skicka</button>
-                {% if (error($errors, 'form-error')) : %}
-                <span class="block left-1 right-1 absolute top-12 text-xxs text-red-600 leading-3.5">{{ error($errors, 'form-error') }}</span>
-                {% endif %}
-              </div>
+              <label for="message" class="block text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Meddelande</label>
+              <textarea name="message" id="message" rows="6"
+                        placeholder="Beskriv ditt ärende här..."
+                        class="w-full px-4 py-3 text-sm border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition duration-300 shadow-sm">{{ old('message') }}</textarea>
+              {% if (error($errors, 'message')) : %}
+                <span class="block absolute -bottom-5 left-1 text-xxs text-red-600 font-medium">{{ error($errors, 'message') }}</span>
+              {% endif %}
+            </div>
+
+            <div class="relative pt-2">
+              <button type="submit" class="w-full md:w-auto px-10 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-100 transition-all duration-300 transform active:scale-[0.98] cursor-pointer">
+                Skicka förfrågan
+              </button>
+
+              {% if (error($errors, 'form-error')) : %}
+                <div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-lg">
+                  <p class="text-xxs text-red-600 font-semibold leading-tight text-center">{{ error($errors, 'form-error') }}</p>
+                </div>
+              {% endif %}
             </div>
           </form>
         </div>
 
-        <aside class="area-aside-right sticky-top pb-5 lg:py-5">
-          <div class="lg:mb-4 width-[250px] py-3 lg:py-0">
-            <ul class="flex flex-col gap-3">
-              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
-                <h4 class="mb-2 text-[18px]">Sidebar right</h4>
-                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Beatae cumque distinctio exercitationem ipsa officiis porro quae quis recusandae.</p>
+        <!-- Höger Sidebar: Tech Stack & Privacy -->
+        <aside class="area-aside-right sticky-top lg:pt-4">
+          <div class="bg-slate-900 rounded-2xl p-6 text-white shadow-xl">
+            <h4 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-4">Om Radix Support</h4>
+            <ul class="space-y-4 text-xs">
+              <li class="flex flex-col">
+                <span class="text-blue-300 text-[10px] font-bold uppercase mb-1">Partnerskap</span>
+                <p class="text-slate-400">Är du intresserad av att använda Radix i ditt nästa kommersiella projekt? Vi erbjuder skräddarsydda lösningar.</p>
               </li>
-              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
-                <h4 class="mb-2 text-[18px]">Sidebar right</h4>
-                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Architecto facilis labore porro quam.</p>
-              </li>
-              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
-                <h4 class="mb-2 text-[18px]">Sidebar right</h4>
-                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusamus itaque, laborum minus molestiae nostrum tempora vitae!</p>
-              </li>
-              <li class="border border-gray-200 px-3 pt-1 pb-2 rounded bg-white">
-                <h4 class="mb-2 text-[18px]">Sidebar right</h4>
-                <p class="text-sm">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Atque culpa dolores molestiae quas reiciendis?</p>
+              <li class="flex flex-col pt-4 border-t border-slate-800">
+                <span class="text-blue-300 text-[10px] font-bold uppercase mb-1">Säker hantering</span>
+                <p class="text-slate-400">Din data hanteras via krypterade kanaler och sparas endast så länge ärendet kräver det.</p>
               </li>
             </ul>
           </div>
         </aside>
+
       </div>
     </section>
 {% endblock %}

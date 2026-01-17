@@ -14,15 +14,24 @@
 {% block content %}
   <div class="flex-1 min-h-[calc(100vh-108px)]">
     <div class="relative">
-      <aside x-data="{ sidebarOpen:false }" class="fixed lg:left-0 left-[-300px] top-[60px] h-[calc(100vh-60px)] w-(--sidebar-aside-w) bg-white shadow z-40 overflow-y-auto hide-scrollbar transition-all duration-200"
+      <aside x-data="{ sidebarOpen:false }" class="fixed lg:left-0 left-[-300px] top-[60px] h-[calc(100vh-60px)] w-(--sidebar-aside-w) bg-white border-r border-gray-100 shadow-sm z-40 overflow-y-auto hide-scrollbar transition-all duration-200"
              x-bind:class="sidebarOpen ? 'left-0' : 'left-[-300px]'">
-        <div class="container-base py-4">
-          <nav class="space-y-1 text-sm">
-            <a href="{{ route('home.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-50 text-gray-700">Hem</a>
+        <div class="py-6 px-4">
+          <nav class="space-y-1">
+            <h4 class="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Huvudmeny</h4>
+            <a href="{{ route('home.index') }}" class="flex items-center py-2 px-3 rounded-xl hover:bg-blue-50 hover:text-blue-700 text-sm font-medium text-gray-700 transition-all">
+              Hem
+            </a>
 
-            <hr class="my-2 border-gray-200" />
-            <a href="{{ route('contact.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-50 text-gray-700">Kontakta oss</a>
-            <a href="{{ route('about.index') }}" class="block py-1.5 px-3 rounded hover:bg-gray-50 text-gray-700">Om oss</a>
+            <div class="my-4 border-t border-gray-50"></div>
+
+            <h4 class="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Information</h4>
+            <a href="{{ route('about.index') }}" class="flex items-center py-2 px-3 rounded-xl hover:bg-blue-50 hover:text-blue-700 text-sm font-medium text-gray-700 transition-all">
+              Om Radix
+            </a>
+            <a href="{{ route('contact.index') }}" class="flex items-center py-2 px-3 rounded-xl hover:bg-blue-50 hover:text-blue-700 text-sm font-medium text-gray-700 transition-all">
+              Support & Kontakt
+            </a>
           </nav>
         </div>
       </aside>

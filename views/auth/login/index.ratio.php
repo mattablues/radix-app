@@ -2,41 +2,65 @@
 {% block title %}Logga in{% endblock %}
 {% block pageId %}login{% endblock %}
 {% block body %}
-    <form action="{{ route('auth.login.create') }}" method="post"  class="w-full bg-white mx-3 max-w-md py-6 px-6 rounded-lg shadow-md">
-      <header class="flex justify-between items-center mb-3.5">
-        <h1 class="text-2xl">Logga in</h1>
-        <a href="{{ route('home.index') }}">
-          <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-10">
-        </a>
-      </header>
-      {{ csrf_field()|raw }}
-      <div class="relative mb-2">
-        <label for="email" class="block text-sm text-slate-600 mb-1.5 ml-1">E-postadress</label>
-        <input type="text" name="email" id="email" value="{{ old('email') }}" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 ring-0 focus:ring-indigo-500 transition duration-300 ease-in">
-        {% if (error($errors, 'email')) : %}
-        <span class="block right-1 absolute -bottom-4 text-xxs text-red-600">{{ error($errors, 'email') }}</span>
-        {% endif %}
-      </div>
-
-      <div class="relative mb-2">
-        <label for="password" class="block text-sm text-slate-600 mb-1.5 ml-1">Lösenord</label>
-        <input type="password" name="password" id="password" class="w-full text-sm border-slate-300 rounded-md focus:outline-none focus:border-indigo-500 ring-0 focus:ring-indigo-500 transition duration-300 ease-in">
-        {% if (error($errors, 'password')) : %}
-        <span class="block right-1 absolute -bottom-4 text-xxs text-red-600">{{ error($errors, 'password') }}</span>
-        {% endif %}
-      </div>
-
-      <div class="relative mt-6 mb-2">
-        <button class="text-sm w-full whitespace-nowrap py-2 px-3 border border-blue-600 bg-blue-600 hover:bg-blue-700 hover:border-blue-700  transition-all duration-300 text-white rounded-lg cursor-pointer">Logga in</button>
-        <div class="flex justify-end gap-2 items-center mt-1 mr-1.5">
-          {% if(getenv('APP_PRIVATE') === '0') : %}
-          <a href="{{ route('auth.register.index') }}" class="text-sm text-blue-600 hover:text-blue-800 transition-all duration-300  text-left">Registrering</a>
-          {% endif; %}
-          <a href="{{ route('auth.password-forgot.index') }}" class="text-sm text-blue-600 hover:text-blue-800 transition-all duration-300  text-left">Glömt lösenord?</a>
+    <div class="w-full max-w-md px-4">
+        <!-- Logo / Header ovanför kortet -->
+        <div class="flex flex-col items-center mb-8">
+            <a href="{{ route('home.index') }}" class="mb-4 transition-transform hover:scale-105">
+                <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-16">
+            </a>
+            <h1 class="text-2xl font-bold text-gray-900">Välkommen tillbaka</h1>
+            <p class="text-sm text-gray-500 mt-1">Logga in på ditt konto för att fortsätta</p>
         </div>
-      {% if (error($errors, 'form-error')) : %}
-        <span class="block left-1 right-1 absolute top-16 text-xxs text-red-600 leading-3.5">{{ error($errors, 'form-error') }}</span>
-      {% endif %}
-      </div>
-    </form>
+
+        <form action="{{ route('auth.login.create') }}" method="post" class="bg-white border border-gray-200 p-8 rounded-2xl shadow-xl">
+          {{ csrf_field()|raw }}
+
+          <!-- E-postadress -->
+          <div class="relative mb-6">
+            <label for="email" class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">E-postadress</label>
+            <div class="relative">
+                <input type="text" name="email" id="email" value="{{ old('email') }}"
+                       placeholder="namn@exempel.se"
+                       class="w-full pl-4 pr-4 py-3 text-sm border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition duration-300">
+            </div>
+            {% if (error($errors, 'email')) : %}
+                <span class="block absolute -bottom-5 left-1 text-xxs text-red-600 font-medium">{{ error($errors, 'email') }}</span>
+            {% endif %}
+          </div>
+
+          <!-- Lösenord -->
+          <div class="relative mb-8">
+            <div class="flex justify-between items-center mb-2 ml-1">
+                <label for="password" class="block text-xs font-bold uppercase tracking-widest text-gray-400">Lösenord</label>
+                <a href="{{ route('auth.password-forgot.index') }}" class="text-xxs font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-tighter transition-colors">Glömt lösenord?</a>
+            </div>
+            <input type="password" name="password" id="password"
+                   placeholder="••••••••"
+                   class="w-full pl-4 pr-4 py-3 text-sm border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition duration-300">
+            {% if (error($errors, 'password')) : %}
+                <span class="block absolute -bottom-5 left-1 text-xxs text-red-600 font-medium">{{ error($errors, 'password') }}</span>
+            {% endif %}
+          </div>
+
+          <div class="relative">
+            <button type="submit" class="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all duration-300 transform active:scale-[0.98] cursor-pointer">
+              Logga in
+            </button>
+
+            {% if (error($errors, 'form-error')) : %}
+                <div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-lg">
+                    <p class="text-xxs text-red-600 font-semibold leading-tight text-center">{{ error($errors, 'form-error') }}</p>
+                </div>
+            {% endif %}
+          </div>
+        </form>
+
+        <!-- Footer-länk under kortet -->
+        {% if(getenv('APP_PRIVATE') === '0') : %}
+        <p class="mt-8 text-center text-sm text-gray-600">
+            Saknar du ett konto?
+            <a href="{{ route('auth.register.index') }}" class="font-bold text-indigo-600 hover:text-indigo-800 transition-colors">Registrera dig här</a>
+        </p>
+        {% endif; %}
+    </div>
 {% endblock %}

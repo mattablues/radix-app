@@ -1,6 +1,6 @@
 {% extends "layouts/admin.ratio.php" %}
 {% block title %}Konton{% endblock %}
-{% block pageId %}users{% endblock %}
+{% block pageId %}admin-users-index{% endblock %}
 {% block searchId %}search-users{% endblock %}
 {% block body %}
         <section x-data="{ openBlockModal: null, selectedUser: { id: null, email: '' } }">
@@ -11,87 +11,105 @@
             </div>
           </div>
 {% if($users['data']) : %}
-          <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
-            <div class="overflow-x-auto">
-              <table class="w-full text-left">
-                <thead class="bg-gray-50/80">
-                  <tr class="border-b border-gray-200">
-                    <th data-cell="id" class="px-3 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 max-md:hidden">ID</th>
-                    <th data-cell="namn" class="px-3 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Namn</th>
-                    <th data-cell="e-post" class="px-3 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">E‑postadress</th>
-                    <th data-cell="status" class="px-3 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 max-sm:hidden">Status</th>
-                    <th data-cell="aktiv" class="px-3 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 max-sm:hidden">Aktiv</th>
-                    <th data-cell="åtgärd" class="px-3 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600">Åtgärd</th>
-                  </tr>
-                </thead>
-                <tbody class="[&_tr:nth-child(odd)]:bg-white [&_tr:nth-child(even)]:bg-gray-50">
-{% foreach($users['data'] as $user) : %}
-                  <tr class="not-last:border-b border-gray-200 hover:bg-blue-50/50 transition-colors">
-                    <td data-cell="id" class="px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap max-md:hidden">{{ $user->getAttribute('id') }}</td>
-                    <td data-cell="namn" class="px-3 py-2.5 text-sm">
-                      <a href="{{ route('user.show', ['id' => $user->getAttribute('id')]) }}" class="font-medium text-gray-900 underline decoration-gray-300 hover:decoration-transparent">
-                        {{ $user->getAttribute('first_name') }} {{ $user->getAttribute('last_name') }}
-                      </a>
+<div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50/50 border-b border-gray-100">
+                    <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 max-md:hidden">ID</th>
+                    <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">Användare</th>
+                    <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 max-sm:hidden">Status</th>
+                    <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 max-sm:hidden">Senast aktiv</th>
+                    <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 text-right">Åtgärder</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% foreach($users['data'] as $user) : %}
+                <tr class="group hover:bg-blue-50/30 transition-all duration-200">
+                    <!-- ID -->
+                    <td class="px-4 py-4 text-xs font-medium text-gray-400 max-md:hidden">
+                        #{{ $user->getAttribute('id') }}
                     </td>
-                    <td data-cell="e-post" class="px-3 py-2.5 text-sm text-gray-700">
-                      <span class="break-all">{{ $user->getAttribute('email') }}</span>
+
+                    <!-- Namn & E-post -->
+                    <td class="px-4 py-4">
+                        <div class="flex flex-col">
+                            <a href="{{ route('user.show', ['id' => $user->getAttribute('id')]) }}"
+                               class="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                                {{ $user->getAttribute('first_name') }} {{ $user->getAttribute('last_name') }}
+                            </a>
+                            <span class="text-xs text-gray-500">{{ $user->getAttribute('email') }}</span>
+                        </div>
                     </td>
-                    <td data-cell="status" class="px-3 py-2.5 text-sm max-sm:hidden">
-                      <div class="inline-flex items-center text-xs py-0.5 text-gray-700">
-                        <span class="{{ $user->getRelation('status')->getAttribute('status') }}">
-                          {{ $user->getRelation('status')->translateStatus($user->getRelation('status')->getAttribute('status')) }}
+
+                    <!-- Status Badge -->
+                    <td class="px-4 py-4 max-sm:hidden">
+                        {% $status = $user->getRelation('status')->getAttribute('status'); %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide
+                            {{ $status === 'activated' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : '' }}
+                            {{ $status === 'blocked' ? 'bg-red-50 text-red-700 border border-red-100' : '' }}
+                            {{ !in_array($status, ['activated', 'blocked']) ? 'bg-amber-50 text-amber-700 border border-amber-100' : '' }}">
+                            <span class="size-1.5 rounded-full {{ $status === 'activated' ? 'bg-emerald-500' : ($status === 'blocked' ? 'bg-red-500' : 'bg-amber-500') }}"></span>
+                            {{ $user->getRelation('status')->translateStatus($status) }}
                         </span>
-                      </div>
                     </td>
-                    <td data-cell="aktiv" class="px-3 py-2.5 text-sm max-sm:hidden">
-                      <div class="inline-flex items-center text-xs py-0.5 text-gray-700">
-                        <span class="{{ $user->getRelation('status')->getAttribute('active') }}">{{ $user->getRelation('status')->getAttribute('active') }}</span>
-                      </div>
+
+                    <!-- Aktivitet -->
+                    <td class="px-4 py-4 max-sm:hidden">
+                        <div class="flex flex-col">
+                            <span class="text-xs font-medium {{ $user->getRelation('status')->getAttribute('active') === 'online' ? 'text-emerald-600' : 'text-gray-600' }}">
+                                {{ ucfirst($user->getRelation('status')->getAttribute('active')) }}
+                            </span>
+                            <span class="text-[10px] text-gray-400 italic">
+                                {{ $user->getRelation('status')->getAttribute('active_at') ?: 'Aldrig' }}
+                            </span>
+                        </div>
                     </td>
-                    <td data-cell="åtgärd" class="px-3 py-2.5 text-sm">
-                      <div class="flex flex-wrap items-center gap-2">
-{% if($user->isAdmin()) : %}
-                        <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-1 px-2 rounded cursor-not-allowed">Aktivering</span>
-                        <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-1 px-2 rounded cursor-not-allowed">Blockera</span>
-{% else : %}
-                        <form action="{{ route('admin.user.send-activation', ['id' => $user->getAttribute('id')]) }}?page={{ $users['pagination']['current_page'] }}" method="post">
-                          {{ csrf_field()|raw }}
-                          <button class="inline-flex items-center text-xs font-semibold bg-blue-600 text-white py-1 px-2 rounded hover:bg-blue-700 active:bg-blue-800 transition-colors cursor-pointer">
-                            Aktivering
-                          </button>
-                        </form>
-{% if($user->getRelation('status')->getAttribute('status') !== 'blocked') : %}
-                        <button
-                          type="button"
-                          x-on:click="selectedUser = { id: {{ $user->getAttribute('id') }}, email: '{{ addslashes($user->getAttribute('email')) }}' }; openBlockModal = true"
-                          class="inline-flex items-center text-xs font-semibold bg-red-600 text-white py-1 px-2 rounded hover:bg-red-700 active:bg-red-800 transition-colors whitespace-nowrap cursor-pointer"
-                        >
-                          Blockera
-                        </button>
-{% else : %}
-                        <span class="inline-block text-xs font-semibold bg-gray-200/70 text-gray-400 py-1 px-2 rounded cursor-not-allowed">Blockera</span>
-{% endif; %}
-{% endif; %}
-                      </div>
+
+                    <!-- Åtgärder -->
+                    <td class="px-4 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            {% if($user->isAdmin()) : %}
+                                <span class="p-1.5 text-gray-300" title="Admin kan ej ändras här">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                </span>
+                            {% else : %}
+                                <form action="{{ route('admin.user.send-activation', ['id' => $user->getAttribute('id')]) }}?page={{ $users['pagination']['current_page'] }}" method="post" class="inline">
+                                    {{ csrf_field()|raw }}
+                                    <button class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Skicka aktivering">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                    </button>
+                                </form>
+
+                                {% if($user->getRelation('status')->getAttribute('status') !== 'blocked') : %}
+                                    <button type="button"
+                                            x-on:click="selectedUser = { id: {{ $user->getAttribute('id') }}, email: '{{ addslashes($user->getAttribute('email')) }}' }; openBlockModal = true"
+                                            class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Blockera användare">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728A9 9 0 115.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                    </button>
+                                {% endif; %}
+                            {% endif; %}
+                        </div>
                     </td>
-                  </tr>
-{% endforeach; %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <!-- Modal -->
+                </tr>
+                {% endforeach; %}
+            </tbody>
+        </table>
+    </div>
+</div>
+          <!-- Modal: Blockera konto -->
           <div
             x-show="openBlockModal"
             x-cloak
             x-on:keydown.escape.window="openBlockModal = false"
             role="dialog"
             aria-modal="true"
-            x-id="['modal-title']"
-            :aria-labelledby="$id('modal-title')"
             class="fixed inset-0 z-50 overflow-y-auto"
           >
+            <!-- Backdrop -->
             <div x-show="openBlockModal" x-transition.opacity class="fixed inset-0 bg-black/60"></div>
+
+            <!-- Modal Container -->
             <div
               x-show="openBlockModal" x-transition
               x-on:click="openBlockModal = false"
@@ -99,23 +117,44 @@
             >
               <div
                 x-on:click.stop
-                class="relative w-full max-w-md rounded-2xl bg-white px-5 py-5 shadow-xl"
+                class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100"
               >
-                <h2 class="text-xl font-semibold text-gray-800" :id="$id('modal-title')">
-                  Blockera konto
-                </h2>
-                <p class="mt-3 text-sm text-gray-700">
-                  Detta kommer att blockera kontot <strong x-text="selectedUser.email"></strong>.
-                </p>
-                <p class="mt-1 text-sm font-medium text-gray-700">Är du säker på att du vill fortsätta?</p>
-                <div class="mt-5 flex justify-end gap-2">
-                  <button type="button" x-on:click="openBlockModal = false" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors">
+                <!-- Header med ikon -->
+                <div class="flex items-center gap-3 text-amber-500 mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728A9 9 0 115.636 5.636m12.728 12.728L5.636 5.636" />
+                  </svg>
+                  <h2 class="text-xl font-bold text-gray-900">
+                    Blockera konto
+                  </h2>
+                </div>
+
+                <div class="space-y-3">
+                  <p class="text-sm text-gray-600 leading-relaxed">
+                    Detta kommer att spärra användaren <strong class="text-gray-900" x-text="selectedUser.email"></strong> från att logga in i systemet tills vidare.
+                  </p>
+                  <p class="text-sm font-bold text-gray-800">
+                    Är du säker på att du vill fortsätta?
+                  </p>
+                </div>
+
+                <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-50">
+                  <button
+                    type="button"
+                    x-on:click="openBlockModal = false"
+                    class="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                  >
                     Avbryt
                   </button>
+
                   <form x-bind:action="'{{ route('admin.user.block', ['id' => '__ID__']) }}?page={{ $users['pagination']['current_page'] }}'.replace('__ID__', selectedUser.id)" method="post">
                     {{ csrf_field()|raw }}
-                    <button type="submit" x-on:click="openBlockModal = false" class="inline-flex items-center justify-center rounded-md border border-transparent bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 transition-colors">
-                      Blockera
+                    <button
+                      type="submit"
+                      x-on:click="openBlockModal = false"
+                      class="inline-flex items-center justify-center rounded-lg bg-red-600 px-6 py-2 text-sm font-bold text-white hover:bg-red-700 shadow-md shadow-red-100 transition-all active:scale-[0.98] cursor-pointer"
+                    >
+                      Ja, blockera konto
                     </button>
                   </form>
                 </div>

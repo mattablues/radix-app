@@ -2,8 +2,7 @@
 <html lang="{{ getenv('APP_LANG') }}">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>{% yield title %}</title>
   <link rel="stylesheet" href="{{ versioned_file('/css/app.css') }}">
@@ -12,53 +11,57 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png">
   <link rel="manifest" href="/favicons/site.webmanifest">
 </head>
-<body x-data="{ openSidebar: false, openCloseModal: false, openDeleteModal: false }" id="{% yield pageId %}" class="relative min-h-screen {% yield pageClass %}">
-  <header class="sticky top-0 z-50 w-full bg-gray-900">
+<body x-data="{ openSidebar: false, openCloseModal: false, openDeleteModal: false }" id="{% yield pageId %}" class="relative min-h-screen bg-slate-50 {% yield pageClass %} text-slate-600 antialiased flex flex-col">
+
+  {% include "components/flash.ratio.php" %}
+
+  <header class="sticky top-0 z-50 w-full bg-gray-900 shadow-lg">
     <div class="container-base relative">
-      <div class="h-15 flex items-center justify-between">
-        <a href="{{ route('home.index') }}" class="flex items-center gap-2">
-          <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-10">
-          <span class="text-xl text-white">{{ getenv('APP_NAME') }}</span>
+      <div class="h-16 flex items-center justify-between">
+        <a href="{{ route('home.index') }}" class="flex items-center gap-2.5 group transition-all">
+          <img src="/images/graphics/logo.png" alt="Logo" class="w-auto h-9 grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
+          <span class="text-xl font-black text-white tracking-tighter italic">{{ getenv('APP_NAME') }}</span>
         </a>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-4">
           <!-- Mobil: sökikon -->
-          <button type="button" id="search-toggle" class="md:hidden p-2 rounded-md text-gray-200 hover:text-white hover:bg-gray-800 cursor-pointer" aria-label="Öppna sök">
+          <button type="button" id="search-toggle" class="md:hidden p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-800 transition-all cursor-pointer" aria-label="Öppna sök">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197M15.803 15.803A7.5 7.5 0 1 1 5.196 5.196a7.5 7.5 0 0 1 10.607 10.607Z"/>
             </svg>
           </button>
 
-          <!-- Namn + avatar (desktop/sm uppåt) -->
-          <a href="{{ route('user.index') }}" class="hidden sm:flex items-center text-gray-200 hover:text-white gap-3 transition-colors duration-300">
-            <span class="text-sm">{{ $currentUser->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</span>
-            <img src="{{ versioned_file($currentUser->getAttribute('avatar'), '/images/graphics/avatar.png') }}" alt="Avatar {{ $currentUser->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}" class="w-9 h-9 rounded-full object-cover">
+          <!-- Namn + avatar -->
+          <a href="{{ route('user.index') }}" class="hidden sm:flex items-center text-gray-300 hover:text-white gap-3 transition-all duration-300 group">
+            <span class="text-sm font-bold border-r border-gray-700 pr-3 py-1">{{ $currentUser->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</span>
+            <img src="{{ versioned_file($currentUser->getAttribute('avatar'), '/images/graphics/avatar.png') }}" alt="Avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-gray-800 group-hover:ring-indigo-500 transition-all shadow-sm">
           </a>
 
           <!-- Hamburger -->
-          <span class="text-white lg:hidden text-4xl cursor-pointer" x-on:click="openSidebar = !openSidebar" aria-label="Öppna meny">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
+          <button type="button" class="text-gray-400 lg:hidden hover:text-white p-1 transition-colors cursor-pointer" x-on:click="openSidebar = !openSidebar" aria-label="Öppna meny">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" />
             </svg>
-          </span>
+          </button>
         </div>
       </div>
 
       <!-- Sök: centrerad på md+, nedfällbar på mobil -->
-      <div class="relative md:absolute md:left-1/2 md:-translate-x-1/2 md:top-1/2 md:-translate-y-1/2 z-60">
-        <div id="search-wrap" class="hidden md:block md:static md:translate-x-0 md:translate-y-0 md:mt-0 mt-2">
+      <div class="relative md:absolute md:left-1/2 md:-translate-x-1/2 md:top-1/2 md:-translate-y-1/2 z-60 w-full md:w-auto px-4 md:px-0">
+        <div id="search-wrap" class="hidden md:block md:static md:mt-0 mt-2">
           <div class="relative">
-            <div class="p-2.5 px-4 flex items-center rounded-md bg-gray-700">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-sm text-gray-300">
+            <div class="p-2.5 px-4 flex items-center rounded-xl bg-gray-800 border border-white/5 shadow-inner">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 text-gray-500">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
               </svg>
               <label for="{% yield searchId %}" class="sr-only">Sök</label>
-              <input class="text-[15px] ml-4 w-full md:w-[280px] bg-transparent border-none py-0 px-0 focus:ring-0 text-gray-100 placeholder:text-gray-300"
-                     id="{% yield searchId %}" placeholder="Sök..." autocomplete="off">
+              <!-- Ändrat: text-base (16px) på mobil för att stoppa auto-zoom, text-sm på desktop -->
+              <input class="text-base md:text-sm ml-3 w-full md:w-[280px] bg-transparent border-none py-0 px-0 focus:ring-0 text-gray-100 placeholder:text-gray-500"
+                     id="{% yield searchId %}" placeholder="Sök i systemet..." autocomplete="off">
             </div>
 
-            <div id="search-dropdown"
-                 class="absolute left-0 mt-1 w-full md:w-[420px] max-h-[60vh] overflow-auto bg-white text-gray-900 rounded-md shadow-lg border border-gray-200 hidden z-70">
+            <!-- Ändrat: Mer robust placering på mobil, dropdownen följer inputfältets bredd -->
+            <div id="search-dropdown" class="absolute left-0 right-0 md:left-0 md:right-auto mt-2 md:w-[420px] max-h-[60vh] overflow-auto bg-white text-gray-900 rounded-2xl shadow-2xl border border-gray-200 hidden z-70">
               <div class="result-container"></div>
             </div>
           </div>
@@ -67,185 +70,149 @@
     </div>
   </header>
 
-  <div class="sidebar h-screen fixed top-0 lg:left-0 py-13 px-2 w-(--sidebar-w) transition-all duration-200 overflow-y-auto text-center bg-gray-900 shadow hide-scrollbar z-40"
+  <!-- Sidebar -->
+  <div class="sidebar h-screen fixed top-0 lg:left-0 py-20 px-4 w-(--sidebar-w) transition-all duration-300 overflow-y-auto text-left bg-gray-900 shadow-2xl hide-scrollbar z-40 flex flex-col"
     :class="openSidebar ? 'left-0' : 'left-(--sidebar-w-neg)'"
   >
-    <div class="text-gray-100">
-      <hr class="my-2 text-gray-600">
-{% if($session->isAuthenticated()) : %}
-      <div class="pt-2">
-        <div class="mt-2 px-4 flex items-center rounded-md transition-all duration-300 cursor-pointer hover:bg-blue-600">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-            <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z" />
-            <path d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z" />
+    <div class="flex-1 space-y-4">
+      <div class="text-xxs font-black uppercase tracking-[0.2em] text-gray-500 mb-4 px-4">Navigation</div>
+
+      <nav class="space-y-1">
+        <!-- Dashboard -->
+        <a href="{{ route('dashboard.index') }}" class="group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 {{ ($pageId === 'dashboard') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100' }}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
+          <span class="text-sm font-bold">Dashboard</span>
+        </a>
 
-          <span class="w-full text-left text-sm ml-1.5 text-gray-200">
-            <a href="{{ route('dashboard.index') }}" class="w-full inline-block px-2.5 py-3" >Startsida</a>
-          </span>
-        </div>
-
-        <div x-data="{ sidebarDropdown: false }">
-          <div class="mt-2 px-4 flex items-center rounded-md transition-all duration-300 cursor-pointer hover:bg-blue-600">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-              <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
-            </svg>
-
-            <div class="w-full flex justify-between items-center" x-on:click="sidebarDropdown = !sidebarDropdown">
-              <span class="text-sm ml-4 py-3 text-gray-200">Konto</span>
-              <span class="text-sm rotate-180" id="arrow">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6"
-                  :class="sidebarDropdown ? 'transition-all rotate-180 duration-300 ease-out' : 'transition-all rotate-0 duration-300 ease-out'"
-                >
-                  <path fill-rule="evenodd" d="M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" />
-                </svg>
-              </span>
+        <!-- Konto Dropdown -->
+        <div x-data="{ sidebarDropdown: {{ in_array($pageId, ['user-index', 'user-edit']) ? 'true' : 'false' }} }">
+          <button @click="sidebarDropdown = !sidebarDropdown" class="w-full group flex items-center justify-between px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-gray-100 transition-all cursor-pointer">
+            <div class="flex items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span class="text-sm font-bold">Mitt konto</span>
             </div>
-          </div>
-          <ul
-            x-cloak
-            x-show="sidebarDropdown"
-            x-transition:enter="transition-all duration-200 ease-out"
-            x-transition:enter-start="-translate-y-5 opacity-0"
-            x-transition:enter-end="translate-y-0 opacity-100"
-            x-transition:leave="transition-all duration-200 ease-in"
-            x-transition:leave-start="translate-y-0 opacity-100"
-            x-transition:leave-end="-translate-y-5 opacity-0"
-            class="leading-7 text-left text-sm font-thin mt-2 w-4/5 mx-auto border-l border-gray-700"
-          >
-            <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
-              <a href="{{ route('user.index') }}" class="w-full inline-block py-2 px-8">Visa konto</a>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-300" :class="sidebarDropdown ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <ul x-show="sidebarDropdown" x-cloak x-collapse class="mt-1 ml-4 border-l border-gray-800 space-y-1">
+            <li><a href="{{ route('user.index') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'user-index') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">Visa profil</a></li>
+            <li><a href="{{ route('user.edit') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'user-edit') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">Redigera profil</a></li>
+
+          {% if(!$currentUser->isAdmin()) : %}
+            <li class="pt-2 mt-2 border-t border-gray-800/50">
+              <button @click="openCloseModal = true" class="w-full text-left py-2 px-8 text-sm text-gray-500 hover:text-red-400 transition-colors cursor-pointer">
+                Stäng konto
+              </button>
             </li>
-            <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
-              <a href="{{ route('user.edit') }}" class="w-full inline-block py-2 px-8">Redigera konto</a>
+            <li>
+              <button @click="openDeleteModal = true" class="w-full text-left py-2 px-8 text-sm text-gray-500 hover:text-red-500 font-medium transition-colors cursor-pointer">
+                Radera konto
+              </button>
             </li>
-{% if(!$currentUser->isAdmin()) : %}
-            <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
-              <button class="w-full text-left inline-block py-2 px-8 cursor-pointer" x-on:click="openCloseModal = true">Stäng konto</button>
-            </li>
-            <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
-              <button class="w-full text-left inline-block py-2 px-8 cursor-pointer" x-on:click="openDeleteModal = true">Radera konto</button>
-            </li>
-{% endif; %}
+          {% endif; %}
           </ul>
         </div>
-{% if($currentUser->hasAtLeast('moderator')) : %}
-        <hr class="my-4 text-gray-400">
-        <div x-data="{ sidebarDropdown: false }">
-          <div class="mt-2 px-4 flex items-center rounded-md transition-all duration-300 cursor-pointer hover:bg-blue-600">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-              <path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 0 0-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 0 0-2.282.819l-.922 1.597a1.875 1.875 0 0 0 .432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 0 0 0 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 0 0-.432 2.385l.922 1.597a1.875 1.875 0 0 0 2.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 0 0 2.28-.819l.923-1.597a1.875 1.875 0 0 0-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 0 0 0-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 0 0-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 0 0-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 0 0-1.85-1.567h-1.843ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" clip-rule="evenodd" />
-            </svg>
+      </nav>
 
-            <div class="w-full flex justify-between items-center" x-on:click="sidebarDropdown = !sidebarDropdown">
-              <span class="text-sm ml-4 py-3 text-gray-200">Administration</span>
-              <span class="text-sm rotate-180" id="arrow">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6"
-                :class="sidebarDropdown ? 'transition-all rotate-180 duration-300 ease-out' : 'transition-all rotate-0 duration-300 ease-out'"
-                >
-                  <path fill-rule="evenodd" d="M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" />
+    {% if($currentUser->hasAtLeast('moderator')) : %}
+      <div class="pt-4 mt-4 border-t border-gray-800">
+        <div class="text-xxs font-black uppercase tracking-[0.2em] text-gray-500 mb-4 px-4">Administration</div>
+
+        <nav class="space-y-1">
+          <!-- Användarhantering Dropdown -->
+          <div x-data="{ sidebarDropdown: {{ (strpos($pageId, 'admin-user') !== false || $pageId === 'users') ? 'true' : 'false' }} }">
+            <button @click="sidebarDropdown = !sidebarDropdown" class="w-full group flex items-center justify-between px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-gray-100 transition-all cursor-pointer">
+              <div class="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
-              </span>
-            </div>
+                <span class="text-sm font-bold">Användare</span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-300" :class="sidebarDropdown ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <ul x-show="sidebarDropdown" x-cloak x-collapse class="mt-1 ml-4 border-l border-gray-800 space-y-1">
+              <li>
+                <a href="{{ route('admin.user.index') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'admin-users-index') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">
+                  Visa alla
+                </a>
+              </li>
+              <li>
+                <a href="{{ route('admin.user.closed') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'admin-user-closed') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">
+                  Stängda konton
+                </a>
+              </li>
+              {% if($currentUser->isAdmin()) : %}
+              <li>
+                <a href="{{ route('admin.user.create') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'admin-user-create') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">
+                  Skapa nytt konto
+                </a>
+              </li>
+              {% endif; %}
+            </ul>
           </div>
 
-          <ul
-            x-cloak
-            x-show="sidebarDropdown"
-            x-transition:enter="transition-all duration-200 ease-out"
-            x-transition:enter-start="-translate-y-5 opacity-0"
-            x-transition:enter-end="translate-y-0 opacity-100"
-            x-transition:leave="transition-all duration-200 ease-in"
-            x-transition:leave-start="translate-y-0 opacity-100"
-            x-transition:leave-end="-translate-y-5 opacity-0"
-            class="leading-7 text-left text-sm font-thin mt-2 w-4/5 mx-auto border-l border-gray-700"
-          >
-            <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
-              <a href="{{ route('admin.user.index') }}" class="w-full inline-block py-2 px-8">Visa konton</a>
-            </li>
-            <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
-              <a href="{{ route('admin.user.closed') }}" class="w-full inline-block py-2 px-8">Stängda konton</a>
-            </li>
-{% if($currentUser->isAdmin()) : %}
-            <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
-              <a href="{{ route('admin.user.create') }}" class="w-full inline-block py-2 px-8">Skapa nytt konton</a>
-            </li>
-{% endif; %}
-          </ul>
-        </div>
-
-        <div x-data="{ sidebarDropdown: false }">
-          <div class="mt-2 px-4 flex items-center rounded-md transition-all duration-300 cursor-pointer hover:bg-blue-600">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-              <path fill-rule="evenodd" d="M12 6.75a5.25 5.25 0 0 1 6.775-5.025.75.75 0 0 1 .313 1.248l-3.32 3.319c.063.475.276.934.641 1.299.365.365.824.578 1.3.64l3.318-3.319a.75.75 0 0 1 1.248.313 5.25 5.25 0 0 1-5.472 6.756c-1.018-.086-1.87.1-2.309.634L7.344 21.3A3.298 3.298 0 1 1 2.7 16.657l8.684-7.151c.533-.44.72-1.291.634-2.309A5.342 5.342 0 0 1 12 6.75ZM4.117 19.125a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Z" clip-rule="evenodd" />
-              <path d="m10.076 8.64-2.201-2.2V4.874a.75.75 0 0 0-.364-.643l-3.75-2.25a.75.75 0 0 0-.916.113l-.75.75a.75.75 0 0 0-.113.916l2.25 3.75a.75.75 0 0 0 .643.364h1.564l2.062 2.062 1.575-1.297Z" />
-              <path fill-rule="evenodd" d="m12.556 17.329 4.183 4.182a3.375 3.375 0 0 0 4.773-4.773l-3.306-3.305a6.803 6.803 0 0 1-1.53.043c-.394-.034-.682-.006-.867.042a.589.589 0 0 0-.167.063l-3.086 3.748Zm3.414-1.36a.75.75 0 0 1 1.06 0l1.875 1.876a.75.75 0 1 1-1.06 1.06L15.97 17.03a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+          <!-- Systemhälsa -->
+          <a href="{{ route('admin.health.index') }}" class="group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 {{ ($pageId === 'health') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100' }}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
-
-            <div class="w-full flex justify-between items-center" x-on:click="sidebarDropdown = !sidebarDropdown">
-              <span class="text-sm ml-4 py-3 text-gray-200">System</span>
-              <span class="text-sm rotate-180" id="arrow">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6"
-                :class="sidebarDropdown ? 'transition-all rotate-180 duration-300 ease-out' : 'transition-all rotate-0 duration-300 ease-out'"
-                >
-                  <path fill-rule="evenodd" d="M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" />
-                </svg>
-              </span>
-            </div>
-          </div>
-
-          <ul
-            x-cloak
-            x-show="sidebarDropdown"
-            x-transition:enter="transition-all duration-200 ease-out"
-            x-transition:enter-start="-translate-y-5 opacity-0"
-            x-transition:enter-end="translate-y-0 opacity-100"
-            x-transition:leave="transition-all duration-200 ease-in"
-            x-transition:leave-start="translate-y-0 opacity-100"
-            x-transition:leave-end="-translate-y-5 opacity-0"
-            class="leading-7 text-left text-sm font-thin mt-2 w-4/5 mx-auto border-l border-gray-700"
-          >
-            <li class="mt-1 ml-1 rounded-md cursor-pointer hover:bg-gray-700">
-              <a href="{{ route('admin.health.index') }}" class="w-full inline-block py-2 px-8">Status</a>
-            </li>
-          </ul>
-        </div>
-{% endif; %}
-        <div>
-          <div class="mt-2 px-4 flex items-center rounded-md transition-all duration-300 cursor-pointer hover:bg-blue-600">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-              <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 0 0 6 5.25v13.5a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5V15a.75.75 0 0 1 1.5 0v3.75a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V5.25a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3V9A.75.75 0 0 1 15 9V5.25a1.5 1.5 0 0 0-1.5-1.5h-6Zm10.72 4.72a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H9a.75.75 0 0 1 0-1.5h10.94l-1.72-1.72a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-            </svg>
-
-            <form action="{{ route('auth.logout.index') }}" method="post" class="w-full text-sm ml-4 text-gray-200">
-              {{ csrf_field()|raw }}
-              <button class="w-full py-3 text-left cursor-pointer">Logout</button>
-            </form>
-          </div>
-        </div>
+            <span class="text-sm font-bold">Systemstatus</span>
+          </a>
+        </nav>
       </div>
-{% endif; %}
+    {% endif; %}
+    </div>
+
+    <!-- Logout -->
+    <div class="pt-4 mt-auto border-t border-gray-800 pb-8">
+      <form action="{{ route('auth.logout.index') }}" method="post">
+        {{ csrf_field()|raw }}
+        <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all cursor-pointer group">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span class="text-sm font-bold">Logga ut</span>
+        </button>
+      </form>
     </div>
   </div>
-    {% include "components/modal-close.ratio.php" %}
-    {% include "components/modal-delete.ratio.php" %}
+
+  {% include "components/modal-close.ratio.php" %}
+  {% include "components/modal-delete.ratio.php" %}
+
   <main
-    class="xl:max-w-[1180px] lg:ml-(--sidebar-w) pt-4 px-3 md-px-5 lg:px-7 pb-2 min-h-[calc(100vh-108px)]"
+    class="max-w-[1180px] flex-1 lg:ml-(--sidebar-w) pt-8 px-4 md:px-8 pb-12 transition-all duration-300"
     x-on:click="if (openSidebar) openSidebar = false"
   >
-    {% include "components/flash-box.ratio.php" %}
     {% include "components/noscript.ratio.php" %}
-    {% yield body %}
+    <div class="max-w-6xl mx-auto">
+        {% yield body %}
+    </div>
   </main>
 
-  <footer class="text-center">
-    <div class="container-base py-4">
-      <p class="text-xs text-slate-500  font-semibold text-center">
-        &copy;{{ copyright(getenv('APP_COPY'), getenv('APP_COPY_YEAR')) }}
-        | <a href="{{ route('cookie.index') }}" class="underline hover:no-underline transition duration-300">Cookies</a>
-      </p>
+  <footer class="py-8 bg-white border-t border-slate-200 mt-auto lg:ml-(--sidebar-w) transition-all duration-300">
+    <div class="max-w-[1180px] px-4 md:px-8">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-xxs font-bold text-slate-400 uppercase tracking-widest">
+          &copy; {{ copyright(getenv('APP_COPY'), getenv('APP_COPY_YEAR')) }}
+        </p>
+
+        <nav class="flex gap-6">
+          <a href="{{ route('cookie.index') }}" class="text-xxs font-bold text-slate-400 hover:text-indigo-600 uppercase tracking-widest transition-colors">Cookies</a>
+          <a href="{{ route('about.index') }}" class="text-xxs font-bold text-slate-400 hover:text-indigo-600 uppercase tracking-widest transition-colors">Om systemet</a>
+        </nav>
+      </div>
     </div>
   </footer>
+
   {% include "components/cookie-consent.ratio.php" %}
   {% yield alpinejs %}
   <script nonce="<?= secure_output(csp_nonce(), true) ?>" src="{{ versioned_file('/js/app.js') }}"></script>
