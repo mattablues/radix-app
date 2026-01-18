@@ -22,14 +22,48 @@ final class ErrorResponderTest extends TestCase
         }
 
         // Skapa en temporär mapp för test-vyer för att undvika att ladda de riktiga tunga vyerna
-        $this->testViewDir = ROOT_PATH . '/views/errors';
+        $this->testViewDir = ROOT_PATH . '/storage/framework/testing/views/errors';
         if (!is_dir($this->testViewDir)) {
             mkdir($this->testViewDir, 0o777, true);
         }
 
+        // Berätta för ErrorResponder att använda test-mappen
+        ErrorResponder::$viewPath = $this->testViewDir;
+
         // Skapa extremt enkla dummy-filer som inte kräver några globala funktioner
         file_put_contents($this->testViewDir . '/404.php', '<html>Real 404 View: <?php echo $message; ?></html>');
         file_put_contents($this->testViewDir . '/500.php', '<html>Real 500 View: <?php echo $status; ?></html>');
+    }
+
+    protected function tearDown(): void
+    {
+        // 1. Återställ den statiska variabeln så den inte förstör för andra tester!
+        ErrorResponder::$viewPath = null;
+
+        // 2. Städa upp de temporära filerna och mappen
+        $files = glob($this->testViewDir . '/*.php');
+        if ($files !== false) {
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
+            }
+        }
+
+        // Ta även bort eventuella undermappar som skapades (t.ex. i testRespondHandlesPathWithTrailingSlash)
+        if (is_dir($this->testViewDir . '/errors')) {
+            $subFiles = glob($this->testViewDir . '/errors/*.php');
+            if ($subFiles !== false) {
+                array_map('unlink', $subFiles);
+            }
+            rmdir($this->testViewDir . '/errors');
+        }
+
+        if (is_dir($this->testViewDir)) {
+            rmdir($this->testViewDir);
+        }
+
+        parent::tearDown();
     }
 
     private function makeRequest(string $uri): Request
@@ -143,5 +177,33 @@ final class ErrorResponderTest extends TestCase
         // 2. Dödar [M] LogicalAnd [&& -> ||]:
         // Verifiera att vi fick den exakta fallback-strängen vid krasch.
         $this->assertSame("<h1>{$status} | {$message}</h1>", $body, 'Mutant dödad: Felaktig fallback-logik vid krasch');
+
+    }
+
+    public function testRespondHandlesPathWithTrailingSlash(): void
+    {
+        $request = $this->makeRequest('/test');
+
+        // 1. Testa rtrim för $errorFile (404.php) med framåtlutade snedstreck
+        ErrorResponder::$viewPath = $this->testViewDir . '/';
+        file_put_contents($this->testViewDir . '/404.php', 'ERR_FILE_OK');
+        $response = ErrorResponder::respond($request, 404, 'msg');
+        $this->assertSame('ERR_FILE_OK', (string) $response->getBody(), 'Mutant dödad: rtrim behövs för $errorFile');
+
+        // 2. Testa rtrim för $fallback (500.php) med bakåtlutade snedstreck (Windows-stil)
+        ErrorResponder::$viewPath = $this->testViewDir . '\\';
+        file_put_contents($this->testViewDir . '/500.php', 'FALLBACK_OK');
+        $response = ErrorResponder::respond($request, 503, 'msg');
+        $this->assertSame('FALLBACK_OK', (string) $response->getBody(), 'Mutant dödad: rtrim behövs för $fallback');
+
+        // 3. För att döda mutanten helt när viewPath är null, testar vi en status där rtrim är avgörande
+        // genom att skicka in en baspath som garanterat har snedstreck.
+        ErrorResponder::$viewPath = $this->testViewDir . '/errors///';
+        if (!is_dir($this->testViewDir . '/errors')) {
+            mkdir($this->testViewDir . '/errors', 0o777, true);
+        }
+        file_put_contents($this->testViewDir . '/errors/404.php', 'DEEP_OK');
+        $response = ErrorResponder::respond($request, 404, 'msg');
+        $this->assertSame('DEEP_OK', (string) $response->getBody(), 'Mutant dödad: rtrim fixar djupa snedstreck');
     }
 }
