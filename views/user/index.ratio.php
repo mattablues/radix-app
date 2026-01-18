@@ -15,13 +15,13 @@
           <div class="flex flex-col md:flex-row items-stretch">
 
             <!-- Vänster sida: Avatar -->
-            <figure class="flex flex-col items-center justify-center p-8 bg-slate-50 border-b md:border-b-0 md:border-r border-gray-100 min-w-[200px]">
+            <figure class="flex flex-col items-center justify-center p-8 bg-slate-50 border-b md:border-b-0 md:border-r border-gray-100 min-w-[220px]">
               <div class="relative">
                 <img src="{{ versioned_file($currentUser->getAttribute('avatar')) }}" alt="Avatar" class="w-32 h-32 rounded-full object-cover ring-4 ring-white shadow-md">
                 <div class="absolute bottom-1 right-1 w-5 h-5 border-4 border-white rounded-full {{ $currentUser->isOnline() ? 'bg-green-500' : 'bg-gray-300' }}"></div>
               </div>
               <figcaption class="mt-4 text-center">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wider {{ $currentUser->isAdmin() ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-800' }}">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {{ $currentUser->isAdmin() ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-50 text-blue-700' }}">
                   {{ $currentUser->fetchGuardedAttribute('role') }}
                 </span>
               </figcaption>

@@ -110,6 +110,16 @@ class User extends Model
     }
 
     /**
+     * Relation till systemhändelser (loggar) kopplade till användaren.
+     *
+     * @return \Radix\Database\ORM\Relationships\HasMany
+     */
+    public function systemEvents(): \Radix\Database\ORM\Relationships\HasMany
+    {
+        return $this->hasMany(SystemEvent::class, 'user_id', 'id');
+    }
+
+    /**
      * Relation till Token.
      *
      * @return \Radix\Database\ORM\Relationships\HasOne

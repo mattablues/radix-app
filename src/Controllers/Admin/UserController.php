@@ -6,6 +6,7 @@ namespace App\Controllers\Admin;
 
 use App\Events\UserRegisteredEvent;
 use App\Models\Status;
+use App\Models\SystemEvent;
 use App\Models\User;
 use Radix\Controller\AbstractController;
 use Radix\Enums\Role;
@@ -13,6 +14,7 @@ use Radix\Enums\UserActivationContext;
 use Radix\EventDispatcher\EventDispatcher;
 use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
+use Radix\Session\Session;
 use Radix\Support\Token;
 use Radix\Support\Validator;
 use RuntimeException;
@@ -117,6 +119,14 @@ class UserController extends AbstractController
         // Ställ in flash-meddelande och omdirigera
         $this->request->session()->setFlashMessage(
             "Konto har skapats för $firstName $lastName och aktiveringslänk skickad."
+        );
+
+        $adminId = $this->request->session()->get(Session::AUTH_KEY);
+
+        SystemEvent::log(
+            message: "Admin skapade nytt konto för: {$firstName} {$lastName}",
+            type: 'info',
+            userId: is_numeric($adminId) ? (int) $adminId : null
         );
 
         return new RedirectResponse(route('admin.user.index'));
@@ -227,6 +237,14 @@ class UserController extends AbstractController
 
         /** @var int|string $rawPage */
         $currentPage = (int) $rawPage;
+
+        $adminId = $this->request->session()->get(Session::AUTH_KEY);
+
+        SystemEvent::log(
+            message: "Konto blockerades: {$user->email}",
+            type: 'warning',
+            userId: is_numeric($adminId) ? (int) $adminId : null
+        );
 
         return new RedirectResponse(route('admin.user.index') . '?page=' . $currentPage);
     }

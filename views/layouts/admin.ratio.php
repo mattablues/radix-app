@@ -133,7 +133,7 @@
         </div>
       </nav>
 
-    {% if($currentUser->hasAtLeast('moderator')) : %}
+  {% if($currentUser->hasAtLeast('moderator')) : %}
       <div class="pt-4 mt-4 border-t border-gray-800">
         <div class="text-xxs font-black uppercase tracking-[0.2em] text-gray-500 mb-4 px-4">Administration</div>
 
@@ -172,17 +172,44 @@
               {% endif; %}
             </ul>
           </div>
+          <!-- System Dropdown -->
+          <div x-data="{ systemDropdown: {{ (strpos($pageId, 'admin-update') !== false || strpos($pageId, 'admin-event') !== false || $pageId === 'health') ? 'true' : 'false' }} }">
+            <button @click="systemDropdown = !systemDropdown" class="w-full group flex items-center justify-between px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-gray-100 transition-all cursor-pointer">
+              <div class="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span class="text-sm font-bold">System</span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-300" :class="systemDropdown ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
 
-          <!-- Systemhälsa -->
-          <a href="{{ route('admin.health.index') }}" class="group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 {{ ($pageId === 'health') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100' }}">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            <span class="text-sm font-bold">Systemstatus</span>
-          </a>
+            <ul x-show="systemDropdown" x-cloak x-collapse class="mt-1 ml-4 border-l border-gray-800 space-y-1">
+              <!-- Systemstatus (Tidigare fristående) -->
+              <li>
+                <a href="{{ route('admin.health.index') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'health') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">
+                  Systemstatus
+                </a>
+              </li>
+              <!-- Systemuppdateringar -->
+              <li>
+                <a href="{{ route('admin.system-update.index') }}" class="block py-2 px-8 text-sm {{ (strpos($pageId, 'admin-update') !== false) ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">
+                  Uppdateringar
+                </a>
+              </li>
+              <!-- Systemhändelser / Loggar -->
+              <li>
+                <a href="{{ route('admin.system-event.index') }}" class="block py-2 px-8 text-sm {{ (strpos($pageId, 'admin-event') !== false) ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">
+                  Händelselogg
+                </a>
+              </li>
+            </ul>
+          </div>
         </nav>
       </div>
-    {% endif; %}
+{% endif; %}
     </div>
 
     <!-- Logout -->

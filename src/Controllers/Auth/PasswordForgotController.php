@@ -6,6 +6,7 @@ namespace App\Controllers\Auth;
 
 use App\Events\UserPasswordEvent;
 use App\Models\Status;
+use App\Models\SystemEvent;
 use App\Models\User;
 use App\Services\AuthService;
 use Radix\Controller\AbstractController;
@@ -63,6 +64,11 @@ class PasswordForgotController extends AbstractController
             $seconds = $remainingTime % 60;
             $status = true;
             $errorMessage = "För många försök. Försök igen om $minutes minuter och $seconds sekunder.";
+
+            SystemEvent::log(
+                message: "Säkerhet: IP {$ip} blockerad pga för många lösenordsförsök",
+                type: 'error'
+            );
 
             return $this->view('auth.password-forgot.index', [
                 'errors' => [

@@ -5,6 +5,9 @@ declare(strict_types=1);
 /** @var \Radix\Routing\Router $router */
 
 // Global grupp för web med request-id + logging
+use App\Controllers\Admin\SystemEventController;
+use App\Controllers\Admin\SystemUpdateController;
+
 $router->group(['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.2mb', 'csrf']], function () use ($router) {
     $router->get('/', [
         \App\Controllers\HomeController::class, 'index',
@@ -160,5 +163,38 @@ $router->group(['middleware' => ['request.id', 'api.logger', 'security.headers',
         $router->get('/health', [
             \App\Controllers\Admin\HealthWebController::class, 'index',
         ])->name('admin.health.index');
+
+        // System Events
+        $router->get('/events', [
+            SystemEventController::class, 'index',
+        ])->name('admin.system-event.index');
+
+        $router->post('/events', [
+            SystemEventController::class, 'store',
+        ])->name('admin.system-event.store')->middleware(['api.throttle.light']);
+
+        $router->get('/updates', [
+            SystemUpdateController::class, 'index',
+        ])->name('admin.system-update.index');
+
+        $router->get('/updates/create', [
+            SystemUpdateController::class, 'create',
+        ])->name('admin.system-update.create');
+
+        $router->post('/updates/create', [
+            SystemUpdateController::class, 'store',
+        ])->name('admin.system-update.store')->middleware(['api.throttle.light']);
+
+        $router->get('/updates/{id:[\d]+}/edit', [
+            SystemUpdateController::class, 'edit',
+        ])->name('admin.system-update.edit');
+
+        $router->post('/updates/{id:[\d]+}/edit', [
+            SystemUpdateController::class, 'update',
+        ])->name('admin.system-update.update')->middleware(['api.throttle.light']);
+
+        $router->post('/updates/{id:[\d]+}/delete', [
+            SystemUpdateController::class, 'delete',
+        ])->name('admin.system-update.delete')->middleware(['api.throttle.hard']);
     });
 });

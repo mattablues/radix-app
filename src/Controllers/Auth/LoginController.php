@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers\Auth;
 
+use App\Models\SystemEvent;
 use App\Services\AuthService;
 use Radix\Auth\Auth;
 use Radix\Controller\AbstractController;
@@ -92,6 +93,12 @@ class LoginController extends AbstractController
         // Logga in användaren och markera som online
         $this->auth->login($user->id);
         $this->request->session()->setFlashMessage("Välkommen tillbaka, $user->first_name $user->last_name!");
+
+        SystemEvent::log(
+            message: "Inloggning: {$user->first_name} {$user->last_name} ({$user->email})",
+            type: 'system',
+            userId: $user->id
+        );
 
         return new RedirectResponse(route('dashboard.index'));
     }

@@ -6,6 +6,7 @@ namespace App\Controllers\Auth;
 
 use App\Events\UserRegisteredEvent;
 use App\Models\Status;
+use App\Models\SystemEvent;
 use App\Models\User;
 use Radix\Controller\AbstractController;
 use Radix\Enums\UserActivationContext;
@@ -161,6 +162,17 @@ class RegisterController extends AbstractController
         /** @var Status $status */
         $status->fill(['status' => 'activated', 'activation' => null]);
         $status->save();               // Spara modellen
+
+        // Hämta användaren för att få namnet till loggen
+        $user = $status->user()->first();
+
+        if ($user instanceof User) {
+            SystemEvent::log(
+                message: "Nytt konto aktiverat: {$user->first_name} {$user->last_name}",
+                type: 'info',
+                userId: $user->id
+            );
+        }
 
         // Ställ in flashmeddelande och omdirigera
         $this->request->session()->setFlashMessage('Ditt konto har aktiverats, du kan nu logga in.');
