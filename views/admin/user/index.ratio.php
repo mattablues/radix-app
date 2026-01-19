@@ -172,7 +172,9 @@
           </div>
 {% endif; %}
 {% else : %}
-          <p>Inga konton hittades.</p>
+        <div class="bg-white border border-dashed border-gray-300 rounded-2xl p-12 text-center text-gray-500">
+            Inga konton registrerade.
+        </div>
 {% endif; %}
         </section>
 {% endblock %}
