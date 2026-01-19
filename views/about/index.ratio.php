@@ -18,7 +18,7 @@
                 <ul class="text-sm space-y-2">
                   <li class="flex justify-between border-b border-slate-800 pb-1">
                     <span class="text-slate-400">Core</span>
-                    <span class="font-medium">PHP 8.3</span>
+                    <span class="font-medium">PHP {{ PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION }}</span>
                   </li>
                   <li class="flex justify-between border-b border-slate-800 pb-1">
                     <span class="text-slate-400">Version</span>
@@ -58,7 +58,7 @@
                 Radix föddes ur behovet av att ha full kontroll över varje rad kod. Istället för att använda tunga, generiska bibliotek skapades en motor som är optimerad för hastighet och säkerhet. Från den egna routing-motorn till det skräddarsydda ORM-lagret är allt designat för att fungera i perfekt harmoni.
               </p>
               <p class="text-slate-600 relative z-10 leading-relaxed mt-4">
-                Genom att kombinera styrkan i <strong>PHP 8.3</strong> med flexibiliteten i <strong>Tailwind CSS v4</strong> och <strong>Alpine.js</strong>, erbjuder Radix en unik miljö där utveckling går snabbt utan att tumma på slutresultatet.
+                Genom att kombinera styrkan i <strong>PHP {{ PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION }}</strong> med flexibiliteten i <strong>Tailwind CSS v4</strong> och <strong>Alpine.js</strong>, erbjuder Radix en unik miljö där utveckling går snabbt utan att tumma på slutresultatet.
               </p>
             </div>
 
@@ -76,64 +76,43 @@
           </div>
         </div>
 
-            <aside class="area-aside-right sticky-top pt-6 lg:pt-4">
-              <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                <div class="bg-slate-50 px-5 py-3 border-b border-gray-100">
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Systemuppdateringar</h4>
-                </div>
-                <div class="p-5 space-y-6">
-                  {% $i = 0; %}
-                  {% foreach($recentUpdates as $update) : %}
-                  <div class="relative pl-4 border-l-2 {{ ($i === 0) ? 'border-blue-500' : 'border-slate-200' }}">
-                    <time class="text-xxs font-bold {{ ($i === 0) ? 'text-blue-600' : 'text-slate-400' }} uppercase">
-                      {% $dateVal = $update->getAttribute('released_at'); %}
-                      {% $dt = $datetime->dateTime($dateVal); %}
+        <aside class="area-aside-right sticky-top pt-6 lg:pt-4">
+          <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="bg-slate-50 px-5 py-3 border-b border-gray-100">
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Systemuppdateringar</h4>
+            </div>
+            <div class="p-5 space-y-6">
+              {% $i = 0; %}
+              {% foreach($recentUpdates as $update) : %}
+              <div class="relative pl-4 border-l-2 {{ ($i === 0) ? 'border-blue-500' : 'border-slate-200' }}">
+                <time class="text-xxs font-bold {{ ($i === 0) ? 'text-blue-600' : 'text-slate-400' }} uppercase">
+                  {% $dateVal = $update->getAttribute('released_at'); %}
+                  {% $dt = $datetime->dateTime($dateVal); %}
 
-                      {% if ($dt->format('Y-m-d') === date('Y-m-d')) : %}
-                        Idag
-                      {% else : %}
-                        {% $months = [1=>'Januari','Februari','Mars','April','Maj','Juni','Juli','Augusti','September','Oktober','November','December']; %}
-                        {{ $months[(int)$dt->format('n')] . ' ' . $dt->format('Y') }}
-                      {% endif; %}
-                    </time>
-                    <h5 class="text-sm font-bold text-slate-800 mt-1">
-                      <span class="{{ ($i === 0) ? 'text-blue-600' : 'text-slate-500' }} mr-1">{{ $update->getAttribute('version') }}</span>
-                      {{ $update->getAttribute('title') }}
-                    </h5>
-                    <p class="text-xs text-slate-500 mt-1 leading-relaxed line-clamp-2">
-                      {{ $update->getAttribute('description') }}
-                    </p>
-                  </div>
-                  {% $i++; %}
-                  {% endforeach; %}
-
-                  {% if(count($recentUpdates) === 0) : %}
-                    <p class="text-xs text-slate-400 italic">Inga uppdateringar loggade.</p>
+                  {% if ($dt->format('Y-m-d') === date('Y-m-d')) : %}
+                    Idag
+                  {% else : %}
+                    {% $months = [1=>'Januari','Februari','Mars','April','Maj','Juni','Juli','Augusti','September','Oktober','November','December']; %}
+                    {{ $months[(int)$dt->format('n')] . ' ' . $dt->format('Y') }}
                   {% endif; %}
-                </div>
+                </time>
+                <h5 class="text-sm font-bold text-slate-800 mt-1">
+                  <span class="{{ ($i === 0) ? 'text-blue-600' : 'text-slate-500' }} mr-1">{{ $update->getAttribute('version') }}</span>
+                  {{ $update->getAttribute('title') }}
+                </h5>
+                <p class="text-xs text-slate-500 mt-1 leading-relaxed line-clamp-2">
+                  {{ $update->getAttribute('description') }}
+                </p>
               </div>
-            </aside>
-<!--        <aside class="area-aside-right sticky-top pt-6 lg:pt-4">-->
-<!--          <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">-->
-<!--            <div class="bg-slate-50 px-5 py-3 border-b border-gray-100">-->
-<!--                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Systemuppdateringar</h4>-->
-<!--            </div>-->
-<!--            <div class="p-5 space-y-6">-->
-<!--              <div class="relative pl-4 border-l-2 border-blue-500">-->
-<!--                <time class="text-xxs font-bold text-slate-400 uppercase">Idag</time>-->
-<!--                <h5 class="text-sm font-bold text-slate-800 mt-1">Radix v1.0.0 Lanserad</h5>-->
-<!--                <p class="text-xs text-slate-500 mt-1">Stabil version med fullt stöd för Tailwind v4 och optimerad esbuild-pipeline.</p>-->
-<!--              </div>-->
-<!---->
-<!--              <div class="relative pl-4 border-l-2 border-gray-200">-->
-<!--                <time class="text-xxs font-bold text-slate-400 uppercase">Januari 2026</time>-->
-<!--                <h5 class="text-sm font-bold text-slate-800 mt-1">ORM Förbättringar</h5>-->
-<!--                <p class="text-xs text-slate-500 mt-1">Lade till stöd för avancerade relationer och automatiserad mass-assignment skydd.</p>-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </aside>-->
+              {% $i++; %}
+              {% endforeach; %}
 
+              {% if(count($recentUpdates) === 0) : %}
+                <p class="text-xs text-slate-400 italic">Inga uppdateringar loggade.</p>
+              {% endif; %}
+            </div>
+          </div>
+        </aside>
       </div>
     </section>
 {% endblock %}

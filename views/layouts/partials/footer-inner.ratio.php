@@ -64,6 +64,6 @@
         &copy; {{ copyright(getenv('APP_COPY'), getenv('APP_COPY_YEAR')) }} | Radix Framework
     </p>
     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-        Build: v1.0.0
+        Build: {{ $currentVersion }}
     </div>
 </div>

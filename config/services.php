@@ -403,12 +403,18 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
     $viewer = new \Radix\Viewer\RadixTemplateViewer();
     $viewer->enableDebugMode(getenv('APP_DEBUG') === '1');
 
+    // I din tjänstekonfiguration (t.ex. där $viewer skapas)
+    $latestUpdate = \App\Models\SystemUpdate::orderBy('released_at', 'DESC')->first();
+
+    // Dela hela objektet eller bara versionssträngen
+    $viewer->shared('currentVersion', $latestUpdate ? $latestUpdate->getAttribute('version') : 'v1.0.0');
+    $viewer->shared('latestUpdate', $latestUpdate); // Bra att ha för Dashboard också!
+
     // Lägg till delade variabler
     $viewer->shared('datetime', $datetime); // Gör datetime tillgänglig i alla vyer
     $viewer->shared('session', $session);
 
     /** @var \Radix\Session\SessionInterface $session */
-
     $userIdRaw = $session->get(\Radix\Session\Session::AUTH_KEY);
 
     /** @var int|null $userId */
