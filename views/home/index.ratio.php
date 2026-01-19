@@ -81,6 +81,73 @@
       </div>
     </section>
 
+    <!-- Testimonials Section -->
+    <section class="pt-16 pb-24 bg-slate-50">
+      <div class="container-centered">
+        <div class="text-center mb-16">
+          <span class="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest rounded-full mb-4">
+            Community & Feedback
+          </span>
+          <h2 class="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">Vad utvecklare säger</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 -mt-8 relative z-10">
+          <!-- Omdöme 1 -->
+          <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 flex flex-col h-full shadow-sm hover:shadow-xl transition-all duration-300">
+            <div class="flex gap-1 mb-6 text-amber-400">
+              {% for($i=0; $i<5; $i++) : %}<svg xmlns="http://www.w3.org/2000/svg" class="size-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>{% endfor; %}
+            </div>
+            <blockquote class="text-lg text-slate-700 leading-relaxed italic mb-8 flex-1">
+              "Radix gav mig den kontroll jag saknat i större frameworks. Hastigheten i kärnan är makalös och koden är föredömligt ren."
+            </blockquote>
+            <div class="flex items-center gap-4">
+              <div class="size-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-200">A</div>
+              <div>
+                <cite class="not-italic font-bold text-slate-900 block">Anders Viklund</cite>
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Fullstack Utvecklare</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Omdöme 2 -->
+          <div class="bg-slate-900 p-8 rounded-[2.5rem] flex flex-col h-full shadow-2xl relative overflow-hidden group hover:-translate-y-2 transition-transform duration-500">
+            <div class="absolute -right-4 -top-4 size-24 bg-blue-500/10 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+
+            <div class="flex gap-1 mb-6 text-blue-400">
+              {% for($i=0; $i<5; $i++) : %}<svg xmlns="http://www.w3.org/2000/svg" class="size-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>{% endfor; %}
+            </div>
+            <blockquote class="text-lg text-slate-300 leading-relaxed italic mb-8 flex-1">
+              "Att gå från 0 till 100% mutation coverage var förvånansvärt smidigt med de inbyggda verktygen. Radix Engine är verkligen byggt för kvalitet."
+            </blockquote>
+            <div class="flex items-center gap-4">
+              <div class="size-12 bg-slate-800 rounded-2xl flex items-center justify-center text-blue-400 font-bold text-lg border border-slate-700">S</div>
+              <div>
+                <cite class="not-italic font-bold text-white block">Sara Lindström</cite>
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Systemarkitekt</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Omdöme 3 -->
+          <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 flex flex-col h-full shadow-sm hover:shadow-xl transition-all duration-300">
+            <div class="flex gap-1 mb-6 text-amber-400">
+              {% for($i=0; $i<5; $i++) : %}<svg xmlns="http://www.w3.org/2000/svg" class="size-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>{% endfor; %}
+            </div>
+            <blockquote class="text-lg text-slate-700 leading-relaxed italic mb-8 flex-1">
+              "Changelog-funktionen och den dynamiska dashboarden gör det extremt lätt att hålla koll på systemets hälsa över tid."
+            </blockquote>
+            <div class="flex items-center gap-4">
+              <div class="size-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-emerald-200">M</div>
+              <div>
+                <cite class="not-italic font-bold text-slate-900 block">Mikael Sundqvist</cite>
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Backend Lead</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Call to Action -->
     <section class="pb-24">
         <div class="container-centered px-4">
@@ -96,51 +163,51 @@
         </div>
     </section>
 
-        <!-- Technical Excellence / Test Results -->
-        <section class="py-20 bg-slate-50 relative overflow-hidden">
-          <!-- Subtilt mönster för att bryta av -->
-          <div class="absolute right-0 top-0 w-64 h-64 bg-blue-100/50 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+    <!-- Technical Excellence / Test Results -->
+    <section class="py-20 bg-slate-50 relative overflow-hidden">
+      <!-- Subtilt mönster för att bryta av -->
+      <div class="absolute right-0 top-0 w-64 h-64 bg-blue-100/50 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
 
-          <div class="container-centered relative z-10">
-            <div class="bg-white border border-gray-100 rounded-[3rem] p-8 md:p-16 shadow-xl flex flex-col lg:flex-row items-center gap-12">
+      <div class="container-centered relative z-10">
+        <div class="bg-white border border-gray-100 rounded-[3rem] p-8 md:p-16 shadow-xl flex flex-col lg:flex-row items-center gap-12">
 
-              <!-- Siffrorna -->
-              <div class="flex gap-4 sm:gap-8">
-                <div class="text-center">
-                  <div class="size-24 sm:size-32 rounded-full border-4 border-emerald-500 flex items-center justify-center mb-4 bg-emerald-50 shadow-inner">
-                    <span class="text-2xl sm:text-3xl font-black text-emerald-600">100%</span>
-                  </div>
-                  <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">MSI Score</span>
-                </div>
-                <div class="text-center">
-                  <div class="size-24 sm:size-32 rounded-full border-4 border-blue-500 flex items-center justify-center mb-4 bg-blue-50 shadow-inner">
-                    <span class="text-2xl sm:text-3xl font-black text-blue-600">100%</span>
-                  </div>
-                  <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Coverage</span>
-                </div>
+          <!-- Siffrorna -->
+          <div class="flex gap-4 sm:gap-8">
+            <div class="text-center">
+              <div class="size-24 sm:size-32 rounded-full border-4 border-emerald-500 flex items-center justify-center mb-4 bg-emerald-50 shadow-inner">
+                <span class="text-2xl sm:text-3xl font-black text-emerald-600">100%</span>
               </div>
+              <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">MSI Score</span>
+            </div>
+            <div class="text-center">
+              <div class="size-24 sm:size-32 rounded-full border-4 border-blue-500 flex items-center justify-center mb-4 bg-blue-50 shadow-inner">
+                <span class="text-2xl sm:text-3xl font-black text-blue-600">100%</span>
+              </div>
+              <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Coverage</span>
+            </div>
+          </div>
 
-              <!-- Texten -->
-              <div class="flex-1 text-center lg:text-left">
-                <span class="inline-block px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-widest rounded-full mb-4">
-                  Kvalitetssäkrad kod
-                </span>
-                <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-6">Testkvalitet i världsklass</h2>
-                <p class="text-slate-600 leading-relaxed mb-6">
-                  Radix Framework är inte bara byggt för fart – det är byggt för att hålla. Med <strong>100% MSI (Mutation Score Indicator)</strong> på över 4000 mutationer är varje logisk rad kod verifierad.
-                </p>
-                <div class="flex flex-wrap justify-center lg:justify-start gap-4">
-                  <div class="flex items-center gap-2 text-sm font-bold text-slate-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                    Noll Deprecations
-                  </div>
-                  <div class="flex items-center gap-2 text-sm font-bold text-slate-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                    Full Typsäkerhet
-                  </div>
-                </div>
+          <!-- Texten -->
+          <div class="flex-1 text-center lg:text-left">
+            <span class="inline-block px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-widest rounded-full mb-4">
+              Kvalitetssäkrad kod
+            </span>
+            <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-6">Testkvalitet i världsklass</h2>
+            <p class="text-slate-600 leading-relaxed mb-6">
+              Radix Framework är inte bara byggt för fart – det är byggt för att hålla. Med <strong>100% MSI (Mutation Score Indicator)</strong> på över 4000 mutationer är varje logisk rad kod verifierad.
+            </p>
+            <div class="flex flex-wrap justify-center lg:justify-start gap-4">
+              <div class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                Noll Deprecations
+              </div>
+              <div class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                Full Typsäkerhet
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </div>
+    </section>
 {% endblock %}
