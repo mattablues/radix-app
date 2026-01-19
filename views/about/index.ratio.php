@@ -107,8 +107,13 @@
               {% $i++; %}
               {% endforeach; %}
 
-              {% if(count($recentUpdates) === 0) : %}
-                <p class="text-xs text-slate-400 italic">Inga uppdateringar loggade.</p>
+              {% if(count($recentUpdates) > 0) : %}
+                <div class="pt-4 mt-2 border-t border-slate-100">
+                    <a href="{{ route('about.changelog') }}" class="text-xxs font-bold text-blue-600 hover:text-blue-800 uppercase tracking-widest transition-colors flex items-center gap-1">
+                        Visa alla uppdateringar
+                        <svg xmlns="http://www.w3.org/2000/svg" class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>
+                    </a>
+                </div>
               {% endif; %}
             </div>
           </div>

@@ -21,6 +21,12 @@ $router->group(['middleware' => ['request.id', 'api.logger', 'security.headers',
         \App\Controllers\AboutController::class, 'index',
     ])->name('about.index');
 
+    $router->get(
+        '/changelog',
+        [
+            \App\Controllers\AboutController::class, 'changelog']
+    )->name('about.changelog');
+
     // Throttle bara POST till kontaktformuläret
     $router->post('/contact', [
         \App\Controllers\ContactController::class, 'create',

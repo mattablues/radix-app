@@ -36,6 +36,27 @@ session_set_save_handler($sessionHandler, true);
 
 /** @var \Radix\Session\SessionInterface $session */
 $session = $container->get(\Radix\Session\SessionInterface::class);
+
+// Kontrollera om vi kör via CLI och om SESSION_DRIVER är database
+if (php_sapi_name() === 'cli' && getenv('SESSION_DRIVER') === 'database') {
+    /** @var \Radix\Database\Connection $db */
+    $db = $container->get(\Radix\Database\Connection::class);
+
+    try {
+        // En extremt snabb koll om tabellen finns
+        $db->execute("SELECT 1 FROM sessions LIMIT 1");
+    } catch (\PDOException $e) {
+        // Om tabellen inte finns (eller databasen är nere), stoppa med instruktioner
+        echo "\n\033[31m[FEL] Systemet kan inte starta.\033[0m\n";
+        echo "SESSION_DRIVER är satt till 'database' men tabellen 'sessions' saknas.\n\n";
+        echo "Gör följande:\n";
+        echo "1. Ändra till SESSION_DRIVER=file i din .env fil.\n";
+        echo "2. Kör: php radix app:setup\n";
+        echo "3. Ändra tillbaka till SESSION_DRIVER=database om du önskar.\n\n";
+        exit(1);
+    }
+}
+
 $session->start();
 
 setAppContainer($container);

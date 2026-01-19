@@ -340,6 +340,21 @@ $container->add(\Radix\Console\Commands\MakeSeederCommand::class, function () {
     return new \Radix\Console\Commands\MakeSeederCommand($seederPath, $templatePath);
 });
 
+// Lägg till AppSetupCommand i containern
+$container->add(\Radix\Console\Commands\AppSetupCommand::class, function () use ($container) {
+    $migrator = $container->get(\Radix\Database\Migration\Migrator::class);
+    $seederRunner = $container->get(\Radix\Database\Migration\SeederRunner::class);
+    $cacheCommand = $container->get(\Radix\Console\Commands\CacheClearCommand::class);
+
+    if (!$migrator instanceof \Radix\Database\Migration\Migrator
+        || !$seederRunner instanceof \Radix\Database\Migration\SeederRunner
+        || !$cacheCommand instanceof \Radix\Console\Commands\CacheClearCommand) {
+        throw new \RuntimeException('Failed to resolve dependencies for AppSetupCommand');
+    }
+
+    return new \Radix\Console\Commands\AppSetupCommand($migrator, $seederRunner, $cacheCommand);
+});
+
 $container->add(\Radix\Console\CommandsRegistry::class, function () {
     $registry = new CommandsRegistry();
 
@@ -361,6 +376,7 @@ $container->add(\Radix\Console\CommandsRegistry::class, function () {
     $registry->register('make:view', Radix\Console\Commands\MakeViewCommand::class);
     $registry->register('cache:clear', \Radix\Console\Commands\CacheClearCommand::class);
 
+    $registry->register('app:setup', \Radix\Console\Commands\AppSetupCommand::class);
 
     return $registry;
 });

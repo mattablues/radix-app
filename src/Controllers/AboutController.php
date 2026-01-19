@@ -20,4 +20,17 @@ class AboutController extends AbstractController
             'recentUpdates' => $recentUpdates,
         ]);
     }
+
+    public function changelog(): Response
+    {
+        $rawPage = $this->request->get['page'] ?? 1;
+        $page = is_numeric($rawPage) ? (int) $rawPage : 1;
+
+        $updates = \App\Models\SystemUpdate::orderBy('released_at', 'DESC')
+            ->paginate(10, $page);
+
+        return $this->view('about.changelog', [
+            'updates' => $updates,
+        ]);
+    }
 }
