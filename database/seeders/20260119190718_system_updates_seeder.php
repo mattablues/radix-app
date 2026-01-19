@@ -6,7 +6,7 @@ final class SystemUpdatesSeeder
 {
     public function run(): void
     {
-        $version = '1.0.0';
+        $version = 'v1.0.0';
 
         // Kontrollera om versionen redan finns för att undvika dubbletter
         $systemUpdates = \App\Models\SystemUpdate::where('version', '=', $version)
