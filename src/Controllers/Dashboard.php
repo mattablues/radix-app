@@ -9,6 +9,8 @@ use App\Models\SystemUpdate;
 use App\Models\User;
 use Radix\Controller\AbstractController;
 use Radix\Http\Response;
+use RuntimeException;
+use Throwable;
 
 class Dashboard extends AbstractController
 {
@@ -26,11 +28,30 @@ class Dashboard extends AbstractController
             ->limit(5)
             ->get();
 
+        $systemStatus = 'OK';
+        $statusColor = 'emerald';
+
+        try {
+            // 1. Kolla Databasen
+            $dbCheck = User::query()->selectRaw('1')->fetchRaw();
+
+            $isWritable = is_dir(cache_path('views')) && is_writable(cache_path('views'));
+
+            if (!$dbCheck || !$isWritable) {
+                throw new RuntimeException('System health check failed');
+            }
+        } catch (Throwable $e) {
+            $systemStatus = 'Error';
+            $statusColor = 'red';
+        }
+
 
         return $this->view('dashboard.index', [
             'userCount'    => $userCount,
             'latestUpdate' => $latestUpdate,
             'latestEvents' => $latestEvents,
+            'systemStatus' => $systemStatus,
+            'statusColor' => $statusColor,
         ]);
     }
 }

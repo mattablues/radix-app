@@ -1,6 +1,7 @@
 {% extends "layouts/admin.ratio.php" %}
 {% block title %}Ny Systemuppdatering{% endblock %}
 {% block pageId %}admin-update-create{% endblock %}
+{% block searchId %}search-users{% endblock %}
 {% block body %}
     <section>
       <div class="mb-8">

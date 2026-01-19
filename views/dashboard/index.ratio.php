@@ -70,12 +70,11 @@
                         <span class="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
                           {{ $event->message }}
                         </span>
-                        <?php
-                          $eventUser = $event->getRelation('user');
-                          if (!$eventUser instanceof \App\Models\User && method_exists($event, 'user')) {
-                              $eventUser = $event->user()->get();
-                          }
-                        ?>
+
+                        {% $eventUser = $event->getRelation('user'); %}
+                        {% if (!$eventUser instanceof \App\Models\User && method_exists($event, 'user')) : %}
+                          {{ $eventUser = $event->user()->get() }}
+                        {% endif; %}
                         {% if($eventUser instanceof \App\Models\User) : %}
                           <span class="text-[10px] text-gray-400 font-medium italic">utfört av {{ $eventUser->first_name }}</span>
                         {% endif; %}
@@ -146,8 +145,8 @@
               <div class="absolute -right-4 -top-4 size-24 bg-blue-500/10 rounded-full"></div>
               <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4 relative z-10">Serverhälsa</h3>
               <div class="flex items-center gap-3 mb-6 relative z-10">
-                  <div class="size-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                  <span class="text-sm font-medium text-slate-200">Status: OK</span>
+                  <div class="size-2 bg-{{ $statusColor ?? 'emerald' }}-500 rounded-full {{ ($statusColor ?? 'emerald') === 'emerald' ? 'animate-pulse' : '' }}"></div>
+                  <span class="text-sm font-medium text-slate-200">Status: {{ $systemStatus ?? 'OK' }}</span>
               </div>
               <a href="{{ route('admin.health.index') }}" class="inline-flex items-center text-[10px] font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-wider relative z-10">
                   Visa hälsorapport

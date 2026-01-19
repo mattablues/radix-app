@@ -1,6 +1,7 @@
 {% extends "layouts/admin.ratio.php" %}
 {% block title %}Systemuppdateringar{% endblock %}
 {% block pageId %}admin-updates-index{% endblock %}
+{% block searchId %}search-users{% endblock %}
 {% block body %}
     <section x-data="{ openDeleteModal: false, selectedUpdate: { id: null, version: '' } }">
       <div class="flex items-start justify-between gap-4 mb-6">
@@ -8,14 +9,8 @@
             <h1 class="text-3xl font-semibold">Systemuppdateringar</h1>
             <p class="text-sm text-gray-500 mt-1">Hantera systemets changelog och historik.</p>
         </div>
-        <div class="flex flex-col items-end gap-2">
-            <a href="{{ route('admin.system-update.create') }}" class="inline-flex items-center gap-2 bg-indigo-600 text-white py-2 px-4 rounded-lg font-bold hover:bg-indigo-700 transition duration-300 shadow-md shadow-indigo-100">
-                <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
-                Ny uppdatering
-            </a>
-            <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-              {{ $updates['pagination']['total'] ?? 0 }} totalt
-            </div>
+        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-3">
+          {{ $updates['pagination']['total'] ?? 0 }} loggar totalt
         </div>
       </div>
 

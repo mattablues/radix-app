@@ -6,8 +6,8 @@
       <div class="container-centered layout-aside-both [--aside-left-w:250px] [--aside-right-w:250px]">
 
         <!-- Vänster Sidebar: Systemstatus & Info -->
-        <aside class="area-aside-left sticky-top lg:pt-4">
-          <div class="space-y-4">
+        <aside class="area-aside-left sticky-top pt-6 lg:pt-4">
+          <div class="space-y-6 lg:space-y-4">
             <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
               <h4 class="font-bold text-slate-800 mb-2 uppercase text-[10px] tracking-widest text-blue-600">Teknisk Support</h4>
               <p class="text-xs text-slate-500 leading-relaxed">Ärenden rörande frameworket eller databasen hanteras prioriterat under vardagar.</p>
@@ -20,7 +20,7 @@
         </aside>
 
         <!-- Huvudinnehåll (Formulär) -->
-        <div class="area-content lg:px-6">
+        <div class="area-content lg:px-8">
           <div class="mb-8">
             <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Kontakta Radix</h1>
             <p class="text-slate-500">Frågor om licensering, partnerskap eller teknisk assistans? Vi är bara ett meddelande bort.</p>
@@ -87,7 +87,7 @@
         </div>
 
         <!-- Höger Sidebar: Tech Stack & Privacy -->
-        <aside class="area-aside-right sticky-top lg:pt-4">
+        <aside class="area-aside-right sticky-top  pt-6 lg:pt-4">
           <div class="bg-slate-900 rounded-2xl p-6 text-white shadow-xl">
             <h4 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-4">Om Radix Support</h4>
             <ul class="space-y-4 text-xs">

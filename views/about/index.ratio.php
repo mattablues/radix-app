@@ -6,25 +6,32 @@
       <div class="container-centered layout-aside-both [--aside-left-w:250px] [--aside-right-w:250px]">
 
         <!-- Vänster Sidebar: Filosofi & Fakta -->
-        <aside class="area-aside-left sticky-top lg:pt-4">
-          <div class="space-y-4">
+        <aside class="area-aside-left sticky-top pt-6 lg:pt-4">
+          <div class="space-y-6 lg:space-y-4">
             <div class="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm">
               <h4 class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">Vår Filosofi</h4>
               <p class="text-sm text-slate-600 leading-relaxed italic">"Att leverera en minimalistisk men kraftfull grund för webbapplikationer där prestanda och kontroll möts."</p>
             </div>
 
-            <div class="bg-slate-900 p-5 rounded-2xl shadow-xl text-white">
-              <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Systemfakta</h4>
-              <ul class="text-sm space-y-2">
-                <li class="flex justify-between border-b border-slate-800 pb-1">
-                  <span class="text-slate-400">Core</span>
-                  <span class="font-medium">PHP 8.3</span>
-                </li>
-                <li class="flex justify-between border-b border-slate-800 pb-1">
-                  <span class="text-slate-400">Version</span>
-                  <span class="font-medium text-blue-400">1.0.0 Stable</span>
-                </li>
-                <li class="flex justify-between border-b border-slate-800 pb-1">
+              <div class="bg-slate-900 p-5 rounded-2xl shadow-xl text-white">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Systemfakta</h4>
+                <ul class="text-sm space-y-2">
+                  <li class="flex justify-between border-b border-slate-800 pb-1">
+                    <span class="text-slate-400">Core</span>
+                    <span class="font-medium">PHP 8.3</span>
+                  </li>
+                  <li class="flex justify-between border-b border-slate-800 pb-1">
+                    <span class="text-slate-400">Version</span>
+                    <span class="font-medium text-blue-400">
+                      {% if(isset($recentUpdates[0])) : %}
+                        {{ $recentUpdates[0]->getAttribute('version') }}
+                        {{ $recentUpdates[0]->getAttribute('is_major') ? 'Stable' : 'Update' }}
+                      {% else : %}
+                        v1.0.0
+                      {% endif; %}
+                    </span>
+                  </li>
+                  <li class="flex justify-between border-b border-slate-800 pb-1">
                     <span class="text-slate-400">Frontend</span>
                     <span class="font-medium text-blue-400">Tailwind v4</span>
                   </li>
@@ -41,7 +48,7 @@
             <p class="text-xl text-slate-500 leading-relaxed">Ett modernt, lättviktigt och högpresterande framework byggt för professionell webbutveckling.</p>
           </div>
 
-          <div class="prose prose-slate max-w-none space-y-6">
+          <div class="prose prose-slate max-w-none lg:space-y-6">
             <div class="bg-white border border-gray-200 p-8 rounded-3xl shadow-sm relative overflow-hidden">
               <!-- Dekorativt element -->
               <div class="absolute -right-10 -top-10 w-40 h-40 bg-blue-50 rounded-full opacity-50"></div>
@@ -56,7 +63,7 @@
             </div>
 
             <!-- Funktionella Fördelar -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 lg:mt-8">
                 <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
                     <h4 class="font-bold text-blue-900 mb-2">Total Kontroll</h4>
                     <p class="text-sm text-blue-800/80">Ingen "magi" i bakgrunden. Du styr din data, dina routes och dina vyer precis som du vill.</p>
@@ -69,27 +76,63 @@
           </div>
         </div>
 
-        <!-- Höger Sidebar: Changelog/Updates -->
-        <aside class="area-aside-right sticky-top lg:pt-4">
-          <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-            <div class="bg-slate-50 px-5 py-3 border-b border-gray-100">
-                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Systemuppdateringar</h4>
-            </div>
-            <div class="p-5 space-y-6">
-              <div class="relative pl-4 border-l-2 border-blue-500">
-                <time class="text-xxs font-bold text-slate-400 uppercase">Idag</time>
-                <h5 class="text-sm font-bold text-slate-800 mt-1">Radix v1.0.0 Lanserad</h5>
-                <p class="text-xs text-slate-500 mt-1">Stabil version med fullt stöd för Tailwind v4 och optimerad esbuild-pipeline.</p>
-              </div>
+            <aside class="area-aside-right sticky-top pt-6 lg:pt-4">
+              <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                <div class="bg-slate-50 px-5 py-3 border-b border-gray-100">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Systemuppdateringar</h4>
+                </div>
+                <div class="p-5 space-y-6">
+                  {% $i = 0; %}
+                  {% foreach($recentUpdates as $update) : %}
+                  <div class="relative pl-4 border-l-2 {{ ($i === 0) ? 'border-blue-500' : 'border-slate-200' }}">
+                    <time class="text-xxs font-bold {{ ($i === 0) ? 'text-blue-600' : 'text-slate-400' }} uppercase">
+                      {% $dateVal = $update->getAttribute('released_at'); %}
+                      {% $dt = $datetime->dateTime($dateVal); %}
 
-              <div class="relative pl-4 border-l-2 border-gray-200">
-                <time class="text-xxs font-bold text-slate-400 uppercase">Januari 2026</time>
-                <h5 class="text-sm font-bold text-slate-800 mt-1">ORM Förbättringar</h5>
-                <p class="text-xs text-slate-500 mt-1">Lade till stöd för avancerade relationer och automatiserad mass-assignment skydd.</p>
+                      {% if ($dt->format('Y-m-d') === date('Y-m-d')) : %}
+                        Idag
+                      {% else : %}
+                        {% $months = [1=>'Januari','Februari','Mars','April','Maj','Juni','Juli','Augusti','September','Oktober','November','December']; %}
+                        {{ $months[(int)$dt->format('n')] . ' ' . $dt->format('Y') }}
+                      {% endif; %}
+                    </time>
+                    <h5 class="text-sm font-bold text-slate-800 mt-1">
+                      <span class="{{ ($i === 0) ? 'text-blue-600' : 'text-slate-500' }} mr-1">{{ $update->getAttribute('version') }}</span>
+                      {{ $update->getAttribute('title') }}
+                    </h5>
+                    <p class="text-xs text-slate-500 mt-1 leading-relaxed line-clamp-2">
+                      {{ $update->getAttribute('description') }}
+                    </p>
+                  </div>
+                  {% $i++; %}
+                  {% endforeach; %}
+
+                  {% if(count($recentUpdates) === 0) : %}
+                    <p class="text-xs text-slate-400 italic">Inga uppdateringar loggade.</p>
+                  {% endif; %}
+                </div>
               </div>
-            </div>
-          </div>
-        </aside>
+            </aside>
+<!--        <aside class="area-aside-right sticky-top pt-6 lg:pt-4">-->
+<!--          <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">-->
+<!--            <div class="bg-slate-50 px-5 py-3 border-b border-gray-100">-->
+<!--                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Systemuppdateringar</h4>-->
+<!--            </div>-->
+<!--            <div class="p-5 space-y-6">-->
+<!--              <div class="relative pl-4 border-l-2 border-blue-500">-->
+<!--                <time class="text-xxs font-bold text-slate-400 uppercase">Idag</time>-->
+<!--                <h5 class="text-sm font-bold text-slate-800 mt-1">Radix v1.0.0 Lanserad</h5>-->
+<!--                <p class="text-xs text-slate-500 mt-1">Stabil version med fullt stöd för Tailwind v4 och optimerad esbuild-pipeline.</p>-->
+<!--              </div>-->
+<!---->
+<!--              <div class="relative pl-4 border-l-2 border-gray-200">-->
+<!--                <time class="text-xxs font-bold text-slate-400 uppercase">Januari 2026</time>-->
+<!--                <h5 class="text-sm font-bold text-slate-800 mt-1">ORM Förbättringar</h5>-->
+<!--                <p class="text-xs text-slate-500 mt-1">Lade till stöd för avancerade relationer och automatiserad mass-assignment skydd.</p>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </aside>-->
 
       </div>
     </section>

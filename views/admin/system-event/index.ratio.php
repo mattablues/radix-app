@@ -1,6 +1,7 @@
 {% extends "layouts/admin.ratio.php" %}
 {% block title %}Händelselogg{% endblock %}
 {% block pageId %}admin-events-index{% endblock %}
+{% block searchId %}search-users{% endblock %}
 {% block body %}
     <section>
       <div class="flex items-start justify-between gap-4 mb-6">
