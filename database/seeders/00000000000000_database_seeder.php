@@ -8,6 +8,7 @@ final readonly class DatabaseSeeder
     {
         (new UsersSeeder())->run();
         (new StatusSeeder())->run();
+        (new SystemUpdatesSeeder())->run();
     }
 
     public function down(): void
@@ -15,5 +16,6 @@ final readonly class DatabaseSeeder
         // Viktigt: ta bort barn först
         (new StatusSeeder())->down();
         (new UsersSeeder())->down();
+        (new SystemUpdatesSeeder())->down();
     }
 }
