@@ -3,10 +3,11 @@
 {% block pageId %}changelog{% endblock %}
 {% block body %}
 <section class="py-12 bg-slate-50">
-    <div class="container-centered max-w-3xl">
+    <div class="container-centered-sm max-w-3xl">
         <div class="mb-12 text-center">
             <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-4">Changelog</h1>
-            <p class="text-lg text-slate-500">Följ resan och se alla uppdateringar av Radix Engine.</p>
+            <div class="h-1.5 w-20 bg-blue-600 rounded-full mx-auto mb-6"></div>
+            <p class="text-lg text-slate-500 leading-relaxed">Följ resan och se alla uppdateringar av Radix Engine.</p>
         </div>
 
         <div class="space-y-12">
