@@ -403,8 +403,16 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
     $viewer = new \Radix\Viewer\RadixTemplateViewer();
     $viewer->enableDebugMode(getenv('APP_DEBUG') === '1');
 
-    // I din tjänstekonfiguration (t.ex. där $viewer skapas)
-    $latestUpdate = \App\Models\SystemUpdate::orderBy('released_at', 'DESC')->first();
+    $latestUpdate = null;
+
+    try {
+        // Försök hämta senaste uppdateringen
+        $latestUpdate = \App\Models\SystemUpdate::orderBy('released_at', 'DESC')
+            ->first();
+    } catch (\PDOException $e) {
+        // Om tabellen inte finns (t.ex. vid första körning på Linux),
+        // låter vi $latestUpdate förbli null istället för att krascha hela systemet.
+    }
 
     // Dela hela objektet eller bara versionssträngen
     $viewer->shared('currentVersion', $latestUpdate ? $latestUpdate->getAttribute('version') : 'v1.0.0');
