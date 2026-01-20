@@ -128,7 +128,7 @@ class RegisterController extends AbstractController
 
         // Skapa en personlig API-token för användaren (giltig i t.ex. 365 dagar)
         \App\Models\Token::createToken(
-            $user->id,
+            (int) $user->id,
             'Default Personal Token',
             365
         );

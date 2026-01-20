@@ -67,19 +67,28 @@
 
         <!-- Åtgärder nedanför kortet -->
         <div class="flex items-center justify-between mt-6 px-2">
-          <a href="{{ route('admin.user.index') }}" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Tillbaka till listan
-          </a>
+          {% if($currentUser->hasAtLeast('moderator')) : %}
+            <a href="{{ route('admin.user.index') }}" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Tillbaka till konton
+            </a>
+          {% else : %}
+            <a href="{{ route('dashboard.index') }}" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              Tillbaka till översikten
+            </a>
+          {% endif; %}
+
           <div class="flex gap-3">
             <a href="{{ route('user.edit') }}" class="inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all rounded-lg shadow-md shadow-indigo-100">
               Redigera profil
             </a>
           </div>
         </div>
-      </div>
 
       <div class="w-full max-w-3xl mt-8 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
         <div class="flex items-center justify-between mb-4">
