@@ -162,3 +162,6 @@ php vendor/bin/infection --configuration=infection.json.dist --threads=1 --no-pr
 
 // Detta
 php vendor/bin/infection --configuration=infection.json.dist --threads=1 --no-progress --show-mutations
+
+MD Powershell
+php radix --md > docs/CLI.md

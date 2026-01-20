@@ -1,25 +1,108 @@
-# Templates / Views (Radix Framework)
+# Radix Template System
 
-## Översikt
-Den här guiden beskriver template-systemet:
-- templates i `views/`
-- syntax (placeholders, directives)
-- components + slots
-- extends/includes
-- cache (views cache path) och invalidation
+Radix använder ett eget templatesystem (via `RadixTemplateViewer`) som kombinerar kraften i PHP med en renare syntax för layouts och komponenter. Mallfiler använder filändelsen `.ratio.php`.
 
-## Var ligger koden?
-- Templates: `views/`
-- Komponenter: `views/components/`
-- TemplateViewer: (t.ex. `framework/src/Viewer/...` eller motsvarande)
+## Grundläggande syntax
 
-## Grundkoncept
-- Rendera en template med data
-- Globala data (“shared”)
-- Filters (transformera data innan rendering)
-- Cache i production, av i development
+### Variabler
+För att skriva ut en variabel (som automatiskt escapas för säkerhet):
+```html
+{{ $name }}
+```
 
-## Tips
-- Testa template rendering med små fixtures
-- Håll komponenter små
-- Var försiktig med cache-path (ska inte peka på projektroten)
+Om du vill skriva ut rå HTML (använd med försiktighet):
+```html
+{{ $html_content | raw }}
+```
+
+### PHP-direktiv
+Du kan köra vanliga PHP-kommandon inuti `{% %}`:
+```html
+{% foreach ($items as $item): %}
+    <li>{{ $item }}</li>
+{% endforeach; %}
+```
+
+## Layouts och Arv
+
+Du kan definiera en baslayout och sedan utöka den i dina vyer.
+
+**Layout (`views/layouts/app.ratio.php`):**
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% yield title %}Standardtitel{% endyield title %}</title>
+</head>
+<body>
+    <main>
+        {% yield content %}
+    </main>
+</body>
+</html>
+```
+
+**Vy (`views/home.ratio.php`):**
+```html
+{% extends "layouts/app.ratio.php" %}
+
+{% block title %}Hem - Min App{% endblock %}
+
+{% block content %}
+    <h1>Välkommen hem!</h1>
+{% endblock %}
+```
+
+## Komponenter
+
+Komponenter ligger i `views/components/` och anropas med `<x-` taggar.
+
+**Exempelkomponent (`views/components/alert.ratio.php`):**
+```html
+<div class="alert alert-{{ $type }}">
+    {{ $slot }}
+</div>
+```
+
+**Användning:**
+```html
+<x-alert type="danger">
+    Något gick fel!
+</x-alert>
+```
+
+### Namngivna Slots
+Om en komponent behöver mer än ett innehållsområde:
+```html
+<x-modal>
+    <x-slot:title>Bekräfta</x-slot:title>
+    Är du säker på att du vill radera?
+</x-modal>
+```
+
+## Inkluderingar
+Du kan inkludera mindre fragment (t.ex. en header) direkt:
+```html
+{% include "partials/nav.ratio.php" %}
+```
+
+## Globala Variabler
+Du kan dela data med alla vyer via containern eller direkt i `RadixTemplateViewer`:
+```php
+$viewer->shared('appName', 'Radix Framework');
+```
+
+I mallen:
+```html
+{{ $appName }}
+```
+
+## Caching
+Mallar kompileras och cachas i `cache/views/` för maximal prestanda.
+- I **development** (`APP_ENV=dev`) är cachen inaktiverad.
+- I **production** minifieras koden automatiskt vid kompilering.
+
+Du kan rensa cachen via CLI:
+```bash
+php radix cache:clear
+```
