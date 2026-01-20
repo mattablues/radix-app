@@ -126,6 +126,10 @@ $router->group(['middleware' => ['request.id', 'api.logger', 'security.headers',
             \App\Controllers\UserController::class, 'close',
         ])->name('user.close')->middleware(['api.throttle.hard']);
 
+        $router->post('/user/token', [
+            \App\Controllers\UserController::class, 'generateToken',
+        ])->name('user.token.create');
+
         $router->post('/logout', [
             \App\Controllers\Auth\LogoutController::class, 'index',
         ])->name('auth.logout.index');

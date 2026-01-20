@@ -212,6 +212,34 @@ class UserController extends AbstractController
         return new RedirectResponse(route('auth.logout.close-message'));
     }
 
+    public function generateToken(): Response
+    {
+        $this->before();
+        $userIdRaw = $this->request->session()->get(\Radix\Session\Session::AUTH_KEY);
+
+        // Kontrollera att vi har ett giltigt numeriskt ID
+        if (!is_numeric($userIdRaw)) {
+            return new RedirectResponse(route('auth.login.index'));
+        }
+
+        // Genom att skapa en ny variabel med tydlig cast så vet PHPStan att $userId är int
+        $userId = (int) $userIdRaw;
+
+        // Hämta befintlig token om den finns
+        $token = \App\Models\Token::where('user_id', '=', $userId)->first();
+
+        if ($token instanceof \App\Models\Token) {
+            $token->forceDelete();
+        }
+
+        // Skapa en ny fräsch token - skicka med den rena $userId (int)
+        \App\Models\Token::createToken($userId, 'Personal API Token', 365);
+
+        $this->request->session()->setFlashMessage('En ny API-nyckel har genererats.');
+
+        return new RedirectResponse(route('user.index'));
+    }
+
     public function delete(): Response
     {
         $this->before();

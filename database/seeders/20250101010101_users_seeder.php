@@ -20,6 +20,13 @@ final class UsersSeeder
         $user->password = 'korvar65'; // triggar setPasswordAttribute och hashar
         $user->role = 'admin';
         $user->save();
+
+        // Skapa API-token för admin
+        \App\Models\Token::createToken(
+            (int) $user->id,
+            'Admin Personal Token',
+            365
+        );
     }
 
     public function down(): void
@@ -28,6 +35,14 @@ final class UsersSeeder
         if (!$user) {
             return;
         }
+
+        $token = \App\Models\Token::where('email', '=', 'mats@akebrands.se')->first();
+        if (!$token) {
+            return;
+        }
+
+        \App\Models\Token::where('user_id', '=', $user->id)->delete();
+        $token->forceDelete();
 
         \App\Models\Status::where('user_id', '=', $user->id)->delete(); // barn först
         $user->forceDelete(); // hård radering, kringgår soft deletes

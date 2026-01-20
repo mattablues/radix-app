@@ -126,6 +126,16 @@ class RegisterController extends AbstractController
         $status->user_id = $user->id;
         $status->save();
 
+        // Skapa en personlig API-token för användaren (giltig i t.ex. 365 dagar)
+        \App\Models\Token::createToken(
+            $user->id,
+            'Default Personal Token',
+            365
+        );
+
+        // Skapa aktiverings-token för e-post
+        $token = new Token();
+
         $activationLink = getenv('APP_URL') . route('auth.register.activate', ['token' => $tokenValue]);
 
         // Skicka e-postmeddelande

@@ -85,6 +85,8 @@ class UserController extends AbstractController
         $user->password = $password;
         $user->save();
 
+        \App\Models\Token::createToken($user->id, 'Admin Created Token', 365);
+
         // Skapa token
         $token = new Token();
         $tokenValue = $token->value();
