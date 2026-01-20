@@ -9,8 +9,8 @@
   "scripts": {
     "watch:tailwind": "npx rimraf public/css/app.css && npx @tailwindcss/cli -i resources/tailwind/index.css -o public/css/app.css --watch && npx touch public/css/app.css",
     "watch:alpinejs": "npx rimraf public/js/app.js && npx esbuild resources/js/index.js --outfile=public/js/app.js --bundle --watch && npx touch public/js/app.js",
-    "build:css": "npx @tailwindcss/cli -i resources/tailwind/index.css -o public/css/app.css --optimize",
-    "build:js": "npx esbuild resources/js/index.js --outfile=public/js/app.js --bundle --minify",
+    "build:css": "npx @tailwindcss/cli -i resources/tailwind/index.css -o public/css/app.css --optimize --minify",
+    "build:js": "npx esbuild resources/js/index.js --outfile=public/js/app.js --bundle --minify --target=es2020",
     "start:dev": "npm-run-all --parallel watch:tailwind watch:alpinejs",
     "start:build": "npm-run-all build:js build:css",
     "toc": "doctoc README.md --maxlevel 3"
@@ -25,6 +25,7 @@
     "@tailwindcss/cli": "^4.1.12",
     "@tailwindcss/forms": "^0.5.10",
     "alpinejs": "^3.14.9",
+    "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.9",
     "npm-run-all": "^4.1.5",
     "rimraf": "^6.0.1"

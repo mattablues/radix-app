@@ -55,6 +55,19 @@ class ImageTest extends TestCase
             unlink($this->watermarkImagePath);
         }
 
+        // Lista alla filer som skapas av testerna
+        $filesToDelete = [
+            __DIR__ . '/resized_image.jpg',
+            __DIR__ . '/test_thumb.thumb.jpg',
+            __DIR__ . '/test_thumb.jpg', // Originalnamnet före saveThumb
+        ];
+
+        foreach ($filesToDelete as $file) {
+            if (file_exists($file)) {
+                unlink($file);
+            }
+        }
+
         $files = glob(__DIR__ . '/result_*');
         if ($files !== false) {
             array_map('unlink', $files);

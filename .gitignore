@@ -15,10 +15,16 @@ node_modules/
 framework/src/**/*.sh
 *.sh
 
-/tests/uploads*.jpg
-/tests/uploads*.jpeg
-/tests/uploads*.png
-/tests/uploads*.webp
+tests/test_image.jpg
+tests/watermark_image.png
+tests/resized_image.jpg
+tests/resized_image.jpeg
+tests/resized_image.JPG
+tests/result_*
+tests/*.thumb.jpg
+tests/crop_test_*.png
+tests/quality_*.jpg
+tests/thumb_delegate.jpg
 
 # Test/coverage-cache
 .phpunit.cache/
