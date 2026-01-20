@@ -28,8 +28,11 @@ export default class SearchUsers extends Search {
             }
 
             const responseJson = await response.json();
-            this.results = responseJson.body.data || [];
-            this.meta = responseJson.body.meta || this.meta;
+
+            // ÄNDRA DESSA RADER: Ta bort ".body"
+            this.results = responseJson.data || [];
+            this.meta = responseJson.meta || this.meta;
+
             this.renderResults();
 
         } catch (error) {
