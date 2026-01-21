@@ -11,6 +11,11 @@
 - [Utveckling & test](#utveckling--test)
 - [Licens](#licens)
 
+## Dokumentation
+För en djupdykning i hur Radix fungerar, se vår kompletta dokumentationsindex:
+
+👉 **[Radix Documentation Index](docs/INDEX.md)**
+
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Översikt

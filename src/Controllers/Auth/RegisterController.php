@@ -178,7 +178,7 @@ class RegisterController extends AbstractController
 
         if ($user instanceof User) {
             SystemEvent::log(
-                message: "Nytt konto aktiverat: {$user->first_name} {$user->last_name}",
+                message: "Konto aktiverat: {$user->first_name} {$user->last_name}",
                 type: 'info',
                 userId: $user->id
             );
