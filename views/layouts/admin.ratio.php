@@ -6,10 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>{% yield title %}</title>
   <link rel="stylesheet" href="{{ versioned_file('/css/app.css') }}">
-  <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png">
-  <link rel="manifest" href="/favicons/site.webmanifest">
+  <link rel="icon" type="image/png" href="/favicons/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicons/favicon.svg" />
+  <link rel="shortcut icon" href="/favicons/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="Radix" />
+  <link rel="manifest" href="/favicons/site.webmanifest" />
 </head>
 <body x-data="{ openSidebar: false, openCloseModal: false, openDeleteModal: false }" id="{% yield pageId %}" class="relative min-h-screen bg-slate-50 {% yield pageClass %} text-slate-600 antialiased flex flex-col">
 
