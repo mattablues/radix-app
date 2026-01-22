@@ -121,6 +121,97 @@ class RadixTemplateViewerTest extends TestCase
         );
     }
 
+    public function testComponentPropsIgnoreEmptyNames(): void
+    {
+        $componentPath = "{$this->tempViewsPath}components/empty_prop.ratio.php";
+        // Vi lägger till en tagg runt proppen för att kunna söka efter den
+        file_put_contents($componentPath, '{% props(["", "label" => "Default"]) %}[{{ $label }}]');
+
+        $templatePath = "{$this->tempViewsPath}empty_test.ratio.php";
+        file_put_contents($templatePath, '<x-empty_prop />');
+
+        $output = $this->viewer->render('empty_test');
+
+        // 1. Verifiera att värdet är korrekt
+        $this->assertStringContainsString('[Default]', $output);
+
+        // 2. KRITISKT: Verifiera att själva props-taggen har raderats helt
+        // Detta dödar ReturnRemoval eftersom muterad kod skulle lämna kvar taggen i output.
+        $this->assertStringNotContainsString('{% props', $output);
+    }
+
+    public function testPropsTagIsRemovedFromOutput(): void
+    {
+        $componentPath = "{$this->tempViewsPath}components/props_removal.ratio.php";
+        // Vi sätter props på en egen rad med whitespace runt
+        file_put_contents($componentPath, "
+            {% props(['title' => 'Hello']) %}
+            <h1>{{ \$title }}</h1>
+        ");
+
+        $templatePath = "{$this->tempViewsPath}props_removal_test.ratio.php";
+        file_put_contents($templatePath, '<x-props_removal />');
+
+        $output = $this->viewer->render('props_removal_test');
+
+        // Om mutanten ReturnRemoval lever, kommer hela strängen '{% props(['title' => 'Hello']) %}'
+        // att finnas kvar i $componentCode när den skickas till replacePlaceholders.
+        // Det gör att den renderade outputen kommer innehålla den råa taggen.
+        $this->assertStringNotContainsString('{% props', $output);
+
+        // Vi kollar också att titeln faktiskt renderades (bevisar att eval() fungerade)
+        $this->assertStringContainsString('<h1>Hello</h1>', $output);
+
+        // För att verkligen döda mutanten: kontrollera att vi inte har några oväntade
+        // rester av PHP-taggar om mutanten returnerade null (vilket lämnar kvar texten)
+        $this->assertStringNotContainsString('props([', $output);
+    }
+
+    public function testPropsCastingKillsMutants(): void
+    {
+        $componentPath = "{$this->tempViewsPath}components/props_cast.ratio.php";
+        // Vi testar:
+        // 1. KV-par där värdet är ett nummer (ska castas till sträng "1")
+        // 2. Ett ensamt värde "simple" (ska bli variabelnamnet $simple via castToString)
+        file_put_contents($componentPath, '{% props(["active" => 1, "simple"]) %}[{{ $active }}][{{ $simple }}]');
+
+        $templatePath = "{$this->tempViewsPath}props_cast_test.ratio.php";
+        file_put_contents($templatePath, '<x-props_cast />');
+
+        $output = $this->viewer->render('props_cast_test');
+
+        // Om castToString fungerar korrekt ska vi se värdet "1"
+        $this->assertStringContainsString('[1]', $output);
+        // "simple" ska finnas som en tom variabel
+        $this->assertStringContainsString('[]', $output);
+
+        // Verifiera att taggen är helt borta
+        $this->assertStringNotContainsString('{% props', $output);
+    }
+
+    public function testComponentWithPropsAndDefaults(): void
+    {
+        $componentPath = "{$this->tempViewsPath}components/button.ratio.php";
+        file_put_contents(
+            $componentPath,
+            '{% props(["type" => "button", "label", "class" => "btn-primary"]) %}
+             <button type="{{ $type }}" class="{{ $class }}">{{ $label }}</button>'
+        );
+
+        // Test 1: Använd standardvärden för typ och klass, skicka bara label
+        $templatePath = "{$this->tempViewsPath}props_test.ratio.php";
+        file_put_contents($templatePath, '<x-button label="Spara"></x-button>');
+
+        $output = $this->viewer->render('props_test');
+        $this->assertSame('<button type="button" class="btn-primary">Spara</button>', trim($output));
+
+        // Test 2: Skriv över ett standardvärde
+        file_put_contents($templatePath, '<x-button label="Radera" class="btn-danger" type="submit"></x-button>');
+
+        $output = $this->viewer->render('props_test');
+        $this->assertSame('<button type="submit" class="btn-danger">Radera</button>', trim($output));
+    }
+
     public function testItInjectsBlocksIntoDataArray(): void
     {
         // 1. Skapa en layout som använder variablerna

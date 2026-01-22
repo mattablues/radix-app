@@ -16,6 +16,7 @@ Välkommen till dokumentationen för Radix – ett modernt, lättviktigt PHP-ram
 - **[Images & Uploads](IMAGES.md)**: Hantera bilduppladdning och bildbehandling.
 - **[Geo Location](GEOLOCATION.md)**: Identifiera besökarens geografiska position via IP.
 - **[Templates](TEMPLATES.md)**: Bygg snygga vyer med layouts och komponenter.
+- **[Frontend & Components](FRONTEND.md)**: Arbeta med komponenter, props, slots, Tailwind 4 och Alpine.js.
 - **[Services & DI](SERVICES.md)**: Förstå hur beroenden injiceras och tjänster registreras.
 - **[Frontend](FRONTEND.md)**: Arbeta med Tailwind 4 och Alpine.js i vyer.
 

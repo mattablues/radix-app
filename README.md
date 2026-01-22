@@ -11,13 +11,6 @@
 - [Utveckling & test](#utveckling--test)
 - [Licens](#licens)
 
-## Dokumentation
-För en djupdykning i hur Radix fungerar, se vår kompletta dokumentationsindex:
-
-👉 **[Radix Documentation Index](docs/INDEX.md)**
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 ## Översikt
 Radix Framework är ett litet PHP 8.3-framework med “batteries included”: routing, middleware, templating, validering, fil-hantering och ett lättvikts ORM/QueryBuilder.
 
@@ -33,6 +26,13 @@ Radix Framework är ett litet PHP 8.3-framework med “batteries included”: ro
 - CI: PHPUnit, PHPStan, format-check, valfritt Infection + schedule
 
 ## Dokumentation
+
+För en djupdykning i hur Radix fungerar, se vår kompletta dokumentationsindex:
+
+👉 **[Radix Documentation Index](docs/INDEX.md)**
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 - Docs-index: `docs/INDEX.md`
 - ORM / QueryBuilder (full guide): `docs/ORM.md`
 - CI / GitHub Actions:
