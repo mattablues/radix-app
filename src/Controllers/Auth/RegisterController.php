@@ -14,7 +14,6 @@ use Radix\EventDispatcher\EventDispatcher;
 use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
 use Radix\Support\Token;
-use Radix\Support\Validator;
 
 class RegisterController extends AbstractController
 {
@@ -35,81 +34,34 @@ class RegisterController extends AbstractController
     public function create(): Response
     {
         $this->before();
-        $data = $this->request->post;
 
-        $expectedHoneypotId = $this->request->session()->get('honeypot_id');
+        $form = new \App\Requests\Auth\RegisterRequest($this->request);
 
-        if (!is_string($expectedHoneypotId) || $expectedHoneypotId === '') {
-            return new RedirectResponse(route('auth.register.index')); // Tillbaka till formuläret
-        }
+        if (!$form->validate()) {
+            $this->request->session()->set('old', $this->request->post);
 
-        // Validera inkommande data
-        $validator = new Validator($data, [
-            'first_name' => 'required|min:2|max:15',
-            'last_name' => 'required|min:2|max:15',
-            'email' => 'required|email|unique:App\Models\User,email',
-            'password' => 'required|min:8|max:15',
-            'password_confirmation' => 'required|confirmed:password',
-            $expectedHoneypotId => 'honeypot', // Dynamisk validering
-            // If multiple honeypot fields are used, you can use the following code to validate them:
-            //'honeypot'    => 'honeypot_dynamic',
-        ]);
-
-        // Om validering misslyckas
-        if (!$validator->validate()) {
-            $this->request->session()->set('old', $data);
-
-            // If multiple honeypot fields are used, you can use the following code to generate a new honeypot ID:
-            //          $newHoneypotId = $validator->regenerateHoneypotId(fn () => generate_honeypot_id());
-
-            $newHoneypotId = generate_honeypot_id();
-            $this->request->session()->set('honeypot_id', $newHoneypotId);
-
-            // Kontrollera fel och hantera potentiella honeypot-fält.
-            $errors = $validator->errors();
-
-            // Hämta det förväntade honeypot-id:t från sessionen.
-            $newHoneypotId = $this->request->session()->get('honeypot_id');
-
-            // Om honeypot-felet är närvarande, lägg till ett specifikt fel.
-            $honeypotErrors = preg_grep('/^hp_/', array_keys($errors));
-
-            if (!empty($honeypotErrors)) {
-                // Om det finns minst en nyckel som börjar med 'hp_', hantera felet.
-                $validator->addError('form-error', 'Det verkar som att du försöker skicka spam. Försök igen.');
-            }
+            // Generera ny honeypot vid fel
+            $this->request->session()->set('honeypot_id', generate_honeypot_id());
 
             return $this->view('auth.register.index', [
-                'honeypotId' => $newHoneypotId, // Skicka det nya id:t till vyn
-                'errors' => $validator->errors(),
+                'honeypotId' => $this->request->session()->get('honeypot_id'),
+                'errors' => $form->errors(),
             ]);
         }
 
-        // Rensa och filtrera data innan lagring
-        $data = $this->request->filterFields($data);
         $this->request->session()->remove('honeypot_id');
         $this->request->session()->remove('old');
 
         // Skapa en ny användare
         $user = new User();
-
-        $firstName = is_string($data['first_name'] ?? null) ? $data['first_name'] : '';
-        $lastName  = is_string($data['last_name'] ?? null) ? $data['last_name'] : '';
-        $email  = is_string($data['email'] ?? null) ? $data['email'] : '';
-
         $user->fill([
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'email' => $email,
+            'first_name' => $form->firstName(),
+            'last_name'  => $form->lastName(),
+            'email'      => $form->email(),
         ]);
 
-        // Uppdatera lösenord om ett nytt lösenord angavs
-        if (isset($data['password']) && is_string($data['password']) && $data['password'] !== '') {
-            $password = $data['password']; // här vet PHPStan att det är string
-
-            $user->password = $password;
-        }
-
+        // Sätt lösenordet direkt från form-objektet
+        $user->password = $form->password();
         $user->save();
 
         // Skapa token
@@ -140,14 +92,15 @@ class RegisterController extends AbstractController
 
         // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
-            email: $email,
-            firstName: $firstName,
-            lastName: $lastName,
+            email: $form->email(),
+            firstName: $form->firstName(),
+            lastName: $form->lastName(),
             activationLink: $activationLink,
             context: UserActivationContext::User,
         ));
 
-        // Ställ in flash-meddelande och omdirigera
+        $firstName = $form->firstName();
+        $lastName = $form->lastName();
         $this->request->session()->setFlashMessage(
             "$firstName $lastName ditt konto har registrerats. Kolla din email för aktiveringslänken."
         );

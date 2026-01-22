@@ -22,4 +22,9 @@ class TestableValidator extends Validator
     {
         return $this->getValueForDotNotation($field);
     }
+
+    public function testHoneypot(mixed $value, ?string $parameter = null): bool
+    {
+        return $this->validateHoneypot($value, $parameter);
+    }
 }

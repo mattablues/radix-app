@@ -7,6 +7,16 @@ namespace Radix\Tests\Support;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Radix\Support\Validator;
+use ReflectionMethod;
+
+final class ValidatorWithForcedHoneypotFailure extends Validator
+{
+    protected function validateHoneypot(mixed $value, ?string $parameter = null): bool
+    {
+        // Override ska alltid faila, även om värdet är tomt.
+        return false;
+    }
+}
 
 class ValidatorTest extends TestCase
 {
@@ -16,6 +26,48 @@ class ValidatorTest extends TestCase
         $rules = ['name' => 'string'];
         $validator = new Validator($data, $rules);
         $this->assertTrue($validator->validate());
+    }
+
+    public function testHoneypotRuleUsesOverridableMethod(): void
+    {
+        $data = [
+            'hp_test' => '', // tomt => bas-validateHoneypot() skulle ge true
+        ];
+
+        $rules = [
+            'hp_test' => 'honeypot',
+        ];
+
+        $validator = new ValidatorWithForcedHoneypotFailure($data, $rules);
+
+        // Original (protected): override körs => false => validate() blir false (PASS).
+        // Mutant (private): override kan inte användas => basmetoden körs => empty('') => true => validate() blir true (då FAILAR testet)
+        $this->assertFalse($validator->validate());
+    }
+
+    public function testValidateHoneypotMethodIsProtected(): void
+    {
+        $method = new ReflectionMethod(Validator::class, 'validateHoneypot');
+
+        $this->assertTrue(
+            $method->isProtected(),
+            'validateHoneypot() måste vara protected (inte private) så att den kan overridas i subklasser.'
+        );
+    }
+
+    public function testHoneypotIsCallableFromSubclassAndBehavesCorrectly(): void
+    {
+        $validator = new TestableValidator(data: [], rules: []);
+
+        $this->assertTrue(
+            $validator->testHoneypot(''),
+            'Honeypot ska passera för tom sträng.'
+        );
+
+        $this->assertFalse(
+            $validator->testHoneypot('bot'),
+            'Honeypot ska faila när fältet är ifyllt.'
+        );
     }
 
     public function testDotNotationValidationPasses(): void
