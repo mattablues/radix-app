@@ -16,6 +16,10 @@ on:
         description: "Optional Infection --filter path"
         required: false
         default: ""
+      infection_run_slow:
+        description: "Run PHPUnit group 'slow' inside Infection (true/false)"
+        required: false
+        default: "false"
 
 permissions:
   contents: read
@@ -177,6 +181,16 @@ jobs:
             FILTER_ARG=""
           fi
 
+          # Default: skip slow i Infection (snabbare, mindre risk för timeout)
+          EXCLUDE_SLOW="--exclude-group slow"
+          RUN_SLOW="${{ github.event.inputs.infection_run_slow || 'false' }}"
+          if [ "$RUN_SLOW" = "true" ]; then
+            echo "Infection: running INCLUDING slow group"
+            EXCLUDE_SLOW=""
+          else
+            echo "Infection: running EXCLUDING slow group"
+          fi
+
           vendor/bin/infection \
             --configuration=$CONFIG_FILE \
             --threads=1 \
@@ -188,7 +202,7 @@ jobs:
             --no-progress \
             --coverage=build/coverage \
             $FILTER_ARG \
-            --test-framework-options="--configuration=phpunit.xml --exclude-group slow --order-by=default --do-not-cache-result"
+            --test-framework-options="--configuration=phpunit.xml $EXCLUDE_SLOW --order-by=default --do-not-cache-result"
 
       - name: Upload Infection report
         if: always()
