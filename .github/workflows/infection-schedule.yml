@@ -89,4 +89,4 @@ jobs:
             --no-progress \
             --coverage=build/coverage \
             $FILTER_ARG \
-            --test-framework-options="--order-by=default --do-not-cache-result"
+            --test-framework-options="--configuration=phpunit.xml --exclude-group slow --order-by=default --do-not-cache-result"

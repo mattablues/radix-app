@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Radix\Tests\Error;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Radix\Error\ErrorResponder;
 use Radix\Http\Request;
 
+#[Group('slow')]
 final class ErrorResponderTest extends TestCase
 {
     private string $testViewDir;

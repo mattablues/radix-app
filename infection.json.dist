@@ -956,5 +956,6 @@
   "bootstrap": "./vendor/autoload.php",
   "phpUnit": {
     "configDir": "."
-  }
+  },
+  "testFrameworkOptions": "--configuration=phpunit.xml --exclude-group slow"
 }
