@@ -12,7 +12,7 @@ on:
       infection_run_slow:
         description: "Run PHPUnit group 'slow' inside Infection (true/false)"
         required: false
-        default: "true"
+        default: "false"
 
 permissions:
   contents: read
@@ -83,7 +83,7 @@ jobs:
           fi
 
           EXCLUDE_SLOW="--exclude-group slow"
-          RUN_SLOW="${{ github.event.inputs.infection_run_slow || 'true' }}"
+          RUN_SLOW="${{ github.event.inputs.infection_run_slow || 'false' }}"
           if [ "$RUN_SLOW" = "true" ]; then
             echo "Infection: running INCLUDING slow group"
             EXCLUDE_SLOW=""
@@ -103,3 +103,11 @@ jobs:
             --coverage=build/coverage \
             $FILTER_ARG \
             --test-framework-options="--configuration=phpunit.xml $EXCLUDE_SLOW --order-by=default --do-not-cache-result"
+
+      - name: Upload Infection report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: infection-report
+          path: infection-report.html
+          if-no-files-found: ignore

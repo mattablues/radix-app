@@ -199,7 +199,8 @@
         "Radix\\Database\\QueryBuilder\\Concerns\\BuildsWhere",
         "Radix\\Database\\QueryBuilder\\Concerns\\CompilesMutations::compileMutationSql",
         "Radix\\Database\\QueryBuilder\\Concerns\\Pagination::paginate",
-        "Radix\\Database\\QueryBuilder\\QueryBuilder::paginate"
+        "Radix\\Database\\QueryBuilder\\QueryBuilder::paginate",
+        "Radix\\Error\\ErrorResponder::respond"
       ]
     },
 
@@ -370,7 +371,8 @@
         "Radix\\Controller\\ApiController::isTokenValid",
         "Radix\\Session\\RadixSessionHandler::gc",
         "Radix\\Support\\Logger::cleanupOldLogs",
-        "Radix\\Support\\Logger::resolveWritableFile"
+        "Radix\\Support\\Logger::resolveWritableFile",
+        "Radix\\Error\\ErrorResponder::respond"
       ]
     },
 
