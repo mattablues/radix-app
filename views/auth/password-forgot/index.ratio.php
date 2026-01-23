@@ -35,9 +35,9 @@
             </button>
 
             {% if (error($errors, 'form-error')) : %}
-                <div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-lg">
-                    <p class="text-xxs text-red-600 font-semibold leading-tight text-center">{{ error($errors, 'form-error') }}</p>
-                </div>
+            <div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-lg">
+                <p class="text-xxs text-red-600 font-semibold leading-tight text-center">{{ error($errors, 'form-error') }}</p>
+            </div>
             {% endif %}
           </div>
         </form>

@@ -73,6 +73,12 @@
           <a href="{{ route('user.index') }}" class="py-2 px-6 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition duration-300">
             Avbryt
           </a>
+
+          {% if (error($errors, 'form-error')) : %}
+          <div class="w-full mt-4 p-3 bg-red-50 border border-red-100 rounded-lg">
+              <p class="text-xxs text-red-600 font-semibold leading-tight text-center">{{ error($errors, 'form-error') }}</p>
+          </div>
+          {% endif %}
         </div>
       </form>
     </section>

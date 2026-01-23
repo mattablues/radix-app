@@ -87,7 +87,7 @@
           {% endif %}
         </div>
 
-        <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-50">
+        <div class="mt-4 flex justify-end gap-3 pt-4 border-t border-gray-50">
           <button
             type="button"
             x-on:click="openDeleteModal = false"
@@ -103,6 +103,11 @@
             Radera permanent
           </button>
         </div>
+        {% if (error($errors, 'form-error')) : %}
+        <div class="w-full mt-4 p-3 bg-red-50 border border-red-100 rounded-lg">
+            <p class="text-xxs text-red-600 font-semibold leading-tight text-center">{{ error($errors, 'form-error') }}</p>
+        </div>
+        {% endif %}
       </form>
     </div>
   </div>

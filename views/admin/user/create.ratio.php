@@ -77,6 +77,12 @@
             Avbryt
           </a>
         </div>
+
+        {% if (error($errors, 'form-error')) : %}
+        <div class="w-full mt-4 p-3 bg-red-50 border border-red-100 rounded-lg">
+            <p class="text-xxs text-red-600 font-semibold leading-tight text-center">{{ error($errors, 'form-error') }}</p>
+        </div>
+        {% endif %}
       </form>
     </section>
 {% endblock %}
