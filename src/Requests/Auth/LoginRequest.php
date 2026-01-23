@@ -6,7 +6,7 @@ namespace App\Requests\Auth;
 
 use Radix\Http\FormRequest;
 
-class RegisterRequest extends FormRequest
+class LoginRequest extends FormRequest
 {
     /**
      * @return array<string, string>
@@ -14,11 +14,8 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name'            => 'required|min:2|max:15',
-            'last_name'             => 'required|min:2|max:15',
-            'email'                 => 'required|email|unique:App\Models\User,email',
-            'password'              => 'required|min:8|max:15',
-            'password_confirmation' => 'required|confirmed:password',
+            'email'    => 'required|email',
+            'password' => 'required',
         ];
     }
 
@@ -54,18 +51,6 @@ class RegisterRequest extends FormRequest
         if (!empty($honeypotErrors)) {
             $this->validator->addError('form-error', 'Det verkar som att du försöker skicka spam. Försök igen.');
         }
-    }
-
-    public function firstName(): string
-    {
-        $value = $this->data['first_name'] ?? '';
-        return is_string($value) ? $value : '';
-    }
-
-    public function lastName(): string
-    {
-        $value = $this->data['last_name'] ?? '';
-        return is_string($value) ? $value : '';
     }
 
     public function email(): string

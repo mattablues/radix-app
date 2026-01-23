@@ -5,7 +5,18 @@
     <div class="w-full max-w-xl px-4 py-8">
         <form action="{{ route('auth.register.create') }}" method="post" class="bg-white border border-gray-200 p-6 md:p-10 rounded-2xl shadow-xl">
           {{ csrf_field()|raw }}
-          {{ honeypot_field()|raw }}
+
+          {% if (isset($honeypotId) && $honeypotId) : %}
+            <input
+              type="text"
+              name="{{ $honeypotId }}"
+              value=""
+              tabindex="-1"
+              autocomplete="off"
+              class="hidden"
+              aria-hidden="true"
+            >
+          {% endif %}
 
           <!-- Namn Grid (Sida vid sida) -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 mb-6">

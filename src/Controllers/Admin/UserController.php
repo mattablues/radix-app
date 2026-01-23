@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Controllers\Admin;
 
+use App\Controllers\Concerns\FormHelpers;
 use App\Events\UserRegisteredEvent;
 use App\Models\Status;
 use App\Models\SystemEvent;
 use App\Models\User;
+use App\Requests\Admin\CreateUserRequest;
 use Radix\Controller\AbstractController;
 use Radix\Enums\Role;
 use Radix\Enums\UserActivationContext;
@@ -16,12 +18,15 @@ use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
 use Radix\Session\Session;
 use Radix\Support\Token;
-use Radix\Support\Validator;
 use RuntimeException;
 
 class UserController extends AbstractController
 {
-    public function __construct(private readonly EventDispatcher $eventDispatcher) {}
+    use FormHelpers;
+
+    public function __construct(
+        private readonly EventDispatcher $eventDispatcher,
+    ) {}
 
     public function index(): Response
     {
@@ -42,46 +47,34 @@ class UserController extends AbstractController
 
     public function create(): Response
     {
-        return $this->view('admin.user.create');
+        return $this->view('admin.user.create', $this->beginForm());
     }
 
     public function store(): Response
     {
         $this->before();
 
-        $data = $this->request->post; // Hämta formulärdata
+        $form = new CreateUserRequest($this->request);
 
-        // Validera data inklusive avatar
-        $validator = new Validator($data, [
-            'first_name' => 'required|min:2|max:15',
-            'last_name' => 'required|min:2|max:15',
-            'email' => 'required|email|unique:App\Models\User,email',
-        ]);
-
-        if (!$validator->validate()) {
-            // Om validering misslyckas, lagra gamla indata och returnera vy med felmeddelanden
-            $this->request->session()->set('old', $data);
-
-            return $this->view('admin.user.create', [
-                'errors' => $validator->errors(),
+        if (!$form->validate()) {
+            $this->request->session()->set('old', [
+                'first_name' => $form->firstName(),
+                'last_name'  => $form->lastName(),
+                'email'      => $form->email(),
             ]);
+
+            return $this->formErrorView('admin.user.create', [], $form->errors());
         }
 
-        // Rensa och filtrera data innan lagring
-        $data = $this->request->filterFields($data);
-        $this->request->session()->remove('old');
-
-        // Skapa en ny användare
         $user = new User();
         $user->fill([
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'email' => $data['email'],
+            'first_name' => $form->firstName(),
+            'last_name'  => $form->lastName(),
+            'email'      => $form->email(),
         ]);
 
         $password = generate_password();
 
-        // Sätt lösenord unikt (handled)
         $user->password = $password;
         $user->save();
 
@@ -91,51 +84,41 @@ class UserController extends AbstractController
             365
         );
 
-        // Skapa token
         $token = new Token();
         $tokenValue = $token->value();
 
-        // Skapa och fyll statusobjekt
         $status = new Status();
-
         $status->fill([
             'activation' => $token->hashHmac(),
         ]);
 
-        // Explicit sätt guardat fält
         $status->user_id = $user->id;
         $status->save();
 
         $activationLink = getenv('APP_URL') . route('auth.register.activate', ['token' => $tokenValue]);
 
-        $firstName = is_string($data['first_name'] ?? null) ? $data['first_name'] : '';
-        $lastName  = is_string($data['last_name'] ?? null) ? $data['last_name'] : '';
-        $email  = is_string($data['email'] ?? null) ? $data['email'] : '';
-
-        // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
-            email: $email,
-            firstName: $firstName,
-            lastName: $lastName,
+            email: $form->email(),
+            firstName: $form->firstName(),
+            lastName: $form->lastName(),
             activationLink: $activationLink,
             password: $password,
             context: UserActivationContext::Admin,
         ));
 
-        // Ställ in flash-meddelande och omdirigera
-        $this->request->session()->setFlashMessage(
-            "Konto har skapats för $firstName $lastName och aktiveringslänk skickad."
-        );
-
         $adminId = $this->request->session()->get(Session::AUTH_KEY);
 
         SystemEvent::log(
-            message: "Admin skapade nytt konto för: {$firstName} {$lastName}",
+            message: "Admin skapade nytt konto för: {$form->firstName()} {$form->lastName()}",
             type: 'info',
             userId: is_numeric($adminId) ? (int) $adminId : null
         );
 
-        return new RedirectResponse(route('admin.user.index'));
+        return $this->formRedirectWithFlash(
+            'admin.user.index',
+            "Konto har skapats för {$form->firstName()} {$form->lastName()} och aktiveringslänk skickad.",
+            'info'
+        );
     }
 
     public function sendActivation(string $id): Response

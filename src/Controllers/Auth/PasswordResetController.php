@@ -4,124 +4,112 @@ declare(strict_types=1);
 
 namespace App\Controllers\Auth;
 
+use App\Controllers\Auth\Concerns\AuthFormHelpers;
 use App\Models\Status;
 use App\Models\User;
+use App\Requests\Auth\PasswordResetRequest;
 use Radix\Controller\AbstractController;
-use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
 use Radix\Support\Token;
-use Radix\Support\Validator;
 
 class PasswordResetController extends AbstractController
 {
+    use AuthFormHelpers;
+
     public function index(string $token): Response
     {
-        $token = new Token($token);
-        $hashedToken = $token->hashHmac();
+        $data = $this->beginAuthForm();
+
+        $tokenObj = new Token($token);
+        $hashedToken = $tokenObj->hashHmac();
 
         $status = Status::where('password_reset', '=', $hashedToken)->first();
 
         if (!$status) {
-            $this->request->session()->setFlashMessage(
-                'Återställningslänken är inte giltig, begär en ny.',
-                'error'
+            return $this->authRedirectWithError(
+                'auth.password-forgot.index',
+                'Återställningslänken är inte giltig, begär en ny.'
             );
-
-            return new RedirectResponse(route('auth.password-forgot.index'));
         }
 
         /** @var Status $status */
-        if (strtotime($status->reset_expires_at) < time()) {
-            $this->request->session()->setFlashMessage(
-                'Återställningslänken är inte giltig, begär en ny.',
-                'error'
+        if (strtotime((string) $status->reset_expires_at) < time()) {
+            return $this->authRedirectWithError(
+                'auth.password-forgot.index',
+                'Återställningslänken är inte giltig, begär en ny.'
             );
-
-            return new RedirectResponse(route('auth.password-forgot.index'));
         }
 
         return $this->view('auth.password-reset.index', [
-            'token' => $token->value(),
+            'token' => $tokenObj->value(),
+            'honeypotId' => $data['honeypotId'],
         ]);
     }
 
     public function create(string $token): Response
     {
         $this->before();
-        $data = $this->request->post;
 
-        $validator = new Validator($data, [
-            'password' => 'required|min:8|max:15',
-            'password_confirmation' => 'required|confirmed:password',
-        ]);
+        $form = new PasswordResetRequest($this->request);
 
-        if (!$validator->validate()) {
-            return $this->view('auth.password-reset.index', [
+        if (!$form->validate()) {
+            // Spara INTE old här (innehåller lösenord / confirmations)
+            $this->request->session()->remove('old');
+
+            return $this->authFormErrorView('auth.password-reset.index', [
                 'token' => $token,
-                'errors' => $validator->errors(),
-            ]);
+            ], $form->errors());
         }
 
-        $rawToken = $data['token'] ?? null;
-        if (!is_string($rawToken) || $rawToken === '') {
-            $this->request->session()->setFlashMessage(
-                'Återställningslänken är inte giltig, begär en ny.',
-                'error'
+        $rawToken = $form->token();
+        if ($rawToken === '') {
+            return $this->authRedirectWithError(
+                'auth.password-forgot.index',
+                'Återställningslänken är inte giltig, begär en ny.'
             );
-            return new RedirectResponse(route('auth.password-forgot.index'));
         }
 
-        $token = new Token($rawToken);
-        $hashedToken = $token->hashHmac();
+        $tokenObj = new Token($rawToken);
+        $hashedToken = $tokenObj->hashHmac();
 
         $status = Status::where('password_reset', '=', $hashedToken)->first();
 
         if (!$status) {
-            $this->request->session()->setFlashMessage(
-                'Återställningslänken är inte giltig, begär en ny.',
-                'error'
+            return $this->authRedirectWithError(
+                'auth.password-forgot.index',
+                'Återställningslänken är inte giltig, begär en ny.'
             );
-
-            return new RedirectResponse(route('auth.password-forgot.index'));
         }
 
         /** @var Status $status */
-        if (strtotime($status->reset_expires_at) < time()) {
-            $this->request->session()->setFlashMessage(
-                'Återställningslänken är inte giltig, begär en ny.',
-                'error'
+        if (strtotime((string) $status->reset_expires_at) < time()) {
+            return $this->authRedirectWithError(
+                'auth.password-forgot.index',
+                'Återställningslänken är inte giltig, begär en ny.'
             );
-
-            return new RedirectResponse(route('auth.password-forgot.index'));
         }
 
         $status->loadMissing('user');
 
         $user = $status->getRelation('user');
 
-        if (!$user) {
-            $this->request->session()->setFlashMessage(
-                'Något gick fel. Försök igen senare.',
-                'error'
+        if (!$user instanceof User) {
+            return $this->authRedirectWithError(
+                'auth.password-forgot.index',
+                'Något gick fel. Försök igen senare.'
             );
-
-            return new RedirectResponse(route('auth.password-forgot.index'));
         }
 
-        /** @var User $user */
         $status->fill(['password_reset' => null, 'reset_expires_at' => null]);
         $status->save();
 
-        if (isset($data['password']) && is_string($data['password']) && $data['password'] !== '') {
-            $password = $data['password']; // här vet PHPStan att det är string
-
-            $user->password = $password;
-        }
-
+        $user->password = $form->password();
         $user->save();
 
-        $this->request->session()->setFlashMessage('Ditt lösenord har återställts, du kan nu logga in.');
-
-        return new RedirectResponse(route('auth.login.index'));
+        return $this->authRedirectWithFlash(
+            'auth.login.index',
+            'Ditt lösenord har återställts, du kan nu logga in.',
+            'info'
+        );
     }
 }

@@ -103,7 +103,7 @@
         </a>
 
         <!-- Konto Dropdown -->
-        <div x-data="{ sidebarDropdown: {{ in_array($pageId, ['user-index', 'user-edit']) ? 'true' : 'false' }} }">
+        <div x-data="{ sidebarDropdown: {{ in_array($pageId, ['user-index', 'user-edit', 'user-password']) ? 'true' : 'false' }} }">
           <button @click="sidebarDropdown = !sidebarDropdown" class="w-full group flex items-center justify-between px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-gray-100 transition-all cursor-pointer">
             <span class="flex items-center gap-3">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

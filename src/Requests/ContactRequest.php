@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Requests\Auth;
+namespace App\Requests;
 
 use Radix\Http\FormRequest;
 
-class RegisterRequest extends FormRequest
+class ContactRequest extends FormRequest
 {
     /**
      * @return array<string, string>
@@ -14,16 +14,15 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name'            => 'required|min:2|max:15',
-            'last_name'             => 'required|min:2|max:15',
-            'email'                 => 'required|email|unique:App\Models\User,email',
-            'password'              => 'required|min:8|max:15',
-            'password_confirmation' => 'required|confirmed:password',
+            'first_name' => 'required|min:2|max:15',
+            'last_name'  => 'required|min:2|max:15',
+            'email'      => 'required|email',
+            'message'    => 'required|min:10|max:500',
         ];
     }
 
     /**
-     * Lägg till honeypot-regel om den finns i sessionen
+     * Lägg till honeypot-regel om den finns i sessionen.
      *
      * @param array<string, string|array<int, string>> $rules
      * @return array<string, string|array<int, string>>
@@ -39,7 +38,7 @@ class RegisterRequest extends FormRequest
     }
 
     /**
-     * Konvertera honeypot-fel till ett generiskt form-error
+     * Konvertera honeypot-fel till ett generiskt form-error.
      */
     protected function handleValidationErrors(): void
     {
@@ -78,9 +77,9 @@ class RegisterRequest extends FormRequest
         return strtolower(trim($value));
     }
 
-    public function password(): string
+    public function message(): string
     {
-        $value = $this->data['password'] ?? '';
+        $value = $this->data['message'] ?? '';
         return is_string($value) ? $value : '';
     }
 }

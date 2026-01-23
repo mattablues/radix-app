@@ -12,6 +12,18 @@
       <form action="{{ route('admin.system-update.store') }}" method="post" class="w-full max-w-2xl border border-gray-200 p-6 rounded-xl bg-white shadow-sm">
         {{ csrf_field()|raw }}
 
+        {% if (isset($honeypotId) && $honeypotId) : %}
+          <input
+            type="text"
+            name="{{ $honeypotId }}"
+            value=""
+            tabindex="-1"
+            autocomplete="off"
+            class="hidden"
+            aria-hidden="true"
+          >
+        {% endif %}
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <!-- Version -->
             <div class="relative">

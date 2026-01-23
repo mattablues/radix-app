@@ -1,10 +1,27 @@
 <div
+  x-data="{ restoreFocusEl: null }"
   x-show="openDeleteModal"
   x-cloak
   x-on:keydown.escape.window="openDeleteModal = false"
+  x-trap.noscroll="openDeleteModal"
+  x-effect="
+    if (openDeleteModal) {
+      if (!restoreFocusEl) restoreFocusEl = document.activeElement;
+      $nextTick(() => { $refs.deleteCurrentPassword?.focus(); });
+    } else {
+      const el = restoreFocusEl;
+      restoreFocusEl = null;
+      if (el && typeof el.focus === 'function') {
+        $nextTick(() => { el.focus(); });
+      }
+    }
+  "
   role="dialog"
   aria-modal="true"
+  aria-labelledby="delete-modal-title"
+  aria-describedby="delete-modal-description"
   class="fixed inset-0 z-50 overflow-y-auto"
+  {% if (isset($modal) && $modal === 'delete') : %}x-init="openDeleteModal = true"{% endif %}
 >
   <!-- Backdrop -->
   <div x-show="openDeleteModal" x-transition.opacity class="fixed inset-0 bg-black/60"></div>
@@ -23,12 +40,12 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
-        <h2 class="text-xl font-bold text-gray-900">
+        <h2 id="delete-modal-title" class="text-xl font-bold text-gray-900">
           Radera konto permanent
         </h2>
       </div>
 
-      <div class="space-y-3">
+      <div id="delete-modal-description" class="space-y-3">
         <p class="text-sm text-gray-600 leading-relaxed">
           Detta raderar all din data permanent. Det går inte att ångra. Om du vill behålla din historik bör du välja att <strong>stänga</strong> kontot istället.
         </p>
@@ -37,22 +54,55 @@
         </p>
       </div>
 
-      <form action="{{ route('user.delete') }}" method="post" class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-50">
+      <form action="{{ route('user.delete') }}" method="post" class="mt-6">
         {{ csrf_field()|raw }}
-        <button
-          type="button"
-          x-on:click="openDeleteModal = false"
-          class="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
-        >
-          Avbryt
-        </button>
 
-        <button
-          type="submit"
-          class="inline-flex items-center justify-center rounded-lg bg-red-600 px-6 py-2 text-sm font-bold text-white hover:bg-red-700 shadow-md shadow-red-100 transition-all active:scale-[0.98] cursor-pointer"
-        >
-          Radera permanent
-        </button>
+        {% if (isset($honeypotId) && $honeypotId) : %}
+          <input
+            type="text"
+            name="{{ $honeypotId }}"
+            value=""
+            tabindex="-1"
+            autocomplete="off"
+            class="hidden"
+            aria-hidden="true"
+          >
+        {% endif %}
+
+        <div class="relative mt-4">
+          <label for="delete-current-password" class="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
+            Bekräfta med lösenord
+          </label>
+          <input
+            x-ref="deleteCurrentPassword"
+            type="password"
+            name="current_password"
+            id="delete-current-password"
+            class="w-full text-sm border-slate-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500 transition shadow-sm bg-white"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          >
+          {% if (error($errors, 'current_password')) : %}
+            <span class="block absolute -bottom-5 left-1 text-xxs text-red-600">{{ error($errors, 'current_password') }}</span>
+          {% endif %}
+        </div>
+
+        <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-50">
+          <button
+            type="button"
+            x-on:click="openDeleteModal = false"
+            class="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+          >
+            Avbryt
+          </button>
+
+          <button
+            type="submit"
+            class="inline-flex items-center justify-center rounded-lg bg-red-600 px-6 py-2 text-sm font-bold text-white hover:bg-red-700 shadow-md shadow-red-100 transition-all active:scale-[0.98] cursor-pointer"
+          >
+            Radera permanent
+          </button>
+        </div>
       </form>
     </div>
   </div>

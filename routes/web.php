@@ -118,6 +118,14 @@ $router->group(['middleware' => ['request.id', 'api.logger', 'security.headers',
             \App\Controllers\UserController::class, 'update',
         ])->name('user.update')->middleware(['api.throttle.light']);
 
+        $router->get('/user/password', [
+            \App\Controllers\UserController::class, 'passwordEdit',
+        ])->name('user.password.edit');
+
+        $router->post('/user/password', [
+            \App\Controllers\UserController::class, 'passwordUpdate',
+        ])->name('user.password.update')->middleware(['api.throttle.hard']);
+
         $router->post('/user/delete', [
             \App\Controllers\UserController::class, 'delete',
         ])->name('user.delete')->middleware(['api.throttle.hard']);

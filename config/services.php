@@ -478,4 +478,24 @@ $container->add(MailManager::class, function () use ($container) {
     return MailManager::createDefault($templateViewer, $config);
 });
 
+$container->addShared(\App\Services\UploadService::class, fn() => new \App\Services\UploadService());
+
+$container->addShared(\App\Services\ProfileAvatarService::class, function () use ($container) {
+    $uploadService = $container->get(\App\Services\UploadService::class);
+    if (!$uploadService instanceof \App\Services\UploadService) {
+        throw new \RuntimeException('Container returned invalid UploadService instance.');
+    }
+
+    return new \App\Services\ProfileAvatarService($uploadService);
+});
+
+$container->addShared(\App\Services\AuthService::class, function () use ($container) {
+    $session = $container->get(\Radix\Session\SessionInterface::class);
+    if (!$session instanceof \Radix\Session\SessionInterface) {
+        throw new \RuntimeException('Container returned invalid SessionInterface instance.');
+    }
+
+    return new \App\Services\AuthService($session);
+});
+
 return $container;

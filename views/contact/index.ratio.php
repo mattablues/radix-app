@@ -28,7 +28,18 @@
 
           <form action="{{ route('contact.create') }}" method="post" class="bg-white border border-gray-200 p-6 md:p-8 rounded-[2rem] shadow-xl">
             {{ csrf_field()|raw }}
-            {{ honeypot_field()|raw }}
+
+            {% if (isset($honeypotId) && $honeypotId) : %}
+              <input
+                type="text"
+                name="{{ $honeypotId }}"
+                value=""
+                tabindex="-1"
+                autocomplete="off"
+                class="hidden"
+                aria-hidden="true"
+              >
+            {% endif %}
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div class="relative">

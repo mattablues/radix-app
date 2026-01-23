@@ -7,6 +7,18 @@
           {{ csrf_field()|raw }}
           <input type="hidden" name="token" value="{{ $token }}">
 
+          {% if (isset($honeypotId) && $honeypotId) : %}
+            <input
+              type="text"
+              name="{{ $honeypotId }}"
+              value=""
+              tabindex="-1"
+              autocomplete="off"
+              class="hidden"
+              aria-hidden="true"
+            >
+          {% endif %}
+
           <!-- Lösenord Grid (Sida vid sida) -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 mb-10">
             <div class="relative">

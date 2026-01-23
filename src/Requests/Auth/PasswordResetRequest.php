@@ -6,7 +6,7 @@ namespace App\Requests\Auth;
 
 use Radix\Http\FormRequest;
 
-class RegisterRequest extends FormRequest
+class PasswordResetRequest extends FormRequest
 {
     /**
      * @return array<string, string>
@@ -14,10 +14,8 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name'            => 'required|min:2|max:15',
-            'last_name'             => 'required|min:2|max:15',
-            'email'                 => 'required|email|unique:App\Models\User,email',
-            'password'              => 'required|min:8|max:15',
+            'token' => 'required',
+            'password' => 'required|min:8|max:15',
             'password_confirmation' => 'required|confirmed:password',
         ];
     }
@@ -56,26 +54,10 @@ class RegisterRequest extends FormRequest
         }
     }
 
-    public function firstName(): string
+    public function token(): string
     {
-        $value = $this->data['first_name'] ?? '';
-        return is_string($value) ? $value : '';
-    }
-
-    public function lastName(): string
-    {
-        $value = $this->data['last_name'] ?? '';
-        return is_string($value) ? $value : '';
-    }
-
-    public function email(): string
-    {
-        $value = $this->data['email'] ?? '';
-        if (!is_string($value)) {
-            return '';
-        }
-
-        return strtolower(trim($value));
+        $value = $this->data['token'] ?? '';
+        return is_string($value) ? trim($value) : '';
     }
 
     public function password(): string

@@ -4,20 +4,29 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Controllers\Concerns\FormHelpers;
 use App\Models\Status;
 use App\Models\User;
-use App\Services\UploadService;
+use App\Requests\User\ChangePasswordRequest;
+use App\Requests\User\ConfirmPasswordRequest;
+use App\Requests\User\UpdateProfileRequest;
+use App\Services\ProfileAvatarService;
 use Radix\Controller\AbstractController;
 use Radix\Enums\Role;
 use Radix\Http\Exception\NotAuthorizedException;
 use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
 use Radix\Session\Session;
-use Radix\Support\Validator;
 use RuntimeException;
 
 class UserController extends AbstractController
 {
+    use FormHelpers;
+
+    public function __construct(
+        private readonly ProfileAvatarService $avatarService,
+    ) {}
+
     public function index(): Response
     {
         return $this->view('user.index');
@@ -56,121 +65,184 @@ class UserController extends AbstractController
 
         $user = User::find($id);
 
-        return $this->view('user.edit', ['user' => $user]);
+        return $this->view('user.edit', array_merge(
+            ['user' => $user],
+            $this->beginForm()
+        ));
+    }
+
+    /**
+     * @param UpdateProfileRequest $form
+     */
+    private function storeOldProfileFields(UpdateProfileRequest $form): void
+    {
+        // Spara endast icke-känsliga fält i old (INTE lösenord)
+        $this->request->session()->set('old', [
+            'first_name' => $form->firstName(),
+            'last_name'  => $form->lastName(),
+            'email'      => $form->email(),
+        ]);
     }
 
     public function update(): Response
     {
         $this->before();
 
-        $data = $this->request->post; // Hämta formulärdata
-
-        $rawAvatar = $this->request->files['avatar'] ?? null;
-        /** @var array{error:int,name?:string,tmp_name?:string,size?:int,type?:string}|null $avatar */
-        $avatar = is_array($rawAvatar) && array_key_exists('error', $rawAvatar) ? $rawAvatar : null;
-
         $userId = $this->request->session()->get(Session::AUTH_KEY);
-
         if (!is_int($userId) && !is_string($userId)) {
             throw new NotAuthorizedException('Invalid user id in session.');
         }
 
         $user = User::find($userId);
-
-        // Validera data inklusive avatar
-        $validator = new Validator($data + ['avatar' => $avatar], [
-            'first_name' => 'required|min:2|max:15',
-            'last_name' => 'required|min:2|max:15',
-            'email' => 'required|email|unique:App\Models\User,email,id=' . $userId,
-            'avatar' => 'nullable|file_size:2|file_type:image/jpeg,image/png',
-            'password' => 'nullable|min:8|max:15',
-            'password_confirmation' => 'nullable|required_with:password|confirmed:password',
-        ]);
-
-        if (!$validator->validate()) {
-            $this->request->session()->set('old', $data);
-
-            return $this->view('user.edit', [
-                'user' => $user,
-                'errors' => $validator->errors(),
-            ]);
-        }
-
-        // Hantera avatar-uppladdning om en fil har laddats upp
-        if ($avatar !== null && $avatar['error'] === UPLOAD_ERR_OK) {
-            try {
-                $uploadDirectory = ROOT_PATH . "/public/images/user/$userId/";
-
-                $uploadService = new UploadService();
-
-                if ($user === null) {
-                    throw new NotAuthorizedException('User not found.');
-                }
-
-                if ($user->avatar !== '/images/graphics/avatar.png') {
-                    $oldAvatarPath = ROOT_PATH . $user->avatar;
-                    if (file_exists($oldAvatarPath)) {
-                        unlink($oldAvatarPath);
-                    }
-                }
-
-                $data['avatar'] = $uploadService->uploadAvatar($avatar, $uploadDirectory);
-            } catch (RuntimeException $e) {
-                return $this->view('user.edit', [
-                    'errors' => ['avatar' => $e->getMessage()],
-                ]);
-            }
-        }
-
-        // Kontrollera avatar innan fälten filtreras
-        if ($avatar !== null && $avatar['error'] === UPLOAD_ERR_NO_FILE) {
-            unset($data['avatar']);
-        }
-
-        // Filtrera irrelevanta fält
-        $data = $this->request->filterFields($data);
-
-        // Rensa session för gamla indata
-        $this->request->session()->remove('old');
-
-        if ($user === null) {
+        if (!$user instanceof User) {
             throw new NotAuthorizedException('User not found.');
         }
 
-        // Uppdatera användardata i databasen
+        $form = new UpdateProfileRequest($this->request);
+
+        if (!$form->validate()) {
+            $this->storeOldProfileFields($form);
+
+            return $this->formErrorView('user.edit', [
+                'user' => $user,
+            ], $form->errors());
+        }
+
+        $avatar = $form->avatar();
+
+        $extraErrors = $form->extraErrorsForUpdate($userId, $avatar);
+        if ($extraErrors !== []) {
+            $this->storeOldProfileFields($form);
+
+            return $this->formErrorView('user.edit', [
+                'user' => $user,
+            ], $extraErrors);
+        }
+
+        try {
+            $this->avatarService->updateAvatar($user, $userId, $avatar);
+        } catch (RuntimeException $e) {
+            $this->storeOldProfileFields($form);
+
+            return $this->formErrorView('user.edit', [
+                'user' => $user,
+            ], [
+                'avatar' => [$e->getMessage()],
+            ]);
+        }
+
         $user->fill([
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'email' => $data['email'],
+            'first_name' => $form->firstName(),
+            'last_name'  => $form->lastName(),
+            'email'      => $form->email(),
         ]);
 
-        // Uppdatera avatar om det finns en ny filväg
-        if (!empty($data['avatar']) && is_string($data['avatar'])) {
-            $user->avatar = $data['avatar'];
-        }
-
-        // Uppdatera lösenord om ett nytt lösenord angavs
-        if (isset($data['password']) && is_string($data['password']) && $data['password'] !== '') {
-            $password = $data['password']; // här vet PHPStan att det är string
-
-            $user->password = $password;
-        }
-
-        // Spara ändringar i databasen
         $user->save();
 
-        // Ange ett framgångsmeddelande
-        $firstName = is_string($data['first_name'] ?? null) ? $data['first_name'] : '';
-        $lastName  = is_string($data['last_name'] ?? null) ? $data['last_name'] : '';
-
-        /** @var string $firstName */
-        /** @var string $lastName */
-        $this->request->session()->setFlashMessage(
-            "Konto för $firstName $lastName har uppdaterats."
+        return $this->formRedirectWithFlash(
+            'user.index',
+            'Ditt konto har uppdaterats.',
+            'info'
         );
+    }
 
-        // Omdirigera till användarens startsida
-        return new RedirectResponse(route('user.index'));
+    public function passwordEdit(): Response
+    {
+        $id = $this->request->session()->get(Session::AUTH_KEY);
+
+        if (!is_int($id) && !is_string($id)) {
+            throw new NotAuthorizedException('Invalid user id in session.');
+        }
+
+        $user = User::find($id);
+
+        return $this->view('user.password', array_merge(
+            ['user' => $user],
+            $this->beginForm()
+        ));
+    }
+
+    public function passwordUpdate(): Response
+    {
+        $this->before();
+
+        $id = $this->request->session()->get(Session::AUTH_KEY);
+
+        if (!is_int($id) && !is_string($id)) {
+            throw new NotAuthorizedException('Invalid user id in session.');
+        }
+
+        $user = User::find($id);
+        if (!$user instanceof User) {
+            throw new NotAuthorizedException('User not found.');
+        }
+
+        $form = new ChangePasswordRequest($this->request);
+
+        if (!$form->validate()) {
+            // Spara INGET old (innehåller lösenordsfält)
+            $this->request->session()->remove('old');
+
+            return $this->formErrorView('user.password', [
+                'user' => $user,
+            ], $form->errors());
+        }
+
+        // Ladda det guardade lösenordet så isPasswordValid() kan jämföra korrekt
+        $hashedPassword = $user->fetchGuardedAttribute('password');
+        if ($hashedPassword !== '') {
+            $user->forceFill(['password' => $hashedPassword]);
+        }
+
+        // Validera nuvarande lösenord mot user
+        if (!$user->isPasswordValid($form->currentPassword())) {
+            $this->request->session()->remove('old');
+
+            return $this->formErrorView('user.password', [
+                'user' => $user,
+            ], [
+                'current_password' => ['Nuvarande lösenord är fel.'],
+            ]);
+        }
+
+        $user->password = $form->password();
+        $user->save();
+
+        return $this->formRedirectWithFlash(
+            'user.index',
+            'Ditt lösenord har uppdaterats.',
+            'info'
+        );
+    }
+
+    public function generateToken(): Response
+    {
+        $this->before();
+
+        $userIdRaw = $this->request->session()->get(Session::AUTH_KEY);
+
+        if (!is_numeric($userIdRaw)) {
+            return $this->formRedirectWithError(
+                'auth.login.index',
+                'Du måste vara inloggad för att generera en API-nyckel.'
+            );
+        }
+
+        $userId = (int) $userIdRaw;
+
+        $token = \App\Models\Token::where('user_id', '=', $userId)->first();
+
+        if ($token instanceof \App\Models\Token) {
+            $token->forceDelete();
+        }
+
+        \App\Models\Token::createToken($userId, 'Personal API Token', 365);
+
+        return $this->formRedirectWithFlash(
+            'user.index',
+            'En ny API-nyckel har genererats.',
+            'info'
+        );
     }
 
     public function close(): Response
@@ -189,8 +261,34 @@ class UserController extends AbstractController
             throw new NotAuthorizedException('You are not authorized to close this account.');
         }
 
-        if ($user === null) {
+        if (!$user instanceof User) {
             throw new NotAuthorizedException('User not found.');
+        }
+
+        $confirm = new ConfirmPasswordRequest($this->request);
+
+        if (!$confirm->validate()) {
+            $this->request->session()->remove('old');
+
+            return $this->formErrorView('user.index', [
+                'modal' => 'close',
+            ], $confirm->errors());
+        }
+
+        // Ladda det guardade lösenordet så isPasswordValid() kan jämföra korrekt
+        $hashedPassword = $user->fetchGuardedAttribute('password');
+        if ($hashedPassword !== '') {
+            $user->forceFill(['password' => $hashedPassword]);
+        }
+
+        if (!$user->isPasswordValid($confirm->currentPassword())) {
+            $this->request->session()->remove('old');
+
+            return $this->formErrorView('user.index', [
+                'modal' => 'close',
+            ], [
+                'current_password' => ['Nuvarande lösenord är fel.'],
+            ]);
         }
 
         $user->loadMissing('status');
@@ -212,34 +310,6 @@ class UserController extends AbstractController
         return new RedirectResponse(route('auth.logout.close-message'));
     }
 
-    public function generateToken(): Response
-    {
-        $this->before();
-        $userIdRaw = $this->request->session()->get(\Radix\Session\Session::AUTH_KEY);
-
-        // Kontrollera att vi har ett giltigt numeriskt ID
-        if (!is_numeric($userIdRaw)) {
-            return new RedirectResponse(route('auth.login.index'));
-        }
-
-        // Genom att skapa en ny variabel med tydlig cast så vet PHPStan att $userId är int
-        $userId = (int) $userIdRaw;
-
-        // Hämta befintlig token om den finns
-        $token = \App\Models\Token::where('user_id', '=', $userId)->first();
-
-        if ($token instanceof \App\Models\Token) {
-            $token->forceDelete();
-        }
-
-        // Skapa en ny fräsch token - skicka med den rena $userId (int)
-        \App\Models\Token::createToken($userId, 'Personal API Token', 365);
-
-        $this->request->session()->setFlashMessage('En ny API-nyckel har genererats.');
-
-        return new RedirectResponse(route('user.index'));
-    }
-
     public function delete(): Response
     {
         $this->before();
@@ -256,27 +326,49 @@ class UserController extends AbstractController
             throw new NotAuthorizedException('You are not authorized to delete this user.');
         }
 
-        if ($user === null) {
+        if (!$user instanceof User) {
             throw new NotAuthorizedException('User not found.');
+        }
+
+        $confirm = new ConfirmPasswordRequest($this->request);
+
+        if (!$confirm->validate()) {
+            $this->request->session()->remove('old');
+
+            return $this->formErrorView('user.index', [
+                'modal' => 'delete',
+            ], $confirm->errors());
+        }
+
+        // Ladda det guardade lösenordet så isPasswordValid() kan jämföra korrekt
+        $hashedPassword = $user->fetchGuardedAttribute('password');
+        if ($hashedPassword !== '') {
+            $user->forceFill(['password' => $hashedPassword]);
+        }
+
+        if (!$user->isPasswordValid($confirm->currentPassword())) {
+            $this->request->session()->remove('old');
+
+            return $this->formErrorView('user.index', [
+                'modal' => 'delete',
+            ], [
+                'current_password' => ['Nuvarande lösenord är fel.'],
+            ]);
         }
 
         $userDirectory = ROOT_PATH . '/public/images/user/' . $user->id;
 
-        // Kontrollera om katalogen existerar innan du försöker ta bort den
         if (is_dir($userDirectory)) {
-            // Iterera och ta bort alla filer i katalogen
             $files = array_diff(scandir($userDirectory), ['.', '..']);
             foreach ($files as $file) {
                 unlink($userDirectory . '/' . $file);
             }
-
-            // Ta bort själva katalogen
             rmdir($userDirectory);
         }
 
         $user->forceDelete();
 
-        $this->request->session()->destroy(); // Förstör sessionen        $this->auth->logout();
+        $this->request->session()->destroy(); // Förstör sessionen
 
         return new RedirectResponse(route('auth.logout.delete-message'));
     }

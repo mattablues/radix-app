@@ -11,6 +11,18 @@
       <form action="{{ route('admin.system-update.update', ['id' => $update->id]) }}" method="post" class="w-full max-w-2xl border border-gray-200 p-6 rounded-xl bg-white shadow-sm">
         {{ csrf_field()|raw }}
 
+        {% if (isset($honeypotId) && $honeypotId) : %}
+          <input
+            type="text"
+            name="{{ $honeypotId }}"
+            value=""
+            tabindex="-1"
+            autocomplete="off"
+            class="hidden"
+            aria-hidden="true"
+          >
+        {% endif %}
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <!-- Version -->
             <div class="relative">
@@ -70,12 +82,8 @@
         <!-- Major Update Toggle -->
         <div class="flex items-center gap-3 mb-8 ml-1">
             <?php
-                // Kolla om vi har '1' i old (från ett tidigare misslyckat store/update)
-                // Eller om databas-värdet är 1 (om ingen old-data finns för just denna nyckel)
                 $isMajorOld = old('is_major');
                 $isMajorDb = $update->getAttribute('is_major');
-
-                // Om old('is_major') är '1', eller om old är tom men DB är 1
                 $checked = ($isMajorOld === '1' || ($isMajorOld === '' && $isMajorDb == 1));
             ?>
             <input type="checkbox" name="is_major" id="is_major" value="1" {{ $checked ? 'checked' : '' }}

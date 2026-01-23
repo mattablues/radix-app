@@ -84,6 +84,10 @@
           {% endif; %}
 
           <div class="flex gap-3">
+            <a href="{{ route('user.password.edit') }}" class="inline-flex items-center px-6 py-2.5 border border-gray-200 text-sm font-bold bg-white text-gray-800 hover:bg-gray-50 transition-all rounded-lg shadow-sm">
+              Byt lösenord
+            </a>
+
             <a href="{{ route('user.edit') }}" class="inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all rounded-lg shadow-md shadow-indigo-100">
               Redigera profil
             </a>
