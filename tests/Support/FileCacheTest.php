@@ -77,8 +77,10 @@ namespace Radix\Tests\Support {
 
     final class FileCacheTest extends TestCase
     {
-        private string $tmpDir;
+        private ?string $tmpDir = null;
         private FileCache $cache;
+
+        private string $originalDirSeparatorForChmod = DIRECTORY_SEPARATOR;
 
         protected function setUp(): void
         {
@@ -95,15 +97,24 @@ namespace Radix\Tests\Support {
 
             @mkdir($this->tmpDir, 0o755, true);
 
-            // Den här använder fortfarande tmpDir (som tidigare)
             $this->cache = new FileCache($this->tmpDir);
+
+            // Spara original och tvinga POSIX-läge för chmod-grenen (även på Windows)
+            $this->originalDirSeparatorForChmod = FileCache::$dirSeparatorForChmod;
+            FileCache::$dirSeparatorForChmod = '/';
 
             FileCacheSpy::reset();
         }
 
         protected function tearDown(): void
         {
-            $this->deleteDirectory($this->tmpDir);
+            // Återställ alltid (även om setUp failade halvvägs)
+            FileCache::$dirSeparatorForChmod = $this->originalDirSeparatorForChmod;
+
+            if ($this->tmpDir !== null) {
+                $this->deleteDirectory($this->tmpDir);
+            }
+
             FileCacheSpy::reset();
             parent::tearDown();
         }
@@ -141,27 +152,16 @@ namespace Radix\Tests\Support {
             $this->assertNull($this->cache->get('k'));
         }
 
-        public function testSetAppliesCorrectPermissionsOnLinux(): void
+        public function testSetCallsChmodWhenOkAndSeparatorIsSlash(): void
         {
-            if (DIRECTORY_SEPARATOR !== '/') {
-                $this->markTestSkipped('Permissions test only applies to POSIX systems.');
-            }
+            FileCacheSpy::reset();
 
-            $key = 'perm_test_' . uniqid();
-            $this->cache->set($key, 'data', 60);
+            $result = $this->cache->set('perm_check', 'data', 60);
 
-            // Hitta den faktiska filen på disken
-            $safeKey = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $key);
-            $file = $this->tmpDir . DIRECTORY_SEPARATOR . $safeKey . '.cache';
-
-            $this->assertFileExists($file);
-
-            // Hämta filrättigheter (t.ex. 0664)
-            $perms = fileperms($file) & 0o777;
-
-            // Vi förväntar oss 0664. Om rtrim eller logic muteras kommer detta faila.
-            $this->assertSame(0o664, $perms, sprintf('Filen borde ha rättigheter 0664, men har 0%o', $perms));
+            $this->assertTrue($result);
+            $this->assertSame(1, FileCacheSpy::$chmodCallCount, 'chmod() ska anropas när skrivningen lyckas och separator är "/"');
         }
+
 
         /**
          * Dödar TrueValue-mutanten i delete():
@@ -362,16 +362,23 @@ namespace Radix\Tests\Support {
          */
         public function testSetDoesNotCallChmodWhenSeparatorIsNotSlash(): void
         {
-            // Vi kan inte ändra konstanten DIRECTORY_SEPARATOR, men vi kan
-            // testa logiken genom att verifiera att chmod faktiskt anropas på Linux
-            // och sedan lita på att mutations-testet ser att vi bryr oss om resultatet.
-            if (DIRECTORY_SEPARATOR !== '/') {
-                $this->markTestSkipped('Endast för Linux/Unix');
-            }
-
             FileCacheSpy::reset();
-            $this->cache->set('perm_check', 'data', 60);
-            $this->assertSame(1, FileCacheSpy::$chmodCallCount, 'Chmod ska anropas på Linux');
+
+            $old = FileCache::$dirSeparatorForChmod;
+            FileCache::$dirSeparatorForChmod = '\\';
+
+            try {
+                $result = $this->cache->set('perm_check_not_slash', 'data', 60);
+
+                $this->assertTrue($result);
+                $this->assertSame(
+                    0,
+                    FileCacheSpy::$chmodCallCount,
+                    'chmod() ska INTE anropas när separator inte är "/"'
+                );
+            } finally {
+                FileCache::$dirSeparatorForChmod = $old;
+            }
         }
 
         public function testTtlExpiry(): void

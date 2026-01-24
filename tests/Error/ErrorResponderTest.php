@@ -9,7 +9,6 @@ use PHPUnit\Framework\TestCase;
 use Radix\Error\ErrorResponder;
 use Radix\Http\Request;
 
-#[Group('slow')]
 final class ErrorResponderTest extends TestCase
 {
     private string $testViewDir;
@@ -131,6 +130,8 @@ final class ErrorResponderTest extends TestCase
         $this->assertStringContainsString('Test 500: 599', (string) $response->getBody());
     }
 
+    // Om du vill behålla vissa tester som "slow", markera dem individuellt:
+    #[Group('slow')]
     public function testRespondUsesCorrectDefaultPathLogic(): void
     {
         $request = $this->makeRequest('/test');

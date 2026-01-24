@@ -68,7 +68,7 @@ jobs:
         run: |
           RAW_FILTER="${{ github.event.inputs.infection_filter || env.INFECTION_FILTER }}"
           CONFIG_FILE="infection.json.dist"
-          
+      
           if [ "$RAW_FILTER" = "src" ]; then
             echo "Limited Mode: Rebuilding config to include ONLY src/ directory..."
             jq '.source.directories = ["src"]' infection.json.dist > infection.project.json
@@ -82,7 +82,7 @@ jobs:
             FILTER_ARG=""
           fi
 
-          EXCLUDE_SLOW="--exclude-group slow"
+          EXCLUDE_SLOW="--exclude-group=slow"
           RUN_SLOW="${{ github.event.inputs.infection_run_slow || 'false' }}"
           if [ "$RUN_SLOW" = "true" ]; then
             echo "Infection: running INCLUDING slow group"
@@ -95,14 +95,14 @@ jobs:
             --configuration=$CONFIG_FILE \
             --threads=1 \
             --ignore-msi-with-no-mutations \
-            --min-msi=80 \
-            --min-covered-msi=90 \
+            --min-msi=90 \
+            --min-covered-msi=95 \
             --skip-initial-tests \
             --no-interaction \
             --no-progress \
             --coverage=build/coverage \
             $FILTER_ARG \
-            --test-framework-options="--configuration=phpunit.xml $EXCLUDE_SLOW --order-by=default --do-not-cache-result"
+            --test-framework-options="$EXCLUDE_SLOW --order-by=default --do-not-cache-result"
 
       - name: Upload Infection report
         if: always()

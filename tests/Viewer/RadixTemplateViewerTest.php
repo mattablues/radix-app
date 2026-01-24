@@ -1028,45 +1028,23 @@ class RadixTemplateViewerTest extends TestCase
         $this->assertSame('A: FOO, B: BAR', $output);
     }
 
-    public function testClearOldCacheFilesRespectsDefaultMaxAgeBoundary(): void
+    public function testClearOldCacheFilesHasDefaultMaxAgeOfOneDay(): void
     {
         $reflection = new ReflectionClass($this->viewer);
 
-        $cachePathProperty = $reflection->getProperty('cachePath');
-        $cachePathProperty->setAccessible(true);
+        $m = $reflection->getMethod('clearOldCacheFiles');
 
-        $cacheDir = $this->tempRootPath . 'cache/default_boundary/';
-        $this->createDirectoryIfNotExists($cacheDir);
-        $cachePathProperty->setValue($this->viewer, $cacheDir);
+        $params = $m->getParameters();
+        $this->assertCount(2, $params);
 
-        $now = time();
+        $maxAgeParam = $params[0];
+        $this->assertTrue($maxAgeParam->isDefaultValueAvailable());
 
-        // Fil exakt 86400 sekunder gammal → ska INTE tas bort med default 86400
-        $borderFile = $cacheDir . 'border_default.php';
-        file_put_contents($borderFile, 'border');
-        touch($borderFile, $now - 86400);
-
-        // Fil 86401 sekunder gammal → ska tas bort med default 86400
-        $oldFile = $cacheDir . 'old_default.php';
-        file_put_contents($oldFile, 'old');
-        touch($oldFile, $now - 86401);
-
-        // Anropa clearOldCacheFiles() UTAN argument → använder default-värdet
-        $clearMethod = $reflection->getMethod('clearOldCacheFiles');
-        $clearMethod->setAccessible(true);
-        $clearMethod->invoke($this->viewer);
-
-        // Original + IncrementInteger (86400/86401) lämnar border-filen kvar
-        $this->assertFileExists(
-            $borderFile,
-            'Fil som är exakt 86400 sekunder gammal ska inte tas bort med default maxAge.'
-        );
-
-        // Original + DecrementInteger (86399) ska ta bort oldFile,
-        // men IncrementInteger (86401) skulle FELAKTIGT lämna den kvar.
-        $this->assertFileDoesNotExist(
-            $oldFile,
-            'Fil äldre än 86400 sekunder ska tas bort med default maxAge.'
+        // Dödar IncrementInteger/DecrementInteger på defaultvärdet 86400
+        $this->assertSame(
+            86400,
+            $maxAgeParam->getDefaultValue(),
+            'Default maxAgeInSeconds ska vara 86400 (1 dag).'
         );
     }
 

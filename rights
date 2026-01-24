@@ -6,3 +6,5 @@ mkdir -p cache/views cache/app cache/health cache/ratelimit
 # Ge din användare och webbservern rättigheter
 sudo chown -R $USER:www-data cache
 chmod -R 775 cache
+
+php -d xdebug.mode=coverage vendor/bin/infection --configuration=infection.json.dist --min-msi=0 --min-covered-msi=0 --filter=framework/src/Support/FileCache.php

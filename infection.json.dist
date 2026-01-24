@@ -959,5 +959,5 @@
   "phpUnit": {
     "configDir": "."
   },
-  "testFrameworkOptions": "--configuration=phpunit.xml --exclude-group slow"
+  "testFrameworkOptions": "--exclude-group=slow"
 }
