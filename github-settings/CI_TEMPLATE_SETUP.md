@@ -159,6 +159,19 @@ Om du ser `src/`, `framework/src/` eller `tests/` → räkna med Infection (om `
 ## 6) När projektet mognat (uppgradera CI)
 När ni har stabil testsvit och vill höja kvaliteten:
 
+### 6.0 Rekommenderad policy: PR vs schedule (Mutation testing)
+Ett bra nybörjarvänligt upplägg är att ha olika nivåer:
+
+- **CI (PR-gate):** lite lägre krav för mindre friktion i vardagen  
+  Exempel: `--min-msi=90 --min-covered-msi=95`
+- **Schedule (kvalitetsbarometer):** striktare krav som körs periodiskt/manuellt  
+  Exempel: `--min-msi=100 --min-covered-msi=100`
+
+Motiv: PR:ar ska kunna flyta utan att varje ändring kräver “perfekta” mutationstester,
+men schedule ska fånga upp om testkvalitén börjar sjunka över tid.
+
+(Om ni vill köra 100/100 även på PR senare: gör det först när testsviten är stabil och ni är ok med extra testarbete per PR.)
+
 1) Sätt:
 ```text
 ENABLE_INFECTION_ON_PR=1
