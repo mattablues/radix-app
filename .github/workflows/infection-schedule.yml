@@ -68,7 +68,7 @@ jobs:
         run: |
           RAW_FILTER="${{ github.event.inputs.infection_filter || env.INFECTION_FILTER }}"
           CONFIG_FILE="infection.json.dist"
-      
+  
           if [ "$RAW_FILTER" = "src" ]; then
             echo "Limited Mode: Rebuilding config to include ONLY src/ directory..."
             jq '.source.directories = ["src"]' infection.json.dist > infection.project.json
@@ -95,8 +95,8 @@ jobs:
             --configuration=$CONFIG_FILE \
             --threads=1 \
             --ignore-msi-with-no-mutations \
-            --min-msi=90 \
-            --min-covered-msi=95 \
+            --min-msi=100 \
+            --min-covered-msi=100 \
             --skip-initial-tests \
             --no-interaction \
             --no-progress \
