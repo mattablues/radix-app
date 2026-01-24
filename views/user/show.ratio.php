@@ -113,7 +113,7 @@
                 </select>
               </div>
 
-              <div class="flex justify-end gap-3 pt-4 border-t border-gray-50">
+              <div class="flex justify-end gap-3 pt-2 border-t border-gray-50">
                 <button type="button" @click="openRoleModal = false" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors cursor-pointer">
                   Avbryt
                 </button>

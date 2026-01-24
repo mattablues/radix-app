@@ -123,7 +123,7 @@
                   </p>
                 </div>
 
-                <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-50">
+                <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-50">
                   <button
                     type="button"
                     x-on:click="openClosedModal = false"

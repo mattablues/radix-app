@@ -355,6 +355,20 @@ $container->add(\Radix\Console\Commands\AppSetupCommand::class, function () use 
     return new \Radix\Console\Commands\AppSetupCommand($migrator, $seederRunner, $cacheCommand);
 });
 
+$container->add(\Radix\Console\Commands\MakeFormRequestCommand::class, function () {
+    $requestsPath = ROOT_PATH . '/src/Requests';
+    $templatePath = ROOT_PATH . '/templates';
+
+    if (!is_dir($requestsPath)) {
+        mkdir($requestsPath, 0o755, true);
+    }
+    if (!is_dir($templatePath)) {
+        mkdir($templatePath, 0o755, true);
+    }
+
+    return new \Radix\Console\Commands\MakeFormRequestCommand($requestsPath, $templatePath);
+});
+
 $container->add(\Radix\Console\CommandsRegistry::class, function () {
     $registry = new CommandsRegistry();
 
@@ -367,6 +381,7 @@ $container->add(\Radix\Console\CommandsRegistry::class, function () {
     $registry->register('make:seeder', \Radix\Console\Commands\MakeSeederCommand::class);
     $registry->register('make:model', Radix\Console\Commands\MakeModelCommand::class); // Nytt kommando
     $registry->register('make:controller', Radix\Console\Commands\MakeControllerCommand::class);
+    $registry->register('make:form-request', Radix\Console\Commands\MakeFormRequestCommand::class);
     $registry->register('make:event', Radix\Console\Commands\MakeEventCommand::class);
     $registry->register('make:listener', Radix\Console\Commands\MakeListenerCommand::class);
     $registry->register('make:middleware', Radix\Console\Commands\MakeMiddlewareCommand::class);
