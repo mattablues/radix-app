@@ -1,6 +1,7 @@
 {% extends "layouts/admin.ratio.php" %}
 {% block title %}Byt lösenord{% endblock %}
 {% block pageId %}user-password{% endblock %}
+{% block searchId %}search-users{% endblock %}
 {% block body %}
   <section>
     <div class="mb-8">

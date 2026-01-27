@@ -56,7 +56,7 @@
           <input
             type="text"
             name="{{ $honeypotId }}"
-            value="1"
+            value=""
             tabindex="-1"
             autocomplete="off"
             class="hidden"
