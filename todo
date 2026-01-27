@@ -1,0 +1,57 @@
+Kom-ihåg-lista: vad vi håller på med i Radix (separera framework + auth)
+Kopiera/klistra gärna detta när du byter dator så jag snabbt kan “synka” kontexten.
+1) Mål
+Du vill separera Radix så att frameworket ligger i ett eget repo/paket (Composer) och appen ligger separat.
+Du vill kunna återanvända frameworket och ev. auth i flera projekt.
+2) Nuvarande läge (viktiga fakta)
+Projektet är idag ett monorepo med både:
+frameworkkod under framework/src/...
+appkod under src/..., routes/..., views/..., database/...
+tester i tests/...
+Du använder 2 datorer och vill ha en kort “logg” på vad vi beslutat.
+3) Auth: vad vi kom fram till
+Du vill ha C: både webb-auth och API-auth.
+API:n kör bara Bearer tokens (stateless) – inga session/cookies på API-routes.
+Slutsats: bygg auth som två separata “guards”/flöden:
+Webb: session-baserad auth
+API: token-baserad auth (Bearer)
+4) Rekommenderad uppdelning i paket/repos
+radix/framework (kärna)
+HTTP, routing, middleware pipeline, session, console, osv.
+Ingen app-domän (App\...) får läcka in här.
+radix/auth (feature-paket, separat från kärnan)
+SessionGuard + TokenGuard
+Interfaces som appen implementerar (user provider / token repository)
+API-middleware (401 JSON) vs webb-middleware (redirect)
+radix/app (din faktiska app)
+App\Models\..., routes, controllers, views, migrations, domänlogik (online/offline/blocked osv.)
+5) Console-idén (din idé) och rekommendationen
+Du funderade på att använda din Radix console för att “skapa ett auth-system”.
+Rekommendation: gör auth till ett paket (radix/auth) och bygg console-kommandon som scaffoldar app-koden:
+t.ex. auth:install (webb: controllers/routes/views/config)
+t.ex. auth:tokens (API: tokens, repo-implementation, ev. migrations/endpoints)
+6) CSRF: vad vi konstaterade
+Din CSRF-modell (session token + hidden field + middleware) är rimlig för webben.
+För separation och tydlighet vill vi:
+köra CSRF endast för web-routes
+inte köra CSRF för stateless API-routes (Bearer)
+Vi noterade också att CSRF-validering helst ska vara på ett ställe (helst middleware), inte både middleware + controller.
+7) Tester: var de ska ligga när du separerar
+De flesta tester är framework-relaterade ⇒ de bör hamna i framework-repot (och auth-tester i auth-repot).
+App-repot ska bara ha ett mindre antal smoke/feature/integration tester som bekräftar att appen är korrekt ihopkopplad.
+8) Sista steget (”vi ska göra det”)
+När du väl vill genomföra separationen gör vi det i den här ordningen:
+Extrahera radix/framework först till eget repo + Composer-paket (PSR-4 autoload, egen CI).
+Ändra appen så att den kräver frameworket via Composer (lokalt med path, senare via Git-tag/Packagist).
+Extrahera radix/auth till eget paket, och flytta appberoenden (App\Models..., routes/redirects) tillbaka till appen via interfaces/scaffolding.
+Flytta/sortera tester: framework → framework-repo, auth → auth-repo, app → app-repo.
+Sätt upp “web” vs “api” middleware-grupper (CSRF bara web; API stateless bearer).
+Kör igenom testsviterna i alla repos tills allt är grönt.
+
+
+## Superkort kom-ihåg (5 rader)
+1. Målet: separera Radix till **`radix/framework`** (kärna) + **`radix/app`** (appen), och helst även **`radix/auth`** som eget paket.
+2. Auth = **C**: webb (session) + API (Bearer tokens).
+3. API är **stateless**: _bara_ Bearer tokens, **inga** session/cookies på API-routes.
+4. CSRF gäller **endast web-routes**; API-routes ska inte köra CSRF. Helst CSRF-validering på **ett ställe (middleware)**.
+5. Sista steget när vi gör det: **extrahera framework → koppla app via Composer → extrahera auth → flytta/sortera tester → web/api middleware-grupper → kör allt grönt i CI**.
