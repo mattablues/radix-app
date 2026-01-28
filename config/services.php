@@ -57,6 +57,35 @@ $container->add(\App\Services\HealthCheckService::class, function () {
     return new \App\Services\HealthCheckService($logger);
 });
 
+// ORM: ModelClassResolver (shared)
+$container->addShared(\Radix\Database\ORM\ModelClassResolverInterface::class, function () use ($container) {
+    /** @var \Radix\Config\Config $config */
+    $config = $container->get('config');
+
+    /** @var array<string, mixed> $orm */
+    $orm = $config->get('orm', []);
+
+    $envNs = getenv('ORM_MODEL_NAMESPACE');
+    if ($envNs !== false && is_string($envNs) && $envNs !== '') {
+        $modelNamespace = $envNs;
+    } else {
+        $nsRaw = $orm['model_namespace'] ?? 'App\\Models\\';
+        $modelNamespace = is_string($nsRaw) && $nsRaw !== '' ? $nsRaw : 'App\\Models\\';
+    }
+
+    $mapRaw = $orm['model_map'] ?? [];
+    /** @var array<string, class-string> $map */
+    $map = is_array($mapRaw) ? $mapRaw : [];
+
+    $fallback = new \Radix\Database\ORM\ConventionModelClassResolver($modelNamespace);
+
+    return new \Radix\Database\ORM\MapModelClassResolver($map, $fallback);
+});
+
+/** @var \Radix\Database\ORM\ModelClassResolverInterface $resolver */
+$resolver = $container->get(\Radix\Database\ORM\ModelClassResolverInterface::class);
+\Radix\Database\ORM\Model::setModelClassResolver($resolver);
+
 $container->addShared(\Radix\Http\EventListeners\CorsListener::class, function () use ($container) {
     $config = $container->get('config');
 
