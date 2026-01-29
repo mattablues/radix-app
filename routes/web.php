@@ -8,7 +8,7 @@ declare(strict_types=1);
 use App\Controllers\Admin\SystemEventController;
 use App\Controllers\Admin\SystemUpdateController;
 
-$router->group(['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.2mb', 'csrf']], function () use ($router) {
+$router->group(['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.2mb', 'csrf', 'share.user']], function () use ($router) {
     $router->get('/', [
         \App\Controllers\HomeController::class, 'index',
     ])->name('home.index');

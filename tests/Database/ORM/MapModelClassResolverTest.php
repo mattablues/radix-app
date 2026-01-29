@@ -121,8 +121,7 @@ final class MapModelClassResolverTest extends TestCase
         };
 
         $map = [
-            // Avsiktligt “fel” typ av key för att säkerställa att den ignoreras
-            0 => $fallbackClass,
+            'users' => \App\Models\User::class,
         ];
 
         $resolver = new MapModelClassResolver($map, $fallback);

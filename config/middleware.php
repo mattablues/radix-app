@@ -18,6 +18,7 @@ return [
     'role.min.moderator' => \App\Middlewares\RequireModeratorOrHigher::class,
     'role.min.editor' => \App\Middlewares\RequireEditorOrHigher::class,
     'role.min.support' => \App\Middlewares\RequireSupportOrHigher::class,
+    'share.user' => \App\Middlewares\ShareCurrentUser::class,
     // API-observability
     'api.logger' => \Radix\Middleware\Middlewares\RequestLogger::class,
     'api.throttle' => \Radix\Middleware\Middlewares\RateLimiter::class,

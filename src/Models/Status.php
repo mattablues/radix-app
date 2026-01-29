@@ -26,8 +26,10 @@ class Status extends Model
     protected string $table = 'status'; // Dynamiskt genererat tabellnamn
     protected string $primaryKey = 'id'; // Standard primärnyckel
     public bool $timestamps = true;
+
     /** @var array<int,string> */
     protected array $fillable = ['user_id', 'password_reset', 'reset_expires_at', 'activation', 'status', 'active', 'active_at']; // Tillåtna fält
+
 
     /**
      * Sätt användaren som "online".

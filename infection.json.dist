@@ -802,7 +802,7 @@
 
     "UnwrapUcFirst": {
       "ignore": [
-        "Radix\\Database\\ORM\\Relationships\\BelongsTo::resolveModelClass",
+        "Radix\\Database\\ORM\\Relationships\\BelongsTo::resolveModelClassFromTable",
         "Radix\\Database\\ORM\\Model::__set",
         "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::addRelationCountSelect"
       ]

@@ -74,8 +74,26 @@ $container->addShared(\Radix\Database\ORM\ModelClassResolverInterface::class, fu
     }
 
     $mapRaw = $orm['model_map'] ?? [];
-    /** @var array<string, class-string> $map */
-    $map = is_array($mapRaw) ? $mapRaw : [];
+
+    /** @var array<string, mixed> $mapRawArray */
+    $mapRawArray = is_array($mapRaw) ? $mapRaw : [];
+
+    /** @var array<string, class-string<\Radix\Database\ORM\Model>> $map */
+    $map = [];
+    foreach ($mapRawArray as $k => $v) {
+        if (!is_string($k) || $k === '') {
+            continue;
+        }
+        if (!is_string($v) || $v === '') {
+            continue;
+        }
+
+        // Säkerställ att det är en Model-klass (autoload kan ske här, vilket är ok för config)
+        if (class_exists($v) && is_subclass_of($v, \Radix\Database\ORM\Model::class)) {
+            /** @var class-string<\Radix\Database\ORM\Model> $v */
+            $map[$k] = $v;
+        }
+    }
 
     $fallback = new \Radix\Database\ORM\ConventionModelClassResolver($modelNamespace);
 
@@ -459,53 +477,27 @@ $container->add(\Radix\Routing\Router::class);
 
 $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () use ($container) {
     $session = $container->get(\Radix\Session\SessionInterface::class);
-    $datetime = $container->get(\Radix\DateTime\RadixDateTime::class); // Hämta den delade RadixDateTime-instansen
+    $datetime = $container->get(\Radix\DateTime\RadixDateTime::class);
     $viewer = new \Radix\Viewer\RadixTemplateViewer();
     $viewer->enableDebugMode(getenv('APP_DEBUG') === '1');
 
     $latestUpdate = null;
 
     try {
-        // Försök hämta senaste uppdateringen
         $latestUpdate = \App\Models\SystemUpdate::orderBy('released_at', 'DESC')
             ->first();
     } catch (\PDOException $e) {
-        // Om tabellen inte finns (t.ex. vid första körning på Linux),
-        // låter vi $latestUpdate förbli null istället för att krascha hela systemet.
+        // ... existing code ...
     }
 
-    // Dela hela objektet eller bara versionssträngen
     $viewer->shared('currentVersion', $latestUpdate ? $latestUpdate->getAttribute('version') : 'v1.0.0');
-    $viewer->shared('latestUpdate', $latestUpdate); // Bra att ha för Dashboard också!
+    $viewer->shared('latestUpdate', $latestUpdate);
 
-    // Lägg till delade variabler
-    $viewer->shared('datetime', $datetime); // Gör datetime tillgänglig i alla vyer
+    $viewer->shared('datetime', $datetime);
     $viewer->shared('session', $session);
 
-    /** @var \Radix\Session\SessionInterface $session */
-    $userIdRaw = $session->get(\Radix\Session\Session::AUTH_KEY);
-
-    /** @var int|null $userId */
-    $userId = is_int($userIdRaw) ? $userIdRaw : null;
-
-    if ($userId) {
-        /** @var \App\Models\User|null $user */
-        $user = \App\Models\User::with(['status', 'token'])
-            ->where('id', '=', $userId)
-            ->first();
-
-        if ($user !== null) {
-            $viewer->shared('currentUser', $user); // Gör currentUser tillgänglig i alla vyer
-
-            $tokenRelation = $user->getRelation('token');
-
-            $currentToken = is_object($tokenRelation) && method_exists($tokenRelation, 'getAttribute')
-                ? $tokenRelation->getAttribute('value')
-                : null;
-
-            $viewer->shared('currentToken', $currentToken); // Gör currentToken tillgänglig i alla vyer
-        }
-    }
+    // OBS: Hämta INTE currentUser här. Det ska göras i middleware (t.ex. ShareCurrentUser),
+    // annars triggar vi ORM/relations under container-boot och får svårfelsökta bieffekter.
 
     return $viewer;
 });
