@@ -1,8 +1,7 @@
 export default class Search {
-    constructor(searchInputId, mainContentSelector, token) {
+    constructor(searchInputId, mainContentSelector) {
         this.searchInput = document.getElementById(searchInputId);
         this.mainContent = document.querySelector(mainContentSelector);
-        this.token = '';
         this.results = [];
         this.meta = { term: '', total: 0, per_page: 10, current_page: 1, last_page: 0 };
         // Dropdown-stöd
@@ -10,7 +9,6 @@ export default class Search {
         this.resultContainer = this.dropdown ? this.dropdown.querySelector('.result-container') : null;
         this.init();
     }
-
 
     init() {
         if (this.searchInput) {

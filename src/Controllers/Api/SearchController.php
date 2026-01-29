@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers\Api;
 
+use App\Models\SystemEvent;
 use App\Models\User;
 use Radix\Controller\ApiController;
 use Radix\Http\JsonResponse;
@@ -151,6 +152,114 @@ class SearchController extends ApiController
             'success' => true,
             'data' => $data,
             'meta' => $results['search'], // Metadata som t.ex. term, current_page, last_page
+        ]);
+    }
+
+    public function systemEvents(): JsonResponse
+    {
+        $this->validateRequestAllowingSession([
+            'search.term' => 'nullable|string',
+            'search.current_page' => 'nullable|integer|min:1',
+            'search.per_page' => 'nullable|integer|min:1',
+        ]);
+
+        $post = $this->request->post;
+
+        $search = isset($post['search']) && is_array($post['search'])
+            ? $post['search']
+            : [];
+
+        $termRaw        = $search['term']          ?? '';
+        $currentPageRaw = $search['current_page']  ?? 1;
+        $perPageRaw     = $search['per_page']      ?? 20;
+
+        $term = is_string($termRaw) ? trim($termRaw) : '';
+        $currentPage = is_numeric($currentPageRaw) ? (int) $currentPageRaw : 1;
+        $perPage     = is_numeric($perPageRaw) ? (int) $perPageRaw : 20;
+
+        if ($term === '') {
+            $page = SystemEvent::with('user')
+                ->orderBy('created_at', 'DESC')
+                ->paginate($perPage, $currentPage);
+
+            return $this->json([
+                'success' => true,
+                'data' => array_map(
+                    /**
+                     * @param mixed $event
+                     * @return array<string,mixed>
+                     */
+                    function ($event): array {
+                        if (!$event instanceof SystemEvent) {
+                            return [];
+                        }
+
+                        $user = $event->getRelation('user');
+                        $userName = ($user instanceof User)
+                            ? trim($user->first_name . ' ' . $user->last_name)
+                            : null;
+
+                        return [
+                            'created_at' => $event->created_at,
+                            'type' => $event->type,
+                            'type_badge_class' => $event->getTypeBadgeClass(),
+                            'message' => $event->message,
+                            'user_name' => $userName,
+                        ];
+                    },
+                    $page['data'] ?? []
+                ),
+                'meta' => $page['pagination'] ?? [
+                    'total' => 0,
+                    'per_page' => $perPage,
+                    'current_page' => $currentPage,
+                    'last_page' => 0,
+                    'first_page' => 1,
+                ],
+            ]);
+        }
+
+        $results = SystemEvent::with('user')
+            ->orderBy('created_at', 'DESC')
+            ->search($term, ['message', 'type'], $perPage, $currentPage);
+
+        $data = array_map(
+            /**
+             * @param mixed $event
+             * @return array<string,mixed>
+             */
+            function ($event): array {
+                if (!$event instanceof SystemEvent) {
+                    return [];
+                }
+
+                $user = $event->getRelation('user');
+                $userName = ($user instanceof User)
+                    ? trim($user->first_name . ' ' . $user->last_name)
+                    : null;
+
+                return [
+                    'created_at' => $event->created_at,
+                    'type' => $event->type,
+                    'type_badge_class' => $event->getTypeBadgeClass(),
+                    'message' => $event->message,
+                    'user_name' => $userName,
+                ];
+            },
+            $results['data'] ?? []
+        );
+
+        return $this->json([
+            'success' => true,
+            'data' => $data,
+            'meta' => $results['search'] ?? [
+                'term' => $term,
+                'total' => 0,
+                'per_page' => $perPage,
+                'current_page' => $currentPage,
+                'last_page' => 0,
+                'first_page' => 1,
+            ],
         ]);
     }
 }

@@ -24,7 +24,8 @@
         "App\\Controllers\\Api\\HealthController::index",
         "Radix\\Middleware\\Middlewares\\RateLimiter::process",
         "Radix\\File\\Writer::ndjsonStream",
-        "Radix\\File\\Writer::json"
+        "Radix\\File\\Writer::json",
+        "Radix\\Config\\Dotenv::load"
       ]
     },
 
@@ -124,7 +125,8 @@
         "Radix\\Routing\\Dispatcher::handle",
         "Radix\\Viewer\\RadixTemplateViewer::replaceYields",
         "Radix\\Viewer\\RadixTemplateViewer::minifyPHP",
-        "Radix\\Viewer\\RadixTemplateViewer::loadIncludes"
+        "Radix\\Viewer\\RadixTemplateViewer::loadIncludes",
+        "Radix\\Config\\Dotenv::load"
       ]
     },
 
@@ -372,7 +374,8 @@
         "Radix\\Session\\RadixSessionHandler::gc",
         "Radix\\Support\\Logger::cleanupOldLogs",
         "Radix\\Support\\Logger::resolveWritableFile",
-        "Radix\\Error\\ErrorResponder::respond"
+        "Radix\\Error\\ErrorResponder::respond",
+        "Radix\\Config\\Dotenv::stripInlineComment"
       ]
     },
 
@@ -445,7 +448,8 @@
         "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::withCountWhere",
         "Radix\\Database\\QueryBuilder\\Concerns\\Aggregates\\WithCount::addRelationCountSelect",
         "Radix\\Database\\QueryBuilder\\Concerns\\BuildsWhere",
-        "Radix\\Database\\QueryBuilder\\Concerns\\EagerLoad"
+        "Radix\\Database\\QueryBuilder\\Concerns\\EagerLoad",
+        "Radix\\Config\\Dotenv::load"
       ]
     },
 

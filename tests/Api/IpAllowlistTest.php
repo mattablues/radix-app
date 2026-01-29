@@ -248,19 +248,6 @@ final class IpAllowlistTest extends TestCase
         $this->assertSame(200, $response->getStatusCode(), 'IP med /0 mask ska tillåtas i production.');
     }
 
-    public function testBypassesInDevelopment(): void
-    {
-        $response = $this->runMiddleware(
-            server: [
-                'REMOTE_ADDR' => '203.0.113.200',
-            ],
-            allowlist: '', // spelar ingen roll i dev
-            appEnv: 'development'
-        );
-
-        $this->assertSame(200, $response->getStatusCode(), 'I development ska middleware släppa igenom alla IP.');
-    }
-
     public function testTrustedProxyUsesXForwardedFor(): void
     {
         // Ange betrodd proxy FÖRE middleware körs
@@ -332,5 +319,31 @@ final class IpAllowlistTest extends TestCase
         );
 
         $this->assertSame(200, $response->getStatusCode(), 'Allowlist med mellanslag ska fungera (ska trimmas).');
+    }
+
+    public function testBypassesInDevelopment(): void
+    {
+        $response = $this->runMiddleware(
+            server: [
+                'REMOTE_ADDR' => '203.0.113.200',
+            ],
+            allowlist: '', // spelar ingen roll i dev
+            appEnv: 'development'
+        );
+
+        $this->assertSame(200, $response->getStatusCode(), 'I development ska middleware släppa igenom alla IP.');
+    }
+
+    public function testBypassesInLocal(): void
+    {
+        $response = $this->runMiddleware(
+            server: [
+                'REMOTE_ADDR' => '203.0.113.200',
+            ],
+            allowlist: '', // spelar ingen roll i local
+            appEnv: 'local'
+        );
+
+        $this->assertSame(200, $response->getStatusCode(), 'I local ska middleware släppa igenom alla IP.');
     }
 }

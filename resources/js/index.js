@@ -6,6 +6,7 @@ import Focus from "@alpinejs/focus";
 import { addTableAria } from "./addTableAria";
 import SearchUsers from './search-users';
 import SearchDeletedUsers from './search-deleted-users';
+import SearchSystemEvents from './search-system-events';
 
 window.Alpine = Alpine;
 Alpine.plugin(Collapse);
@@ -19,19 +20,17 @@ Alpine.start();
 addTableAria();
 
 document.addEventListener('DOMContentLoaded', () => {
-    const tokenMeta = document.querySelector('meta[name="Authorization"]');
-    const token = tokenMeta ? (tokenMeta.content || '') : '';
     const mainContent = document.querySelector('main');
 
     const searchUserInput = document.getElementById('search-users');
     const searchDeletedInput = document.getElementById('search-deleted-users');
 
     if (searchUserInput && mainContent) {
-        new SearchUsers('search-users', 'main', token);
+        new SearchUsers('search-users', 'main');
     }
 
     if (searchDeletedInput && mainContent) {
-        new SearchDeletedUsers('search-deleted-users', 'main', token);
+        new SearchDeletedUsers('search-deleted-users', 'main');
     }
 
     const btn = document.getElementById('search-toggle');
@@ -86,5 +85,30 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') close();
     });
-});
 
+    const pageId =
+        document.querySelector('[data-page-id]')?.getAttribute('data-page-id')
+        || (document.body ? document.body.id : null);
+
+    if (pageId === 'admin-events-index') {
+        const params = new URLSearchParams(window.location.search);
+        const initialTerm = (params.get('q') || '').trim();
+        const initialPage = parseInt(params.get('page') || '1', 10) || 1;
+
+        const form = document.getElementById('system-events-search-form');
+        const endpoint = form ? (form.getAttribute('data-search-endpoint') || '') : '';
+
+        new SearchSystemEvents({
+            formId: 'system-events-search-form',
+            clearBtnId: 'system-events-clear',
+            inputId: 'system-events-search',
+            tbodyId: 'system-events-tbody',
+            pagerId: 'system-events-pager',
+            endpoint: endpoint || '/api/v1/search/system-events',
+            routeBase: '/admin/events',
+            perPage: 20,
+            initialTerm,
+            initialPage
+        });
+    }
+});

@@ -146,6 +146,11 @@ class UserController extends AbstractController
         );
     }
 
+    public function apiToken(): Response
+    {
+        return $this->view('user.api-token');
+    }
+
     public function passwordEdit(): Response
     {
         $id = $this->request->session()->get(Session::AUTH_KEY);
@@ -236,10 +241,10 @@ class UserController extends AbstractController
             $token->forceDelete();
         }
 
-        \App\Models\Token::createToken($userId, 'Personal API Token', 365);
+        \App\Models\Token::createToken($userId, 'Integration Token', 365);
 
         return $this->formRedirectWithFlash(
-            'user.index',
+            'user.token.index',
             'En ny API-nyckel har genererats.',
             'info'
         );

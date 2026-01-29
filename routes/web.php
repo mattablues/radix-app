@@ -134,9 +134,6 @@ $router->group(['middleware' => ['request.id', 'api.logger', 'security.headers',
             \App\Controllers\UserController::class, 'close',
         ])->name('user.close')->middleware(['api.throttle.hard']);
 
-        $router->post('/user/token', [
-            \App\Controllers\UserController::class, 'generateToken',
-        ])->name('user.token.create');
 
         $router->post('/logout', [
             \App\Controllers\Auth\LogoutController::class, 'index',
@@ -214,5 +211,13 @@ $router->group(['middleware' => ['request.id', 'api.logger', 'security.headers',
         $router->post('/updates/{id:[\d]+}/delete', [
             SystemUpdateController::class, 'delete',
         ])->name('admin.system-update.delete')->middleware(['api.throttle.hard']);
+
+        $router->get('/user/api-token', [
+            \App\Controllers\UserController::class, 'apiToken',
+        ])->name('user.token.index');
+
+        $router->post('/user/token', [
+            \App\Controllers\UserController::class, 'generateToken',
+        ])->name('user.token.create')->middleware(['api.throttle.light']);
     });
 });

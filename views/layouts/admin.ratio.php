@@ -13,7 +13,12 @@
   <meta name="apple-mobile-web-app-title" content="Radix" />
   <link rel="manifest" href="/favicons/site.webmanifest" />
 </head>
-<body x-data="{ openSidebar: false, openCloseModal: false, openDeleteModal: false }" id="{% yield pageId %}" class="relative min-h-screen bg-slate-50 {% yield pageClass %} text-slate-600 antialiased flex flex-col">
+<body
+  x-data="{ openSidebar: false, openCloseModal: false, openDeleteModal: false }"
+  id="{% yield pageId %}"
+  data-page-id="{% yield pageId %}"
+  class="relative min-h-screen bg-slate-50 {% yield pageClass %} text-slate-600 antialiased flex flex-col"
+>
 
   {% include "components/flash.ratio.php" %}
 
@@ -103,7 +108,7 @@
         </a>
 
         <!-- Konto Dropdown -->
-        <div x-data="{ sidebarDropdown: {{ in_array($pageId, ['user-index', 'user-edit', 'user-password']) ? 'true' : 'false' }} }">
+        <div x-data="{ sidebarDropdown: {{ in_array($pageId, ['user-index', 'user-edit', 'user-password', 'user-api-token']) ? 'true' : 'false' }} }">
           <button @click="sidebarDropdown = !sidebarDropdown" class="w-full group flex items-center justify-between px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-gray-100 transition-all cursor-pointer">
             <span class="flex items-center gap-3">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -118,6 +123,10 @@
           <ul x-show="sidebarDropdown" x-cloak x-collapse class="mt-1 ml-4 border-l border-gray-800 space-y-1">
             <li><a href="{{ route('user.index') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'user-index') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">Visa profil</a></li>
             <li><a href="{{ route('user.edit') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'user-edit') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">Redigera profil</a></li>
+            {% if($currentUser->hasAtLeast('moderator')) : %}
+              <li><a href="{{ route('user.token.index') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'user-api-token') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">API-nyckel</a></li>
+            {% endif; %}
+
 
           {% if(!$currentUser->isAdmin()) : %}
             <li class="pt-2 mt-2 border-t border-gray-800/50">

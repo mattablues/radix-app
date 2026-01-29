@@ -5,39 +5,45 @@ declare(strict_types=1);
 /** @var \Radix\Routing\Router $router */
 
 // Toppgrupp: request-id + logging + security headers (CSP) på hela API:t
+
 $router->group([
     'path' => '/api/v1',
     'middleware' => [
         'request.id',
         'api.logger',
-        'security.headers', // använder csp['api']-profilen
-        // 'limit.2mb',     // valfritt: slå på om du vill begränsa payload-size även på API
+        'security.headers',
+        // 'limit.2mb',
     ],
 ], function (\Radix\Routing\Router $router) {
-    // Health: endast allowlist, ingen throttling
     $router->get('/health', [\App\Controllers\Api\HealthController::class, 'index'])
         ->name('api.health.index')
         ->middleware(['ip.allowlist']);
 
-    // Undergrupp: throttling på resten (standardpolicy)
     $router->group(['middleware' => ['api.throttle']], function (\Radix\Routing\Router $router) {
-        // Route för att hämta alla användare
         $router->get('/users', [\App\Controllers\Api\UserController::class, 'index'])
             ->name('api.users.index');
 
         // Sök-endpoints
-        $router->post('/search/users', [\App\Controllers\Api\SearchController::class, 'users'])
-            ->name('api.search.users');
 
+        // Alla inloggade (session/token) får söka users, men throttla "snällt"
+        $router->post('/search/users', [\App\Controllers\Api\SearchController::class, 'users'])
+            ->name('api.search.users')
+            ->middleware(['api.throttle.light']);
+
+        // Endast moderator+ får söka deleted users
         $router->post('/search/deleted-users', [\App\Controllers\Api\SearchController::class, 'deletedUsers'])
-            ->name('api.search.deleted-users');
+            ->name('api.search.deleted-users')
+            ->middleware(['role.min.moderator']);
+
+        // Endast moderator+ får söka system events
+        $router->post('/search/system-events', [\App\Controllers\Api\SearchController::class, 'systemEvents'])
+            ->name('api.search.system-events')
+            ->middleware(['role.min.moderator']);
     });
 
-    // Preflight (OPTIONS mappas till GET i Dispatcher): returnera 204 endast om originalmetoden var OPTIONS
     $router->get('/{any:.*}', function () {
         $response = new \Radix\Http\Response();
 
-        // Säkerställ att vi inte stjäl riktiga GET-rutter: svara 204 endast för preflight (OPTIONS)
         $method = isset($_SERVER['REQUEST_METHOD']) && is_string($_SERVER['REQUEST_METHOD'])
             ? $_SERVER['REQUEST_METHOD']
             : '';
@@ -47,7 +53,6 @@ $router->group([
             return $response;
         }
 
-        // För andra metoder (t.ex. GET) låt detta falla igenom som 404
         $response->setStatusCode(404);
         return $response;
     })->name('api.preflight');

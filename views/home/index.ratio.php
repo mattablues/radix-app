@@ -194,7 +194,7 @@
             </span>
             <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-6">Testkvalitet i världsklass</h2>
             <p class="text-slate-600 leading-relaxed mb-6">
-              Radix Framework är inte bara byggt för fart – det är byggt för att hålla. Med <strong>100% MSI (Mutation Score Indicator)</strong> på över 4000 mutationer är varje logisk rad kod verifierad.
+              Radix Framework är inte bara byggt för fart – det är byggt för att hålla. Med <strong>100% MSI (Mutation Score Indicator)</strong> på över 4500 mutationer är varje logisk rad kod verifierad.
             </p>
             <div class="flex flex-wrap justify-center lg:justify-start gap-4">
               <div class="flex items-center gap-2 text-sm font-bold text-slate-700">

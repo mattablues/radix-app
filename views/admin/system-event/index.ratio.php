@@ -14,6 +14,38 @@
         </div>
       </div>
 
+      <form
+        id="system-events-search-form"
+        method="get"
+        action="/admin/events"
+        class="mb-4"
+        data-search-endpoint="{{ route('api.search.system-events') }}"
+      >
+        <div class="flex gap-2 items-center">
+          <input
+            id="system-events-search"
+            type="search"
+            name="q"
+            value="{{ $q ?? '' }}"
+            placeholder="Sök i händelser..."
+            class="w-full md:w-[420px] text-base md:text-sm rounded-xl bg-white border border-gray-200 px-4 py-2 focus:ring-0 focus:border-gray-300"
+            autocomplete="off"
+          >
+          <button type="submit" class="px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold">
+            Sök
+          </button>
+
+          <button
+            id="system-events-clear"
+            type="button"
+            class="px-3 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-gray-900"
+            {% if(($q ?? '') === '') : %}disabled{% endif; %}
+          >
+            Rensa
+          </button>
+        </div>
+      </form>
+
       {% if($events['data']) : %}
       <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div class="overflow-x-auto">
@@ -26,7 +58,7 @@
                     <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 max-sm:hidden">Användare</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
+              <tbody id="system-events-tbody" class="divide-y divide-gray-50">
               {% foreach($events['data'] as $event) : %}
               <tr class="group hover:bg-blue-50/30 transition-all duration-200">
                 <td class="px-4 py-4 whitespace-nowrap">
@@ -61,9 +93,11 @@
       </div>
 
       {% if($events['pagination']['total'] > $events['pagination']['per_page']) : %}
-          <div class="mt-6">
+        <div id="system-events-pager" class="mt-6">
+          {% if(($events['pagination']['total'] ?? 0) > ($events['pagination']['per_page'] ?? 0)) : %}
             {{ paginate_links($events['pagination'], 'admin.system-event.index', 2)|raw }}
-          </div>
+          {% endif; %}
+        </div>
       {% endif; %}
       {% else : %}
         <div class="bg-white border border-dashed border-gray-300 rounded-2xl p-12 text-center text-gray-500">

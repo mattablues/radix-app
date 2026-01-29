@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Config;
+namespace Radix\Tests\Config;
 
 use PHPUnit\Framework\TestCase;
 use Radix\Config\Config;

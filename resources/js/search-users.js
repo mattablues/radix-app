@@ -1,8 +1,8 @@
 import Search from './search';
 
 export default class SearchUsers extends Search {
-    constructor(searchInputId, mainContentSelector, token) {
-        super(searchInputId, mainContentSelector, token);
+    constructor(searchInputId, mainContentSelector) {
+        super(searchInputId, mainContentSelector);
         this.meta = { term: '', total: 0, per_page: 2, current_page: 1, last_page: 0 };
     }
 
@@ -15,6 +15,7 @@ export default class SearchUsers extends Search {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({
                     search: {
                         term: term,
@@ -29,7 +30,6 @@ export default class SearchUsers extends Search {
 
             const responseJson = await response.json();
 
-            // ÄNDRA DESSA RADER: Ta bort ".body"
             this.results = responseJson.data || [];
             this.meta = responseJson.meta || this.meta;
 

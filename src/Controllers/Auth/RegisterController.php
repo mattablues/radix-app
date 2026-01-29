@@ -67,11 +67,11 @@ class RegisterController extends AbstractController
         $status->user_id = $user->id;
         $status->save();
 
-        \App\Models\Token::createToken(
-            (int) $user->id,
-            'Default Personal Token',
-            365
-        );
+        //        \App\Models\Token::createToken(
+        //            (int) $user->id,
+        //            'Default Personal Token',
+        //            365
+        //        );
 
         $activationLink = getenv('APP_URL') . route('auth.register.activate', ['token' => $tokenValue]);
 
