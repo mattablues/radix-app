@@ -39,6 +39,10 @@ $router->group([
         $router->post('/search/system-events', [\App\Controllers\Api\SearchController::class, 'systemEvents'])
             ->name('api.search.system-events')
             ->middleware(['role.min.moderator']);
+
+        $router->post('/search/system-updates', [\App\Controllers\Api\SearchController::class, 'systemUpdates'])
+            ->name('api.search.system-updates')
+            ->middleware(['role.min.moderator']);
     });
 
     $router->get('/{any:.*}', function () {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers\Api;
 
 use App\Models\SystemEvent;
+use App\Models\SystemUpdate;
 use App\Models\User;
 use Radix\Controller\ApiController;
 use Radix\Http\JsonResponse;
@@ -244,6 +245,128 @@ class SearchController extends ApiController
                     'type_badge_class' => $event->getTypeBadgeClass(),
                     'message' => $event->message,
                     'user_name' => $userName,
+                ];
+            },
+            $results['data'] ?? []
+        );
+
+        return $this->json([
+            'success' => true,
+            'data' => $data,
+            'meta' => $results['search'] ?? [
+                'term' => $term,
+                'total' => 0,
+                'per_page' => $perPage,
+                'current_page' => $currentPage,
+                'last_page' => 0,
+                'first_page' => 1,
+            ],
+        ]);
+    }
+
+    public function systemUpdates(): JsonResponse
+    {
+        $this->validateRequestAllowingSession([
+            'search.term' => 'nullable|string',
+            'search.current_page' => 'nullable|integer|min:1',
+            'search.per_page' => 'nullable|integer|min:1',
+        ]);
+
+        $post = $this->request->post;
+
+        $search = isset($post['search']) && is_array($post['search'])
+            ? $post['search']
+            : [];
+
+        $termRaw        = $search['term']          ?? '';
+        $currentPageRaw = $search['current_page']  ?? 1;
+        $perPageRaw     = $search['per_page']      ?? 10;
+
+        $term = is_string($termRaw) ? trim($termRaw) : '';
+        $currentPage = is_numeric($currentPageRaw) ? (int) $currentPageRaw : 1;
+        $perPage     = is_numeric($perPageRaw) ? (int) $perPageRaw : 10;
+
+        // Tom term => vanlig paginering (så "Rensa" visar allt)
+        if ($term === '') {
+            $page = SystemUpdate::orderBy('released_at', 'DESC')
+                ->paginate($perPage, $currentPage);
+
+            return $this->json([
+                'success' => true,
+                'data' => array_map(
+                    /**
+                     * @param mixed $update
+                     * @return array<string,mixed>
+                     */
+                    function ($update): array {
+                        if (!$update instanceof SystemUpdate) {
+                            return [];
+                        }
+
+                        $releasedAtRaw = $update->getAttribute('released_at');
+                        $releasedAt = is_string($releasedAtRaw) ? $releasedAtRaw : '';
+
+                        $ts = $releasedAt !== '' ? strtotime($releasedAt) : false;
+                        $releasedAtDate = $ts !== false ? date('Y-m-d', $ts) : '';
+
+                        $idRaw = $update->getAttribute('id');
+                        $id = (is_int($idRaw) || is_string($idRaw)) ? (string) $idRaw : '';
+
+                        return [
+                            'id' => $idRaw,
+                            'version' => $update->getAttribute('version'),
+                            'title' => $update->getAttribute('title'),
+                            'description' => $update->getAttribute('description'),
+                            'is_major' => (bool) $update->getAttribute('is_major'),
+                            'released_at' => $releasedAt,
+                            'released_at_date' => $releasedAtDate,
+                            'edit_url' => $id !== '' ? '/admin/updates/' . $id . '/edit' : '',
+                        ];
+                    },
+                    $page['data'] ?? []
+                ),
+                'meta' => $page['pagination'] ?? [
+                    'total' => 0,
+                    'per_page' => $perPage,
+                    'current_page' => $currentPage,
+                    'last_page' => 0,
+                    'first_page' => 1,
+                ],
+            ]);
+        }
+
+        $results = SystemUpdate::query()
+            ->orderBy('released_at', 'DESC')
+            ->search($term, ['version', 'title', 'description'], $perPage, $currentPage);
+
+        $data = array_map(
+            /**
+             * @param mixed $update
+             * @return array<string,mixed>
+             */
+            function ($update): array {
+                if (!$update instanceof SystemUpdate) {
+                    return [];
+                }
+
+                $releasedAtRaw = $update->getAttribute('released_at');
+                $releasedAt = is_string($releasedAtRaw) ? $releasedAtRaw : '';
+
+                $ts = $releasedAt !== '' ? strtotime($releasedAt) : false;
+                $releasedAtDate = $ts !== false ? date('Y-m-d', $ts) : '';
+
+                $idRaw = $update->getAttribute('id');
+                $id = (is_int($idRaw) || is_string($idRaw)) ? (string) $idRaw : '';
+
+                return [
+                    'id' => $idRaw,
+                    'version' => $update->getAttribute('version'),
+                    'title' => $update->getAttribute('title'),
+                    'description' => $update->getAttribute('description'),
+                    'is_major' => (bool) $update->getAttribute('is_major'),
+                    'released_at' => $releasedAt,
+                    'released_at_date' => $releasedAtDate,
+                    'edit_url' => $id !== '' ? '/admin/updates/' . $id . '/edit' : '',
                 ];
             },
             $results['data'] ?? []

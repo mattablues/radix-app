@@ -3,7 +3,7 @@
 {% block pageId %}admin-updates-index{% endblock %}
 {% block searchId %}search-users{% endblock %}
 {% block body %}
-    <section x-data="{ openDeleteModal: false, selectedUpdate: { id: null, version: '' } }">
+    <section>
       <div class="flex items-start justify-between gap-4 mb-6">
         <div>
             <h1 class="text-3xl font-semibold">Systemuppdateringar</h1>
@@ -13,6 +13,38 @@
           {{ $updates['pagination']['total'] ?? 0 }} loggar totalt
         </div>
       </div>
+
+      <form
+        id="system-updates-search-form"
+        method="get"
+        action="/admin/updates"
+        class="mb-4"
+        data-search-endpoint="/api/v1/search/system-updates"
+      >
+        <div class="flex gap-2 items-center">
+          <input
+            id="system-updates-search"
+            type="search"
+            name="q"
+            value="{{ $q ?? '' }}"
+            placeholder="Sök i uppdateringar..."
+            class="w-full md:w-[420px] text-base md:text-sm rounded-xl bg-white border border-gray-200 px-4 py-2 focus:ring-0 focus:border-gray-300"
+            autocomplete="off"
+          >
+          <button type="submit" class="px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold">
+            Sök
+          </button>
+
+          <button
+            id="system-updates-clear"
+            type="button"
+            class="px-3 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-gray-900"
+            {% if(($q ?? '') === '') : %}disabled{% endif; %}
+          >
+            Rensa
+          </button>
+        </div>
+      </form>
 
       {% if($updates['data']) : %}
       <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
@@ -26,7 +58,7 @@
                     <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 text-right">Åtgärder</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
+            <tbody id="system-updates-tbody" class="divide-y divide-gray-50">
               {% foreach($updates['data'] as $update) : %}
               <tr class="group hover:bg-blue-50/30 transition-all duration-200">
                 <!-- Version & Typ -->
@@ -47,7 +79,7 @@
                   </div>
                 </td>
 
-                <!-- Releasedatun -->
+                <!-- Releasedatum -->
                 <td class="px-4 py-4 max-sm:hidden">
                   <span class="text-xs font-medium text-gray-600">
                     {{ date('Y-m-d', strtotime($update->getAttribute('released_at'))) }}
@@ -61,9 +93,15 @@
                        class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Redigera">
                       <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                     </a>
-                    <button type="button"
-                      x-on:click="selectedUpdate = { id: {{ $update->getAttribute('id') }}, version: '{{ $update->getAttribute('version') }}' }; openDeleteModal = true"
-                      class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Radera">
+
+                    <button
+                      type="button"
+                      class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      title="Radera"
+                      data-action="delete-update"
+                      data-update-id="{{ $update->getAttribute('id') }}"
+                      data-update-version="{{ $update->getAttribute('version') }}"
+                    >
                       <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
                   </div>
@@ -75,16 +113,26 @@
         </div>
       </div>
 
-      <!-- Modal: Radera uppdatering -->
-      <div x-show="openDeleteModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" role="dialog">
-        <div x-show="openDeleteModal" x-transition.opacity class="fixed inset-0 bg-black/60"></div>
-        <div x-show="openDeleteModal" x-transition class="relative flex min-h-screen items-center justify-center p-4">
-          <div x-on:click.stop class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+      {% if($updates['pagination']['total'] > $updates['pagination']['per_page']) : %}
+          <div id="system-updates-pager" class="mt-6">
+            {{ paginate_links($updates['pagination'], 'admin.system-update.index', 2)|raw }}
+          </div>
+      {% else : %}
+          <div id="system-updates-pager" class="mt-6"></div>
+      {% endif; %}
+
+      <!-- Modal: Radera uppdatering (styrs av JS, inte Alpine) -->
+      <div id="delete-update-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-hidden="true">
+        <div id="delete-update-backdrop" class="fixed inset-0 bg-black/60"></div>
+        <div class="relative flex min-h-screen items-center justify-center p-4">
+          <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Radera uppdatering</h2>
-            <p class="text-sm text-gray-600 mb-8">Är du säker på att du vill radera version <strong x-text="selectedUpdate.version"></strong>? Detta går inte att ångra.</p>
+            <p class="text-sm text-gray-600 mb-8">
+              Är du säker på att du vill radera version <strong id="delete-update-version"></strong>? Detta går inte att ångra.
+            </p>
             <div class="flex justify-end gap-3">
-              <button x-on:click="openDeleteModal = false" class="px-4 py-2 text-sm font-bold text-gray-500">Avbryt</button>
-              <form x-bind:action="'{{ route('admin.system-update.delete', ['id' => '__ID__']) }}'.replace('__ID__', selectedUpdate.id)" method="post">
+              <button id="delete-update-cancel" type="button" class="px-4 py-2 text-sm font-bold text-gray-500">Avbryt</button>
+              <form id="delete-update-form" action="" method="post">
                 {{ csrf_field()|raw }}
                 <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-md shadow-red-100">Radera permanent</button>
               </form>
@@ -92,12 +140,6 @@
           </div>
         </div>
       </div>
-
-      {% if($updates['pagination']['total'] > $updates['pagination']['per_page']) : %}
-          <div class="mt-6">
-            {{ paginate_links($updates['pagination'], 'admin.system-update.index', 2)|raw }}
-          </div>
-      {% endif; %}
 
       {% else : %}
         <div class="bg-white border border-dashed border-gray-300 rounded-2xl p-12 text-center text-gray-500">

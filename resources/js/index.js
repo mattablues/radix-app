@@ -7,6 +7,7 @@ import { addTableAria } from "./addTableAria";
 import SearchUsers from './search-users';
 import SearchDeletedUsers from './search-deleted-users';
 import SearchSystemEvents from './search-system-events';
+import SearchSystemUpdates from './search-system-updates';
 
 window.Alpine = Alpine;
 Alpine.plugin(Collapse);
@@ -107,6 +108,28 @@ document.addEventListener('DOMContentLoaded', () => {
             endpoint: endpoint || '/api/v1/search/system-events',
             routeBase: '/admin/events',
             perPage: 20,
+            initialTerm,
+            initialPage
+        });
+    }
+
+    if (pageId === 'admin-updates-index') {
+        const params = new URLSearchParams(window.location.search);
+        const initialTerm = (params.get('q') || '').trim();
+        const initialPage = parseInt(params.get('page') || '1', 10) || 1;
+
+        const form = document.getElementById('system-updates-search-form');
+        const endpoint = form ? (form.getAttribute('data-search-endpoint') || '') : '';
+
+        new SearchSystemUpdates({
+            formId: 'system-updates-search-form',
+            clearBtnId: 'system-updates-clear',
+            inputId: 'system-updates-search',
+            tbodyId: 'system-updates-tbody',
+            pagerId: 'system-updates-pager',
+            endpoint: endpoint || '/api/v1/search/system-updates',
+            routeBase: '/admin/updates',
+            perPage: 10,
             initialTerm,
             initialPage
         });

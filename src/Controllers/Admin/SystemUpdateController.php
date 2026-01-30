@@ -22,12 +22,33 @@ class SystemUpdateController extends AbstractController
         $rawPage = $this->request->get['page'] ?? 1;
         $page = is_numeric($rawPage) ? (int) $rawPage : 1;
 
-        $updates = SystemUpdate::query()
-            ->orderBy('released_at', 'DESC')
-            ->paginate(10, $page);
+        $rawQ = $this->request->get['q'] ?? '';
+        $q = is_string($rawQ) ? trim($rawQ) : '';
+
+        if ($q !== '') {
+            $results = SystemUpdate::query()
+                ->orderBy('released_at', 'DESC')
+                ->search($q, ['version', 'title', 'description'], 10, $page);
+
+            $updates = [
+                'data' => $results['data'] ?? [],
+                'pagination' => $results['search'] ?? [
+                    'term' => $q,
+                    'total' => 0,
+                    'per_page' => 10,
+                    'current_page' => $page,
+                    'last_page' => 0,
+                    'first_page' => 1,
+                ],
+            ];
+        } else {
+            $updates = SystemUpdate::orderBy('released_at', 'DESC')
+                ->paginate(10, $page);
+        }
 
         return $this->view('admin.system-update.index', [
             'updates' => $updates,
+            'q' => $q,
         ]);
     }
 
