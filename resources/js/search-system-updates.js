@@ -14,6 +14,29 @@ export default class SearchSystemUpdates extends SearchTable {
     this.modalCancel = document.getElementById('delete-update-cancel');
     this.modalVersion = document.getElementById('delete-update-version');
     this.modalForm = document.getElementById('delete-update-form');
+
+    // Viktigt: init() kan ha körts innan dessa fanns (pga super()).
+    // Bind därför modal-events här också, när vi vet att referenserna är satta.
+    this.bindModalHandlers();
+  }
+
+  bindModalHandlers() {
+    // Stäng modalen
+    if (this.modalBackdrop && !this._modalBackdropBound) {
+      this._modalBackdropBound = true;
+      this.modalBackdrop.addEventListener('click', () => this.closeDeleteModal());
+    }
+    if (this.modalCancel && !this._modalCancelBound) {
+      this._modalCancelBound = true;
+      this.modalCancel.addEventListener('click', () => this.closeDeleteModal());
+    }
+
+    if (!this._boundEscHandler) {
+      this._boundEscHandler = (e) => {
+        if (e.key === 'Escape') this.closeDeleteModal();
+      };
+      document.addEventListener('keydown', this._boundEscHandler);
+    }
   }
 
   init() {
@@ -33,29 +56,17 @@ export default class SearchSystemUpdates extends SearchTable {
       this.openDeleteModal(id, version);
     });
 
-    // Stäng modalen
-    if (this.modalBackdrop) {
-      this.modalBackdrop.addEventListener('click', () => this.closeDeleteModal());
-    }
-    if (this.modalCancel) {
-      this.modalCancel.addEventListener('click', () => this.closeDeleteModal());
-    }
-
-    if (!this._boundEscHandler) {
-      this._boundEscHandler = (e) => {
-        if (e.key === 'Escape') this.closeDeleteModal();
-      };
-      document.addEventListener('keydown', this._boundEscHandler);
-    }
+    // Bind igen (om init körts innan constructor hann sätta refs, eller om DOM ändrats)
+    this.bindModalHandlers();
   }
 
-  openDeleteModal(id, version) {
+openDeleteModal(id, version) {
     if (!this.modal || !this.modalForm || !this.modalVersion) return;
 
     this.modalVersion.textContent = version || '';
 
-    // Din route: POST /admin/updates/{id}/delete
-    this.modalForm.setAttribute('action', `/admin/updates/${encodeURIComponent(id)}/delete`);
+    const suffix = this.currentQuerySuffix();
+    this.modalForm.setAttribute('action', `/admin/updates/${encodeURIComponent(id)}/delete${suffix}`);
 
     this.modal.classList.remove('hidden');
     this.modal.setAttribute('aria-hidden', 'false');

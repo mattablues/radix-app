@@ -35,7 +35,7 @@ class SystemUpdateController extends AbstractController
                 'pagination' => $results['search'] ?? [
                     'term' => $q,
                     'total' => 0,
-                    'per_page' => 10,
+                    'per_page' => 1,
                     'current_page' => $page,
                     'last_page' => 0,
                     'first_page' => 1,
@@ -43,7 +43,7 @@ class SystemUpdateController extends AbstractController
             ];
         } else {
             $updates = SystemUpdate::orderBy('released_at', 'DESC')
-                ->paginate(10, $page);
+                ->paginate(1, $page);
         }
 
         return $this->view('admin.system-update.index', [
@@ -170,9 +170,22 @@ class SystemUpdateController extends AbstractController
 
         if ($update) {
             $update->forceDelete();
-            $this->request->session()->setFlashMessage('Uppdateringen har raderats.');
+
+            return $this->formRedirectWithFlashAndQuery(
+                'admin.system-update.index',
+                'Uppdateringen har raderats.',
+                'info',
+                [],
+                $this->currentListQuery()
+            );
         }
 
-        return $this->formRedirect('admin.system-update.index');
+        return $this->formRedirectWithFlashAndQuery(
+            'admin.system-update.index',
+            'Uppdateringen kunde inte hittas.',
+            'error',
+            [],
+            $this->currentListQuery()
+        );
     }
 }

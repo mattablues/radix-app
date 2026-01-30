@@ -75,10 +75,10 @@
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 text-gray-500">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
               </svg>
-              <label for="{% yield searchId %}" class="sr-only">Sök</label>
+              <label for="search-profiles" class="sr-only">Sök</label>
               <!-- Ändrat: text-base (16px) på mobil för att stoppa auto-zoom, text-sm på desktop -->
               <input class="text-base md:text-sm ml-3 w-full md:w-[280px] bg-transparent border-none py-0 px-0 focus:ring-0 text-gray-100 placeholder:text-gray-500"
-                     id="{% yield searchId %}" placeholder="Sök i systemet..." autocomplete="off">
+                     id="search-profiles" placeholder="Sök användare..." autocomplete="off">
             </div>
 
             <!-- Ändrat: Mer robust placering på mobil, dropdownen följer inputfältets bredd -->

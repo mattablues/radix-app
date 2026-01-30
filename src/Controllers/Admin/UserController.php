@@ -14,7 +14,6 @@ use Radix\Controller\AbstractController;
 use Radix\Enums\Role;
 use Radix\Enums\UserActivationContext;
 use Radix\EventDispatcher\EventDispatcher;
-use Radix\Http\RedirectResponse;
 use Radix\Http\Response;
 use Radix\Session\Session;
 use Radix\Support\Token;
@@ -30,19 +29,39 @@ class UserController extends AbstractController
 
     public function index(): Response
     {
-        $rawPage = $this->request->get['page'] ?? 1;
 
-        if (!is_int($rawPage) && !is_string($rawPage)) {
-            // Fallback om någon skickar något knasigt
-            $rawPage = 1;
+        $rawPage = $this->request->get['page'] ?? 1;
+        $page = is_numeric($rawPage) ? (int) $rawPage : 1;
+
+        $rawQ = $this->request->get['q'] ?? '';
+        $q = is_string($rawQ) ? trim($rawQ) : '';
+
+        if ($q !== '') {
+            $results = User::with('status')
+                ->orderBy('id', 'DESC')
+                ->search($q, ['first_name', 'last_name', 'email'], 10, $page);
+
+            $users = [
+                'data' => $results['data'] ?? [],
+                'pagination' => $results['search'] ?? [
+                    'term' => $q,
+                    'total' => 0,
+                    'per_page' => 10,
+                    'current_page' => $page,
+                    'last_page' => 0,
+                    'first_page' => 1,
+                ],
+            ];
+        } else {
+            $users = User::with('status')
+                ->orderBy('id', 'DESC')
+                ->paginate(10, $page);
         }
 
-        /** @var int|string $rawPage */
-        $page = (int) $rawPage;
-
-        $users = User::with('status')->paginate(10, $page);
-
-        return $this->view('admin.user.index', ['users' => $users]);
+        return $this->view('admin.user.index', [
+            'users' => $users,
+            'q' => $q,
+        ]);
     }
 
     public function create(): Response
@@ -128,11 +147,13 @@ class UserController extends AbstractController
         $user = User::find($id);
 
         if (!$user) {
-            $this->request->session()->setFlashMessage(
-                "Användare kunde inte hittas."
+            return $this->formRedirectWithFlashAndQuery(
+                'admin.user.index',
+                'Användare kunde inte hittas.',
+                'error',
+                [],
+                $this->currentListQuery()
             );
-
-            return new RedirectResponse(route('admin.user.index'));
         }
 
         $token = new Token();
@@ -156,7 +177,6 @@ class UserController extends AbstractController
 
         $activationLink = getenv('APP_URL') . route('auth.register.activate', ['token' => $tokenValue]);
 
-        // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
             email: $user->email,
             firstName: $user->first_name,
@@ -165,22 +185,13 @@ class UserController extends AbstractController
             context: UserActivationContext::Resend,
         ));
 
-        // Ställ in flash-meddelande och omdirigera
-        $this->request->session()->setFlashMessage(
-            "Aktiveringslänk skickad till $user->email."
+        return $this->formRedirectWithFlashAndQuery(
+            'admin.user.index',
+            "Aktiveringslänk skickad till {$user->email}.",
+            'info',
+            [],
+            $this->currentListQuery()
         );
-
-        $rawPage = $this->request->get['page'] ?? 1;
-
-        if (!is_int($rawPage) && !is_string($rawPage)) {
-            // Fallback om någon skickar något knasigt
-            $rawPage = 1;
-        }
-
-        /** @var int|string $rawPage */
-        $currentPage = (int) $rawPage;
-
-        return new RedirectResponse(route('admin.user.index') . '?page=' . $currentPage);
     }
 
     public function block(string $id): Response
@@ -190,11 +201,13 @@ class UserController extends AbstractController
         $user = User::find($id);
 
         if (!$user) {
-            $this->request->session()->setFlashMessage(
-                "Användare kunde inte hittas."
+            return $this->formRedirectWithFlashAndQuery(
+                'admin.user.index',
+                'Användare kunde inte hittas.',
+                'error',
+                [],
+                $this->currentListQuery()
             );
-
-            return new RedirectResponse(route('admin.user.index'));
         }
 
         $user->loadMissing('status');
@@ -213,20 +226,6 @@ class UserController extends AbstractController
 
         $status->save();
 
-        $this->request->session()->setFlashMessage(
-            "onto för $user->first_name $user->last_name har blockerats."
-        );
-
-        $rawPage = $this->request->get['page'] ?? 1;
-
-        if (!is_int($rawPage) && !is_string($rawPage)) {
-            // Fallback om någon skickar något knasigt
-            $rawPage = 1;
-        }
-
-        /** @var int|string $rawPage */
-        $currentPage = (int) $rawPage;
-
         $adminId = $this->request->session()->get(Session::AUTH_KEY);
 
         SystemEvent::log(
@@ -235,7 +234,13 @@ class UserController extends AbstractController
             userId: is_numeric($adminId) ? (int) $adminId : null
         );
 
-        return new RedirectResponse(route('admin.user.index') . '?page=' . $currentPage);
+        return $this->formRedirectWithFlashAndQuery(
+            'admin.user.index',
+            "Konto för {$user->first_name} {$user->last_name} har blockerats.",
+            'info',
+            [],
+            $this->currentListQuery()
+        );
     }
 
     public function closed(): Response
@@ -243,18 +248,39 @@ class UserController extends AbstractController
         $this->before();
 
         $rawPage = $this->request->get['page'] ?? 1;
+        $page = is_numeric($rawPage) ? (int) $rawPage : 1;
 
-        if (!is_int($rawPage) && !is_string($rawPage)) {
-            // Fallback om någon skickar något knasigt
-            $rawPage = 1;
+        $rawQ = $this->request->get['q'] ?? '';
+        $q = is_string($rawQ) ? trim($rawQ) : '';
+
+        if ($q !== '') {
+            $results = User::with('status')
+                ->getOnlySoftDeleted()
+                ->orderBy('deleted_at', 'DESC')
+                ->search($q, ['first_name', 'last_name', 'email'], 10, $page);
+
+            $users = [
+                'data' => $results['data'] ?? [],
+                'pagination' => $results['search'] ?? [
+                    'term' => $q,
+                    'total' => 0,
+                    'per_page' => 10,
+                    'current_page' => $page,
+                    'last_page' => 0,
+                    'first_page' => 1,
+                ],
+            ];
+        } else {
+            $users = User::with('status')
+                ->getOnlySoftDeleted()
+                ->orderBy('deleted_at', 'DESC')
+                ->paginate(10, $page);
         }
 
-        /** @var int|string $rawPage */
-        $page = (int) $rawPage;
-
-        $users = User::with('status')->getOnlySoftDeleted()->paginate(10, $page);
-
-        return $this->view('admin.user.closed', ['users' => $users]);
+        return $this->view('admin.user.closed', [
+            'users' => $users,
+            'q' => $q,
+        ]);
     }
 
     public function restore(string $id): Response
@@ -264,21 +290,13 @@ class UserController extends AbstractController
         $user = User::find($id, true);
 
         if (!$user) {
-            $rawPage = $this->request->get['page'] ?? 1;
-
-            if (!is_int($rawPage) && !is_string($rawPage)) {
-                // Fallback om någon skickar något knasigt
-                $rawPage = 1;
-            }
-
-            /** @var int|string $rawPage */
-            $currentPage = (int) $rawPage;
-
-            $this->request->session()->setFlashMessage(
-                "Användare kunde inte hittas."
+            return $this->formRedirectWithFlashAndQuery(
+                'admin.user.closed',
+                'Användare kunde inte hittas.',
+                'error',
+                [],
+                $this->currentListQuery()
             );
-
-            return new RedirectResponse(route('admin.user.closed') . '?page=' . $currentPage);
         }
 
         $user->restore();
@@ -304,7 +322,6 @@ class UserController extends AbstractController
 
         $activationLink = getenv('APP_URL') . route('auth.register.activate', ['token' => $tokenValue]);
 
-        // Skicka e-postmeddelande
         $this->eventDispatcher->dispatch(new UserRegisteredEvent(
             email: $user->email,
             firstName: $user->first_name,
@@ -313,11 +330,13 @@ class UserController extends AbstractController
             context: UserActivationContext::Resend
         ));
 
-        $this->request->session()->setFlashMessage(
-            "Konto för $user->first_name $user->last_name har återställts, aktiveringslänk skickad."
+        return $this->formRedirectWithFlashAndQuery(
+            'admin.user.closed',
+            "Konto för $user->first_name $user->last_name har återställts, aktiveringslänk skickad.",
+            'info',
+            [],
+            $this->currentListQuery()
         );
-
-        return new RedirectResponse(route('admin.user.index'));
     }
 
     public function role(string $id): Response
@@ -327,43 +346,53 @@ class UserController extends AbstractController
         $rawRoleInput = $this->request->post['role'] ?? null;
 
         if (!is_string($rawRoleInput)) {
-            $this->request->session()->setFlashMessage('Något blev fel, prova igen.', 'error');
-
-            return new RedirectResponse(route('user.show', ['id' => $id]));
+            return $this->formRedirectWithFlash(
+                'user.show',
+                'Något blev fel, prova igen.',
+                'error',
+                ['id' => $id]
+            );
         }
 
-        $roleInput = $rawRoleInput;
-        $roleEnum = Role::tryFromName($roleInput);
+        $roleEnum = Role::tryFromName($rawRoleInput);
 
         if ($roleEnum === null) {
-            $this->request->session()->setFlashMessage('Ogiltig behörighetsnivå angiven.', 'error');
-
-            return new RedirectResponse(route('user.show', ['id' => $id]));
+            return $this->formRedirectWithFlash(
+                'user.show',
+                'Ogiltig behörighetsnivå angiven.',
+                'error',
+                ['id' => $id]
+            );
         }
 
         $user = User::find($id);
 
         if ($user === null) {
-            $this->request->session()->setFlashMessage('Användare saknas.', 'error');
-
-            return new RedirectResponse(route('user.show', ['id' => $id]));
+            return $this->formRedirectWithFlash(
+                'user.show',
+                'Användare saknas.',
+                'error',
+                ['id' => $id]
+            );
         }
 
         if ($user->isAdmin()) {
-            $this->request->session()->setFlashMessage('Du kan inte ändra en admin.', 'error');
-
-            return new RedirectResponse(route('admin.user.index'));
+            return $this->formRedirectWithFlash(
+                'user.show',
+                'Du kan inte ändra en admin.',
+                'error',
+                ['id' => (string) $user->id]
+            );
         }
 
         $user->setRole($roleEnum);
         $user->save();
 
-        $roleName = $roleEnum->value;
-
-        $this->request->session()->setFlashMessage(
-            "$user->first_name $user->last_name har tilldelats behörighet {$roleName}"
+        return $this->formRedirectWithFlash(
+            'user.show',
+            "{$user->first_name} {$user->last_name} har tilldelats behörighet {$roleEnum->value}",
+            'info',
+            ['id' => (string) $user->id]
         );
-
-        return new RedirectResponse(route('user.show', ['id' => $user->id]));
     }
 }

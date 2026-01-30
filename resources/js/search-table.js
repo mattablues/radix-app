@@ -94,6 +94,25 @@ export default class SearchTable {
     });
   }
 
+    /**
+   * Bygger querystring-suffix baserat på nuvarande URL (q + page).
+   * - Tar bara med q om den inte är tom
+   * - Tar bara med page om page > 1
+   * @return {string} Ex: "?q=test&page=2" eller "".
+   */
+  currentQuerySuffix() {
+    const params = new URLSearchParams(window.location.search);
+    const q = (params.get('q') || '').trim();
+    const page = parseInt(params.get('page') || '1', 10) || 1;
+
+    const qs = new URLSearchParams();
+    if (q) qs.set('q', q);
+    if (page > 1) qs.set('page', String(page));
+
+    const s = qs.toString();
+    return s ? `?${s}` : '';
+  }
+
   setClearEnabled() {
     if (!this.clearBtn) return;
     this.clearBtn.disabled = !this.term;

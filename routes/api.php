@@ -26,9 +26,12 @@ $router->group([
         // Sök-endpoints
 
         // Alla inloggade (session/token) får söka users, men throttla "snällt"
+        $router->post('/search/profiles', [\App\Controllers\Api\SearchController::class, 'profiles'])
+            ->name('api.search.profiles');
+
         $router->post('/search/users', [\App\Controllers\Api\SearchController::class, 'users'])
             ->name('api.search.users')
-            ->middleware(['api.throttle.light']);
+            ->middleware(['role.min.moderator']);
 
         // Endast moderator+ får söka deleted users
         $router->post('/search/deleted-users', [\App\Controllers\Api\SearchController::class, 'deletedUsers'])

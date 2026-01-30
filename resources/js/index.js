@@ -4,10 +4,11 @@ import Ajax from "@imacrayon/alpine-ajax";
 import Ui from "@alpinejs/ui";
 import Focus from "@alpinejs/focus";
 import { addTableAria } from "./addTableAria";
-import SearchUsers from './search-users';
-import SearchDeletedUsers from './search-deleted-users';
+import SearchProfiles from './search-profiles';
 import SearchSystemEvents from './search-system-events';
 import SearchSystemUpdates from './search-system-updates';
+import SearchUsers from './search-users';
+import SearchDeletedUsers from './search-deleted-users';
 
 window.Alpine = Alpine;
 Alpine.plugin(Collapse);
@@ -23,15 +24,10 @@ addTableAria();
 document.addEventListener('DOMContentLoaded', () => {
     const mainContent = document.querySelector('main');
 
-    const searchUserInput = document.getElementById('search-users');
-    const searchDeletedInput = document.getElementById('search-deleted-users');
+    const searchProfileInput = document.getElementById('search-profiles');
 
-    if (searchUserInput && mainContent) {
-        new SearchUsers('search-users', 'main');
-    }
-
-    if (searchDeletedInput && mainContent) {
-        new SearchDeletedUsers('search-deleted-users', 'main');
+    if (searchProfileInput && mainContent) {
+        new SearchProfiles('search-profiles', 'main');
     }
 
     const btn = document.getElementById('search-toggle');
@@ -46,13 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
         wrap.style.top = '100%';
         wrap.style.marginTop = '0.5rem';
         wrap.style.zIndex = '70';
-        // ... existing code ...
+
         setTimeout(() => {
-            if (searchUserInput) {
-                searchUserInput.focus();
-            } else if (searchDeletedInput) {
-                searchDeletedInput.focus();
-            }
+            searchProfileInput.focus();
         }, 0);
     };
 
@@ -60,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
         wrap.classList.add('hidden');
         wrap.removeAttribute('style');
 
-        if (searchUserInput) searchUserInput.value = '';
-        if (searchDeletedInput) searchDeletedInput.value = '';
+        if (searchProfileInput) searchProfileInput.value = '';
+
 
         // Hitta och rensa första matchande dropdown som finns
         const dropdown =
@@ -130,6 +122,50 @@ document.addEventListener('DOMContentLoaded', () => {
             endpoint: endpoint || '/api/v1/search/system-updates',
             routeBase: '/admin/updates',
             perPage: 10,
+            initialTerm,
+            initialPage
+        });
+    }
+
+    if (pageId === 'admin-users-index') {
+        const params = new URLSearchParams(window.location.search);
+        const initialTerm = (params.get('q') || '').trim();
+        const initialPage = parseInt(params.get('page') || '1', 10) || 1;
+
+        const form = document.getElementById('users-search-form');
+        const endpoint = form ? (form.getAttribute('data-search-endpoint') || '') : '';
+
+        new SearchUsers({
+            formId: 'users-search-form',
+            clearBtnId: 'users-clear',
+            inputId: 'users-search',
+            tbodyId: 'users-tbody',
+            pagerId: 'users-pager',
+            endpoint: endpoint || '/api/v1/search/users',
+            routeBase: '/admin/users',
+            perPage: 20,
+            initialTerm,
+            initialPage
+        });
+    }
+
+    if (pageId === 'admin-user-closed') {
+        const params = new URLSearchParams(window.location.search);
+        const initialTerm = (params.get('q') || '').trim();
+        const initialPage = parseInt(params.get('page') || '1', 10) || 1;
+
+        const form = document.getElementById('deleted-users-search-form');
+        const endpoint = form ? (form.getAttribute('data-search-endpoint') || '') : '';
+
+        new SearchDeletedUsers({
+            formId: 'deleted-users-search-form',
+            clearBtnId: 'deleted-users-clear',
+            inputId: 'deleted-users-search',
+            tbodyId: 'deleted-users-tbody',
+            pagerId: 'deleted-users-pager',
+            endpoint: endpoint || '/api/v1/search/deleted-users',
+            routeBase: '/admin/users/closed',
+            perPage: 20,
             initialTerm,
             initialPage
         });
