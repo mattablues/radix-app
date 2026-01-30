@@ -149,7 +149,8 @@
         "Radix\\Support\\Validator::validateMax",
         "Radix\\Support\\Validator::validateMin",
         "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey",
-        "Radix\\Database\\ORM\\Relationships\\BelongsToMany::detach"
+        "Radix\\Database\\ORM\\Relationships\\BelongsToMany::detach",
+        "Radix\\Config\\EnvValidator::isValidIpOrCidr"
       ]
     },
 
@@ -552,7 +553,8 @@
         "Radix\\Database\\ORM\\Model::isFillable",
         "Radix\\Database\\QueryBuilder\\Concerns\\Functions",
         "Radix\\Database\\QueryBuilder\\QueryBuilder::compileCteBindings",
-        "Radix\\Database\\QueryBuilder\\Concerns\\WithCtes::compileCteBindings"
+        "Radix\\Database\\QueryBuilder\\Concerns\\WithCtes::compileCteBindings",
+        "Radix\\Config\\Dotenv::stripInlineComment"
       ]
     },
 
@@ -914,7 +916,8 @@
         "Radix\\Http\\EventListeners\\CorsListener::__invoke",
         "Radix\\Support\\Validator::getErrorMessage",
         "Radix\\Viewer\\RadixTemplateViewer::generateCacheKey",
-        "Radix\\Database\\QueryBuilder\\Concerns\\CompilesSelect"
+        "Radix\\Database\\QueryBuilder\\Concerns\\CompilesSelect",
+        "Radix\\Config\\EnvValidator::writablePath"
       ]
     },
 
