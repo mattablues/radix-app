@@ -30,144 +30,180 @@ document.addEventListener('DOMContentLoaded', () => {
         new SearchProfiles('search-profiles', 'main');
     }
 
+    // ---------- Header-sök (robust / valfri) ----------
     const btn = document.getElementById('search-toggle');
     const wrap = document.getElementById('search-wrap');
-    if (!btn || !wrap) return;
 
-    const open = () => {
-        wrap.classList.remove('hidden');
-        wrap.style.position = 'absolute';
-        wrap.style.left = '0';
-        wrap.style.right = '0';
-        wrap.style.top = '100%';
-        wrap.style.marginTop = '0.5rem';
-        wrap.style.zIndex = '70';
+    if (btn && wrap) {
+        const open = () => {
+            wrap.classList.remove('hidden');
+            wrap.style.position = 'absolute';
+            wrap.style.left = '0';
+            wrap.style.right = '0';
+            wrap.style.top = '100%';
+            wrap.style.marginTop = '0.5rem';
+            wrap.style.zIndex = '70';
 
-        setTimeout(() => {
-            searchProfileInput.focus();
-        }, 0);
-    };
+            setTimeout(() => {
+                if (searchProfileInput) searchProfileInput.focus();
+            }, 0);
+        };
 
-    const close = () => {
-        wrap.classList.add('hidden');
-        wrap.removeAttribute('style');
+        const close = () => {
+            wrap.classList.add('hidden');
+            wrap.removeAttribute('style');
 
-        if (searchProfileInput) searchProfileInput.value = '';
+            if (searchProfileInput) searchProfileInput.value = '';
 
+            const dropdown = document.getElementById('search-dropdown');
 
-        // Hitta och rensa första matchande dropdown som finns
-        const dropdown =
-            document.getElementById('search-dropdown');
+            if (dropdown) {
+                const resultContainer = dropdown.querySelector('.result-container');
+                if (resultContainer) resultContainer.innerHTML = '';
+                dropdown.classList.add('hidden');
+            }
+        };
 
-        if (dropdown) {
-            const resultContainer = dropdown.querySelector('.result-container');
-            if (resultContainer) resultContainer.innerHTML = '';
-            dropdown.classList.add('hidden');
-        }
-    };
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (wrap.classList.contains('hidden')) open(); else close();
+        });
 
-    btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (wrap.classList.contains('hidden')) open(); else close();
-    });
+        document.addEventListener('click', (e) => {
+            if (!wrap.contains(e.target) && !btn.contains(e.target)) close();
+        });
 
-    document.addEventListener('click', (e) => {
-        if (!wrap.contains(e.target) && !btn.contains(e.target)) close();
-    });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') close();
+        });
+    }
+    // ---------- /Header-sök ----------
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') close();
-    });
+    // ---------- Tabell-sök (robust / destroy / guards) ----------
+    window.__tableSearchInstances = window.__tableSearchInstances || {};
 
-    const pageId =
+    const getPageId = () =>
         document.querySelector('[data-page-id]')?.getAttribute('data-page-id')
         || (document.body ? document.body.id : null);
 
-    if (pageId === 'admin-events-index') {
-        const params = new URLSearchParams(window.location.search);
-        const initialTerm = (params.get('q') || '').trim();
-        const initialPage = parseInt(params.get('page') || '1', 10) || 1;
+    const exists = (id) => !!document.getElementById(id);
 
-        const form = document.getElementById('system-events-search-form');
+    const getEndpointFromForm = (formId, fallback) => {
+        const form = document.getElementById(formId);
         const endpoint = form ? (form.getAttribute('data-search-endpoint') || '') : '';
+        return endpoint || fallback;
+    };
 
-        new SearchSystemEvents({
-            formId: 'system-events-search-form',
-            clearBtnId: 'system-events-clear',
-            inputId: 'system-events-search',
-            tbodyId: 'system-events-tbody',
-            pagerId: 'system-events-pager',
-            endpoint: endpoint || '/api/v1/search/system-events',
-            routeBase: '/admin/events',
-            perPage: 20,
-            initialTerm,
-            initialPage
-        });
+    const getInitialState = () => {
+        const params = new URLSearchParams(window.location.search);
+        return {
+            initialTerm: (params.get('q') || '').trim(),
+            initialPage: parseInt(params.get('page') || '1', 10) || 1
+        };
+    };
+
+    const initTableSearch = (key, requiredIds, createInstance) => {
+        const ok = requiredIds.every(exists);
+        if (!ok) return null;
+
+        const prev = window.__tableSearchInstances[key];
+        if (prev && typeof prev.destroy === 'function') {
+            prev.destroy();
+        }
+
+        const instance = createInstance();
+        window.__tableSearchInstances[key] = instance;
+        return instance;
+    };
+
+    const pageId = getPageId();
+
+    if (pageId === 'admin-events-index') {
+        const { initialTerm, initialPage } = getInitialState();
+        const endpoint = getEndpointFromForm('system-events-search-form', '/api/v1/search/system-events');
+
+        initTableSearch(
+            'systemEvents',
+            ['system-events-search-form', 'system-events-search', 'system-events-tbody'],
+            () => new SearchSystemEvents({
+                formId: 'system-events-search-form',
+                clearBtnId: 'system-events-clear',
+                inputId: 'system-events-search',
+                tbodyId: 'system-events-tbody',
+                pagerId: 'system-events-pager',
+                endpoint,
+                routeBase: '/admin/events',
+                perPage: 20,
+                initialTerm,
+                initialPage
+            })
+        );
     }
 
     if (pageId === 'admin-updates-index') {
-        const params = new URLSearchParams(window.location.search);
-        const initialTerm = (params.get('q') || '').trim();
-        const initialPage = parseInt(params.get('page') || '1', 10) || 1;
+        const { initialTerm, initialPage } = getInitialState();
+        const endpoint = getEndpointFromForm('system-updates-search-form', '/api/v1/search/system-updates');
 
-        const form = document.getElementById('system-updates-search-form');
-        const endpoint = form ? (form.getAttribute('data-search-endpoint') || '') : '';
-
-        new SearchSystemUpdates({
-            formId: 'system-updates-search-form',
-            clearBtnId: 'system-updates-clear',
-            inputId: 'system-updates-search',
-            tbodyId: 'system-updates-tbody',
-            pagerId: 'system-updates-pager',
-            endpoint: endpoint || '/api/v1/search/system-updates',
-            routeBase: '/admin/updates',
-            perPage: 10,
-            initialTerm,
-            initialPage
-        });
+        initTableSearch(
+            'systemUpdates',
+            ['system-updates-search-form', 'system-updates-search', 'system-updates-tbody'],
+            () => new SearchSystemUpdates({
+                formId: 'system-updates-search-form',
+                clearBtnId: 'system-updates-clear',
+                inputId: 'system-updates-search',
+                tbodyId: 'system-updates-tbody',
+                pagerId: 'system-updates-pager',
+                endpoint,
+                routeBase: '/admin/updates',
+                perPage: 10,
+                initialTerm,
+                initialPage
+            })
+        );
     }
 
     if (pageId === 'admin-users-index') {
-        const params = new URLSearchParams(window.location.search);
-        const initialTerm = (params.get('q') || '').trim();
-        const initialPage = parseInt(params.get('page') || '1', 10) || 1;
+        const { initialTerm, initialPage } = getInitialState();
+        const endpoint = getEndpointFromForm('users-search-form', '/api/v1/search/users');
 
-        const form = document.getElementById('users-search-form');
-        const endpoint = form ? (form.getAttribute('data-search-endpoint') || '') : '';
-
-        new SearchUsers({
-            formId: 'users-search-form',
-            clearBtnId: 'users-clear',
-            inputId: 'users-search',
-            tbodyId: 'users-tbody',
-            pagerId: 'users-pager',
-            endpoint: endpoint || '/api/v1/search/users',
-            routeBase: '/admin/users',
-            perPage: 20,
-            initialTerm,
-            initialPage
-        });
+        initTableSearch(
+            'users',
+            ['users-search-form', 'users-search', 'users-tbody'],
+            () => new SearchUsers({
+                formId: 'users-search-form',
+                clearBtnId: 'users-clear',
+                inputId: 'users-search',
+                tbodyId: 'users-tbody',
+                pagerId: 'users-pager',
+                endpoint,
+                routeBase: '/admin/users',
+                perPage: 20,
+                initialTerm,
+                initialPage
+            })
+        );
     }
 
     if (pageId === 'admin-user-closed') {
-        const params = new URLSearchParams(window.location.search);
-        const initialTerm = (params.get('q') || '').trim();
-        const initialPage = parseInt(params.get('page') || '1', 10) || 1;
+        const { initialTerm, initialPage } = getInitialState();
+        const endpoint = getEndpointFromForm('deleted-users-search-form', '/api/v1/search/deleted-users');
 
-        const form = document.getElementById('deleted-users-search-form');
-        const endpoint = form ? (form.getAttribute('data-search-endpoint') || '') : '';
-
-        new SearchDeletedUsers({
-            formId: 'deleted-users-search-form',
-            clearBtnId: 'deleted-users-clear',
-            inputId: 'deleted-users-search',
-            tbodyId: 'deleted-users-tbody',
-            pagerId: 'deleted-users-pager',
-            endpoint: endpoint || '/api/v1/search/deleted-users',
-            routeBase: '/admin/users/closed',
-            perPage: 20,
-            initialTerm,
-            initialPage
-        });
+        initTableSearch(
+            'deletedUsers',
+            ['deleted-users-search-form', 'deleted-users-search', 'deleted-users-tbody'],
+            () => new SearchDeletedUsers({
+                formId: 'deleted-users-search-form',
+                clearBtnId: 'deleted-users-clear',
+                inputId: 'deleted-users-search',
+                tbodyId: 'deleted-users-tbody',
+                pagerId: 'deleted-users-pager',
+                endpoint,
+                routeBase: '/admin/users/closed',
+                perPage: 20,
+                initialTerm,
+                initialPage
+            })
+        );
     }
+    // ---------- /Tabell-sök ----------
 });

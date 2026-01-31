@@ -1,4 +1,8 @@
 export default class SearchTable {
+  // Håll koll på alla instanser + bara en popstate-listener
+  static instances = new Set();
+  static popstateBound = false;
+
   constructor(options) {
     this.form = options.formId ? document.getElementById(options.formId) : null;
     this.clearBtn = options.clearBtnId ? document.getElementById(options.clearBtnId) : null;
@@ -18,83 +22,141 @@ export default class SearchTable {
 
     this._abort = null;
 
+    this._onSubmit = null;
+    this._onInput = null;
+    this._onClear = null;
+    this._onPagerClick = null;
+
     this._debounced = this.debounce(() => {
       this.page = 1;
       this.fetchAndRender(this.term, this.page, true);
     }, options.debounceMs ?? 250);
 
+    // Registrera instans + bind popstate en gång
+    SearchTable.instances.add(this);
+    if (!SearchTable.popstateBound) {
+      SearchTable.popstateBound = true;
+      window.addEventListener('popstate', () => {
+        for (const inst of SearchTable.instances) {
+          inst.handlePopState();
+        }
+      });
+    }
+
     this.init();
   }
 
   init() {
-    if (!this.input || !this.tbody || !this.pager) return;
+    // Pager ska vara valfri
+    if (!this.input || !this.tbody) return;
 
     this.input.value = this.term;
     this.setClearEnabled();
 
     if (this.form) {
-      this.form.addEventListener('submit', (e) => {
+      this._onSubmit = (e) => {
         e.preventDefault();
         this.term = (this.input.value || '').trim();
         this.page = 1;
         this.fetchAndRender(this.term, this.page, true);
-      });
+      };
+      this.form.addEventListener('submit', this._onSubmit);
     }
 
-    this.input.addEventListener('input', (e) => {
+    this._onInput = (e) => {
       this.term = (e.target.value || '').trim();
       this.setClearEnabled();
       this._debounced();
-    });
+    };
+    this.input.addEventListener('input', this._onInput);
 
     if (this.clearBtn) {
-      this.clearBtn.addEventListener('click', (e) => {
+      this._onClear = (e) => {
         e.preventDefault();
         this.term = '';
         this.page = 1;
         this.input.value = '';
         this.setClearEnabled();
         this.fetchAndRender(this.term, this.page, true);
-      });
+      };
+      this.clearBtn.addEventListener('click', this._onClear);
     }
 
-    this.pager.addEventListener('click', (e) => {
-      const a = e.target.closest('a');
-      if (!a) return;
+    // Pager-event bara om den finns
+    if (this.pager) {
+      this._onPagerClick = (e) => {
+        const a = e.target.closest('a');
+        if (!a) return;
 
-      const href = a.getAttribute('href') || '';
-      if (!href) return;
-      if (!this.routeBase || !href.includes(this.routeBase)) return;
+        const href = a.getAttribute('href') || '';
+        if (!href) return;
+        if (!this.routeBase || !href.includes(this.routeBase)) return;
 
-      e.preventDefault();
+        e.preventDefault();
 
-      const url = new URL(href, window.location.origin);
-      const page = parseInt(url.searchParams.get('page') || '1', 10) || 1;
-      const q = (url.searchParams.get('q') || '').trim();
+        const url = new URL(href, window.location.origin);
+        const page = parseInt(url.searchParams.get('page') || '1', 10) || 1;
+        const q = (url.searchParams.get('q') || '').trim();
 
-      this.term = q;
-      this.page = page;
-      this.input.value = this.term;
-      this.setClearEnabled();
+        this.term = q;
+        this.page = page;
+        this.input.value = this.term;
+        this.setClearEnabled();
 
-      this.fetchAndRender(this.term, this.page, true);
-    });
-
-    window.addEventListener('popstate', () => {
-      const params = new URLSearchParams(window.location.search);
-      const term = (params.get('q') || '').trim();
-      const page = parseInt(params.get('page') || '1', 10) || 1;
-
-      this.term = term;
-      this.page = page;
-      this.input.value = this.term;
-      this.setClearEnabled();
-
-      this.fetchAndRender(this.term, this.page, false);
-    });
+        this.fetchAndRender(this.term, this.page, true);
+      };
+      this.pager.addEventListener('click', this._onPagerClick);
+    }
   }
 
-    /**
+  // Nytt: städa upp (för SPA / re-init utan full reload)
+  destroy() {
+    // 1) Stoppa ev. pågående request
+    if (this._abort) {
+      this._abort.abort();
+      this._abort = null;
+    }
+
+    // 2) Ta bort event listeners som denna instans la till
+    if (this.form && this._onSubmit) {
+      this.form.removeEventListener('submit', this._onSubmit);
+    }
+    if (this.input && this._onInput) {
+      this.input.removeEventListener('input', this._onInput);
+    }
+    if (this.clearBtn && this._onClear) {
+      this.clearBtn.removeEventListener('click', this._onClear);
+    }
+    if (this.pager && this._onPagerClick) {
+      this.pager.removeEventListener('click', this._onPagerClick);
+    }
+
+    this._onSubmit = null;
+    this._onInput = null;
+    this._onClear = null;
+    this._onPagerClick = null;
+
+    // 3) Avregistrera instansen så den inte får popstate längre
+    SearchTable.instances.delete(this);
+  }
+
+  handlePopState() {
+    const params = new URLSearchParams(window.location.search);
+    const term = (params.get('q') || '').trim();
+    const page = parseInt(params.get('page') || '1', 10) || 1;
+
+    this.term = term;
+    this.page = page;
+
+    if (this.input) {
+      this.input.value = this.term;
+    }
+    this.setClearEnabled();
+
+    this.fetchAndRender(this.term, this.page, false);
+  }
+
+  /**
    * Bygger querystring-suffix baserat på nuvarande URL (q + page).
    * - Tar bara med q om den inte är tom
    * - Tar bara med page om page > 1
