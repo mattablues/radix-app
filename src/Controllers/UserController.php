@@ -43,11 +43,32 @@ class UserController extends AbstractController
 
         $authUser = User::find($authId);
 
+        $isModeratorOrHigher = $authUser instanceof User && $authUser->hasAtLeast('moderator');
+
         // $id här är route-parametern: vilken användare vi vill visa
-        if (!$authUser || !$authUser->hasAtLeast('moderator')) {
+        if (!$isModeratorOrHigher) {
             $user = User::with('status')->where('id', '=', $id)->first();
         } else {
             $user = User::with('status')->withSoftDeletes()->where('id', '=', $id)->first();
+        }
+
+        if (!$user) {
+            throw new \Radix\Http\Exception\PageNotFoundException('Page not found.');
+        }
+
+        // Blockerade profiler: endast moderator+
+        if (!$isModeratorOrHigher) {
+            $statusRel = $user->getRelation('status');
+
+            $statusRaw = ($statusRel instanceof Status)
+                ? ($statusRel->getAttribute('status') ?? '')
+                : '';
+
+            $statusValue = is_string($statusRaw) ? $statusRaw : '';
+
+            if (strtolower($statusValue) === 'blocked') {
+                throw new \Radix\Http\Exception\PageNotFoundException('Page not found.');
+            }
         }
 
         $roles = Role::cases();

@@ -56,23 +56,31 @@
                     {% endif; %}
                   </dd>
                 </div>
-              </div>
 
-              <!-- Status & Åtgärder -->
-              <div class="mt-8 pt-6 border-t border-gray-50 flex items-center gap-4">
-                <div class="flex flex-col">
-                    <span class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Kontostatus</span>
-                    <span class="inline-flex items-center text-sm font-medium">
+                <!-- Status & Åtgärder (som en ny "rad" med 2 kolumner, linjerar med grid) -->
+                <div class="sm:col-span-2 md:mt-2 md:pt-6 border-t border-gray-50">
+                  <div class="grid grid-cols-2 gap-x-12 gap-y-4 items-center">
+                    <div class="flex flex-col">
+                      <span class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Kontostatus</span>
+                      <span class="inline-flex items-center text-sm font-medium">
                         <span class="w-2 h-2 rounded-full mr-2 {{ $user->getRelation('status')->getAttribute('status') === 'activated' ? 'bg-green-500' : 'bg-red-500' }}"></span>
                         {{ $user->getRelation('status')->translateStatus($user->getRelation('status')->getAttribute('status')) }}
-                    </span>
-                </div>
+                      </span>
+                    </div>
 
-                {% if($currentUser->isAdmin() && !$user->isAdmin()) : %}
-                <button type="button" @click="openRoleModal = true" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-bold uppercase tracking-widest bg-indigo-600 text-white hover:bg-indigo-700 transition-all rounded-lg shadow-sm cursor-pointer">
-                  Ändra behörighet
-                </button>
-                {% endif; %}
+                    <div class="text-left">
+                      {% if($currentUser->isAdmin() && !$user->isAdmin()) : %}
+                        <button
+                          type="button"
+                          @click="openRoleModal = true"
+                          class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-bold uppercase tracking-widest bg-indigo-600 text-white hover:bg-indigo-700 transition-all rounded-lg shadow-sm cursor-pointer whitespace-nowrap"
+                        >
+                          Ändra behörighet
+                        </button>
+                      {% endif; %}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

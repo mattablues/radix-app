@@ -110,7 +110,6 @@ class SearchController extends ApiController
         // Tom term => vanlig paginering (så "Rensa" visar allt)
         if ($term === '') {
             $page = User::with('status')
-                ->orderBy('id', 'DESC')
                 ->paginate($perPage, $currentPage);
 
             return $this->json([
@@ -150,7 +149,7 @@ class SearchController extends ApiController
                             'active' => $activeValue,
                             'active_at' => $activeAtStr,
 
-                            'show_url' => $id !== '' ? '/user/' . $id : '',
+                            'show_url' => $id !== '' ? '/user/' . $id . '/show' : '',
                             'send_activation_url' => $id !== '' ? '/admin/users/' . $id . '/send-activation' : '',
                             'block_url' => $id !== '' ? '/admin/users/' . $id . '/block' : '',
                             'is_admin' => (bool) $user->isAdmin(),
@@ -207,7 +206,7 @@ class SearchController extends ApiController
                     'active' => $activeValue,
                     'active_at' => $activeAtStr,
 
-                    'show_url' => $id !== '' ? '/user/' . $id : '',
+                    'show_url' => $id !== '' ? '/user/' . $id . '/show' : '',
                     'send_activation_url' => $id !== '' ? '/admin/users/' . $id . '/send-activation' : '',
                     'block_url' => $id !== '' ? '/admin/users/' . $id . '/block' : '',
                     'is_admin' => (bool) $user->isAdmin(),

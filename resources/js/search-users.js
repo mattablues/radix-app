@@ -186,7 +186,9 @@ export default class SearchUsers extends SearchTable {
       const first = this.escapeHtml(u.first_name || '');
       const last = this.escapeHtml(u.last_name || '');
       const email = this.escapeHtml(u.email || '');
-      const showUrl = this.escapeHtml(u.show_url || '#');
+
+      const rawShowUrl = u.admin_show_url || u.show_url || '#';
+      const showUrl = this.escapeHtml(rawShowUrl);
 
       const status = u.status || '';
       const active = this.escapeHtml(u.active || '');
@@ -194,6 +196,7 @@ export default class SearchUsers extends SearchTable {
 
       const isAdmin = !!u.is_admin;
       const isBlocked = String(u.status || '').toLowerCase() === 'blocked';
+
 
       const actionHtml = isAdmin
         ? `<span class="p-1.5 text-gray-300" title="Admin kan ej ändras här">
@@ -213,7 +216,11 @@ export default class SearchUsers extends SearchTable {
             ${mailIcon}
           </button>
 
-          ${isBlocked ? '' : `
+          ${isBlocked ? `
+            <span class="p-2 text-gray-400 cursor-not-allowed">
+              <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728A9 9 0 115.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+            </span>
+          ` : `
             <button
               type="button"
               class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"

@@ -38,7 +38,6 @@ class UserController extends AbstractController
 
         if ($q !== '') {
             $results = User::with('status')
-                ->orderBy('id', 'DESC')
                 ->search($q, ['first_name', 'last_name', 'email'], 10, $page);
 
             $users = [
@@ -54,7 +53,6 @@ class UserController extends AbstractController
             ];
         } else {
             $users = User::with('status')
-                ->orderBy('id', 'DESC')
                 ->paginate(10, $page);
         }
 

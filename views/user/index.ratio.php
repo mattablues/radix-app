@@ -51,7 +51,7 @@
               </div>
 
               <!-- Status-indikator -->
-              <div class="mt-8 pt-6 border-t border-gray-50 flex items-center gap-4">
+              <div class="md:mt-8 pt-6 border-t border-gray-50 flex items-center gap-4">
                 <div class="flex flex-col">
                     <span class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Kontostatus</span>
                     <span class="inline-flex items-center text-sm font-medium">

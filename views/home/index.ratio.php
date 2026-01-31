@@ -25,7 +25,7 @@
           <h1 class="text-4xl md:text-6xl lg:text-7xl font-black text-white tracking-tight mb-6 leading-tight">
             Bygg snabbare med
             <span class="text-3xl md:text-5xl lg:text-6xl text-blue-500 block mt-2 italic">
-              Radix Engine {{ $currentVersion }}
+              Radix Engine {{ $currentVersion ?? 'v1.0.0' }}
             </span>
           </h1>
 
