@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controllers\Auth;
 
+use App\Auth\Auth;
 use App\Controllers\Auth\Concerns\AuthFormHelpers;
 use App\Models\SystemEvent;
 use App\Requests\Auth\LoginRequest;
 use App\Services\AuthService;
-use Radix\Auth\Auth;
 use Radix\Controller\AbstractController;
 use Radix\Http\Response;
 

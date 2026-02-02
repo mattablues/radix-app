@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Radix\Auth;
+namespace App\Auth;
 
 use App\Models\User;
 use Radix\Session\Session;

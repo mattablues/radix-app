@@ -1,57 +1,81 @@
-Kom-ihåg-lista: vad vi håller på med i Radix (separera framework + auth)
-Kopiera/klistra gärna detta när du byter dator så jag snabbt kan “synka” kontexten.
-1) Mål
-Du vill separera Radix så att frameworket ligger i ett eget repo/paket (Composer) och appen ligger separat.
-Du vill kunna återanvända frameworket och ev. auth i flera projekt.
-2) Nuvarande läge (viktiga fakta)
-Projektet är idag ett monorepo med både:
-frameworkkod under framework/src/...
-appkod under src/..., routes/..., views/..., database/...
-tester i tests/...
-Du använder 2 datorer och vill ha en kort “logg” på vad vi beslutat.
-3) Auth: vad vi kom fram till
-Du vill ha C: både webb-auth och API-auth.
-API:n kör bara Bearer tokens (stateless) – inga session/cookies på API-routes.
-Slutsats: bygg auth som två separata “guards”/flöden:
-Webb: session-baserad auth
-API: token-baserad auth (Bearer)
-4) Rekommenderad uppdelning i paket/repos
-radix/framework (kärna)
-HTTP, routing, middleware pipeline, session, console, osv.
-Ingen app-domän (App\...) får läcka in här.
-radix/auth (feature-paket, separat från kärnan)
-SessionGuard + TokenGuard
-Interfaces som appen implementerar (user provider / token repository)
-API-middleware (401 JSON) vs webb-middleware (redirect)
-radix/app (din faktiska app)
-App\Models\..., routes, controllers, views, migrations, domänlogik (online/offline/blocked osv.)
-5) Console-idén (din idé) och rekommendationen
-Du funderade på att använda din Radix console för att “skapa ett auth-system”.
-Rekommendation: gör auth till ett paket (radix/auth) och bygg console-kommandon som scaffoldar app-koden:
-t.ex. auth:install (webb: controllers/routes/views/config)
-t.ex. auth:tokens (API: tokens, repo-implementation, ev. migrations/endpoints)
-6) CSRF: vad vi konstaterade
-Din CSRF-modell (session token + hidden field + middleware) är rimlig för webben.
-För separation och tydlighet vill vi:
-köra CSRF endast för web-routes
-inte köra CSRF för stateless API-routes (Bearer)
-Vi noterade också att CSRF-validering helst ska vara på ett ställe (helst middleware), inte både middleware + controller.
-7) Tester: var de ska ligga när du separerar
-De flesta tester är framework-relaterade ⇒ de bör hamna i framework-repot (och auth-tester i auth-repot).
-App-repot ska bara ha ett mindre antal smoke/feature/integration tester som bekräftar att appen är korrekt ihopkopplad.
-8) Sista steget (”vi ska göra det”)
-När du väl vill genomföra separationen gör vi det i den här ordningen:
-Extrahera radix/framework först till eget repo + Composer-paket (PSR-4 autoload, egen CI).
-Ändra appen så att den kräver frameworket via Composer (lokalt med path, senare via Git-tag/Packagist).
-Extrahera radix/auth till eget paket, och flytta appberoenden (App\Models..., routes/redirects) tillbaka till appen via interfaces/scaffolding.
-Flytta/sortera tester: framework → framework-repo, auth → auth-repo, app → app-repo.
-Sätt upp “web” vs “api” middleware-grupper (CSRF bara web; API stateless bearer).
-Kör igenom testsviterna i alla repos tills allt är grönt.
+## Plan: Separera framework‑ och app‑tester (utan att dela repo än)
+Mål: göra `framework/` lätt att lyfta ut senare genom att gradvis separera **testernas struktur**, **körning**, och **kontrakt** – men allt ligger kvar i samma projekt.
+### Fas 0 – Nuläge (det ni redan har uppnått)
+- PHPUnit grönt.
+- PHPStan grönt.
+- Arkitekturtestet grönt: `framework/src` får inte referera till `App\\...` och vissa “helpers” (med regex-regler).
+- Infection dödar mutanter.
 
+Det är en stabil bas att bygga vidare på.
+### Fas 1 – Skapa en tydlig test‑indelning i filsystemet
+Skapa en ny rotmapp för framework-tester:
+- `tests/Framework/`
 
-## Superkort kom-ihåg (5 rader)
-1. Målet: separera Radix till **`radix/framework`** (kärna) + **`radix/app`** (appen), och helst även **`radix/auth`** som eget paket.
-2. Auth = **C**: webb (session) + API (Bearer tokens).
-3. API är **stateless**: _bara_ Bearer tokens, **inga** session/cookies på API-routes.
-4. CSRF gäller **endast web-routes**; API-routes ska inte köra CSRF. Helst CSRF-validering på **ett ställe (middleware)**.
-5. Sista steget när vi gör det: **extrahera framework → koppla app via Composer → extrahera auth → flytta/sortera tester → web/api middleware-grupper → kör allt grönt i CI**.
+Flytta in tester som primärt testar `framework/src/*` (Radix‑namespaces), t.ex.:
+- `tests/Framework/Architecture/FrameworkMustNotDependOnAppTest.php`
+- `tests/Framework/Database/ORM/*`
+- `tests/Framework/Database/QueryBuilder/*`
+- `tests/Framework/Container/*`
+- `tests/Framework/Routing/*`
+- `tests/Framework/Viewer/*`
+- `tests/Framework/Http/*` (om det är framework HTTP primitives, inte app controllers)
+
+**Tumregel:**
+Om testets huvudsakliga SUT är `Radix\...` och det går att köra utan att starta “app bootstrap”, så är det ett framework-test.
+Du kan behålla nuvarande namespaces i testklasserna i början (ingen brådska att byta).
+### Fas 2 – Dela upp PHPUnit i två suites (fortfarande samma repo)
+I (eller ), definiera: `phpunit.xml``phpunit.xml.dist`
+- suite: kör bara `tests/Framework` `framework`
+- `app` suite: kör resten men exkludera `tests/Framework`
+
+Exempel:``` xml
+<testsuites>
+  <testsuite name="framework">
+    <directory>tests/Framework</directory>
+  </testsuite>
+
+  <testsuite name="app">
+    <directory>tests</directory>
+    <exclude>tests/Framework</exclude>
+  </testsuite>
+</testsuites>
+```
+Det låter dig köra:
+vendor/bin/phpunit --testsuite framework
+vendor/bin/phpunit --testsuite app
+Och i CI kan ni köra dem som separata jobb.
+
+Fas 3 – Rensa beroenden i framework‑testsviten
+Målet är att --testsuite framework ska kunna köras med minimal app‑setup.
+Gör gradvis:
+Undvik ApplicationContainer::set(...) om testet inte behöver det.
+Undvik App\\... i assertions/fixtures om det går (om det används bara som dummy class-string är det okej, men håll koll).
+Skapa små “test doubles” i testet i stället för att peka på app‑modeller.
+
+Fas 4 – Dela upp Infection-körningen (valfritt, men bra senare)
+Ni kan senare köra två Infection-jobb:
+Framework mutation
+source.directories: bara framework/src
+kör phpunit --testsuite framework
+App mutation
+source.directories: bara src
+kör phpunit --testsuite app
+Det brukar ge snabbare CI och renare signal.
+
+Fas 5 – Dela upp PHPStan (valfritt)
+På sikt kan ni ha:
+phpstan-framework.neon (analyserar framework/src, egna regler)
+phpstan-app.neon (analyserar src, app-regler)
+Och köra två jobb, eller ett jobb med två configs.
+
+Fas 6 – Förbered “extract” (när ni vill lyfta ut framework)
+När allt ovan är stabilt:
+Skapa egen composer.json i framework/ med PSR‑4 mapping för Radix\\.
+Flytta tests/Framework med till framework-paketet (eller duplicera tillfälligt).
+Låt appens root composer.json kräva framework som path-repo först (lokal utveckling), sedan som git-repo.
+
+Praktiska checkpoints (så du vet att du är “redo”)
+phpunit --testsuite framework kör grönt utan att behöva app-specifika env-variabler.
+phpunit --testsuite app kör grönt.
+Arkitekturtestet ligger i framework-suiten och förhindrar regression.
+Infection kan köras per suite.

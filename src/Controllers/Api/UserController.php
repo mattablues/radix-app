@@ -6,7 +6,6 @@ namespace App\Controllers\Api;
 
 use App\Models\Status;
 use App\Models\User;
-use Radix\Controller\ApiController;
 use Radix\Http\JsonResponse;
 use Throwable;
 

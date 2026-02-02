@@ -21,6 +21,7 @@ php radix make:controller Api/UserController
 Vanliga webb-controllers bör ärva från `Radix\Controller\AbstractController`. Detta ger dig tillgång till vy-rendering, CSRF-skydd och sessionshantering.
 
 ### Grundläggande flöde
+
 ```php
 namespace App\Controllers;
 

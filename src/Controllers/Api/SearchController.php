@@ -8,7 +8,6 @@ use App\Models\Status;
 use App\Models\SystemEvent;
 use App\Models\SystemUpdate;
 use App\Models\User;
-use Radix\Controller\ApiController;
 use Radix\Http\JsonResponse;
 
 class SearchController extends ApiController

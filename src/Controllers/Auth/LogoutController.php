@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers\Auth;
 
-use Radix\Auth\Auth;
+use App\Auth\Auth;
 use Radix\Controller\AbstractController;
 use Radix\Http\RedirectResponse;
 use Radix\Http\Response;

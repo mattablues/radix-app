@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Controllers\Api;
 
-use Radix\Controller\ApiController;
 use Radix\Http\JsonResponse;
 
 class HealthController extends ApiController
