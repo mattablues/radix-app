@@ -26,6 +26,7 @@ namespace Radix\Tests\Database\ORM {
     use PDOStatement;
     use PHPUnit\Framework\TestCase;
     use Radix\Database\Connection;
+    use Radix\Database\ORM\ConventionModelClassResolver;
     use Radix\Database\ORM\Model;
     use Radix\Database\ORM\Relationships\BelongsTo;
     use Radix\Database\ORM\Relationships\BelongsToMany;
@@ -41,6 +42,9 @@ namespace Radix\Tests\Database\ORM {
         protected function setUp(): void
         {
             parent::setUp();
+
+            // ORM i tester: konfigurera resolver (motsvarar det appen gör i services.php)
+            Model::setModelClassResolver(new ConventionModelClassResolver('App\\Models\\'));
 
             \Radix\Container\ApplicationContainer::reset();
             $container = new \Radix\Container\Container();
@@ -2068,15 +2072,17 @@ namespace Radix\Tests\Database\ORM {
                         /** array<int, string> */
                         protected array $fillable = ['id', 'first_name'];
                     };
+
                     return new BelongsTo(
                         $this->getConnection(),
-                        $user->getTable(),
+                        get_class($user), // <-- FQCN istället för $user->getTable()
                         'user_id',
                         'id',
                         $this
                     );
                 }
             };
+
             $status->setConn($connection);
             $status->forceFill(['user_id' => 999]);
 
@@ -2166,15 +2172,17 @@ namespace Radix\Tests\Database\ORM {
                         /** array<int, string> */
                         protected array $fillable = ['first_name'];
                     };
+
                     return new BelongsTo(
                         $this->getConnection(),
-                        $user->getTable(),
+                        get_class($user), // <-- FQCN istället för $user->getTable()
                         'user_id',
                         'id',
                         $this
                     );
                 }
             };
+
             $child->setConn($connection);
             $child->forceFill(['user_id' => 5]);
 
@@ -2709,7 +2717,7 @@ namespace Radix\Tests\Database\ORM {
 
             $rel = new \Radix\Database\ORM\Relationships\BelongsTo(
                 $connection,
-                'users',   // låt resolveModelClass jobba på tabellnamn
+                \App\Models\User::class, // <-- FQCN istället för 'users'
                 'user_id', // foreignKey på child
                 'id',      // ownerKey på parent
                 $child
@@ -2738,7 +2746,7 @@ namespace Radix\Tests\Database\ORM {
 
             $rel = (new \Radix\Database\ORM\Relationships\BelongsTo(
                 $connection,
-                'users',
+                \App\Models\User::class, // <-- FQCN istället för 'users'
                 'user_id',
                 'id',
                 $child
@@ -2765,13 +2773,16 @@ namespace Radix\Tests\Database\ORM {
                 ['user_id', 1],
             ]);
 
-            // Skicka in tabellnamn 'users' så resolveModelClass måste bygga App\Models\User
+            $resolver = new \Radix\Database\ORM\ConventionModelClassResolver('App\\Models\\');
+
+            // Skicka in tabellnamn 'users' + resolver så BelongsTo kan mappa till App\Models\User
             $rel = new \Radix\Database\ORM\Relationships\BelongsTo(
                 $connection,
                 'users',
                 'user_id',
                 'id',
-                $child
+                $child,
+                $resolver // <-- viktigt
             );
 
             $result = $rel->first();

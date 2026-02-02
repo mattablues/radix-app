@@ -142,7 +142,7 @@
       "ignore": [
         "Radix\\Middleware\\Middlewares\\RateLimiter::process",
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
-        "Radix\\Middleware\\Middlewares\\RequestLogger::process",
+        "App\\Middlewares\\RequestLogger::process",
         "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes",
         "Radix\\Support\\FileCache::ttlToExpires",
         "Radix\\Support\\FileCache::get",
@@ -159,7 +159,7 @@
         "Radix\\Middleware\\Middlewares\\RateLimiter::__construct",
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
         "Radix\\Middleware\\Middlewares\\RateLimiter::process",
-        "Radix\\Middleware\\Middlewares\\RequestLogger::process",
+        "App\\Middlewares\\RequestLogger::process",
         "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes",
         "Radix\\Collection\\Collection::filter",
         "Radix\\Container\\Resolver::createFromFactory",
@@ -211,7 +211,7 @@
       "ignore": [
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
         "Radix\\Middleware\\Middlewares\\RateLimiter::process",
-        "Radix\\Middleware\\Middlewares\\RequestLogger::process",
+        "App\\Middlewares\\RequestLogger::process",
         "Radix\\Middleware\\Middlewares\\LimitRequestSize::bytesToMegabytes",
         "Radix\\Collection\\Collection::filter",
         "Radix\\Container\\Resolver::createFromFactory",
@@ -346,7 +346,7 @@
     "Plus": {
       "ignore": [
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
-        "Radix\\Middleware\\Middlewares\\RequestLogger::process",
+        "App\\Middlewares\\RequestLogger::process",
         "Radix\\Session\\RadixSessionHandler::write"
       ]
     },
@@ -369,7 +369,7 @@
     "LessThan": {
       "ignore": [
         "Radix\\Middleware\\Middlewares\\RateLimiter::increment",
-        "Radix\\Middleware\\Middlewares\\RequestLogger::process",
+        "App\\Middlewares\\RequestLogger::process",
         "Radix\\Middleware\\Middlewares\\LimitRequestSize::getContentLengthFromServer",
         "Radix\\Controller\\ApiController::isTokenValid",
         "Radix\\Session\\RadixSessionHandler::gc",
@@ -395,7 +395,7 @@
     "NotIdentical": {
       "ignore": [
         "Radix\\Viewer\\RadixTemplateViewer::__construct",
-        "Radix\\Middleware\\Middlewares\\RequestLogger::process",
+        "App\\Middlewares\\RequestLogger::process",
         "Radix\\File\\Image::resizeImage",
         "Radix\\File\\Reader::detectDelimiter",
         "Radix\\File\\Reader::ndjsonStream",

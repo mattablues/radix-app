@@ -7,8 +7,6 @@ use Radix\Config\Dotenv;
 use Radix\Console\CommandsRegistry;
 use Radix\Database\DatabaseManager;
 use Radix\Database\Migration\Migrator;
-use Radix\Mailer\MailManager;
-use Radix\Viewer\TemplateViewerInterface;
 
 // Ladda miljövariabler
 $dotenv = new Dotenv(ROOT_PATH . '/.env', ROOT_PATH);
@@ -69,8 +67,18 @@ $container->addShared(\Radix\Database\ORM\ModelClassResolverInterface::class, fu
     if ($envNs !== false && is_string($envNs) && $envNs !== '') {
         $modelNamespace = $envNs;
     } else {
-        $nsRaw = $orm['model_namespace'] ?? 'App\\Models\\';
-        $modelNamespace = is_string($nsRaw) && $nsRaw !== '' ? $nsRaw : 'App\\Models\\';
+        $nsRaw = $orm['model_namespace'] ?? null;
+        $modelNamespace = is_string($nsRaw) ? $nsRaw : '';
+    }
+
+    $modelNamespace = trim($modelNamespace);
+    if ($modelNamespace === '') {
+        throw new \RuntimeException('Missing ORM model namespace. Set ORM_MODEL_NAMESPACE or config("orm.model_namespace").');
+    }
+
+    // Normalisera: alltid trailing backslash
+    if (!str_ends_with($modelNamespace, '\\')) {
+        $modelNamespace .= '\\';
     }
 
     $mapRaw = $orm['model_map'] ?? [];
@@ -103,6 +111,7 @@ $container->addShared(\Radix\Database\ORM\ModelClassResolverInterface::class, fu
 /** @var \Radix\Database\ORM\ModelClassResolverInterface $resolver */
 $resolver = $container->get(\Radix\Database\ORM\ModelClassResolverInterface::class);
 \Radix\Database\ORM\Model::setModelClassResolver($resolver);
+
 
 $container->addShared(\Radix\Http\EventListeners\CorsListener::class, function () use ($container) {
     $config = $container->get('config');
@@ -503,16 +512,6 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
 });
 
 $container->addShared(\Radix\EventDispatcher\EventDispatcher::class, \Radix\EventDispatcher\EventDispatcher::class);
-
-$container->add(MailManager::class, function () use ($container) {
-    /** @var Config $config */
-    $config = $container->get('config');
-
-    /** @var TemplateViewerInterface $templateViewer */
-    $templateViewer = $container->get(TemplateViewerInterface::class);
-
-    return MailManager::createDefault($templateViewer, $config);
-});
 
 $container->addShared(\App\Services\UploadService::class, fn() => new \App\Services\UploadService());
 

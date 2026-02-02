@@ -2,16 +2,6 @@
 
 declare(strict_types=1);
 
-namespace Radix\Middleware\Middlewares {
-    /**
-     * Överskugga mt_rand i RateLimiter-namespacet för deterministiska tester.
-     */
-    function mt_rand(int $min, int $max): int
-    {
-        return \Radix\Tests\Api\RateLimiterRandomHelper::$nextValue ?? \mt_rand($min, $max);
-    }
-}
-
 namespace Radix\Tests\Api {
 
     use PHPUnit\Framework\TestCase;
@@ -20,9 +10,8 @@ namespace Radix\Tests\Api {
     use Radix\Http\Response;
     use Radix\Middleware\Middlewares\RateLimiter;
     use Radix\Support\FileCache;
+    use Redis;
     use ReflectionClass;
-
-    // ... befintliga imports ...
 
     /**
      * Helper för att styra slumpen i testerna.
@@ -38,6 +27,40 @@ namespace Radix\Tests\Api {
         {
             RateLimiterRandomHelper::$nextValue = null;
             parent::tearDown();
+        }
+
+        /**
+         * Default: deterministiskt "förlora lotteriet" (2) så prune() aldrig körs av slump.
+         * Sätt RateLimiterRandomHelper::$nextValue = 1 i ett test för att trigga prune().
+         */
+        private function makeRateLimiter(
+            ?FileCache $fileCache = null,
+            ?int $limit = null,
+            ?int $windowSeconds = null,
+            ?string $bucket = null,
+            Redis|string|null $redis = null
+        ): RateLimiter {
+            $args = [
+                'redis' => $redis,
+                'bucket' => $bucket,
+                'fileCache' => $fileCache,
+                'rand' => static function (int $min, int $max): int {
+                    if (RateLimiterRandomHelper::$nextValue !== null) {
+                        return RateLimiterRandomHelper::$nextValue;
+                    }
+                    return 2; // deterministiskt default: förlora lotteriet
+                },
+            ];
+
+            if ($limit !== null) {
+                $args['limit'] = $limit;
+            }
+
+            if ($windowSeconds !== null) {
+                $args['windowSeconds'] = $windowSeconds;
+            }
+
+            return new RateLimiter(...$args);
         }
 
         private function makeHandler(int $status = 200): RequestHandlerInterface
@@ -71,7 +94,12 @@ namespace Radix\Tests\Api {
 
         public function testDefaultWindowSecondsIsExactly60(): void
         {
-            $mw = new RateLimiter(); // default-konstruktorn
+            // Viktigt: bygg UTAN att skicka windowSeconds, annars testar vi inte defaulten.
+            $mw = new RateLimiter(
+                rand: static function (int $min, int $max): int {
+                    return 2; // deterministiskt: förlora lotteriet (ingen prune)
+                }
+            );
 
             $ref = new ReflectionClass($mw);
             $prop = $ref->getProperty('windowSeconds');
@@ -81,6 +109,26 @@ namespace Radix\Tests\Api {
                 60,
                 $prop->getValue($mw),
                 'Default windowSeconds måste vara exakt 60 (dödar IncrementInteger-mutanten 60->61).'
+            );
+        }
+
+        public function testDefaultLimitIsExactly60(): void
+        {
+            // Viktigt: bygg UTAN att skicka limit, annars testar vi inte defaulten.
+            $mw = new RateLimiter(
+                rand: static function (int $min, int $max): int {
+                    return 2; // deterministiskt: förlora lotteriet (ingen prune)
+                }
+            );
+
+            $ref = new ReflectionClass($mw);
+            $prop = $ref->getProperty('limit');
+            $prop->setAccessible(true);
+
+            $this->assertSame(
+                60,
+                $prop->getValue($mw),
+                'Default limit måste vara exakt 60 (dödar IncrementInteger-mutanten 60->61).'
             );
         }
 
@@ -94,12 +142,11 @@ namespace Radix\Tests\Api {
             @mkdir($cacheDir, 0o777, true);
             $cache = new FileCache($cacheDir);
 
-            $mw = new RateLimiter(
-                redis: null,
+            $mw = $this->makeRateLimiter(
+                fileCache: $cache,
                 limit: $limit,
                 windowSeconds: $window,
-                bucket: $bucket,
-                fileCache: $cache
+                bucket: $bucket
             );
 
             $handler = $this->makeHandler(200);
@@ -113,7 +160,6 @@ namespace Radix\Tests\Api {
             $this->assertSame((string) ($limit - 1), $headers1['X-RateLimit-Remaining'] ?? null);
             $resetAt1 = (int) ($headers1['X-RateLimit-Reset'] ?? 0);
             $this->assertGreaterThanOrEqual($t0, $resetAt1);
-            // Verifiera exakt resetAt-beräkning
             $expectedWindowId = (int) floor($t0 / $window);
             $this->assertSame(($expectedWindowId + 1) * $window, $resetAt1);
 
@@ -136,7 +182,7 @@ namespace Radix\Tests\Api {
             @mkdir($cacheDir, 0o777, true);
             $cache = new FileCache($cacheDir);
 
-            $mw = new RateLimiter(
+            $mw = $this->makeRateLimiter(
                 redis: null,
                 limit: $limit,
                 windowSeconds: $window,
@@ -189,7 +235,7 @@ namespace Radix\Tests\Api {
             @mkdir($cacheDir, 0o777, true);
             $cache = new FileCache($cacheDir);
 
-            $mw = new RateLimiter(
+            $mw = $this->makeRateLimiter(
                 redis: null,
                 limit: $limit,
                 windowSeconds: $window,
@@ -222,7 +268,7 @@ namespace Radix\Tests\Api {
             @mkdir($cacheDir, 0o777, true);
             $cache = new FileCache($cacheDir);
 
-            $mw = new RateLimiter(
+            $mw = $this->makeRateLimiter(
                 redis: null,
                 limit: $limit,
                 windowSeconds: $window,
@@ -262,14 +308,14 @@ namespace Radix\Tests\Api {
             @mkdir($cacheDir, 0o777, true);
             $cache = new FileCache($cacheDir);
 
-            $mwNull = new RateLimiter(
+            $mwNull = $this->makeRateLimiter(
                 redis: null,
                 limit: $limit,
                 windowSeconds: $window,
                 bucket: null,
                 fileCache: $cache
             );
-            $mwDefault = new RateLimiter(
+            $mwDefault = $this->makeRateLimiter(
                 redis: null,
                 limit: $limit,
                 windowSeconds: $window,
@@ -307,7 +353,7 @@ namespace Radix\Tests\Api {
             $cacheDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'radix_ratelimit_test_' . uniqid();
             @mkdir($cacheDir, 0o777, true);
             $cache = new FileCache($cacheDir);
-            $mw = new RateLimiter(
+            $mw = $this->makeRateLimiter(
                 redis: null,
                 limit: $limit,
                 windowSeconds: $window,
@@ -343,7 +389,7 @@ namespace Radix\Tests\Api {
             $limit = 1;
             $window = 60;
             $bucket = 'tPath';
-            $mw = new RateLimiter(redis: null, limit: $limit, windowSeconds: $window, bucket: $bucket);
+            $mw = $this->makeRateLimiter(redis: null, limit: $limit, windowSeconds: $window, bucket: $bucket);
             $handler = $this->makeHandler();
             $req = $this->makeRequest('203.0.113.200');
 
@@ -369,7 +415,7 @@ namespace Radix\Tests\Api {
             $cacheDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'radix_ratelimit_test_' . uniqid();
             @mkdir($cacheDir, 0o777, true);
             $cache = new FileCache($cacheDir);
-            $mw = new RateLimiter(
+            $mw = $this->makeRateLimiter(
                 redis: null,
                 limit: $limit,
                 windowSeconds: $window,
@@ -403,7 +449,7 @@ namespace Radix\Tests\Api {
         public function testDefaultLimitIs60AndCacheWrittenInExpectedTempDir(): void
         {
             // Använd default-konstruktorn (limit=60, window=60, bucket=null => 'default')
-            $mw = new RateLimiter(); // inga argument
+            $mw = $this->makeRateLimiter(); // inga argument
             $handler = $this->makeHandler();
             $req = $this->makeRequest('203.0.113.250');
 
@@ -462,7 +508,7 @@ namespace Radix\Tests\Api {
             @mkdir($cacheDir, 0o777, true);
             $cache = new FileCache($cacheDir);
 
-            $mw = new RateLimiter(
+            $mw = $this->makeRateLimiter(
                 redis: null,
                 limit: $limit,
                 windowSeconds: $window,
@@ -511,7 +557,7 @@ namespace Radix\Tests\Api {
             $bucket = 'pathCheck_' . bin2hex(random_bytes(3));
             $ip = '203.0.113.199';
 
-            $mw = new RateLimiter(redis: null, windowSeconds: 60, bucket: $bucket); // default limit 60
+            $mw = $this->makeRateLimiter(redis: null, windowSeconds: 60, bucket: $bucket); // default limit 60
             $handler = $this->makeHandler();
             $req = $this->makeRequest($ip);
 
@@ -546,7 +592,7 @@ namespace Radix\Tests\Api {
             @mkdir($cacheDir, 0o777, true);
             $cache = new FileCache($cacheDir);
 
-            $mw = new RateLimiter(
+            $mw = $this->makeRateLimiter(
                 redis: null,
                 limit: $limit,
                 windowSeconds: $window,
@@ -579,7 +625,7 @@ namespace Radix\Tests\Api {
 
         public function testDefaultConstructorUsesWindow60AndValidatesRedisWiring(): void
         {
-            $mw = new RateLimiter(); // default limit=60, window=60, bucket=null
+            $mw = $this->makeRateLimiter(); // default limit=60, window=60, bucket=null
             $handler = $this->makeHandler();
             $req = $this->makeRequest('203.0.113.88');
 
@@ -606,7 +652,7 @@ namespace Radix\Tests\Api {
                 }
             }
 
-            $mw = new RateLimiter(redis: null, limit: 1, windowSeconds: 2, bucket: 'mut-kill');
+            $mw = $this->makeRateLimiter(redis: null, limit: 1, windowSeconds: 2, bucket: 'mut-kill');
             $handler = $this->makeHandler();
             $req = $this->makeRequest('203.0.113.180');
 
@@ -667,7 +713,7 @@ namespace Radix\Tests\Api {
             @mkdir($cacheDir, 0o777, true);
             $cache = new FileCache($cacheDir);
 
-            $mw = new RateLimiter(
+            $mw = $this->makeRateLimiter(
                 redis: null,
                 limit: $limit,
                 windowSeconds: $window,
@@ -737,7 +783,7 @@ namespace Radix\Tests\Api {
             @mkdir($cacheDir, 0o777, true);
             $cache = new FileCache($cacheDir);
 
-            $mw = new RateLimiter(
+            $mw = $this->makeRateLimiter(
                 redis: null,
                 limit: $limit,
                 windowSeconds: $window,
@@ -770,7 +816,7 @@ namespace Radix\Tests\Api {
             @mkdir($cacheDir, 0o777, true);
             $cache = new FileCache($cacheDir);
 
-            $mw = new RateLimiter(
+            $mw = $this->makeRateLimiter(
                 redis: null,
                 limit: $limit,
                 windowSeconds: $window,
@@ -812,7 +858,7 @@ namespace Radix\Tests\Api {
 
             try {
                 // Använd default-konstruktorn (ingen FileCache injicerad)
-                $mw = new RateLimiter(); // limit=60, window=60, bucket=null => 'default'
+                $mw = $this->makeRateLimiter(); // limit=60, window=60, bucket=null => 'default'
                 $handler = $this->makeHandler();
                 $req = $this->makeRequest('203.0.113.42');
 
@@ -853,7 +899,7 @@ namespace Radix\Tests\Api {
             }
 
             // Använd FileCache direkt istället för en mock
-            $mw = new RateLimiter(limit: 100, fileCache: $cache);
+            $mw = $this->makeRateLimiter(limit: 100, fileCache: $cache);
             $handler = $this->makeHandler();
             $req = $this->makeRequest();
 
@@ -883,7 +929,6 @@ namespace Radix\Tests\Api {
             @mkdir($cacheDir, 0o777, true);
             $cache = new FileCache($cacheDir);
 
-            // Skapa 5 utgångna filer
             $createFiles = function () use ($cacheDir) {
                 for ($i = 0; $i < 5; $i++) {
                     file_put_contents(
@@ -893,34 +938,28 @@ namespace Radix\Tests\Api {
                 }
             };
 
-            $mw = new RateLimiter(limit: 1000, fileCache: $cache);
+            $mw = $this->makeRateLimiter(limit: 1000, fileCache: $cache);
             $handler = $this->makeHandler();
             $req = $this->makeRequest();
 
-            // TEST 1: Verifiera att vi inte rensar VARJE gång (Dödar !== 1)
+            // TEST 1: prune ska INTE köras när lotteriet "förlorar"
             $createFiles();
+            RateLimiterRandomHelper::$nextValue = 2;
             for ($i = 0; $i < 10; $i++) {
                 $mw->process($req, $handler);
             }
             $remaining = glob($cacheDir . DIRECTORY_SEPARATOR . '*.cache') ?: [];
-            // Om mutanten !== 1 vore aktiv, skulle 10 försök med 99% chans tömt allt.
             $this->assertNotEmpty($remaining, 'Lotteriet rensade för aggressivt (mutant !== 1 misstänks)');
 
-            // TEST 2: Verifiera att prune faktiskt ANROPAS ibland (Dödar MethodCallRemoval)
-            // Vi kör tillräckligt många gånger för att statistiskt "vinna" lotteriet minst en gång.
-            // Chansen att inte få en 1:a på 1000 försök är (99/100)^1000, vilket är extremt lågt.
-            $maxAttempts = 1000;
-            $cleaned = false;
-            for ($i = 0; $i < $maxAttempts; $i++) {
-                $mw->process($req, $handler);
-                if (count(glob($cacheDir . DIRECTORY_SEPARATOR . '*.cache') ?: []) === 1) { // Bara den aktiva kvar
-                    $cleaned = true;
-                    break;
-                }
-            }
-            $this->assertTrue(
-                $cleaned,
-                'Lotteriet triggade aldrig prune() under 1000 anrop (MethodCallRemoval misstänks)'
+            // TEST 2: prune SKA köras när lotteriet "vinner" (ingen statistik)
+            $createFiles();
+            RateLimiterRandomHelper::$nextValue = 1;
+            $mw->process($req, $handler);
+
+            $oldRemaining = glob($cacheDir . DIRECTORY_SEPARATOR . 'old_*.cache') ?: [];
+            $this->assertEmpty(
+                $oldRemaining,
+                'Prune kördes inte när rand returnerade 1 (MethodCallRemoval misstänks)'
             );
 
             // Städa
@@ -936,27 +975,24 @@ namespace Radix\Tests\Api {
             @mkdir($cacheDir, 0o777, true);
             $cache = new \Radix\Support\FileCache($cacheDir);
 
-            // Skapa en utgången fil
             $oldFile = $cacheDir . DIRECTORY_SEPARATOR . "should_be_gone.cache";
             file_put_contents($oldFile, json_encode(['v' => 'x', 'e' => time() - 100]));
 
-            $mw = new \Radix\Middleware\Middlewares\RateLimiter(limit: 100, fileCache: $cache);
+            $mw = $this->makeRateLimiter(fileCache: $cache, limit: 100);
             $handler = $this->makeHandler();
             $req = $this->makeRequest();
 
-            // 1. Tvinga mt_rand att returnera 2 (Lotteriet förlorar)
-            // Om mutanten !== 1 vore aktiv skulle den rensa här.
             RateLimiterRandomHelper::$nextValue = 2;
             $mw->process($req, $handler);
-            $this->assertFileExists($oldFile, 'Prune ska INTE köras när mt_rand returnerar 2');
+            $this->assertFileExists($oldFile, 'Prune ska INTE köras när rand returnerar 2');
 
-            // 2. Tvinga mt_rand att returnera 1 (Lotteriet vinner)
             RateLimiterRandomHelper::$nextValue = 1;
             $mw->process($req, $handler);
-            $this->assertFileDoesNotExist($oldFile, 'Prune SKA köras när mt_rand returnerar 1');
+            $this->assertFileDoesNotExist($oldFile, 'Prune SKA köras när rand returnerar 1');
 
             @unlink($oldFile);
             @rmdir($cacheDir);
         }
+
     }
 }

@@ -28,17 +28,17 @@ final class BelongsToUcfirstConventionTest extends TestCase
         };
         $parent->forceFill(['foo_id' => 123]);
 
-        // Viktigt: relatedModelOrTable är tabellnamn (inte FQCN) => går via ucFirst(singularize())
+        $resolver = new \Radix\Database\ORM\ConventionModelClassResolver('App\\Models\\');
+
         $rel = new BelongsTo(
             $connection,
             'foos',
             'foo_id',
             'id',
             $parent,
-            null
+            $resolver
         );
 
-        // Kör get() för att trigga resolveModelClassFromTable()
         $this->assertNull($rel->get());
     }
 
@@ -59,16 +59,17 @@ final class BelongsToUcfirstConventionTest extends TestCase
         };
         $parent->forceFill(['foo_id' => 1]);
 
+        $resolver = new \Radix\Database\ORM\ConventionModelClassResolver('App\\Models\\');
+
         $rel = new BelongsTo(
             $connection,
-            'foos',     // tabellnamn => fallback-konvention ska användas
+            'foos',
             'foo_id',
             'id',
             $parent,
-            null        // <- viktigt: resolver=null så att fallback körs
+            $resolver
         );
 
-        // Om ucfirst tas bort försöker den ladda App\Models\foo och kastar innan fetchOne.
         $this->assertNull($rel->get());
     }
 }

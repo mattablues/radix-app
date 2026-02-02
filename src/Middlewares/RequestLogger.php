@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Radix\Middleware\Middlewares;
+namespace App\Middlewares;
 
 use Radix\Http\Request;
 use Radix\Http\RequestHandlerInterface;

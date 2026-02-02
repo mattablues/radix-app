@@ -6,12 +6,21 @@ namespace Radix\Tests\Database\ORM;
 
 use PHPUnit\Framework\TestCase;
 use Radix\Database\Connection;
+use Radix\Database\ORM\ConventionModelClassResolver;
 use Radix\Database\ORM\Model;
 use Radix\Database\ORM\Relationships\HasMany;
 use ReflectionMethod;
 
 final class ModelHasManyMutationTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Test-bootstrap: behövs för Model::hasMany() (använder Model::modelClassResolver()).
+        Model::setModelClassResolver(new ConventionModelClassResolver('App\\Models\\'));
+    }
+
     public function testHasManyIsPublic(): void
     {
         $ref = new ReflectionMethod(Model::class, 'hasMany');

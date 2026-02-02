@@ -8,6 +8,8 @@ use PHPUnit\Framework\TestCase;
 use Radix\Container\ApplicationContainer;
 use Radix\Container\Container;
 use Radix\Database\Connection;
+use Radix\Database\ORM\ConventionModelClassResolver;
+use Radix\Database\ORM\Model;
 use Radix\Http\Request;
 use RuntimeException;
 
@@ -20,6 +22,10 @@ class UserControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Viktigt: ORM behöver resolver i tester också (motsvarar app-bootstrap).
+        Model::setModelClassResolver(new ConventionModelClassResolver('App\\Models\\'));
+
 
         // Återställ containern före varje test
         ApplicationContainer::reset();
