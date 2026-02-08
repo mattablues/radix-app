@@ -266,6 +266,8 @@ namespace Radix\Tests\Api {
                 'time' => date('c'),
                 'db' => 'ok',
                 'fs' => 'ok',
+                'url' => 'https://example.test/a/b',
+                'note' => 'åäö',
             ]);
             /** @var \Radix\Container\Container $container */
             $container->add(\App\Services\HealthCheckService::class, fn() => $mockHealthService);
@@ -311,8 +313,16 @@ namespace Radix\Tests\Api {
             $this->assertArrayHasKey('Expires', $headers);
             $this->assertSame('0', $headers['Expires']);
 
+            $raw = $response->getBody();
+
+            // Dödar BitwiseOr-mutanterna: kräver UNESCAPED_SLASHES + UNESCAPED_UNICODE
+            $this->assertStringContainsString('https://example.test/a/b', $raw);
+            $this->assertStringNotContainsString('https:\\/\\/example.test\\/a\\/b', $raw);
+            $this->assertStringContainsString('åäö', $raw);
+            $this->assertStringNotContainsString('\\u00e5', $raw);
+
             /** @var array{ok: bool, checks: array<string, mixed>} $body */
-            $body = json_decode($response->getBody(), true);
+            $body = json_decode($raw, true);
             $this->assertIsArray($body);
 
             $this->assertTrue($body['ok']);
@@ -330,7 +340,9 @@ namespace Radix\Tests\Api {
             try {
                 $router = new Router();
                 // VIKTIGT: Lägg till middleware på rutten!
-                $router->get('/test', function () { return new Response(); })
+                $router->get('/test', function () {
+                    return new Response();
+                })
                        ->middleware(['request.id']);
 
                 $middleware = [

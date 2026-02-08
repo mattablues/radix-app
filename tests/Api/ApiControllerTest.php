@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Radix\Tests\Api;
 
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Radix\Http\Request;
 use Radix\Http\Response;
@@ -62,9 +64,9 @@ final class ApiControllerTest extends TestCase
     /**
      * Vi kör i separat process för att kunna class_alias:a App\Models\Token innan den laddas.
      *
-     * @runInSeparateProcess
-     * @preserveGlobalState disabled
      */
+    #[PreserveGlobalState(false)]
+    #[RunInSeparateProcess]
     public function testIsTokenValidReturnsFalseWhenEnvTokenIsSetButProvidedTokenDoesNotMatch(): void
     {
         self::bootFakeToken();
@@ -86,9 +88,9 @@ final class ApiControllerTest extends TestCase
     /**
      * Dödar CastString-mutanten genom att kräva att null hanteras utan TypeError.
      *
-     * @runInSeparateProcess
-     * @preserveGlobalState disabled
      */
+    #[PreserveGlobalState(false)]
+    #[RunInSeparateProcess]
     public function testIsTokenValidReturnsFalseWhenDbTokenHasNullExpiresAt(): void
     {
         self::bootFakeToken();
@@ -112,9 +114,9 @@ final class ApiControllerTest extends TestCase
     /**
      * Dödar LogicalOr-mutanten (|| -> &&) genom att testa "icke-tom men utgången" token.
      *
-     * @runInSeparateProcess
-     * @preserveGlobalState disabled
      */
+    #[PreserveGlobalState(false)]
+    #[RunInSeparateProcess]
     public function testIsTokenValidReturnsFalseWhenDbTokenIsExpired(): void
     {
         self::bootFakeToken();
@@ -138,9 +140,9 @@ final class ApiControllerTest extends TestCase
     /**
      * Dödar LessThan-mutanten (< -> <=) stabilt genom fryst tid.
      *
-     * @runInSeparateProcess
-     * @preserveGlobalState disabled
      */
+    #[PreserveGlobalState(false)]
+    #[RunInSeparateProcess]
     public function testIsTokenValidAcceptsDbTokenThatExpiresExactlyNow(): void
     {
         self::bootFakeToken();

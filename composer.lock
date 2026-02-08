@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e514c40fa710c538a31380d06ca8db1f",
+    "content-hash": "abba4f22b4bbda0e9fe1ef5341cf2f6a",
     "packages": [
         {
             "name": "dflydev/dot-access-data",
@@ -271,6 +271,51 @@
                 "source": "https://github.com/php-fig/event-dispatcher"
             },
             "time": "2024-03-17T21:29:03+00:00"
+        },
+        {
+            "name": "radix/framework",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mattablues/radix-framework.git",
+                "reference": "19708572baa56a648741b8e1bc5fe3b703a825fa"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/19708572baa56a648741b8e1bc5fe3b703a825fa",
+                "reference": "19708572baa56a648741b8e1bc5fe3b703a825fa",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^11.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Radix\\": "src/"
+                },
+                "files": [
+                    "support/helpers.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Radix\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Radix Framework",
+            "support": {
+                "source": "https://github.com/mattablues/radix-framework/tree/main",
+                "issues": "https://github.com/mattablues/radix-framework/issues"
+            },
+            "time": "2026-02-08T18:44:32+00:00"
         }
     ],
     "packages-dev": [
@@ -6151,6 +6196,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "radix/framework": 20,
         "psr/event-dispatcher": 20,
         "psr/container": 20,
         "phpmailer/phpmailer": 20,
@@ -6172,7 +6218,8 @@
         "ext-fileinfo": "*",
         "ext-iconv": "*",
         "ext-simplexml": "*",
-        "ext-libxml": "*"
+        "ext-libxml": "*",
+        "ext-redis": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.3.0"

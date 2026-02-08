@@ -487,7 +487,13 @@ $container->add(\Radix\Routing\Router::class);
 $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () use ($container) {
     $session = $container->get(\Radix\Session\SessionInterface::class);
     $datetime = $container->get(\Radix\DateTime\RadixDateTime::class);
-    $viewer = new \Radix\Viewer\RadixTemplateViewer();
+
+    $viewsDir = (defined('ROOT_PATH') ? rtrim((string) ROOT_PATH, "/\\") : getcwd())
+        . DIRECTORY_SEPARATOR
+        . 'views'
+        . DIRECTORY_SEPARATOR;
+
+    $viewer = new \Radix\Viewer\RadixTemplateViewer($viewsDir);
     $viewer->enableDebugMode(getenv('APP_DEBUG') === '1');
 
     $latestUpdate = null;

@@ -29,7 +29,6 @@
   <source>
     <include>
       <directory>src</directory>
-      <directory>framework/src</directory>
     </include>
     <exclude>
       <directory>vendor</directory>

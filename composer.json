@@ -1,4 +1,5 @@
 {
+    "$schema": "https://getcomposer.org/schema.json",
     "name": "mats/radix",
     "description": "Radix System",
     "license": "MIT",
@@ -9,23 +10,27 @@
         }
     ],
     "scripts": {
-      "stan": "phpstan analyse -c phpstan.neon.dist",
-      "test": "php -d xdebug.mode=off vendor/bin/phpunit",
-      "test:cov": "php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-text",
-      "format": "php-cs-fixer fix",
-      "format:check": "php-cs-fixer fix --dry-run --diff",
-      "infect": "php -d xdebug.mode=coverage vendor/bin/infection --configuration=infection.json.dist --threads=4 --min-msi=90 --min-covered-msi=95",
-      "infect:cov": "php -d xdebug.mode=coverage vendor/bin/infection --configuration=infection.json.dist --threads=4 --min-msi=90 --min-covered-msi=95 --skip-initial-tests --coverage=build/coverage"
+        "stan": "phpstan analyse -c phpstan.neon.dist",
+        "test": "php -d xdebug.mode=off vendor/bin/phpunit",
+        "test:cov": "php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-text",
+        "format": "php-cs-fixer fix",
+        "format:check": "php-cs-fixer fix --dry-run --diff",
+        "infect": "php -d xdebug.mode=coverage vendor/bin/infection --configuration=infection.json.dist --threads=4 --min-msi=90 --min-covered-msi=95",
+        "infect:cov": "php -d xdebug.mode=coverage vendor/bin/infection --configuration=infection.json.dist --threads=4 --min-msi=90 --min-covered-msi=95 --skip-initial-tests --coverage=build/coverage"
     },
     "minimum-stability": "dev",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:mattablues/radix-framework.git"
+        }
+    ],
     "autoload": {
         "psr-4": {
-            "App\\": "src",
-            "Radix\\": "framework/src"
+            "App\\": "src"
         },
         "files": [
-          "framework/support/helpers.php",
-          "support/helpers.php"
+            "support/helpers.php"
         ]
     },
     "autoload-dev": {
@@ -42,6 +47,7 @@
     },
     "require": {
         "php": "^8.3",
+        "radix/framework": "dev-main",
         "psr/event-dispatcher": "^1.0@dev",
         "psr/container": "^2.0.x-dev",
         "dflydev/dot-access-data": "^v3.0.2",

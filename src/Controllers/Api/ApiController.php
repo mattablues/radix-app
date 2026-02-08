@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Controllers\Api;
 
 use App\Models\Token;
-use Radix\Controller\ApiController as FrameworkApiController;
+use Radix\Controller\AbstractApiController;
 
-abstract class ApiController extends FrameworkApiController
+abstract class ApiController extends AbstractApiController
 {
     /**
          * Kapsla in tidskällan så den går att kontrollera i tester.

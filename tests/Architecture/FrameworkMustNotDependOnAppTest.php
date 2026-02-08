@@ -9,11 +9,6 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
 
-/**
- * Arkitekturspärr: framework får inte referera till App\...
- *
- * Målet är att kunna lyfta ut /framework som egen repo senare utan beroenden till appen.
- */
 final class FrameworkMustNotDependOnAppTest extends TestCase
 {
     private function skipIfDisabled(): void
@@ -25,13 +20,26 @@ final class FrameworkMustNotDependOnAppTest extends TestCase
         }
     }
 
-    public function testFrameworkSrcDoesNotReferenceAppNamespace(): void
+    private function getInstalledFrameworkSrcPath(): ?string
+    {
+        // Kör som dependency: vendor/radix/framework/src
+        $path = dirname(__DIR__, 2)
+            . DIRECTORY_SEPARATOR . 'vendor'
+            . DIRECTORY_SEPARATOR . 'radix'
+            . DIRECTORY_SEPARATOR . 'framework'
+            . DIRECTORY_SEPARATOR . 'src';
+
+        return is_dir($path) ? $path : null;
+    }
+
+    public function testInstalledFrameworkSrcDoesNotReferenceAppNamespace(): void
     {
         $this->skipIfDisabled();
-        // ... existing code ...
 
-        $frameworkSrc = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'framework' . DIRECTORY_SEPARATOR . 'src';
-        self::assertDirectoryExists($frameworkSrc, 'Hittar inte framework/src: ' . $frameworkSrc);
+        $frameworkSrc = $this->getInstalledFrameworkSrcPath();
+        if ($frameworkSrc === null) {
+            self::markTestSkipped('radix/framework är inte installerat (vendor/radix/framework/src saknas).');
+        }
 
         $violations = [];
 
@@ -63,34 +71,27 @@ final class FrameworkMustNotDependOnAppTest extends TestCase
         self::assertSame(
             [],
             $violations,
-            "Framework får inte referera till App\\\\. Filer som bryter regeln:\n- " . implode("\n- ", $violations)
+            "Installerat framework får inte referera till App\\\\. Filer som bryter regeln:\n- " . implode("\n- ", $violations)
         );
-
     }
 
-    public function testFrameworkSrcDoesNotReferenceAppOrAppHelpers(): void
+    public function testInstalledFrameworkSrcDoesNotReferenceAppOrAppHelpers(): void
     {
         $this->skipIfDisabled();
-        // ... existing code ...
 
-        $frameworkSrc = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'framework' . DIRECTORY_SEPARATOR . 'src';
-        self::assertDirectoryExists($frameworkSrc, 'Hittar inte framework/src: ' . $frameworkSrc);
+        $frameworkSrc = $this->getInstalledFrameworkSrcPath();
+        if ($frameworkSrc === null) {
+            self::markTestSkipped('radix/framework är inte installerat (vendor/radix/framework/src saknas).');
+        }
 
         $rules = [
             'App namespace reference (App\\\...)' => '/\bApp\\\\/',
             'route(...) helper' => '/(?<!->)\broute\s*\(/',
-
-            // Matcha "view(" endast om raden INTE innehåller "function view(" och det inte är "->view("
             'view(...) helper' => '/^(?!.*\bfunction\s+view\s*\().*(?<!->)\bview\s*\(/m',
-
             'redirect(...) helper' => '/(?<!->)\bredirect\s*\(/',
             'asset(...) helper' => '/(?<!->)\basset\s*\(/',
             'dd(...) helper' => '/(?<!->)\bdd\s*\(/',
-
-            // Matcha "dump(" endast om raden INTE innehåller "function dump(" eller docblock "@method ... dump("
-            // och det inte är "->dump("
             'dump(...) helper' => '/^(?!.*\bfunction\s+dump\s*\()(?!.*@method[^\n]*\bdump\s*\().*(?<!->)\bdump\s*\(/m',
-
             'env(...) helper (app-style)' => '/(?<!->)\benv\s*\(/',
             'config(...) helper (app-style)' => '/(?<!->)\bconfig\s*\(/',
         ];
@@ -137,8 +138,10 @@ final class FrameworkMustNotDependOnAppTest extends TestCase
             }
 
             self::fail(
-                "Framework får inte bero på appen.\n\nRegelbrott:\n" . implode("\n", $lines)
+                "Installerat framework får inte bero på appen.\n\nRegelbrott:\n" . implode("\n", $lines)
             );
         }
+
+        self::assertSame([], $violations, 'Inga regelbrott förväntas i installerat framework.');
     }
 }

@@ -17,6 +17,18 @@ final readonly class RequestLogger implements MiddlewareInterface
         private string $channel = 'http'
     ) {}
 
+    private static function usFromDeltaSeconds(float $deltaSeconds): int
+    {
+        // Korrekt avrundning – ska vara +0.5
+        return (int) (($deltaSeconds * 1_000_000.0) + 0.5);
+    }
+
+    private static function msFromUs(int $us): int
+    {
+        // Exakt ms-formel – måste vara intdiv(us + 500, 1000) och (int)-cast kvar
+        return (int) intdiv($us + 500, 1000);
+    }
+
     public function process(Request $request, RequestHandlerInterface $next): Response
     {
         $start = microtime(true);
@@ -37,8 +49,7 @@ final readonly class RequestLogger implements MiddlewareInterface
             $end = microtime(true);
             $delta = $end - $start;
 
-            // Korrekt avrundning – ska vara +0.5
-            $us = (int) (($delta * 1_000_000.0) + 0.5);
+            $us = self::usFromDeltaSeconds($delta);
 
             // Monoton clamp på us med strikt < (inte <=)
             static $lastUs = null;
@@ -51,8 +62,7 @@ final readonly class RequestLogger implements MiddlewareInterface
             /** @var int $us */
             $us = $us;
 
-            // Exakt ms-formel – måste vara intdiv(us + 500, 1000) och (int)-cast kvar
-            $ms = (int) intdiv($us + 500, 1000);
+            $ms = self::msFromUs($us);
 
             $status = isset($response) ? $response->getStatusCode() : 500;
 

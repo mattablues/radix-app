@@ -1,81 +1,91 @@
-## Plan: Separera framework‑ och app‑tester (utan att dela repo än)
-Mål: göra `framework/` lätt att lyfta ut senare genom att gradvis separera **testernas struktur**, **körning**, och **kontrakt** – men allt ligger kvar i samma projekt.
-### Fas 0 – Nuläge (det ni redan har uppnått)
-- PHPUnit grönt.
-- PHPStan grönt.
-- Arkitekturtestet grönt: `framework/src` får inte referera till `App\\...` och vissa “helpers” (med regex-regler).
-- Infection dödar mutanter.
+“Nästa steg: uppdatera radic-app workflows (ci.yml + infection-schedule.yml) och phpstan paths efter split.”
 
-Det är en stabil bas att bygga vidare på.
-### Fas 1 – Skapa en tydlig test‑indelning i filsystemet
-Skapa en ny rotmapp för framework-tester:
-- `tests/Framework/`
+RADIX-APP (repo: mattablues/radix-app)
 
-Flytta in tester som primärt testar `framework/src/*` (Radix‑namespaces), t.ex.:
-- `tests/Framework/Architecture/FrameworkMustNotDependOnAppTest.php`
-- `tests/Framework/Database/ORM/*`
-- `tests/Framework/Database/QueryBuilder/*`
-- `tests/Framework/Container/*`
-- `tests/Framework/Routing/*`
-- `tests/Framework/Viewer/*`
-- `tests/Framework/Http/*` (om det är framework HTTP primitives, inte app controllers)
+Mål
+- Appen ska inte innehålla framework-kod som mapp.
+- Appen ska installera radix-framework via Composer.
+- CI ska köra PHP alltid + Node-build när frontend påverkas (vi committar inte byggda assets).
 
-**Tumregel:**
-Om testets huvudsakliga SUT är `Radix\...` och det går att köra utan att starta “app bootstrap”, så är det ett framework-test.
-Du kan behålla nuvarande namespaces i testklasserna i början (ingen brådska att byta).
-### Fas 2 – Dela upp PHPUnit i två suites (fortfarande samma repo)
-I (eller ), definiera: `phpunit.xml``phpunit.xml.dist`
-- suite: kör bara `tests/Framework` `framework`
-- `app` suite: kör resten men exkludera `tests/Framework`
+0) Status (klart redan)
+- [x] radix-app repo skapad + pushad
+- [x] radix-framework repo skapad + pushad
+- [x] Appens TemplateViewer får views-path från ROOT_PATH (fixat template path i vendor)
 
-Exempel:``` xml
-<testsuites>
-  <testsuite name="framework">
-    <directory>tests/Framework</directory>
-  </testsuite>
+1) Composer: koppla appen till framework
+- [ ] Säkerställ i composer.json:
+      - repositories: VCS url till radix-framework (SSH: git@github.com:mattablues/radix-framework.git)
+      - require: "radix/framework": dev-main (tills vi taggar)
+      - autoload: ta bort alla gamla "framework/..." paths (ska inte finnas)
+      - (rekommenderat) prefer-stable: true
+- [ ] Kör lokalt:
+      - composer update radix/framework
+      - composer dump-autoload
+- [ ] Commit/push:
+      - composer.json + composer.lock
 
-  <testsuite name="app">
-    <directory>tests</directory>
-    <exclude>tests/Framework</exclude>
-  </testsuite>
-</testsuites>
-```
-Det låter dig köra:
-vendor/bin/phpunit --testsuite framework
-vendor/bin/phpunit --testsuite app
-Och i CI kan ni köra dem som separata jobb.
+2) Kodfixar efter split (verify)
+- [ ] Kontrollera att alla imports pekar på rätt framework-klasser:
+      - Ex: App\Controllers\Api\ApiController ska extend Radix\Controller\AbstractApiController
+- [ ] Kontrollera att TemplateViewerInterface-binding använder appens views-dir (ROOT_PATH/views)
+- [ ] Sök efter hårdkodade "framework/" paths i appen och ta bort:
+      - "framework/src", "framework/support", "framework/views" etc.
 
-Fas 3 – Rensa beroenden i framework‑testsviten
-Målet är att --testsuite framework ska kunna köras med minimal app‑setup.
-Gör gradvis:
-Undvik ApplicationContainer::set(...) om testet inte behöver det.
-Undvik App\\... i assertions/fixtures om det går (om det används bara som dummy class-string är det okej, men håll koll).
-Skapa små “test doubles” i testet i stället för att peka på app‑modeller.
+3) Helpers / globala funktioner
+- [ ] Kontrollera att appen inte förlitar sig på helpers som tidigare låg i framework-mappen.
+      - Om helpers ska komma från framework: flytta/autoloada dem i radix-framework composer.json (autoload.files)
+      - Om helpers är app-specifika: behåll i support/helpers.php (appen)
 
-Fas 4 – Dela upp Infection-körningen (valfritt, men bra senare)
-Ni kan senare köra två Infection-jobb:
-Framework mutation
-source.directories: bara framework/src
-kör phpunit --testsuite framework
-App mutation
-source.directories: bara src
-kör phpunit --testsuite app
-Det brukar ge snabbare CI och renare signal.
+4) PHPStan-konfig i appen (viktigt efter split)
+- [ ] Uppdatera phpstan.neon.dist:
+      - ta bort paths som pekar på framework/... (t.ex. framework/src, framework/support)
+      - behåll appens paths (src, tests, config, support, bootstrap, etc.)
+- [ ] Kör lokalt: composer stan
 
-Fas 5 – Dela upp PHPStan (valfritt)
-På sikt kan ni ha:
-phpstan-framework.neon (analyserar framework/src, egna regler)
-phpstan-app.neon (analyserar src, app-regler)
-Och köra två jobb, eller ett jobb med två configs.
+5) GitHub Actions: CI (radix-app)
+- [ ] Uppdatera .github/workflows/ci.yml så att:
+      PHP-job (alltid):
+        - setup php 8.3
+        - composer install
+        - composer format:check
+        - composer stan
+        - composer test
+      Frontend-job (endast när relevant):
+        - setup node 20
+        - npm ci
+        - npm run start:build
+      (valfritt) cache composer + npm för snabbare builds
+- [ ] Lägg paths-filter så frontend-job körs när t.ex. dessa ändras:
+      - package.json / package-lock.json
+      - resources/**
+      - tailwind.config.* / postcss.config.* (om finns)
+      - public/** (om era inputs ligger där)
+      - templates/** / views/** (om build påverkas)
+      - .github/workflows/** (om ni vill testa CI-ändringar)
 
-Fas 6 – Förbered “extract” (när ni vill lyfta ut framework)
-När allt ovan är stabilt:
-Skapa egen composer.json i framework/ med PSR‑4 mapping för Radix\\.
-Flytta tests/Framework med till framework-paketet (eller duplicera tillfälligt).
-Låt appens root composer.json kräva framework som path-repo först (lokal utveckling), sedan som git-repo.
+6) Infection i appen
+- [ ] Uppdatera infection workflow (PR/schedule) så att:
+      - appens Infection muterar bara appens src/
+      - ta bort all logik som kör “src + framework”
+- [ ] Bestäm policy:
+      - PR: kör Infection endast när backend-core ändras (src/tests/composer/phpunit/infection)
+      - Schedule: full körning + artifact upload
 
-Praktiska checkpoints (så du vet att du är “redo”)
-phpunit --testsuite framework kör grönt utan att behöva app-specifika env-variabler.
-phpunit --testsuite app kör grönt.
-Arkitekturtestet ligger i framework-suiten och förhindrar regression.
-Infection kan köras per suite.
+7) Release-strategi när framework stabiliseras
+- [ ] När radix-framework taggas (v0.1.0):
+      - byt i radix-app från dev-main -> ^0.1
+      - kör composer update radix/framework
+      - commit composer.lock
+
+8) Dokumentation
+- [ ] Uppdatera README i radix-app:
+      - install: composer install + npm ci
+      - build: npm run start:build
+      - test: composer test
+      - infection: composer infect (om ni kör lokalt)
+      - env: vilka env-variabler behövs för dev/CI
+
+Klart när:
+- Appen bootar utan vendor-path-buggar (views, helpers, controllers)
+- CI är grön på PR (PHP alltid, Node vid behov)
+- Infection körs enligt policy (PR/schedule)

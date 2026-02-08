@@ -11,6 +11,7 @@ use Radix\Http\RequestHandlerInterface;
 use Radix\Http\Response;
 use Radix\Session\SessionInterface;
 use Radix\Support\Logger;
+use ReflectionClass;
 use RuntimeException;
 use Throwable;
 
@@ -369,6 +370,33 @@ final class RequestLoggerTest extends TestCase
         // us kan fluktuera lite; tillåt 10% minskning ...
         $this->assertGreaterThanOrEqual((int) floor($ctx1['us'] * 0.9), $ctx2['us'], 'us ska inte minska väsentligt mellan körningar');
         $this->assertGreaterThanOrEqual($ctx1['ms'], $ctx2['ms'], 'ms ska inte minska mellan körningar');
+    }
+
+    public function testUsFromDeltaSecondsRoundsCorrectlyAtHalfMicrosecond(): void
+    {
+        $ref = new ReflectionClass(RequestLogger::class);
+        $m = $ref->getMethod('usFromDeltaSeconds');
+        $m->setAccessible(true);
+
+        // 0.6 mikrosekunder => 0.6 + 0.5 = 1.1 => (int)1.1 = 1
+        // Mutanten "- 0.5" skulle ge 0.1 => 0 och dödas här.
+        $us = $m->invoke(null, 0.0000006);
+        $this->assertSame(1, $us);
+    }
+
+    public function testMsFromUsUsesIntdivUsPlus500Over1000(): void
+    {
+        $ref = new ReflectionClass(RequestLogger::class);
+        $m = $ref->getMethod('msFromUs');
+        $m->setAccessible(true);
+
+        // Välj ett värde där +499/+501 ger annan ms.
+        // us=500 => (500+500)/1000 = 1
+        $this->assertSame(1, $m->invoke(null, 500));
+
+        // us=1499 => (1499+500)/1000 = 1 (intdiv 1999,1000)
+        // +501-mutation skulle ge 2 (2000/1000)
+        $this->assertSame(1, $m->invoke(null, 1499));
     }
 
     public function testRoundingAtHalfBoundariesForUsAndMs(): void
