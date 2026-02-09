@@ -7,6 +7,7 @@ use Radix\Config\Dotenv;
 use Radix\Console\CommandsRegistry;
 use Radix\Database\DatabaseManager;
 use Radix\Database\Migration\Migrator;
+use Radix\Support\StringHelper;
 
 // Ladda miljövariabler
 $dotenv = new Dotenv(ROOT_PATH . '/.env', ROOT_PATH);
@@ -45,6 +46,14 @@ foreach ($configFiles as $file) {
 // Registrera den sammanslagna konfigurationen i containern
 /** @var array<string,mixed> $configData */
 $container->add('config', new Config($configData));
+
+/** Pluralisering: sätt app-override tidigt (innan ORM/konventioner initieras) */
+$plural = $configData['pluralization'] ?? null;
+if (is_array($plural)) {
+    /** @var array<string,mixed> $plural */
+    StringHelper::setPluralizationConfig($plural);
+}
+
 $container->add(\Radix\Support\FileCache::class, fn() => new \Radix\Support\FileCache(getenv('APP_CACHE_PATH') ?: null));
 
 $container->addShared(\Radix\Support\Logger::class, fn() => new \Radix\Support\Logger('app'));
