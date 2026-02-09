@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3fae72e693642b1e31790f18009fa5af",
+    "content-hash": "ca1f6254074d8315c1a22ba854f51b69",
     "packages": [
         {
             "name": "dflydev/dot-access-data",
@@ -267,16 +267,16 @@
         },
         {
             "name": "radix/framework",
-            "version": "dev-main",
+            "version": "v0.1.0",
             "source": {
                 "type": "git",
-                "url": "git@github.com:mattablues/radix-framework.git",
-                "reference": "cb304cf8994519e4f593602435edefc762a9871e"
+                "url": "https://github.com/mattablues/radix-framework.git",
+                "reference": "e54f4a06f94b672cf2a884d6a4511e5a1f52d65b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/cb304cf8994519e4f593602435edefc762a9871e",
-                "reference": "cb304cf8994519e4f593602435edefc762a9871e",
+                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/e54f4a06f94b672cf2a884d6a4511e5a1f52d65b",
+                "reference": "e54f4a06f94b672cf2a884d6a4511e5a1f52d65b",
                 "shasum": ""
             },
             "require": {
@@ -291,7 +291,6 @@
                 "phpstan/phpstan": "^2.1",
                 "phpunit/phpunit": "^11.0"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -330,7 +329,7 @@
                 "MIT"
             ],
             "description": "Radix Framework",
-            "time": "2026-02-09T11:26:16+00:00"
+            "time": "2026-02-09T12:17:01+00:00"
         }
     ],
     "packages-dev": [
@@ -6038,9 +6037,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "radix/framework": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

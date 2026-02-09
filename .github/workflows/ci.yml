@@ -30,17 +30,16 @@ env:
   ENABLE_INFECTION_ON_PR: ${{ vars.ENABLE_INFECTION_ON_PR || '1' }}
   ENABLE_INFECTION_ON_CI_CHANGES: ${{ vars.ENABLE_INFECTION_ON_CI_CHANGES || '0' }}
   ENABLE_INFECTION_ON_PUSH_MAIN: ${{ vars.ENABLE_INFECTION_ON_PUSH_MAIN || '0' }}
-  # I nya projekt (som akebrands): Sätt denna variabel till "src" på GitHub (Settings -> Variables)
-  # I Radix: Låt den vara tom ""
   INFECTION_FILTER: ""
 
 jobs:
   changes:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       infection_core: ${{ steps.filter.outputs.infection_core }}
       infection_ci: ${{ steps.filter.outputs.infection_ci }}
+      frontend: ${{ steps.filter.outputs.frontend }}
     steps:
       - uses: actions/checkout@v4
       - name: Detect changed paths
@@ -50,7 +49,6 @@ jobs:
           list-files: shell
           filters: |
             infection_core:
-              - 'framework/src/**'
               - 'src/**'
               - 'tests/**'
               - 'infection.json'
@@ -64,35 +62,64 @@ jobs:
             infection_ci:
               - '.github/workflows/**'
               - 'tools/**'
+            frontend:
+              - 'package.json'
+              - 'package-lock.json'
+              - 'resources/**'
+              - 'views/**'
+              - 'templates/**'
+              - 'public/**'
+              - 'tailwind.config.*'
+              - 'postcss.config.*'
+              - 'esbuild.*'
 
   php:
     runs-on: ubuntu-latest
+    needs: [changes]
     env:
       RADIX_RUN_ID: "${{ github.run_id }}-${{ github.run_attempt }}"
       HEALTH_CACHE_PATH: "${{ github.workspace }}/cache/health"
     steps:
       - uses: actions/checkout@v4
+
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
           coverage: none
           extensions: pdo_mysql, pdo_sqlite
           tools: composer
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php83-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php83-composer-
+
       - run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Prepare health cache dir
         run: mkdir -p "${{ github.workspace }}/cache/health"
 
       - name: Set up Node
-        if: env.ENABLE_FRONTEND_BUILD == '1'
+        if: env.ENABLE_FRONTEND_BUILD == '1' && (github.event_name == 'pull_request' || github.event_name == 'push') && needs.changes.outputs.frontend == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
       - name: Install NPM deps
-        if: env.ENABLE_FRONTEND_BUILD == '1'
+        if: env.ENABLE_FRONTEND_BUILD == '1' && (github.event_name == 'pull_request' || github.event_name == 'push') && needs.changes.outputs.frontend == 'true'
         run: npm ci
+
       - name: Build assets
-        if: env.ENABLE_FRONTEND_BUILD == '1'
+        if: env.ENABLE_FRONTEND_BUILD == '1' && (github.event_name == 'pull_request' || github.event_name == 'push') && needs.changes.outputs.frontend == 'true'
         run: npm run start:build
 
       - run: composer format:check
@@ -136,6 +163,20 @@ jobs:
           coverage: xdebug
           tools: composer
 
+      - name: Get Composer cache directory
+        if: steps.decide.outputs.run_infection == 'true'
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer downloads
+        if: steps.decide.outputs.run_infection == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php83-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php83-composer-
+
       - if: steps.decide.outputs.run_infection == 'true'
         run: composer install --no-interaction --prefer-dist --no-progress
 
@@ -166,10 +207,9 @@ jobs:
         run: |
           RAW_FILTER="${{ github.event.inputs.infection_filter || env.INFECTION_FILTER }}"
           CONFIG_FILE="infection.json.dist"
-      
-          # Om filtret är inställt på "src", skriv om JSON-filen så att framework inte ens finns med
+
           if [ "$RAW_FILTER" = "src" ] || [ "$RAW_FILTER" = "src/" ]; then
-            echo "Akebrands Mode: Rebuilding config to include ONLY src/ directory..."
+            echo "Limited Mode: Rebuilding config to include ONLY src/ directory..."
             jq '.source.directories = ["src"]' infection.json.dist > infection.project.json
             CONFIG_FILE="infection.project.json"
             FILTER_ARG=""
@@ -177,11 +217,10 @@ jobs:
             echo "Custom filter mode: $RAW_FILTER"
             FILTER_ARG="--filter=$RAW_FILTER"
           else
-            echo "Radix Mode: Full scope (src + framework)"
+            echo "Full scope mode (app repo)"
             FILTER_ARG=""
           fi
 
-          # Default: skip slow i Infection (snabbare, mindre risk för timeout)
           EXCLUDE_SLOW="--exclude-group=slow"
           RUN_SLOW="${{ github.event.inputs.infection_run_slow || 'false' }}"
           if [ "$RUN_SLOW" = "true" ]; then
