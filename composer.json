@@ -47,7 +47,7 @@
     },
     "require": {
         "php": "^8.3",
-        "radix/framework": "^0.1",
+        "radix/framework": "dev-main",
         "ext-pdo": "*",
         "phpmailer/phpmailer": "v6.12.0",
         "ext-gd": "*",
