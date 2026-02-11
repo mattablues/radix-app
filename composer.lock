@@ -271,12 +271,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/mattablues/radix-framework.git",
-                "reference": "a56006e69263780ecdecb7342b88ae2b52642727"
+                "reference": "bb4b682eec5eb78a3691416b63a1b8a29897251e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/a56006e69263780ecdecb7342b88ae2b52642727",
-                "reference": "a56006e69263780ecdecb7342b88ae2b52642727",
+                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/bb4b682eec5eb78a3691416b63a1b8a29897251e",
+                "reference": "bb4b682eec5eb78a3691416b63a1b8a29897251e",
                 "shasum": ""
             },
             "require": {
@@ -335,7 +335,7 @@
                 "source": "https://github.com/mattablues/radix-framework/tree/main",
                 "issues": "https://github.com/mattablues/radix-framework/issues"
             },
-            "time": "2026-02-11T17:09:21+00:00"
+            "time": "2026-02-11T22:06:05+00:00"
         }
     ],
     "packages-dev": [
