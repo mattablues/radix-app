@@ -475,4 +475,108 @@ class UserRoleTest extends TestCase
         // Verifiera att det sparades exakt som det var (ingen dubbel-hashning)
         $this->assertSame($alreadyHashed, $user->getAttribute('password'));
     }
+
+    public function testSetPasswordAttributeHashesPlainTextAndKeepsExistingHash(): void
+    {
+        $user = new \App\Models\User();
+
+        $user->setPasswordAttribute('secret123');
+
+        $ref = new ReflectionClass($user);
+        $p = $ref->getProperty('attributes');
+        $p->setAccessible(true);
+        $attrs = $p->getValue($user);
+
+        self::assertIsArray($attrs);
+        self::assertArrayHasKey('password', $attrs);
+        self::assertIsString($attrs['password']);
+        self::assertNotSame('secret123', $attrs['password'], 'Plaintext får inte sparas som lösenord.');
+        self::assertTrue(password_verify('secret123', $attrs['password']), 'Hashen måste verifiera mot original-lösenordet.');
+
+        $existingHash = password_hash('already-hashed', PASSWORD_DEFAULT);
+        $user->setPasswordAttribute($existingHash);
+
+        $attrs2 = $p->getValue($user);
+        self::assertIsArray($attrs2);
+        self::assertSame($existingHash, $attrs2['password'], 'Om input redan är en hash ska den sparas oförändrad.');
+    }
+
+    public function testSetEmailAttributeTrimsAndLowercases(): void
+    {
+        $user = new \App\Models\User();
+
+        $user->setEmailAttribute("  TeSt@ExAmPlE.COM  ");
+
+        $ref = new ReflectionClass($user);
+        $p = $ref->getProperty('attributes');
+        $p->setAccessible(true);
+        $attrs = $p->getValue($user);
+
+        self::assertIsArray($attrs);
+        self::assertArrayHasKey('email', $attrs);
+        self::assertSame('test@example.com', $attrs['email'], 'Email ska trimmas och normaliseras till lowercase.');
+    }
+
+    public function testRoleEnumUsesAttributesWhenStringAndOtherwiseFallsBackToGuarded(): void
+    {
+        $user = new class extends \App\Models\User {
+            public mixed $guardedReturn = null;
+            public bool $guardedThrows = false;
+
+            public function fetchGuardedAttribute(string $key): mixed
+            {
+                if ($this->guardedThrows) {
+                    throw new InvalidArgumentException('nope');
+                }
+                return $this->guardedReturn;
+            }
+        };
+
+        // 1) Attribut finns och är sträng => ska använda attribut
+        $ref = new ReflectionClass($user);
+        $p = $ref->getProperty('attributes');
+        $p->setAccessible(true);
+        $p->setValue($user, ['role' => 'admin']);
+
+        self::assertSame(Role::Admin, $user->roleEnum());
+
+        // 2) Attribut finns men är INTE sträng => fallback till guarded
+        $p->setValue($user, ['role' => 123]);
+        $user->guardedReturn = 'user';
+
+        self::assertSame(Role::User, $user->roleEnum());
+
+        // 3) Guarded kastar => null
+        $p->setValue($user, ['role' => 123]);
+        $user->guardedThrows = true;
+
+        self::assertNull($user->roleEnum());
+    }
+
+    public function testSetRoleAcceptsEnumAndValidStringAndRejectsInvalidString(): void
+    {
+        $user = new \App\Models\User();
+
+        // Enum
+        $user->setRole(Role::Admin);
+
+        $ref = new ReflectionClass($user);
+        $p = $ref->getProperty('attributes');
+        $p->setAccessible(true);
+        $attrs = $p->getValue($user);
+
+        self::assertIsArray($attrs);
+        self::assertSame(Role::Admin->value, $attrs['role']);
+
+        // Sträng (giltig)
+        $user->setRole('user');
+        $attrs2 = $p->getValue($user);
+        self::assertIsArray($attrs2);
+        self::assertSame(Role::User->value, $attrs2['role']);
+
+        // Sträng (ogiltig)
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Ogiltig roll:');
+        $user->setRole('definitely-not-a-role');
+    }
 }

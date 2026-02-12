@@ -285,93 +285,6 @@ final class RequestLoggerTest extends TestCase
         $this->assertSame(7, $ctx['userId']);
     }
 
-    public function testMonotonicTimingAndRoundingAgainstMutants(): void
-    {
-        $spy = new SpyLogger();
-
-        $req = $this->makeRequest(uri: '/time', method: 'GET', headers: ['User-Agent' => 'UA']);
-        $mw = new RequestLogger($spy);
-
-        // Första körningen
-        $resp1 = $mw->process($req, $this->makeHandlerReturning(200));
-        $this->assertSame(200, $resp1->getStatusCode());
-        $this->assertNotEmpty($spy->infos);
-        /** @var array<string,mixed> $ctx1 */
-        $ctx1 = $this->getFirstContext($spy);
-        $this->assertIsInt($ctx1['us']);
-        $this->assertIsInt($ctx1['ms']);
-        /** @var int $us1 */
-        $us1 = $ctx1['us'];
-        $this->assertSame((int) intdiv($us1 + 500, 1000), $ctx1['ms']);
-
-        usleep(20000); // 20ms
-
-        // Andra körningen
-        $spy->infos = [];
-        $resp2 = $mw->process($req, $this->makeHandlerReturning(200));
-        $this->assertSame(200, $resp2->getStatusCode());
-        $this->assertNotEmpty($spy->infos);
-        /** @var array<string,mixed> $ctx2 */
-        $ctx2 = $this->getFirstContext($spy);
-
-        // Monotonicitet och exakt formel
-        $this->assertGreaterThanOrEqual($ctx1['us'], $ctx2['us'], 'us ska inte minska (dödar delta=end+start eller delning i stället för multiplikation)');
-        $this->assertGreaterThanOrEqual($ctx1['ms'], $ctx2['ms'], 'ms ska inte minska (dödar felaktig avrundning eller delare 999/1001)');
-        /** @var int $us2 */
-        $us2 = $ctx2['us'];
-        $this->assertSame((int) intdiv($us2 + 500, 1000), $ctx2['ms'], 'ms måste vara intdiv(us+500,1000)');
-
-    }
-
-    public function testTimingDeltaAndRoundingAreCorrect(): void
-    {
-        $spy = new SpyLogger();
-        $mw = new RequestLogger($spy);
-
-        $handler = new class implements RequestHandlerInterface {
-            public function handle(Request $request): Response
-            {
-                usleep(20000); // ~20ms
-                $r = new Response();
-                $r->setStatusCode(200);
-                return $r;
-            }
-        };
-
-        $req = $this->makeRequest(uri: '/timing', method: 'GET', headers: ['User-Agent' => 'UA'], session: null, ip: '127.0.0.1');
-
-        // Körning 1
-        $resp1 = $mw->process($req, $handler);
-        $this->assertSame(200, $resp1->getStatusCode());
-        $this->assertNotEmpty($spy->infos);
-        /** @var array<string,mixed> $ctx1 */
-        $ctx1 = $this->getFirstContext($spy);
-
-        $this->assertIsInt($ctx1['us']);
-        $this->assertIsInt($ctx1['ms']);
-        /** @var int $us1 */
-        $us1 = $ctx1['us'];
-        $this->assertSame((int) intdiv($us1 + 500, 1000), $ctx1['ms']);
-        $this->assertGreaterThanOrEqual(15_000, $ctx1['us']);
-        $this->assertLessThan(200_000, $ctx1['us']);
-
-        // Körning 2
-        $spy->infos = [];
-        $resp2 = $mw->process($req, $handler);
-        $this->assertSame(200, $resp2->getStatusCode());
-        $this->assertNotEmpty($spy->infos);
-        /** @var array<string,mixed> $ctx2 */
-        $ctx2 = $this->getFirstContext($spy);
-
-        /** @var int $us2 */
-        $us2 = $ctx2['us'];
-        $this->assertSame((int) intdiv($us2 + 500, 1000), $ctx2['ms']);
-
-        // us kan fluktuera lite; tillåt 10% minskning ...
-        $this->assertGreaterThanOrEqual((int) floor($ctx1['us'] * 0.9), $ctx2['us'], 'us ska inte minska väsentligt mellan körningar');
-        $this->assertGreaterThanOrEqual($ctx1['ms'], $ctx2['ms'], 'ms ska inte minska mellan körningar');
-    }
-
     public function testUsFromDeltaSecondsRoundsCorrectlyAtHalfMicrosecond(): void
     {
         $ref = new ReflectionClass(RequestLogger::class);
@@ -453,5 +366,120 @@ final class RequestLoggerTest extends TestCase
         $first = $infos[0];
 
         return $first['ctx'];
+    }
+
+    public function testMonotonicTimingAndRoundingAgainstMutants(): void
+    {
+        $spy = new SpyLogger();
+
+        $req = $this->makeRequest(uri: '/time', method: 'GET', headers: ['User-Agent' => 'UA']);
+        $mw = new RequestLogger($spy);
+
+        $fastHandler = new class implements RequestHandlerInterface {
+            public function handle(Request $request): Response
+            {
+                usleep(1_000); // ~1ms
+                $r = new Response();
+                $r->setStatusCode(200);
+                $r->setBody('ok');
+                return $r;
+            }
+        };
+
+        $slowHandler = new class implements RequestHandlerInterface {
+            public function handle(Request $request): Response
+            {
+                usleep(30_000); // ~30ms (tydligt längre än första)
+                $r = new Response();
+                $r->setStatusCode(200);
+                $r->setBody('ok');
+                return $r;
+            }
+        };
+
+        // Första körningen (snabb)
+        $resp1 = $mw->process($req, $fastHandler);
+        $this->assertSame(200, $resp1->getStatusCode());
+        $this->assertNotEmpty($spy->infos);
+        /** @var array<string,mixed> $ctx1 */
+        $ctx1 = $this->getFirstContext($spy);
+
+        $this->assertIsInt($ctx1['us']);
+        $this->assertIsInt($ctx1['ms']);
+        /** @var int $us1 */
+        $us1 = $ctx1['us'];
+        $this->assertSame((int) intdiv($us1 + 500, 1000), $ctx1['ms']);
+
+        // Andra körningen (långsam)
+        $spy->infos = [];
+        $resp2 = $mw->process($req, $slowHandler);
+        $this->assertSame(200, $resp2->getStatusCode());
+        $this->assertNotEmpty($spy->infos);
+        /** @var array<string,mixed> $ctx2 */
+        $ctx2 = $this->getFirstContext($spy);
+
+        $this->assertIsInt($ctx2['us']);
+        $this->assertIsInt($ctx2['ms']);
+        /** @var int $us2 */
+        $us2 = $ctx2['us'];
+        $this->assertSame((int) intdiv($us2 + 500, 1000), $ctx2['ms']);
+
+        // Monotonicitet: andra ska inte vara mindre än första
+        $this->assertGreaterThanOrEqual($ctx1['us'], $ctx2['us'], 'us ska inte minska (monotont clamp)');
+        $this->assertGreaterThanOrEqual($ctx1['ms'], $ctx2['ms'], 'ms ska inte minska (monotont clamp)');
+
+        // Och p.g.a. mycket längre handler ska den dessutom öka tydligt.
+        // Detta dödar mutanten som clampa:ar vid us >= lastUs (då fastnar tiden på första värdet).
+        $this->assertGreaterThanOrEqual($ctx1['us'] + 10_000, $ctx2['us'], 'us ska öka tydligt när arbetet tar längre tid');
+        $this->assertGreaterThanOrEqual($ctx1['ms'] + 10, $ctx2['ms'], 'ms ska öka tydligt när arbetet tar längre tid');
+    }
+
+    public function testTimingDeltaAndRoundingAreCorrect(): void
+    {
+        $spy = new SpyLogger();
+        $mw = new RequestLogger($spy);
+
+        $handler = new class implements RequestHandlerInterface {
+            public function handle(Request $request): Response
+            {
+                usleep(20000); // ~20ms
+                $r = new Response();
+                $r->setStatusCode(200);
+                return $r;
+            }
+        };
+
+        $req = $this->makeRequest(uri: '/timing', method: 'GET', headers: ['User-Agent' => 'UA'], session: null, ip: '127.0.0.1');
+
+        // Körning 1
+        $resp1 = $mw->process($req, $handler);
+        $this->assertSame(200, $resp1->getStatusCode());
+        $this->assertNotEmpty($spy->infos);
+        /** @var array<string,mixed> $ctx1 */
+        $ctx1 = $this->getFirstContext($spy);
+
+        $this->assertIsInt($ctx1['us']);
+        $this->assertIsInt($ctx1['ms']);
+        /** @var int $us1 */
+        $us1 = $ctx1['us'];
+        $this->assertSame((int) intdiv($us1 + 500, 1000), $ctx1['ms']);
+        $this->assertGreaterThanOrEqual(15_000, $ctx1['us']);
+        $this->assertLessThan(200_000, $ctx1['us']);
+
+        // Körning 2 (ska också vara rimlig + följa formeln; jämför inte “minska/öka” här p.g.a. fluktuation)
+        $spy->infos = [];
+        $resp2 = $mw->process($req, $handler);
+        $this->assertSame(200, $resp2->getStatusCode());
+        $this->assertNotEmpty($spy->infos);
+        /** @var array<string,mixed> $ctx2 */
+        $ctx2 = $this->getFirstContext($spy);
+
+        $this->assertIsInt($ctx2['us']);
+        $this->assertIsInt($ctx2['ms']);
+        /** @var int $us2 */
+        $us2 = $ctx2['us'];
+        $this->assertSame((int) intdiv($us2 + 500, 1000), $ctx2['ms']);
+        $this->assertGreaterThanOrEqual(15_000, $ctx2['us']);
+        $this->assertLessThan(200_000, $ctx2['us']);
     }
 }

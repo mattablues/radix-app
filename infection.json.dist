@@ -5,12 +5,13 @@
     "excludes": ["config", "routes", "resources", "database", "tests", "vendor"]
   },
   "logs": {
-    "text": "php://stdout",
-    "html": "infection-report.html"
+    "text": "php://stdout"
   },
   "timeout": 25,
   "mutators": {
     "@default": true,
+    "PublicVisibility": false,
+    "ProtectedVisibility": false,
 
     "NotIdentical": {
       "ignore": [

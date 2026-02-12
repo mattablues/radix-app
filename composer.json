@@ -11,11 +11,11 @@
     "scripts": {
         "stan": "phpstan analyse -c phpstan.neon.dist",
         "test": "php -d xdebug.mode=off vendor/bin/phpunit",
-        "test:cov": "php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-text",
+        "infect": "php tools/infection.php",
+        "infect:pcov": "php tools/infection.php pcov",
+        "infect:xdebug": "php tools/infection.php xdebug",
         "format": "php-cs-fixer fix",
-        "format:check": "php-cs-fixer fix --dry-run --diff",
-        "infect": "php -d xdebug.mode=coverage vendor/bin/infection --configuration=infection.json.dist --threads=4 --min-msi=90 --min-covered-msi=95",
-        "infect:cov": "php -d xdebug.mode=coverage vendor/bin/infection --configuration=infection.json.dist --threads=4 --min-msi=90 --min-covered-msi=95 --skip-initial-tests --coverage=build/coverage"
+        "format:check": "php-cs-fixer fix --dry-run --diff"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

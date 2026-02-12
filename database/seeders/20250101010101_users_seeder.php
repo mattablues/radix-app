@@ -6,18 +6,18 @@ final class UsersSeeder
 {
     public function run(): void
     {
-        $user = \App\Models\User::where('email', '=', 'mats@akebrands.se')->first();
+        $user = \App\Models\User::where('email', '=', 'admin@example.com')->first();
         if ($user) {
             return;
         }
 
         $user = new \App\Models\User();
         $user->fill([
-            'first_name' => 'Mats',
-            'last_name'  => 'Åkebrand',
-            'email'      => 'mats@akebrands.se',
+            'first_name' => 'Admin',
+            'last_name'  => 'Example',
+            'email'      => 'admin@example.com',
         ]);
-        $user->password = 'korvar65'; // triggar setPasswordAttribute och hashar
+        $user->password = 'secret123'; // triggar setPasswordAttribute och hashar
         $user->role = 'admin';
         $user->save();
 
@@ -31,12 +31,12 @@ final class UsersSeeder
 
     public function down(): void
     {
-        $user = \App\Models\User::where('email', '=', 'mats@akebrands.se')->first();
+        $user = \App\Models\User::where('email', '=', 'admin@example.com')->first();
         if (!$user) {
             return;
         }
 
-        $token = \App\Models\Token::where('email', '=', 'mats@akebrands.se')->first();
+        $token = \App\Models\Token::where('email', '=', 'admin@example.com')->first();
         if (!$token) {
             return;
         }
