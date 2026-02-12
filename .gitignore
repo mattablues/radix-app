@@ -39,6 +39,7 @@ storage/
 .php-cs-fixer.cache
 infection-report.html
 infection-report.txt
+infection-summary.json
 
 # Build-artifacts
 build/
