@@ -9,10 +9,6 @@ on:
         description: "Optional Infection --filter path (e.g. src/Models)"
         required: false
         default: ""
-      infection_run_slow:
-        description: "Run PHPUnit group 'slow' inside Infection (true/false)"
-        required: false
-        default: "false"
 
 permissions:
   contents: read
@@ -37,7 +33,7 @@ jobs:
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: "8.3"
           coverage: xdebug
           tools: composer
 
@@ -53,14 +49,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-php83-composer-
 
-      - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Pre-check PHPUnit for Infection
         env:
           XDEBUG_MODE: coverage
           APP_ENV: development
         run: |
-          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default --do-not-cache-result
+          vendor/bin/phpunit \
+            -c phpunit.xml \
+            --display-deprecations \
+            --display-errors \
+            --display-notices \
+            --colors=never \
+            --order-by=default \
+            --do-not-cache-result
 
       - name: Generate coverage for Infection
         env:
@@ -80,7 +84,7 @@ jobs:
           RAW_FILTER="${{ github.event.inputs.infection_filter || env.INFECTION_FILTER }}"
           CONFIG_FILE="infection.json.dist"
 
-          if [ "$RAW_FILTER" = "src" ]; then
+          if [ "$RAW_FILTER" = "src" ] || [ "$RAW_FILTER" = "src/" ]; then
             echo "Limited Mode: Rebuilding config to include ONLY src/ directory..."
             jq '.source.directories = ["src"]' infection.json.dist > infection.project.json
             CONFIG_FILE="infection.project.json"
@@ -93,17 +97,8 @@ jobs:
             FILTER_ARG=""
           fi
 
-          EXCLUDE_SLOW="--exclude-group=slow"
-          RUN_SLOW="${{ github.event.inputs.infection_run_slow || 'false' }}"
-          if [ "$RUN_SLOW" = "true" ]; then
-            echo "Infection: running INCLUDING slow group"
-            EXCLUDE_SLOW=""
-          else
-            echo "Infection: running EXCLUDING slow group"
-          fi
-
           vendor/bin/infection \
-            --configuration=$CONFIG_FILE \
+            --configuration="$CONFIG_FILE" \
             --threads=1 \
             --ignore-msi-with-no-mutations \
             --min-msi=100 \
@@ -113,7 +108,7 @@ jobs:
             --no-progress \
             --coverage=build/coverage \
             $FILTER_ARG \
-            --test-framework-options="$EXCLUDE_SLOW --order-by=default --do-not-cache-result"
+            --test-framework-options="--order-by=default --do-not-cache-result"
 
       - name: Upload Infection report
         if: always()

@@ -137,6 +137,27 @@ final class ApiControllerTest extends TestCase
         self::assertFalse($isValid, 'Utgången token ska vara ogiltig.');
     }
 
+    #[PreserveGlobalState(false)]
+    #[RunInSeparateProcess]
+    public function testCleanupExpiredTokensExecutesDeleteQuery(): void
+    {
+        self::bootFakeToken();
+        FakeTokenQuery::$executeCalls = 0;
+
+        $controller = new TestApiController();
+        $controller->frozenNow = 1_700_000_000;
+
+        $ref = new ReflectionMethod($controller, 'cleanupExpiredTokens');
+        $ref->setAccessible(true);
+        $ref->invoke($controller);
+
+        self::assertGreaterThan(
+            0,
+            FakeTokenQuery::$executeCalls,
+            'cleanupExpiredTokens() måste leda till att Token-query execute() anropas.'
+        );
+    }
+
     /**
      * Dödar LessThan-mutanten (< -> <=) stabilt genom fryst tid.
      *
@@ -192,6 +213,8 @@ final class FakeToken
 
 final class FakeTokenQuery
 {
+    public static int $executeCalls = 0;
+
     public function where(string $column, string $op, mixed $value): self
     {
         return $this;
@@ -209,6 +232,6 @@ final class FakeTokenQuery
 
     public function execute(): void
     {
-        // no-op
+        self::$executeCalls++;
     }
 }

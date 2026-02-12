@@ -16,10 +16,6 @@ on:
         description: "Optional Infection --filter path"
         required: false
         default: ""
-      infection_run_slow:
-        description: "Run PHPUnit group 'slow' inside Infection (true/false)"
-        required: false
-        default: "false"
 
 permissions:
   contents: read
@@ -84,7 +80,7 @@ jobs:
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: "8.3"
           coverage: none
           extensions: pdo_mysql, pdo_sqlite
           tools: composer
@@ -101,7 +97,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-php83-composer-
 
-      - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Prepare health cache dir
         run: mkdir -p "${{ github.workspace }}/cache/health"
@@ -110,8 +107,8 @@ jobs:
         if: env.ENABLE_FRONTEND_BUILD == '1' && (github.event_name == 'pull_request' || github.event_name == 'push') && needs.changes.outputs.frontend == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: npm
           cache-dependency-path: package-lock.json
 
       - name: Install NPM deps
@@ -122,14 +119,22 @@ jobs:
         if: env.ENABLE_FRONTEND_BUILD == '1' && (github.event_name == 'pull_request' || github.event_name == 'push') && needs.changes.outputs.frontend == 'true'
         run: npm run start:build
 
-      - run: composer format:check
-      - run: composer stan
+      - name: Format check
+        run: composer format:check
+
+      - name: PHPStan
+        run: composer stan
 
       - name: Run PHPUnit (deterministic)
-        run: |
-          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --do-not-cache-result
         env:
           APP_ENV: development
+        run: |
+          vendor/bin/phpunit \
+            -c phpunit.xml \
+            --display-deprecations \
+            --display-errors \
+            --display-notices \
+            --do-not-cache-result
 
   infection:
     if: github.event_name == 'pull_request' && (vars.ENABLE_INFECTION_ON_PR || '1') == '1'
@@ -159,7 +164,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         if: steps.decide.outputs.run_infection == 'true'
         with:
-          php-version: '8.3'
+          php-version: "8.3"
           coverage: xdebug
           tools: composer
 
@@ -177,7 +182,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-php83-composer-
 
-      - if: steps.decide.outputs.run_infection == 'true'
+      - name: Install Composer dependencies
+        if: steps.decide.outputs.run_infection == 'true'
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Pre-check PHPUnit for Infection
@@ -186,7 +192,14 @@ jobs:
           XDEBUG_MODE: coverage
           APP_ENV: development
         run: |
-          vendor/bin/phpunit -c phpunit.xml --display-deprecations --display-errors --display-notices --colors=never --order-by=default --do-not-cache-result
+          vendor/bin/phpunit \
+            -c phpunit.xml \
+            --display-deprecations \
+            --display-errors \
+            --display-notices \
+            --colors=never \
+            --order-by=default \
+            --do-not-cache-result
 
       - name: Generate coverage for Infection
         if: steps.decide.outputs.run_infection == 'true'
@@ -221,17 +234,8 @@ jobs:
             FILTER_ARG=""
           fi
 
-          EXCLUDE_SLOW="--exclude-group=slow"
-          RUN_SLOW="${{ github.event.inputs.infection_run_slow || 'false' }}"
-          if [ "$RUN_SLOW" = "true" ]; then
-            echo "Infection: running INCLUDING slow group"
-            EXCLUDE_SLOW=""
-          else
-            echo "Infection: running EXCLUDING slow group"
-          fi
-
           vendor/bin/infection \
-            --configuration=$CONFIG_FILE \
+            --configuration="$CONFIG_FILE" \
             --threads=1 \
             --ignore-msi-with-no-mutations \
             --min-msi=90 \
@@ -241,7 +245,7 @@ jobs:
             --no-progress \
             --coverage=build/coverage \
             $FILTER_ARG \
-            --test-framework-options="$EXCLUDE_SLOW --order-by=default --do-not-cache-result"
+            --test-framework-options="--order-by=default --do-not-cache-result"
 
       - name: Upload Infection report
         if: always()

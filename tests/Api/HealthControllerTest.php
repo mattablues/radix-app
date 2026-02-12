@@ -72,6 +72,8 @@ namespace Radix\Tests\Api {
 
     final class HealthControllerTest extends TestCase
     {
+        private Connection $dbConn;
+
         protected function setUp(): void
         {
             parent::setUp();
@@ -106,11 +108,11 @@ namespace Radix\Tests\Api {
             $pdoStmt = $this->createMock(PDOStatement::class);
 
             // Mocka Connection så execute() returnerar PDOStatement
-            $dbConn = $this->createMock(Connection::class);
-            $dbConn->method('execute')->willReturn($pdoStmt);
+            $this->dbConn = $this->createMock(Connection::class);
+            $this->dbConn->method('execute')->willReturn($pdoStmt);
 
             // Minimal DatabaseManager-stub
-            $dbManager = new class ($dbConn) {
+            $dbManager = new class ($this->dbConn) {
                 public function __construct(private Connection $conn) {}
                 public function connection(): Connection
                 {
@@ -616,13 +618,16 @@ namespace Radix\Tests\Api {
             putenv('HEALTH_REQUIRE_TOKEN');
         }
 
-
+        /**
+         * Vi kör i separat process för att kunna class_alias:a App\Models\Token innan den laddas.
+         */
+        #[\PHPUnit\Framework\Attributes\PreserveGlobalState(false)]
+        #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
         public function testHealthValidatesTokenWhenRequiredIsTrueString(): void
         {
-            // Sätt miljövariabler för att isolera skillnaden mellan original och mutant.
             putenv('APP_ENV=local');
             putenv('HEALTH_REQUIRE_TOKEN=true');
-            putenv('API_TOKEN=secret123'); // För att passera validering utan exit()
+            putenv('API_TOKEN=secret123');
 
             $mockHealthService = $this->createMock(\App\Services\HealthCheckService::class);
             $mockHealthService->method('run')->willReturn(['_ok' => true, 'db' => 'ok']);
@@ -631,31 +636,14 @@ namespace Radix\Tests\Api {
             /** @var \Radix\Container\Container $container */
             $container->add(\App\Services\HealthCheckService::class, fn() => $mockHealthService);
 
-            // Mocka DB-kopplingen för att verifiera att cleanupExpiredTokens() körs.
-            $pdoStmt = $this->createMock(PDOStatement::class);
-            $dbConn = $this->createMock(Connection::class);
-
-            // Vi förväntar oss att execute anropas (för DELETE query i cleanupExpiredTokens).
-            $dbConn->expects($this->atLeastOnce())
-                ->method('execute')
-                ->willReturn($pdoStmt);
-
-            // Skapa en anonym DatabaseManager som returnerar vår mockade connection
-            $dbManager = new class ($dbConn) {
-                public function __construct(private Connection $conn) {}
-                public function connection(): Connection
-                {
-                    return $this->conn;
-                }
-            };
-            $container->add(\Radix\Database\DatabaseManager::class, fn() => $dbManager);
+            // Reset spy
+            TestHealthController::$cleanupCalls = 0;
 
             $router = new Router();
-            $router->get('/health', [\App\Controllers\Api\HealthController::class, 'index']);
+            $router->get('/health', [TestHealthController::class, 'index']);
 
             $dispatcher = new Dispatcher($router, $container, []);
 
-            // Skicka headern via server-arrayen som HTTP_AUTHORIZATION
             $request = new Request(
                 uri: '/health',
                 method: 'GET',
@@ -670,14 +658,19 @@ namespace Radix\Tests\Api {
 
             $this->assertSame(200, $response->getStatusCode());
 
+            // Dödar MethodCallRemoval av $this->cleanupExpiredTokens()
+            $this->assertGreaterThan(
+                0,
+                TestHealthController::$cleanupCalls,
+                'cleanupExpiredTokens() ska anropas när token-validering körs.'
+            );
+
             putenv('HEALTH_REQUIRE_TOKEN');
             putenv('API_TOKEN');
         }
 
         public function testHealthValidatesTokenWhenRequiredIsOneString(): void
         {
-            // Samma logik som för 'true', men nu testar vi '1'.
-            // Om mutanten tar bort '1' kommer den falla till default -> local -> false -> ingen validering -> fail.
             putenv('APP_ENV=local');
             putenv('HEALTH_REQUIRE_TOKEN=1');
             putenv('API_TOKEN=secret123');
@@ -689,24 +682,10 @@ namespace Radix\Tests\Api {
             /** @var \Radix\Container\Container $container */
             $container->add(\App\Services\HealthCheckService::class, fn() => $mockHealthService);
 
-            $pdoStmt = $this->createMock(PDOStatement::class);
-            $dbConn = $this->createMock(Connection::class);
-
-            $dbConn->expects($this->atLeastOnce())
-                ->method('execute')
-                ->willReturn($pdoStmt);
-
-            $dbManager = new class ($dbConn) {
-                public function __construct(private Connection $conn) {}
-                public function connection(): Connection
-                {
-                    return $this->conn;
-                }
-            };
-            $container->add(\Radix\Database\DatabaseManager::class, fn() => $dbManager);
+            TestHealthController::$cleanupCalls = 0;
 
             $router = new Router();
-            $router->get('/health', [\App\Controllers\Api\HealthController::class, 'index']);
+            $router->get('/health', [TestHealthController::class, 'index']);
 
             $dispatcher = new Dispatcher($router, $container, []);
 
@@ -723,6 +702,11 @@ namespace Radix\Tests\Api {
             $response = $dispatcher->handle($request);
 
             $this->assertSame(200, $response->getStatusCode());
+            $this->assertGreaterThan(
+                0,
+                TestHealthController::$cleanupCalls,
+                'När HEALTH_REQUIRE_TOKEN=1 ska validateRequest() köras och därmed cleanupExpiredTokens().'
+            );
 
             putenv('HEALTH_REQUIRE_TOKEN');
             putenv('API_TOKEN');
@@ -730,7 +714,6 @@ namespace Radix\Tests\Api {
 
         public function testHealthValidatesTokenWhenRequiredIsOnString(): void
         {
-            // Samma logik som för 'true', men nu testar vi 'on'.
             putenv('APP_ENV=local');
             putenv('HEALTH_REQUIRE_TOKEN=on');
             putenv('API_TOKEN=secret123');
@@ -742,24 +725,10 @@ namespace Radix\Tests\Api {
             /** @var \Radix\Container\Container $container */
             $container->add(\App\Services\HealthCheckService::class, fn() => $mockHealthService);
 
-            $pdoStmt = $this->createMock(PDOStatement::class);
-            $dbConn = $this->createMock(Connection::class);
-
-            $dbConn->expects($this->atLeastOnce())
-                ->method('execute')
-                ->willReturn($pdoStmt);
-
-            $dbManager = new class ($dbConn) {
-                public function __construct(private Connection $conn) {}
-                public function connection(): Connection
-                {
-                    return $this->conn;
-                }
-            };
-            $container->add(\Radix\Database\DatabaseManager::class, fn() => $dbManager);
+            TestHealthController::$cleanupCalls = 0;
 
             $router = new Router();
-            $router->get('/health', [\App\Controllers\Api\HealthController::class, 'index']);
+            $router->get('/health', [TestHealthController::class, 'index']);
 
             $dispatcher = new Dispatcher($router, $container, []);
 
@@ -776,6 +745,11 @@ namespace Radix\Tests\Api {
             $response = $dispatcher->handle($request);
 
             $this->assertSame(200, $response->getStatusCode());
+            $this->assertGreaterThan(
+                0,
+                TestHealthController::$cleanupCalls,
+                'När HEALTH_REQUIRE_TOKEN=on ska validateRequest() köras och därmed cleanupExpiredTokens().'
+            );
 
             putenv('HEALTH_REQUIRE_TOKEN');
             putenv('API_TOKEN');
@@ -1259,6 +1233,46 @@ namespace Radix\Tests\Api {
 
             putenv('HEALTH_CACHE_PATH');
             // ingen katalog skapas i projektroten här, bara under systemets temp
+        }
+
+    }
+
+    /**
+     * Fake QueryBuilder som kan kedjas som i cleanupExpiredTokens().
+     */
+    final class HealthFakeTokenQuery
+    {
+        public static int $executeCalls = 0;
+
+        public function where(string $column, string $op, string $value): self
+        {
+            return $this;
+        }
+
+        public function delete(): self
+        {
+            return $this;
+        }
+
+        public function execute(): self
+        {
+            self::$executeCalls++;
+            return $this;
+        }
+    }
+
+    /**
+     * Test-controller som bara spårar att cleanupExpiredTokens() anropas.
+     * Vi override:ar för att slippa koppling till ORM/DB.
+     */
+    final class TestHealthController extends \App\Controllers\Api\HealthController
+    {
+        public static int $cleanupCalls = 0;
+
+        protected function cleanupExpiredTokens(): void
+        {
+            self::$cleanupCalls++;
+            // Kör inte parent; vi vill inte bero på DB/ORM här.
         }
     }
 }
