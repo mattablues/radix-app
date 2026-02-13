@@ -6,5 +6,5 @@
 
 <div class="bg-white border border-gray-200 rounded-2xl {{ $shadow }} {{ $padding }}">
     <h4 class="text-lg font-bold mb-2">{{ $title }}</h4>
-    {{ $slot }}
+    {{ slot }}
 </div>
