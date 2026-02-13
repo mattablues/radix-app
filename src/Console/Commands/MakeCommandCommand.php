@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Support\AppPaths;
 use Radix\Console\Commands\BaseCommand;
+use Radix\Console\CommandsRegistry;
 
 final class MakeCommandCommand extends BaseCommand
 {
     private const int DIR_MODE = 0o755;
 
     public function __construct(
-        private readonly string $commandsBasePath,
-        private readonly string $templatePath,
-        private readonly string $configCommandsFile,
+        private readonly AppPaths $paths,
+        private readonly CommandsRegistry $registry,
     ) {}
 
     /**
@@ -71,10 +72,28 @@ final class MakeCommandCommand extends BaseCommand
             return;
         }
 
-        $targetDir = rtrim($this->commandsBasePath, '/\\');
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, self::DIR_MODE, true);
+        // NYTT: skydda mot att råka registrera samma CLI-kommando som redan finns (framework eller app)
+        $existing = $this->registry->getCommands();
+        if (array_key_exists($cliCommand, $existing)) {
+            $existingTarget = $existing[$cliCommand];
+
+            if (is_string($existingTarget)) {
+                $existingLabel = $existingTarget;
+            } elseif (is_object($existingTarget)) {
+                $existingLabel = $existingTarget::class;
+            } else {
+                $existingLabel = gettype($existingTarget);
+            }
+
+            $this->coloredOutput(
+                "Error: Command '{$cliCommand}' already exists ({$existingLabel}). Pick another --command.",
+                'red'
+            );
+            return;
         }
+
+        $targetDir = rtrim($this->paths->commandsDir(), '/\\');
+        $this->paths->ensureDir($targetDir, self::DIR_MODE);
 
         $targetFile = $targetDir . DIRECTORY_SEPARATOR . $className . '.php';
         if (is_file($targetFile)) {
@@ -82,7 +101,7 @@ final class MakeCommandCommand extends BaseCommand
             return;
         }
 
-        $stubFile = rtrim($this->templatePath, '/\\') . DIRECTORY_SEPARATOR . 'command.stub';
+        $stubFile = rtrim($this->paths->templatesDir(), '/\\') . DIRECTORY_SEPARATOR . 'command.stub';
         if (!is_file($stubFile)) {
             $this->coloredOutput("Error: Stub not found: {$stubFile}", 'red');
             return;
@@ -208,7 +227,7 @@ final class MakeCommandCommand extends BaseCommand
 
     private function tryAppendToCommandsConfig(string $cliCommand, string $fqcn): void
     {
-        $file = $this->configCommandsFile;
+        $file = $this->paths->commandsConfigFile();
 
         if (!is_file($file)) {
             $this->coloredOutput("Warning: Config file not found: {$file}", 'yellow');
@@ -222,26 +241,25 @@ final class MakeCommandCommand extends BaseCommand
             return;
         }
 
-        // Already registered?
         if (str_contains($src, "'" . $cliCommand . "'")) {
             $this->coloredOutput("Config already contains '{$cliCommand}'. Skipping update.", 'yellow');
             return;
         }
 
-        // Insert after: 'commands' => [
-        $needle = "'commands' => [";
-        $pos = strpos($src, $needle);
-        if ($pos === false) {
-            $this->coloredOutput("Warning: Could not find {$needle} in {$file}. Register manually.", 'yellow');
+        $line = "\n            '{$cliCommand}' => \\{$fqcn}::class,";
+
+        // Sätt in i: 'commands' => [ 'commands' => [ ... HÄR ... ] ]
+        $pattern = "/('commands'\\s*=>\\s*\\[\\s*'commands'\\s*=>\\s*\\[)/";
+        if (!preg_match($pattern, $src)) {
+            $this->coloredOutput("Warning: Could not find commands.commands array in {$file}. Register manually.", 'yellow');
             return;
         }
 
-        $insertPos = $pos + strlen($needle);
-
-        // Viktigt: i en PHP-fil vill vi ha EN ledande "\" i klass-referensen.
-        $line = "\n        '{$cliCommand}' => \\{$fqcn}::class,";
-
-        $out = substr($src, 0, $insertPos) . $line . substr($src, $insertPos);
+        $out = preg_replace($pattern, "$1{$line}", $src, 1);
+        if (!is_string($out)) {
+            $this->coloredOutput("Warning: Failed updating config file: {$file}", 'yellow');
+            return;
+        }
 
         if (file_put_contents($file, $out) === false) {
             $this->coloredOutput("Warning: Failed writing config file: {$file}", 'yellow');
