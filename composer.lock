@@ -334,10 +334,6 @@
                 "MIT"
             ],
             "description": "Radix Framework",
-            "support": {
-                "source": "https://github.com/mattablues/radix-framework/tree/main",
-                "issues": "https://github.com/mattablues/radix-framework/issues"
-            },
             "time": "2026-02-13T09:51:51+00:00"
         }
     ],
@@ -6063,9 +6059,9 @@
         "ext-simplexml": "*",
         "ext-libxml": "*"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "platform-overrides": {
         "php": "8.3.30"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.3.0"
 }
