@@ -7,4 +7,5 @@ return [
     \App\Providers\EventServiceProvider::class,
     \App\Providers\MailServiceProvider::class,
     \App\Providers\ListenersServiceProvider::class,
+    \App\Providers\ConsoleCommandsServiceProvider::class,
 ];
