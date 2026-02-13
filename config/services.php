@@ -430,6 +430,8 @@ $container->addShared(\Radix\Console\CommandsRegistry::class, function () {
     $registry = new CommandsRegistry();
 
     // Registrera alla CLI-kommandon med det nya namnsystemet
+    $registry->register('app:setup', \Radix\Console\Commands\AppSetupCommand::class);
+    $registry->register('cache:clear', \Radix\Console\Commands\CacheClearCommand::class);
     $registry->register('migrations:migrate', Radix\Console\Commands\MigrationCommand::class);
     $registry->register('migrations:rollback', Radix\Console\Commands\MigrationCommand::class);
     $registry->register('seeds:run', \Radix\Console\Commands\SeedCommand::class);
@@ -446,8 +448,6 @@ $container->addShared(\Radix\Console\CommandsRegistry::class, function () {
     $registry->register('make:provider', Radix\Console\Commands\MakeProviderCommand::class);
     $registry->register('make:test', Radix\Console\Commands\MakeTestCommand::class);
     $registry->register('make:view', Radix\Console\Commands\MakeViewCommand::class);
-    $registry->register('cache:clear', \Radix\Console\Commands\CacheClearCommand::class);
-    $registry->register('app:setup', \Radix\Console\Commands\AppSetupCommand::class);
 
     return $registry;
 });
