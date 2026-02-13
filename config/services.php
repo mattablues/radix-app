@@ -318,22 +318,6 @@ $container->add(\Radix\Console\Commands\CacheClearCommand::class, function () {
     return new \Radix\Console\Commands\CacheClearCommand();
 });
 
-$container->add(\App\Console\Commands\MakeCommandCommand::class, function () {
-    $commandsPath = ROOT_PATH . '/src/Console/Commands';
-    $templatePath = ROOT_PATH . '/templates';
-    $commandsConfigFile = ROOT_PATH . '/config/commands.php';
-
-    if (!is_dir($commandsPath)) {
-        mkdir($commandsPath, 0o755, true);
-    }
-
-    return new \App\Console\Commands\MakeCommandCommand(
-        commandsBasePath: $commandsPath,
-        templatePath: $templatePath,
-        configCommandsFile: $commandsConfigFile,
-    );
-});
-
 $container->add(\Radix\Console\Commands\MakeMigrationCommand::class, function () {
     $migrationPath = ROOT_PATH . '/database/migrations';
     $templatePath = ROOT_PATH . '/templates/migrations';
@@ -442,7 +426,7 @@ $container->add(\Radix\Console\Commands\MakeFormRequestCommand::class, function 
     return new \Radix\Console\Commands\MakeFormRequestCommand($requestsPath, $templatePath);
 });
 
-$container->add(\Radix\Console\CommandsRegistry::class, function () {
+$container->addShared(\Radix\Console\CommandsRegistry::class, function () {
     $registry = new CommandsRegistry();
 
     // Registrera alla CLI-kommandon med det nya namnsystemet
@@ -463,7 +447,6 @@ $container->add(\Radix\Console\CommandsRegistry::class, function () {
     $registry->register('make:test', Radix\Console\Commands\MakeTestCommand::class);
     $registry->register('make:view', Radix\Console\Commands\MakeViewCommand::class);
     $registry->register('cache:clear', \Radix\Console\Commands\CacheClearCommand::class);
-    $registry->register('make:command', \App\Console\Commands\MakeCommandCommand::class);
     $registry->register('app:setup', \Radix\Console\Commands\AppSetupCommand::class);
 
     return $registry;

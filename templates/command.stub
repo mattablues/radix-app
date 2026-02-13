@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace [NAMESPACE];
 
+use App\Support\AppPaths;
 use Radix\Console\Commands\BaseCommand;
 
 final class [CLASS] extends BaseCommand
 {
+    public function __construct(private readonly AppPaths $paths) {}
+
     /**
      * Kör kommandot med givna argument.
      *
@@ -35,6 +38,8 @@ final class [CLASS] extends BaseCommand
         if ($this->handleHelpFlag($argv, $usage, $options)) {
             return;
         }
+
+        // Exempel: $this->coloredOutput('Templates: ' . $this->paths->templatesDir(), 'cyan');
 
         $this->coloredOutput('TODO: implement [CLI_COMMAND]', 'yellow');
     }
