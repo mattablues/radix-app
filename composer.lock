@@ -271,12 +271,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/mattablues/radix-framework.git",
-                "reference": "6b656b0b8d73edc7bafbdfa20623f29daf6e8c9e"
+                "reference": "ad29079769e9f1fe67cd68a91ee92fc3e89b4cfd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/6b656b0b8d73edc7bafbdfa20623f29daf6e8c9e",
-                "reference": "6b656b0b8d73edc7bafbdfa20623f29daf6e8c9e",
+                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/ad29079769e9f1fe67cd68a91ee92fc3e89b4cfd",
+                "reference": "ad29079769e9f1fe67cd68a91ee92fc3e89b4cfd",
                 "shasum": ""
             },
             "require": {
@@ -334,7 +334,7 @@
                 "MIT"
             ],
             "description": "Radix Framework",
-            "time": "2026-02-13T09:51:51+00:00"
+            "time": "2026-02-13T17:22:23+00:00"
         }
     ],
     "packages-dev": [
