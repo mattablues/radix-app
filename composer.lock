@@ -271,12 +271,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/mattablues/radix-framework.git",
-                "reference": "ba92357a0f240eb885ed53fdd56d9fdf854c355b"
+                "reference": "6b656b0b8d73edc7bafbdfa20623f29daf6e8c9e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/ba92357a0f240eb885ed53fdd56d9fdf854c355b",
-                "reference": "ba92357a0f240eb885ed53fdd56d9fdf854c355b",
+                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/6b656b0b8d73edc7bafbdfa20623f29daf6e8c9e",
+                "reference": "6b656b0b8d73edc7bafbdfa20623f29daf6e8c9e",
                 "shasum": ""
             },
             "require": {
@@ -314,20 +314,14 @@
                 "test": [
                     "php -d xdebug.mode=off vendor/bin/phpunit"
                 ],
-                "test:cov": [
-                    "php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-text"
-                ],
-                "test:coverage": [
-                    "php -d pcov.enabled=1 -d pcov.directory=src vendor/bin/phpunit -c phpunit.xml --order-by=default --do-not-cache-result --coverage-xml=build/coverage/coverage-xml --log-junit=build/coverage/junit.xml"
+                "infect": [
+                    "php tools/infection.php"
                 ],
                 "infect:pcov": [
-                    "APP_ENV=development php vendor/bin/infection --configuration=infection.json.dist --threads=1 --skip-initial-tests --coverage=build/coverage --log-verbosity=all --no-interaction --no-progress"
+                    "php tools/infection.php pcov"
                 ],
                 "infect:xdebug": [
-                    "XDEBUG_MODE=coverage APP_ENV=development php vendor/bin/infection --configuration=infection.json.dist --threads=1 --skip-initial-tests --coverage=build/coverage --log-verbosity=all --no-interaction --no-progress"
-                ],
-                "infect": [
-                    "APP_ENV=development php vendor/bin/infection --configuration=infection.json.dist --threads=1 --skip-initial-tests --coverage=build/coverage --log-verbosity=all --no-interaction --no-progress"
+                    "php tools/infection.php xdebug"
                 ],
                 "format": [
                     "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix"
@@ -344,7 +338,7 @@
                 "source": "https://github.com/mattablues/radix-framework/tree/main",
                 "issues": "https://github.com/mattablues/radix-framework/issues"
             },
-            "time": "2026-02-12T11:19:47+00:00"
+            "time": "2026-02-13T09:51:51+00:00"
         }
     ],
     "packages-dev": [
