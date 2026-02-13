@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+namespace [NAMESPACE];
+
+use Radix\Console\Commands\BaseCommand;
+
+final class [CLASS] extends BaseCommand
+{
+    /**
+     * Kör kommandot med givna argument.
+     *
+     * @param array<int|string, string> $args
+     */
+    public function execute(array $args): void
+    {
+        $this->__invoke($args);
+    }
+
+    /**
+     * @param array<int|string, string> $args
+     */
+    public function __invoke(array $args): void
+    {
+        $usage = '[CLI_COMMAND] [--help]';
+        $options = [
+            '--help, -h' => 'Display this help message.',
+            '--md, --markdown' => 'Output help as Markdown.',
+        ];
+
+        $argv = array_filter($args, static fn($k): bool => is_int($k), ARRAY_FILTER_USE_KEY);
+        /** @var array<int,string> $argv */
+
+        if ($this->handleHelpFlag($argv, $usage, $options)) {
+            return;
+        }
+
+        $this->coloredOutput('TODO: implement [CLI_COMMAND]', 'yellow');
+    }
+}
