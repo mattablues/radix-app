@@ -35,7 +35,7 @@ class SystemUpdateController extends AbstractController
                 'pagination' => $results['search'] ?? [
                     'term' => $q,
                     'total' => 0,
-                    'per_page' => 1,
+                    'per_page' => 10,
                     'current_page' => $page,
                     'last_page' => 0,
                     'first_page' => 1,
@@ -43,7 +43,7 @@ class SystemUpdateController extends AbstractController
             ];
         } else {
             $updates = SystemUpdate::orderBy('released_at', 'DESC')
-                ->paginate(1, $page);
+                ->paginate(10, $page);
         }
 
         return $this->view('admin.system-update.index', [
