@@ -397,6 +397,14 @@ $container->add(\Radix\Console\Commands\MakeSeederCommand::class, function () {
     return new \Radix\Console\Commands\MakeSeederCommand($seederPath, $templatePath);
 });
 
+// Lägg till ScaffoldInstallCommand i containern
+$container->add(\Radix\Console\Commands\ScaffoldInstallCommand::class, function () {
+    return new \Radix\Console\Commands\ScaffoldInstallCommand(
+        ROOT_PATH . '/templates/scaffolds', // $presetsRoot
+        ROOT_PATH                           // $projectRoot
+    );
+});
+
 // Lägg till AppSetupCommand i containern
 $container->add(\Radix\Console\Commands\AppSetupCommand::class, function () use ($container) {
     $migrator = $container->get(\Radix\Database\Migration\Migrator::class);
@@ -431,6 +439,7 @@ $container->addShared(\Radix\Console\CommandsRegistry::class, function () {
 
     // Registrera alla CLI-kommandon med det nya namnsystemet
     $registry->register('app:setup', \Radix\Console\Commands\AppSetupCommand::class);
+    $registry->register('scaffold:install', \Radix\Console\Commands\ScaffoldInstallCommand::class);
     $registry->register('cache:clear', \Radix\Console\Commands\CacheClearCommand::class);
     $registry->register('migrations:migrate', Radix\Console\Commands\MigrationCommand::class);
     $registry->register('migrations:rollback', Radix\Console\Commands\MigrationCommand::class);

@@ -1,0 +1,78 @@
+<?php
+
+declare(strict_types=1);
+
+/** @var \Radix\Routing\Router $router */
+
+// Global grupp för web med request-id + logging
+$router->group(
+    ['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.2mb', 'csrf', 'share.user']],
+    function () use ($router) {
+        // Registrering (privat + guest)
+        $router->group(['middleware' => ['private', 'guest']], function () use ($router) {
+            $router->get('/register', [
+                \App\Controllers\Auth\RegisterController::class, 'index',
+            ])->name('auth.register.index');
+
+            // Throttle registrering
+            $router->post('/register', [
+                \App\Controllers\Auth\RegisterController::class, 'create',
+            ])->name('auth.register.create')->middleware(['api.throttle.light']);
+        });
+
+        // Övrig auth för gäster
+        $router->group(['middleware' => ['guest']], function () use ($router) {
+            $router->get('/register/activate/{token:[\da-f]+}', [
+                \App\Controllers\Auth\RegisterController::class, 'activate',
+            ])->name('auth.register.activate');
+
+            $router->get('/login', [
+                \App\Controllers\Auth\LoginController::class, 'index',
+            ])->name('auth.login.index');
+
+            // Throttle login
+            $router->post('/login', [
+                \App\Controllers\Auth\LoginController::class, 'create',
+            ])->name('auth.login.create')->middleware(['api.throttle.hard']);
+
+            $router->get('/password-forgot', [
+                \App\Controllers\Auth\PasswordForgotController::class, 'index',
+            ])->name('auth.password-forgot.index');
+
+            // Throttle password-forgot
+            $router->post('/password-forgot', [
+                \App\Controllers\Auth\PasswordForgotController::class, 'create',
+            ])->name('auth.password-forgot.create')->middleware(['api.throttle.light']);
+
+            $router->get('/password-reset/{token:[\da-f]+}', [
+                \App\Controllers\Auth\PasswordResetController::class, 'index',
+            ])->name('auth.password-reset.index');
+
+            // Throttle password-reset
+            $router->post('/password-reset/{token:[\da-f]+}', [
+                \App\Controllers\Auth\PasswordResetController::class, 'create',
+            ])->name('auth.password-reset.create')->middleware(['api.throttle.light']);
+
+            $router->get('/logout-message', [
+                \App\Controllers\Auth\LogoutController::class, 'logoutMessage',
+            ])->name('auth.logout.message');
+
+            $router->get('/logout-close-message', [
+                \App\Controllers\Auth\LogoutController::class, 'closeLogoutMessage',
+            ])->name('auth.logout.close-message');
+
+            $router->get('/logout-delete-message', [
+                \App\Controllers\Auth\LogoutController::class, 'deletedLogoutMessage',
+            ])->name('auth.logout.delete-message');
+
+            $router->get('/logout-blocked-message', [
+                \App\Controllers\Auth\LogoutController::class, 'blockedLogoutMessage',
+            ])->name('auth.logout.blocked-message');
+        });
+
+        // Logout – kräver auth
+        $router->post('/logout', [
+            \App\Controllers\Auth\LogoutController::class, 'index',
+        ])->name('auth.logout.index')->middleware(['auth']);
+    }
+);

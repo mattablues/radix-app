@@ -1,0 +1,62 @@
+<?php
+
+declare(strict_types=1);
+
+/** @var \Radix\Routing\Router $router */
+
+// Global grupp för web med request-id + logging
+$router->group(
+    ['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.2mb', 'csrf', 'share.user']],
+    function () use ($router) {
+        // Inloggad användare (ingen /admin-prefix)
+        $router->group(['middleware' => ['auth']], function () use ($router) {
+            $router->get('/dashboard', [
+                \App\Controllers\Dashboard::class, 'index',
+            ])->name('dashboard.index');
+
+            $router->get('/user', [
+                \App\Controllers\UserController::class, 'index',
+            ])->name('user.index');
+
+            $router->get('/user/{id:[\d]+}/show', [
+                \App\Controllers\UserController::class, 'show',
+            ])->name('user.show');
+
+            $router->get('/user/edit', [
+                \App\Controllers\UserController::class, 'edit',
+            ])->name('user.edit');
+
+            // Throttle känsliga POST endpoints
+            $router->post('/user/edit', [
+                \App\Controllers\UserController::class, 'update',
+            ])->name('user.update')->middleware(['api.throttle.light']);
+
+            $router->get('/user/password', [
+                \App\Controllers\UserController::class, 'passwordEdit',
+            ])->name('user.password.edit');
+
+            $router->post('/user/password', [
+                \App\Controllers\UserController::class, 'passwordUpdate',
+            ])->name('user.password.update')->middleware(['api.throttle.hard']);
+
+            $router->post('/user/delete', [
+                \App\Controllers\UserController::class, 'delete',
+            ])->name('user.delete')->middleware(['api.throttle.hard']);
+
+            $router->post('/user/close', [
+                \App\Controllers\UserController::class, 'close',
+            ])->name('user.close')->middleware(['api.throttle.hard']);
+
+            // API-token: bara moderator+ får se/generera
+            $router->group(['middleware' => ['role.min.moderator']], function () use ($router) {
+                $router->get('/user/api-token', [
+                    \App\Controllers\UserController::class, 'apiToken',
+                ])->name('user.token.index');
+
+                $router->post('/user/token', [
+                    \App\Controllers\UserController::class, 'generateToken',
+                ])->name('user.token.create')->middleware(['api.throttle.light']);
+            });
+        });
+    }
+);

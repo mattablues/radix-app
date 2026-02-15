@@ -1,0 +1,89 @@
+<?php
+
+declare(strict_types=1);
+
+/** @var \Radix\Routing\Router $router */
+
+use App\Controllers\Admin\SystemEventController;
+use App\Controllers\Admin\SystemUpdateController;
+
+// Global grupp för web med request-id + logging
+$router->group(
+    ['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.2mb', 'csrf', 'share.user']],
+    function () use ($router) {
+        // Admin: exakt admin-roll
+        $router->group(['path' => '/admin', 'middleware' => ['auth', 'role.exact.admin']], function () use ($router) {
+            $router->get('/users/create-user', [
+                \App\Controllers\Admin\UserController::class, 'create',
+            ])->name('admin.user.create');
+
+            $router->post('/users/create-user', [
+                \App\Controllers\Admin\UserController::class, 'store',
+            ])->name('admin.user.store')->middleware(['api.throttle.light']);
+
+            $router->post('/users/{id:[\d]+}/role', [
+                \App\Controllers\Admin\UserController::class, 'role',
+            ])->name('admin.user.role')->middleware(['api.throttle.light']);
+        });
+
+        // Admin: moderator+
+        $router->group(['path' => '/admin', 'middleware' => ['auth', 'role.min.moderator']], function () use ($router) {
+            $router->get('/users', [
+                \App\Controllers\Admin\UserController::class, 'index',
+            ])->name('admin.user.index');
+
+            $router->post('/users/{id:[\d]+}/send-activation', [
+                \App\Controllers\Admin\UserController::class, 'sendActivation',
+            ])->name('admin.user.send-activation')->middleware(['api.throttle.light']);
+
+            $router->post('/users/{id:[\d]+}/block', [
+                \App\Controllers\Admin\UserController::class, 'block',
+            ])->name('admin.user.block')->middleware(['api.throttle.light']);
+
+            $router->get('/users/closed', [
+                \App\Controllers\Admin\UserController::class, 'closed',
+            ])->name('admin.user.closed');
+
+            $router->post('/users/{id:[\d]+}/restore', [
+                \App\Controllers\Admin\UserController::class, 'restore',
+            ])->name('admin.user.restore')->middleware(['api.throttle.light']);
+
+            $router->get('/health', [
+                \App\Controllers\Admin\HealthWebController::class, 'index',
+            ])->name('admin.health.index');
+
+            // System Events
+            $router->get('/events', [
+                SystemEventController::class, 'index',
+            ])->name('admin.system-event.index');
+
+            $router->post('/events', [
+                SystemEventController::class, 'store',
+            ])->name('admin.system-event.store')->middleware(['api.throttle.light']);
+
+            $router->get('/updates', [
+                SystemUpdateController::class, 'index',
+            ])->name('admin.system-update.index');
+
+            $router->get('/updates/create', [
+                SystemUpdateController::class, 'create',
+            ])->name('admin.system-update.create');
+
+            $router->post('/updates/create', [
+                SystemUpdateController::class, 'store',
+            ])->name('admin.system-update.store')->middleware(['api.throttle.light']);
+
+            $router->get('/updates/{id:[\d]+}/edit', [
+                SystemUpdateController::class, 'edit',
+            ])->name('admin.system-update.edit');
+
+            $router->post('/updates/{id:[\d]+}/edit', [
+                SystemUpdateController::class, 'update',
+            ])->name('admin.system-update.update')->middleware(['api.throttle.light']);
+
+            $router->post('/updates/{id:[\d]+}/delete', [
+                SystemUpdateController::class, 'delete',
+            ])->name('admin.system-update.delete')->middleware(['api.throttle.hard']);
+        });
+    }
+);
