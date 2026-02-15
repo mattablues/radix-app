@@ -1,4 +1,3 @@
-
 <!-- Logo -->
 <a href="{{ route('home.index') }}" class="flex items-center gap-3 z-70 group">
   <div class="relative size-10">
@@ -32,12 +31,6 @@
   <a href="{{ route('home.index') }}" class="text-[11px] font-bold text-slate-500 hover:text-blue-600 transition-colors uppercase tracking-widest">Hem</a>
   <a href="{{ route('about.index') }}" class="text-[11px] font-bold text-slate-500 hover:text-blue-600 transition-colors uppercase tracking-widest">Om Radix</a>
   <a href="{{ route('contact.index') }}" class="text-[11px] font-bold text-slate-500 hover:text-blue-600 transition-colors uppercase tracking-widest">Kontakt</a>
-
-  <div class="h-6 w-px bg-slate-200 mx-2"></div>
-
-  <a href="{{ route('auth.login.index') }}" class="px-5 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-md shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95">
-    Logga in
-  </a>
 </nav>
 
 <!-- Mobile Menu Trigger -->
@@ -75,12 +68,6 @@
         <a href="{{ route('about.index') }}" @click="menu = false" class="text-3xl font-black text-white hover:text-blue-400 transition-colors">Om Radix</a>
         <a href="{{ route('contact.index') }}" @click="menu = false" class="text-3xl font-black text-white hover:text-blue-400 transition-colors">Kontakt</a>
       </nav>
-
-      <div class="mt-auto">
-        <a href="{{ route('auth.login.index') }}" class="w-full inline-flex justify-center items-center py-4 bg-blue-600 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-500/20">
-          Logga in i systemet
-        </a>
-      </div>
     </div>
   </template>
 </div>

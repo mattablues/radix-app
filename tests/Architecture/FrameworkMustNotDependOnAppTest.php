@@ -25,8 +25,8 @@ final class FrameworkMustNotDependOnAppTest extends TestCase
         // Kör som dependency: vendor/radix/framework/src
         $path = dirname(__DIR__, 2)
             . DIRECTORY_SEPARATOR . 'vendor'
-            . DIRECTORY_SEPARATOR . 'radix'
-            . DIRECTORY_SEPARATOR . 'framework'
+            . DIRECTORY_SEPARATOR . 'mattablues'
+            . DIRECTORY_SEPARATOR . 'radix-framework'
             . DIRECTORY_SEPARATOR . 'src';
 
         return is_dir($path) ? $path : null;

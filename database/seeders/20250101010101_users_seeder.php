@@ -6,37 +6,37 @@ final class UsersSeeder
 {
     public function run(): void
     {
-        $user = \App\Models\User::where('email', '=', 'admin@example.com')->first();
+        $user = \App\Models\User::where('email', '=', 'user@example.com')->first();
         if ($user) {
             return;
         }
 
         $user = new \App\Models\User();
         $user->fill([
-            'first_name' => 'Admin',
+            'first_name' => 'User',
             'last_name'  => 'Example',
-            'email'      => 'admin@example.com',
+            'email'      => 'user@example.com',
         ]);
-        $user->password = 'secret123'; // triggar setPasswordAttribute och hashar
+        $user->password = 'secrets'; // triggar setPasswordAttribute och hashar
         $user->role = 'admin';
         $user->save();
 
         // Skapa API-token för admin
-        \App\Models\Token::createToken(
-            (int) $user->id,
-            'Admin Personal Token',
-            365
-        );
+        //        \App\Models\Token::createToken(
+        //            (int) $user->id,
+        //            'AdminPersonal Token',
+        //            365
+        //        );
     }
 
     public function down(): void
     {
-        $user = \App\Models\User::where('email', '=', 'admin@example.com')->first();
+        $user = \App\Models\User::where('email', '=', 'user@example.com')->first();
         if (!$user) {
             return;
         }
 
-        $token = \App\Models\Token::where('email', '=', 'admin@example.com')->first();
+        $token = \App\Models\Token::where('email', '=', 'user@example.com')->first();
         if (!$token) {
             return;
         }

@@ -6,7 +6,7 @@ final class StatusSeeder
 {
     public function run(): void
     {
-        $user = \App\Models\User::where('email', '=', 'admin@example.com')->first();
+        $user = \App\Models\User::where('email', '=', 'user@example.com')->first();
         if ($user === null) {
             return;
         }
@@ -33,7 +33,7 @@ final class StatusSeeder
 
     public function down(): void
     {
-        $user = \App\Models\User::where('email', '=', 'admin@example.com')->first();
+        $user = \App\Models\User::where('email', '=', 'user@example.com')->first();
         if (!$user) {
             return;
         }

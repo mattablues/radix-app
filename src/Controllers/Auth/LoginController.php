@@ -82,8 +82,10 @@ class LoginController extends AbstractController
             userId: $user->id
         );
 
+        // Tidigare: 'dashboard.index' – kräver att user-preseten är installerad.
+        // För att auth ska fungera fristående, skicka användaren till home.index.
         return $this->authRedirectWithFlash(
-            'dashboard.index',
+            'home.index',
             "Välkommen tillbaka, $user->first_name $user->last_name!",
             'info'
         );
