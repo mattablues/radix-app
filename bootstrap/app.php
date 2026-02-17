@@ -61,7 +61,31 @@ $session->start();
 
 setAppContainer($container);
 
+// Ladda core providers + ev. scaffoldade providers (install = filen finns)
 $providers = require ROOT_PATH . '/config/providers.php';
+if (!is_array($providers)) {
+    throw new RuntimeException('Config file config/providers.php must return an array.');
+}
+
+foreach (['auth', 'admin', 'contact'] as $preset) {
+    $file = ROOT_PATH . '/config/providers.' . $preset . '.php';
+
+    if (!is_file($file)) {
+        continue;
+    }
+
+    /** @phpstan-ignore-next-line require.fileNotFound optional scaffolded config */
+    $extra = require $file;
+
+    if (!is_array($extra)) {
+        throw new RuntimeException(sprintf(
+            'Config file config/providers.%s.php must return an array.',
+            $preset
+        ));
+    }
+
+    $providers = array_values(array_unique(array_merge($providers, $extra)));
+}
 
 /**
  * @var array<int, class-string<\Radix\ServiceProvider\ServiceProviderInterface>> $providers
@@ -84,6 +108,32 @@ foreach ($providers as $providerClass) {
 }
 
 $router = require ROOT_PATH . '/config/routes.php';
+
 $middleware = require ROOT_PATH . '/config/middleware.php';
+if (!is_array($middleware)) {
+    throw new RuntimeException('Config file config/middleware.php must return an array.');
+}
+
+// Ladda optional preset-middleware (install = filen finns)
+foreach (['auth', 'admin', 'contact'] as $preset) {
+    $file = ROOT_PATH . '/config/middleware.' . $preset . '.php';
+
+    if (!is_file($file)) {
+        continue;
+    }
+
+    /** @phpstan-ignore-next-line require.fileNotFound optional scaffolded config */
+    $extra = require $file;
+
+    if (!is_array($extra)) {
+        throw new RuntimeException(sprintf(
+            'Config file config/middleware.%s.php must return an array.',
+            $preset
+        ));
+    }
+
+    // Middleware är en flat map alias => class, så array_merge räcker
+    $middleware = array_merge($middleware, $extra);
+}
 
 return $container;

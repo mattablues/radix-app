@@ -41,6 +41,9 @@ infection-report.html
 infection-report.txt
 infection-summary.json
 
+# Radix local scaffold state
+/.radix/
+
 # Build-artifacts
 build/
 -

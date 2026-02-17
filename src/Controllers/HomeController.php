@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Models\SystemUpdate;
 use Radix\Controller\AbstractController;
 use Radix\Http\Response;
 use Throwable;
@@ -13,12 +12,22 @@ class HomeController extends AbstractController
 {
     public function index(): Response
     {
-        // Hämta senaste versionen om tabellen/migrationen finns, annars fallback
+        $latestVersion = 'v1.0.0';
+
         try {
-            $latestVersion = SystemUpdate::orderBy('released_at', 'DESC')
-                ->limit(1)
-                ->pluck('version')[0] ?? 'v1.0.0';
-        } catch (Throwable $e) {
+            $systemUpdateClass = 'App\\Models\\SystemUpdate';
+
+            if (class_exists($systemUpdateClass)) {
+                /** @phpstan-ignore-next-line optional scaffold model */
+                $latest = $systemUpdateClass::orderBy('released_at', 'DESC')
+                    ->limit(1)
+                    ->pluck('version');
+
+                if (is_array($latest) && isset($latest[0]) && is_string($latest[0])) {
+                    $latestVersion = $latest[0];
+                }
+            }
+        } catch (Throwable) {
             $latestVersion = 'v1.0.0';
         }
 

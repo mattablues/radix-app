@@ -50,7 +50,7 @@ $router->group(
 
             $router->get('/health', [
                 \App\Controllers\Admin\HealthWebController::class, 'index',
-            ])->name('admin.health.index');
+            ])->name('admin.health.index')->middleware(['ip.allowlist']);
 
             // System Events
             $router->get('/events', [

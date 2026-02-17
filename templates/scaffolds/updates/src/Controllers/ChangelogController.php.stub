@@ -1,0 +1,52 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers;
+
+use App\Models\SystemUpdate;
+use Radix\Controller\AbstractController;
+use Radix\Http\Response;
+use Throwable;
+
+final class ChangelogController extends AbstractController
+{
+    public function index(): Response
+    {
+        $rawPage = $this->request->get['page'] ?? 1;
+        $page = is_numeric($rawPage) ? (int) $rawPage : 1;
+
+        $updates = [
+            'data' => [],
+            'pagination' => [
+                'term' => '',
+                'total' => 0,
+                'per_page' => 10,
+                'current_page' => $page,
+                'last_page' => 0,
+                'first_page' => 1,
+            ],
+        ];
+
+        try {
+            $result = SystemUpdate::orderBy('released_at', 'DESC')
+                ->paginate(10, $page);
+
+            // paginate() hos er verkar returnera array-lik struktur i vissa lägen,
+            // så vi normaliserar defensivt:
+            if (is_array($result)) {
+                $updates['data'] = $result['data'] ?? [];
+                $updates['pagination'] = $result['pagination'] ?? ($result['search'] ?? $updates['pagination']);
+            } else {
+                // Om paginate() skulle råka returnera något annat i framtiden
+                $updates['data'] = [];
+            }
+        } catch (Throwable) {
+            // Minimal by default: om migration/tabell inte finns än -> visa tom changelog.
+        }
+
+        return $this->view('about.changelog', [
+            'updates' => $updates,
+        ]);
+    }
+}

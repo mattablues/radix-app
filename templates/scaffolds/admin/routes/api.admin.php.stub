@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+/** @var \Radix\Routing\Router $router */
+
+$router->get('/health', [\App\Controllers\Api\HealthController::class, 'index'])
+    ->name('api.health.index')
+    ->middleware(['ip.allowlist']);
+
+$router->group(['path' => '/admin'], function (\Radix\Routing\Router $router) {
+    $router->post('/search/system-events', [\App\Controllers\Api\Admin\SystemEventsController::class, 'search'])
+        ->name('api.search.system-events')
+        ->middleware(['role.min.moderator']);
+
+    $router->post('/search/system-updates', [\App\Controllers\Api\Admin\SystemUpdatesController::class, 'search'])
+        ->name('api.search.system-updates')
+        ->middleware(['role.min.moderator']);
+});

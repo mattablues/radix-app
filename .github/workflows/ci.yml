@@ -69,7 +69,7 @@ jobs:
               - 'postcss.config.*'
               - 'esbuild.*'
 
-  php:
+  php-minimal:
     runs-on: ubuntu-latest
     needs: [changes]
     env:
@@ -84,6 +84,9 @@ jobs:
           coverage: none
           extensions: pdo_mysql, pdo_sqlite
           tools: composer
+
+      - name: Reset local scaffold state (minimal)
+        run: rm -rf .radix || true
 
       - name: Get Composer cache directory
         id: composer-cache
@@ -122,10 +125,87 @@ jobs:
       - name: Format check
         run: composer format:check
 
-      - name: PHPStan
+      - name: PHPStan (minimal)
         run: composer stan
 
-      - name: Run PHPUnit (deterministic)
+      - name: Run PHPUnit (minimal, deterministic)
+        env:
+          APP_ENV: development
+        run: |
+          vendor/bin/phpunit \
+            -c phpunit.xml \
+            --display-deprecations \
+            --display-errors \
+            --display-notices \
+            --do-not-cache-result
+
+  php-full:
+    runs-on: ubuntu-latest
+    needs: [changes]
+    env:
+      RADIX_RUN_ID: "${{ github.run_id }}-${{ github.run_attempt }}"
+      HEALTH_CACHE_PATH: "${{ github.workspace }}/cache/health"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+          extensions: pdo_mysql, pdo_sqlite
+          tools: composer
+
+      - name: Reset local scaffold state (full)
+        run: rm -rf .radix || true
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php83-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php83-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install scaffolds (full)
+        run: |
+          php radix scaffold:install auth --force
+          php radix scaffold:install user --force
+          php radix scaffold:install updates --force
+          php radix scaffold:install admin --force
+
+      - name: Prepare health cache dir
+        run: mkdir -p "${{ github.workspace }}/cache/health"
+
+      - name: Set up Node
+        if: env.ENABLE_FRONTEND_BUILD == '1' && (github.event_name == 'pull_request' || github.event_name == 'push') && needs.changes.outputs.frontend == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install NPM deps
+        if: env.ENABLE_FRONTEND_BUILD == '1' && (github.event_name == 'pull_request' || github.event_name == 'push') && needs.changes.outputs.frontend == 'true'
+        run: npm ci
+
+      - name: Build assets
+        if: env.ENABLE_FRONTEND_BUILD == '1' && (github.event_name == 'pull_request' || github.event_name == 'push') && needs.changes.outputs.frontend == 'true'
+        run: npm run start:build
+
+      - name: Format check
+        run: composer format:check
+
+      - name: PHPStan (full)
+        run: composer stan
+
+      - name: Run PHPUnit (full, deterministic)
         env:
           APP_ENV: development
         run: |
@@ -138,7 +218,7 @@ jobs:
 
   infection:
     if: github.event_name == 'pull_request' && (vars.ENABLE_INFECTION_ON_PR || '1') == '1'
-    needs: [php, changes]
+    needs: [php-full, changes]
     runs-on: ubuntu-latest
     env:
       RADIX_RUN_ID: "${{ github.run_id }}-${{ github.run_attempt }}"
@@ -168,6 +248,10 @@ jobs:
           coverage: xdebug
           tools: composer
 
+      - name: Reset local scaffold state (infection)
+        if: steps.decide.outputs.run_infection == 'true'
+        run: rm -rf .radix || true
+
       - name: Get Composer cache directory
         if: steps.decide.outputs.run_infection == 'true'
         id: composer-cache
@@ -185,6 +269,14 @@ jobs:
       - name: Install Composer dependencies
         if: steps.decide.outputs.run_infection == 'true'
         run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install scaffolds (full for Infection)
+        if: steps.decide.outputs.run_infection == 'true'
+        run: |
+          php radix scaffold:install auth --force
+          php radix scaffold:install user --force
+          php radix scaffold:install updates --force
+          php radix scaffold:install admin --force
 
       - name: Pre-check PHPUnit for Infection
         if: steps.decide.outputs.run_infection == 'true'
