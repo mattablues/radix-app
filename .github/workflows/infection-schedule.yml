@@ -61,6 +61,16 @@ jobs:
             cp .env.example .env
           fi
 
+      - name: Patch .env for CI (EnvValidator)
+        run: |
+          # TRUSTED_PROXY: tomt är ok (ingen betrodd proxy i CI)
+          sed -i 's/^TRUSTED_PROXY=.*/TRUSTED_PROXY=/' .env || true
+          echo "TRUSTED_PROXY=" >> .env
+
+          # LOCATOR_CITY_URL: sätt en giltig URL för CI
+          sed -i 's/^LOCATOR_CITY_URL=.*/LOCATOR_CITY_URL=https:\/\/example.com\//' .env || true
+          echo "LOCATOR_CITY_URL=https://example.com/" >> .env
+
       - name: Reset local scaffold state (schedule)
         run: rm -rf .radix || true
 
