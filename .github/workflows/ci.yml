@@ -173,6 +173,15 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
+      - name: Create .env for CI
+        run: |
+          if [ ! -f .env ]; then
+            cp .env.example .env
+          fi
+
+      - name: Reset local scaffold state (schedule)
+        run: rm -rf .radix || true
+
       - name: Install scaffolds (full)
         run: |
           php radix scaffold:install auth --force
@@ -269,6 +278,15 @@ jobs:
       - name: Install Composer dependencies
         if: steps.decide.outputs.run_infection == 'true'
         run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Create .env for CI
+        run: |
+          if [ ! -f .env ]; then
+            cp .env.example .env
+          fi
+
+      - name: Reset local scaffold state (schedule)
+        run: rm -rf .radix || true
 
       - name: Install scaffolds (full for Infection)
         if: steps.decide.outputs.run_infection == 'true'
