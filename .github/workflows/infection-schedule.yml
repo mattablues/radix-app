@@ -94,6 +94,8 @@ jobs:
           SESSION_LIFETIME=120
           SESSION_FILE_PATH=./cache/sessions
 
+          ORM_MODEL_NAMESPACE=App\Models
+
           SECURE_TOKEN_HMAC=00000000000000000000000000000000
           SECURE_ENCRYPTION_KEY=00000000000000000000000000000000
 
@@ -111,7 +113,6 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
-
 
       - name: Install scaffolds (full suite)
         env:
