@@ -177,7 +177,9 @@ namespace Radix\Tests\Api {
         public function testProbeUsesResolvedRealpathWhenAvailable(): void
         {
             \App\Services\FileSystemSpy::$forceFilePutContentsFail = false;
-            \App\Services\FileSystemSpy::$lastFilePath = null;
+
+            $sentinel = '__unset__' . uniqid('', true);
+            \App\Services\FileSystemSpy::$lastFilePath = $sentinel;
 
             $realDir = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . 'health-realpath-' . uniqid('', true);
             @mkdir($realDir, 0o777, true);
@@ -196,12 +198,20 @@ namespace Radix\Tests\Api {
             $spy = new TestSpyLogger();
             (new \App\Services\HealthCheckService($spy))->run();
 
-            $lastFile = (string) \App\Services\FileSystemSpy::$lastFilePath;
-            self::assertNotSame('', $lastFile, 'Expected FileSystemSpy::$lastFilePath to be set to a non-empty string.');
+            $lastFileRaw = \App\Services\FileSystemSpy::$lastFilePath;
+
+            if ($lastFileRaw === $sentinel) {
+                self::fail('Expected FileSystemSpy::$lastFilePath to be updated by the probe write.');
+            }
+
+            $lastFile = (string) $lastFileRaw;
+
+            if (trim($lastFile) === '') {
+                self::fail('Expected FileSystemSpy::$lastFilePath to be a non-empty string.');
+            }
 
             $expectedProbe = $resolved . DIRECTORY_SEPARATOR . 'probe.txt';
 
-            // Viktigt: dödar mutanten där $base blir kvar som $envDir (med ".." i sig)
             self::assertSame(
                 $expectedProbe,
                 $lastFile,
@@ -764,27 +774,22 @@ namespace Radix\Tests\Api {
 
             $this->assertNotEmpty($spyLogger->logs, 'Expected logs to be written');
 
-            $firstLogEntry = $spyLogger->logs[0] ?? [];
+            $firstLogEntry = $spyLogger->logs[0] ?? '';
 
             // Kontrollera att 'php' finns i kontexten för att döda ArrayItemRemoval
             if (is_array($firstLogEntry)) {
-                $ctx = $firstLogEntry['ctx'] ?? [];
+                $ctx = $firstLogEntry['ctx'];
                 $this->assertArrayHasKey('php', $ctx, 'Context should contain "php" key');
                 $this->assertArrayHasKey('time', $ctx, 'Context should contain "time" key');
             }
 
-            $firstMsg = '';
             if (is_array($firstLogEntry)) {
-                $firstMsg = $firstLogEntry['msg'] ?? '';
-            } elseif (is_string($firstLogEntry)) {
-                $firstMsg = $firstLogEntry;
+                $firstMsg = $firstLogEntry['msg'];
+            } else {
+                $firstMsg = (string) $firstLogEntry;
             }
 
-            if (!is_string($firstMsg)) {
-                $firstMsg = '';
-            }
-
-            $this->assertStringContainsString('start', $firstMsg, 'Expected start log');
+            $this->assertStringContainsString('start', (string) $firstMsg, 'Expected start log');
         }
 
         public function testHealthServiceLogsFileSystemCheckSuccess(): void

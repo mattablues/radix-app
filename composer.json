@@ -40,7 +40,8 @@
         "friendsofphp/php-cs-fixer": "v3.93.1",
         "symfony/event-dispatcher": "^7.4",
         "symfony/filesystem": "^7.4",
-        "symfony/finder": "^7.4"
+        "symfony/finder": "^7.4",
+        "phpstan/phpstan-phpunit": "^2.0"
     },
     "require": {
         "php": "^8.3",

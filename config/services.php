@@ -521,7 +521,6 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
         }
     }
 
-    /** @phpstan-ignore-next-line $latestUpdate is optional scaffold model */
     $viewer->shared('currentVersion', $latestUpdate ? $latestUpdate->getAttribute('version') : 'v1.0.0');
     $viewer->shared('latestUpdate', $latestUpdate);
 
