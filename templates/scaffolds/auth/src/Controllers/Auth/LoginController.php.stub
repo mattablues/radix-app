@@ -1,0 +1,95 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers\Auth;
+
+use App\Auth\Auth;
+use App\Controllers\Auth\Concerns\AuthFormHelpers;
+use App\Models\SystemEvent;
+use App\Requests\Auth\LoginRequest;
+use App\Services\AuthService;
+use Radix\Controller\AbstractController;
+use Radix\Http\Response;
+
+class LoginController extends AbstractController
+{
+    use AuthFormHelpers;
+
+    public function __construct(
+        private readonly AuthService $authService,
+        private readonly Auth $auth,
+    ) {}
+
+    public function index(): Response
+    {
+        return $this->view('auth.login.index', $this->beginAuthForm());
+    }
+
+    public function create(): Response
+    {
+        $this->before();
+
+        $form = new LoginRequest($this->request);
+
+        if (!$form->validate()) {
+            $this->request->session()->set('old', ['email' => $form->email()]);
+
+            return $this->authFormErrorView('auth.login.index', [], $form->errors());
+        }
+
+        $email = $form->email();
+        $password = $form->password();
+
+        $this->request->session()->set('old', ['email' => $email]);
+
+        if ($this->authService->isBlocked($email)) {
+            $blockedUntil = $this->authService->getBlockedUntil($email);
+            $remainingTime = $blockedUntil !== null ? $blockedUntil - time() : 0;
+
+            $minutes = $remainingTime > 0 ? intdiv($remainingTime, 60) : 0;
+            $seconds = $remainingTime > 0 ? $remainingTime % 60 : 0;
+
+            $errorMessage = "För många misslyckade försök. Försök igen om $minutes minuter och $seconds sekunder.";
+
+            return $this->authFormErrorView('auth.login.index', [], [
+                'form-error' => [$errorMessage],
+            ]);
+        }
+
+        /** @var array{email:string,password:string} $loginData */
+        $loginData = [
+            'email' => $email,
+            'password' => $password,
+        ];
+
+        $user = $this->authService->login($loginData);
+
+        $statusError = $this->authService->getStatusError($user);
+
+        if ($statusError || !$user) {
+            return $this->authFormErrorView('auth.login.index', [], [
+                'form-error' => [$statusError ?: 'Inloggning misslyckades.'],
+            ]);
+        }
+
+        $this->auth->login($user->id);
+        $this->request->session()->set('last_login', time());
+
+        SystemEvent::log(
+            message: "Inloggning: {$user->first_name} {$user->last_name} ({$user->email})",
+            type: 'system',
+            userId: $user->id
+        );
+
+        $targetRoute = is_file(ROOT_PATH . '/routes/user.php')
+            ? 'dashboard.index'
+            : 'home.index';
+
+        return $this->authRedirectWithFlash(
+            $targetRoute,
+            "Välkommen tillbaka, $user->first_name $user->last_name!",
+            'info'
+        );
+    }
+}

@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 // Global grupp för web med request-id + logging
 
-$router->group(['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.2mb', 'csrf', 'share.user']], function () use ($router) {
+$router->group(['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.2mb', 'csrf']], function () use ($router) {
     $router->get('/', [
         \App\Controllers\HomeController::class, 'index',
     ])->name('home.index');
@@ -18,12 +18,6 @@ $router->group(['middleware' => ['request.id', 'api.logger', 'security.headers',
     $router->get('/about', [
         \App\Controllers\AboutController::class, 'index',
     ])->name('about.index');
-
-    $router->get(
-        '/changelog',
-        [
-            \App\Controllers\AboutController::class, 'changelog']
-    )->name('about.changelog');
 
     // Throttle bara POST till kontaktformuläret
     $router->post('/contact', [

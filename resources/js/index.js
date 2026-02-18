@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (pageId === 'admin-events-index') {
         const { initialTerm, initialPage } = getInitialState();
-        const endpoint = getEndpointFromForm('system-events-search-form', '/api/v1/search/system-events');
+        const endpoint = getEndpointFromForm('system-events-search-form', '/api/v1/admin/search/system-events');
 
         initTableSearch(
             'systemEvents',
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (pageId === 'admin-updates-index') {
         const { initialTerm, initialPage } = getInitialState();
-        const endpoint = getEndpointFromForm('system-updates-search-form', '/api/v1/search/system-updates');
+        const endpoint = getEndpointFromForm('system-updates-search-form', '/api/v1/admin/search/system-updates');
 
         initTableSearch(
             'systemUpdates',

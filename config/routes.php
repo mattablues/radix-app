@@ -14,6 +14,7 @@ foreach ([
     ROOT_PATH . '/routes/auth.php',
     ROOT_PATH . '/routes/user.php',
     ROOT_PATH . '/routes/admin.php',
+    ROOT_PATH . '/routes/updates.php',
 ] as $optionalRouteFile) {
     if (is_file($optionalRouteFile)) {
         /** @phpstan-ignore-next-line require.fileNotFound optional scaffolded route files */

@@ -60,29 +60,37 @@
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+                <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col h-full">
                     <h3 class="text-sm font-bold text-slate-900 mb-2 uppercase tracking-widest">Auth</h3>
-                    <p class="text-sm text-slate-600 mb-4">
+                    <p class="text-sm text-slate-600 mb-4 flex-1">
                         Lägg till login, registrering och återställning av lösenord med ett enkelt kommando.
                     </p>
-                    <pre class="text-[11px] bg-slate-900 text-slate-100 rounded-xl p-3 text-left overflow-x-auto"><code>php radix scaffold:install routes/auth</code></pre>
+                    <pre class="text-[11px] bg-slate-900 text-slate-100 rounded-xl p-3 text-left overflow-x-auto"><code>php radix scaffold:install auth</code></pre>
                 </div>
 
-                <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col h-full">
                     <h3 class="text-sm font-bold text-slate-900 mb-2 uppercase tracking-widest">User</h3>
-                    <p class="text-sm text-slate-600 mb-4">
+                    <p class="text-sm text-slate-600 mb-4 flex-1">
                         Aktivera användarprofil, dashboard och kontohantering för inloggade användare.
                     </p>
-                    <pre class="text-[11px] bg-slate-900 text-slate-100 rounded-xl p-3 text-left overflow-x-auto"><code>php radix scaffold:install routes/user</code></pre>
+                    <pre class="text-[11px] bg-slate-900 text-slate-100 rounded-xl p-3 text-left overflow-x-auto"><code>php radix scaffold:install user</code></pre>
                 </div>
 
-                <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col h-full">
                     <h3 class="text-sm font-bold text-slate-900 mb-2 uppercase tracking-widest">Admin</h3>
-                    <p class="text-sm text-slate-600 mb-4">
+                    <p class="text-sm text-slate-600 mb-4 flex-1">
                         Lägg till admin‑panel med användarhantering, systemloggar och uppdateringar.
                     </p>
-                    <pre class="text-[11px] bg-slate-900 text-slate-100 rounded-xl p-3 text-left overflow-x-auto"><code>php radix scaffold:install routes/admin</code></pre>
+                    <pre class="text-[11px] bg-slate-900 text-slate-100 rounded-xl p-3 text-left overflow-x-auto"><code>php radix scaffold:install admin</code></pre>
+                </div>
+
+                <div class="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col h-full">
+                    <h3 class="text-sm font-bold text-slate-900 mb-2 uppercase tracking-widest">Updates</h3>
+                    <p class="text-sm text-slate-600 mb-4 flex-1">
+                        Lägg till changelog och hantering av systemuppdateringar.
+                    </p>
+                    <pre class="text-[11px] bg-slate-900 text-slate-100 rounded-xl p-3 text-left overflow-x-auto"><code>php radix scaffold:install updates</code></pre>
                 </div>
             </div>
         </div>

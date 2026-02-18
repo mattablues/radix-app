@@ -17,7 +17,7 @@
       method="get"
       action="/admin/users/closed"
       class="mb-4"
-      data-search-endpoint="/api/v1/search/deleted-users"
+      data-search-endpoint="{{ route('api.search.deleted-users') }}"
     >
       <div class="flex gap-2 items-center">
         <input

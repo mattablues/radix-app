@@ -50,11 +50,15 @@ $container->add(\Radix\Support\FileCache::class, fn() => new \Radix\Support\File
 
 $container->addShared(\Radix\Support\Logger::class, fn() => new \Radix\Support\Logger('app'));
 
-$container->add(\App\Services\HealthCheckService::class, function () {
-    // injicera delad logger, eller skapa kanal-specifik
-    $logger = new \Radix\Support\Logger('health');
-    return new \App\Services\HealthCheckService($logger);
-});
+$healthCheckServiceClass = 'App\\Services\\HealthCheckService';
+if (class_exists($healthCheckServiceClass)) {
+    $container->add($healthCheckServiceClass, function () use ($healthCheckServiceClass) {
+        // injicera delad logger, eller skapa kanal-specifik
+        $logger = new \Radix\Support\Logger('health');
+
+        return new $healthCheckServiceClass($logger);
+    });
+}
 
 // ORM: ModelClassResolver (shared)
 $container->addShared(\Radix\Database\ORM\ModelClassResolverInterface::class, function () use ($container) {
@@ -507,13 +511,17 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
 
     $latestUpdate = null;
 
-    try {
-        $latestUpdate = \App\Models\SystemUpdate::orderBy('released_at', 'DESC')
-            ->first();
-    } catch (\PDOException $e) {
-        // ... existing code ...
+    $systemUpdateClass = 'App\\Models\\SystemUpdate';
+    if (class_exists($systemUpdateClass)) {
+        try {
+            $latestUpdate = $systemUpdateClass::orderBy('released_at', 'DESC')
+                ->first();
+        } catch (\Throwable) {
+            $latestUpdate = null;
+        }
     }
 
+    /** @phpstan-ignore-next-line $latestUpdate is optional scaffold model */
     $viewer->shared('currentVersion', $latestUpdate ? $latestUpdate->getAttribute('version') : 'v1.0.0');
     $viewer->shared('latestUpdate', $latestUpdate);
 
@@ -530,22 +538,29 @@ $container->addShared(\Radix\EventDispatcher\EventDispatcher::class, \Radix\Even
 
 $container->addShared(\App\Services\UploadService::class, fn() => new \App\Services\UploadService());
 
-$container->addShared(\App\Services\ProfileAvatarService::class, function () use ($container) {
-    $uploadService = $container->get(\App\Services\UploadService::class);
-    if (!$uploadService instanceof \App\Services\UploadService) {
-        throw new \RuntimeException('Container returned invalid UploadService instance.');
-    }
+$profileAvatarServiceClass = 'App\\Services\\ProfileAvatarService';
 
-    return new \App\Services\ProfileAvatarService($uploadService);
-});
+if (class_exists($profileAvatarServiceClass)) {
+    $container->addShared($profileAvatarServiceClass, function () use ($container, $profileAvatarServiceClass) {
+        $uploadService = $container->get(\App\Services\UploadService::class);
+        if (!$uploadService instanceof \App\Services\UploadService) {
+            throw new \RuntimeException('Container returned invalid UploadService instance.');
+        }
 
-$container->addShared(\App\Services\AuthService::class, function () use ($container) {
-    $session = $container->get(\Radix\Session\SessionInterface::class);
-    if (!$session instanceof \Radix\Session\SessionInterface) {
-        throw new \RuntimeException('Container returned invalid SessionInterface instance.');
-    }
+        return new $profileAvatarServiceClass($uploadService);
+    });
+}
 
-    return new \App\Services\AuthService($session);
-});
+$authServiceClass = 'App\\Services\\AuthService';
+if (class_exists($authServiceClass)) {
+    $container->addShared($authServiceClass, function () use ($container, $authServiceClass) {
+        $session = $container->get(\Radix\Session\SessionInterface::class);
+        if (!$session instanceof \Radix\Session\SessionInterface) {
+            throw new \RuntimeException('Container returned invalid SessionInterface instance.');
+        }
+
+        return new $authServiceClass($session);
+    });
+}
 
 return $container;

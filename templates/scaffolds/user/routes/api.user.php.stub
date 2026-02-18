@@ -1,0 +1,22 @@
+<?php
+
+declare(strict_types=1);
+
+/** @var \Radix\Routing\Router $router */
+
+$router->group(['middleware' => ['api.throttle']], function (\Radix\Routing\Router $router) {
+    $router->get('/users', [\App\Controllers\Api\UserController::class, 'index'])
+        ->name('api.users.index');
+
+    // Sök-endpoints
+    $router->post('/search/profiles', [\App\Controllers\Api\SearchController::class, 'profiles'])
+        ->name('api.search.profiles');
+
+    $router->post('/search/users', [\App\Controllers\Api\SearchController::class, 'users'])
+        ->name('api.search.users')
+        ->middleware(['role.min.moderator']);
+
+    $router->post('/search/deleted-users', [\App\Controllers\Api\SearchController::class, 'deletedUsers'])
+        ->name('api.search.deleted-users')
+        ->middleware(['role.min.moderator']);
+});

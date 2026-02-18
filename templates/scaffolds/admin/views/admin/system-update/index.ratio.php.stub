@@ -19,7 +19,7 @@
         method="get"
         action="/admin/updates"
         class="mb-4"
-        data-search-endpoint="/api/v1/search/system-updates"
+        data-search-endpoint="{{ route('api.search.system-updates') }}"
       >
         <div class="flex gap-2 items-center">
           <input

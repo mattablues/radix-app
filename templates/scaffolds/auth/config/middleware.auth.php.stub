@@ -1,0 +1,13 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'auth' => \App\Middlewares\Auth::class,
+    'guest' => \App\Middlewares\Guest::class,
+    'share.user' => \App\Middlewares\ShareCurrentUser::class,
+    'role.exact.admin' => \App\Middlewares\RequireAdmin::class,
+    'role.min.moderator' => \App\Middlewares\RequireModeratorOrHigher::class,
+    'role.min.editor' => \App\Middlewares\RequireEditorOrHigher::class,
+    'role.min.support' => \App\Middlewares\RequireSupportOrHigher::class,
+];

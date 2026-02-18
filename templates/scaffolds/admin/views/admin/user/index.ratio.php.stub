@@ -17,7 +17,7 @@
       method="get"
       action="/admin/users"
       class="mb-4"
-      data-search-endpoint="/api/v1/search/users"
+      data-search-endpoint="{{ route('api.search.users') }}"
     >
       <div class="flex gap-2 items-center">
         <input
