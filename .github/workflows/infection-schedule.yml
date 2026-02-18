@@ -109,6 +109,10 @@ jobs:
 
           touch database/database.sqlite
 
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+
       - name: Install scaffolds (full suite)
         env:
           APP_ENV: development
