@@ -18,7 +18,6 @@ class HomeController extends AbstractController
             $systemUpdateClass = 'App\\Models\\SystemUpdate';
 
             if (class_exists($systemUpdateClass)) {
-                /** @phpstan-ignore-next-line optional scaffold model */
                 $latest = $systemUpdateClass::orderBy('released_at', 'DESC')
                     ->limit(1)
                     ->pluck('version');

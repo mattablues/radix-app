@@ -56,7 +56,6 @@ if (class_exists($healthCheckServiceClass)) {
         // injicera delad logger, eller skapa kanal-specifik
         $logger = new \Radix\Support\Logger('health');
 
-        /** @phpstan-ignore-next-line optional scaffold class */
         return new $healthCheckServiceClass($logger);
     });
 }
@@ -549,7 +548,6 @@ if (class_exists($profileAvatarServiceClass)) {
             throw new \RuntimeException('Container returned invalid UploadService instance.');
         }
 
-        /** @phpstan-ignore-next-line optional scaffold class */
         return new $profileAvatarServiceClass($uploadService);
     });
 }
@@ -562,7 +560,6 @@ if (class_exists($authServiceClass)) {
             throw new \RuntimeException('Container returned invalid SessionInterface instance.');
         }
 
-        /** @phpstan-ignore-next-line optional scaffold class */
         return new $authServiceClass($session);
     });
 }

@@ -18,7 +18,6 @@ class AboutController extends AbstractController
             $systemUpdateClass = 'App\\Models\\SystemUpdate';
 
             if (class_exists($systemUpdateClass)) {
-                /** @phpstan-ignore-next-line optional scaffold model */
                 $recentUpdates = $systemUpdateClass::orderBy('released_at', 'DESC')
                     ->limit(5)
                     ->get();
