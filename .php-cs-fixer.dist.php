@@ -7,10 +7,16 @@ $finder = (new PhpCsFixer\Finder())
         __DIR__ . '/config',
         __DIR__ . '/routes',
         __DIR__ . '/support',
-        __DIR__.'/database',
+        __DIR__ . '/database',
+        __DIR__ . '/templates/scaffolds',
         // Lägg till fler mappar vid behov, t.ex. 'tools' om du vill städa dem
     ])
+    ->exclude([
+        'views', // scaffold-views (t.ex. ratio-stubs) är templates, inte PHP
+    ])
     ->name('*.php')
+    ->name('*.php.stub')
+    ->notName('*.ratio.php.stub')
     ->ignoreDotFiles(true)
     ->ignoreVCS(true);
 

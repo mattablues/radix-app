@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace App\Controllers\Api;
 
 use App\Models\Status;
-use App\Models\SystemEvent;
-use App\Models\SystemUpdate;
 use App\Models\User;
 use Radix\Http\JsonResponse;
 
