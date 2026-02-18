@@ -509,7 +509,7 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
     $viewer = new \Radix\Viewer\RadixTemplateViewer($viewsDir);
     $viewer->enableDebugMode(getenv('APP_DEBUG') === '1');
 
-$latestUpdate = null;
+    $latestUpdate = null;
 
     $systemUpdateClass = 'App\\Models\\SystemUpdate';
     if (class_exists($systemUpdateClass)) {
