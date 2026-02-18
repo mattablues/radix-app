@@ -1,3 +1,6 @@
+includes:
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+
 parameters:
     level: 10
     paths:
@@ -10,10 +13,6 @@ parameters:
     reportUnmatchedIgnoredErrors: true
     inferPrivatePropertyTypeFromConstructor: true
     treatPhpDocTypesAsCertain: false
-
-    scanFiles:
-        - tools/phpstan-stubs/optional-scaffolds.stub.php
-        - tools/phpstan-stubs/optional-models.stub.php
 
     bootstrapFiles:
         - tools/phpstan-bootstrap.php
