@@ -55,20 +55,22 @@ jobs:
 
       - name: Prepare .env for CI
         run: |
-          if [ ! -f .env ]; then
-            cp .env.example .env
-          fi
-          # Sätt minimala värden så EnvValidator/Dotenv blir nöjda i CI
-          {
-            echo "APP_ENV=development"
-            echo "APP_DEBUG=0"
-            echo "APP_URL=http://localhost"
-            echo "APP_NAME=Radix"
-            echo "APP_CACHE_PATH=${{ github.workspace }}/cache"
-            echo "HEALTH_CACHE_PATH=${{ github.workspace }}/cache/health"
-            echo "DB_DRIVER=sqlite"
-            echo "DB_NAME=${{ github.workspace }}/database/database.sqlite"
-          } >> .env
+          cat > .env << 'EOF'
+          APP_ENV=development
+          APP_DEBUG=0
+          APP_URL=http://localhost
+          APP_NAME=Radix
+          APP_CACHE_PATH=./cache
+          HEALTH_CACHE_PATH=./cache/health
+
+          # EnvValidator kräver giltiga värden:
+          TRUSTED_PROXY=127.0.0.1
+          LOCATOR_CITY_URL=https://example.test/locator/city
+
+          DB_DRIVER=sqlite
+          DB_NAME=./database/database.sqlite
+          EOF
+
           mkdir -p cache/health database
           touch database/database.sqlite
 
