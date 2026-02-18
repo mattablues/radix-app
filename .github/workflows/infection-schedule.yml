@@ -118,6 +118,16 @@ jobs:
         env:
           APP_ENV: development
         run: |
+          set -euo pipefail
+
+          # Skippa om appen ser scaffoldad ut i repo:t (dvs committad kod finns).
+          # OBS: routes/*.php kan finnas som stubs, så vi kräver även typiska mappar.
+          if [ -d "src/Auth" ] && [ -d "views/auth" ] && [ -d "views/admin" ] && [ -d "views/user" ]; then
+            echo "Scaffolds verkar redan vara installerade i repo:t — skippar scaffold:install."
+            exit 0
+          fi
+
+          echo "Scaffolds saknas (eller appen är minimal/partiell) — installerar scaffolds..."
           php radix scaffold:install auth
           php radix scaffold:install user
           php radix scaffold:install admin
