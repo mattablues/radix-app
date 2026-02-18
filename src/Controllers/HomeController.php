@@ -15,7 +15,8 @@ class HomeController extends AbstractController
         $latestVersion = 'v1.0.0';
 
         try {
-            $systemUpdateClass = 'App\\Models\\SystemUpdate';
+            /** @var class-string<\App\Models\SystemUpdate> $systemUpdateClass */
+            $systemUpdateClass = \App\Models\SystemUpdate::class;
 
             if (class_exists($systemUpdateClass)) {
                 $latest = $systemUpdateClass::orderBy('released_at', 'DESC')

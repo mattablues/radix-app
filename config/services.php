@@ -514,7 +514,6 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
     $systemUpdateClass = 'App\\Models\\SystemUpdate';
     if (class_exists($systemUpdateClass)) {
         try {
-            /** @phpstan-ignore-next-line optional scaffold model */
             $latestUpdate = $systemUpdateClass::orderBy('released_at', 'DESC')
                 ->first();
         } catch (\Throwable) {

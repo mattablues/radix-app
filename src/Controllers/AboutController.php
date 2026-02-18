@@ -15,6 +15,8 @@ class AboutController extends AbstractController
         $recentUpdates = [];
 
         try {
+            /** @var class-string<\App\Models\SystemUpdate> $systemUpdateClass */
+
             $systemUpdateClass = 'App\\Models\\SystemUpdate';
 
             if (class_exists($systemUpdateClass)) {
