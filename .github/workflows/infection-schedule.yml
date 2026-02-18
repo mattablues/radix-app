@@ -53,6 +53,25 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
+      - name: Prepare .env for CI
+        run: |
+          if [ ! -f .env ]; then
+            cp .env.example .env
+          fi
+          # Sätt minimala värden så EnvValidator/Dotenv blir nöjda i CI
+          {
+            echo "APP_ENV=development"
+            echo "APP_DEBUG=0"
+            echo "APP_URL=http://localhost"
+            echo "APP_NAME=Radix"
+            echo "APP_CACHE_PATH=${{ github.workspace }}/cache"
+            echo "HEALTH_CACHE_PATH=${{ github.workspace }}/cache/health"
+            echo "DB_DRIVER=sqlite"
+            echo "DB_NAME=${{ github.workspace }}/database/database.sqlite"
+          } >> .env
+          mkdir -p cache/health database
+          touch database/database.sqlite
+
       - name: Install scaffolds (full suite)
         env:
           APP_ENV: development
