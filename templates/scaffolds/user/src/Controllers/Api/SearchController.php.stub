@@ -15,7 +15,7 @@ class SearchController extends ApiController
     public function profiles(): JsonResponse
     {
         // Validera förfrågan för att säkerställa att rätt data skickas med
-            $this->validateRequestAllowingSession([
+        $this->validateRequestAllowingSession([
             'search.term' => 'required|string|min:1',
             'search.current_page' => 'nullable|integer|min:1',
         ]);
