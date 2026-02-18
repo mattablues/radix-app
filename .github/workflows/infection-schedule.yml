@@ -31,9 +31,6 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Reset local scaffold state (schedule)
-        run: rm -rf .radix || true
-
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
@@ -54,32 +51,6 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
-
-      - name: Create .env for CI
-        run: |
-          if [ ! -f .env ]; then
-            cp .env.example .env
-          fi
-
-      - name: Patch .env for CI (EnvValidator)
-        run: |
-          # TRUSTED_PROXY: tomt är ok (ingen betrodd proxy i CI)
-          sed -i 's/^TRUSTED_PROXY=.*/TRUSTED_PROXY=/' .env || true
-          echo "TRUSTED_PROXY=" >> .env
-
-          # LOCATOR_CITY_URL: sätt en giltig URL för CI
-          sed -i 's/^LOCATOR_CITY_URL=.*/LOCATOR_CITY_URL=https:\/\/example.com\//' .env || true
-          echo "LOCATOR_CITY_URL=https://example.com/" >> .env
-
-      - name: Reset local scaffold state (schedule)
-        run: rm -rf .radix || true
-
-      - name: Install scaffolds (full for schedule Infection)
-        run: |
-          php radix scaffold:install auth --force
-          php radix scaffold:install user --force
-          php radix scaffold:install updates --force
-          php radix scaffold:install admin --force
 
       - name: Pre-check PHPUnit for Infection
         env:
