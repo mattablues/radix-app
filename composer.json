@@ -9,7 +9,8 @@
         }
     ],
     "scripts": {
-        "stan": "phpstan analyse -c phpstan.neon.dist",
+        "stan": "php tools/phpstan.php",
+        "stan:minimal": "phpstan analyse -c phpstan.minimal.neon",
         "test": "php -d xdebug.mode=off vendor/bin/phpunit",
         "infect": "php tools/infection.php",
         "infect:pcov": "php tools/infection.php pcov",
