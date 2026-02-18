@@ -61,7 +61,7 @@ final class ApiControllerTest extends TestCase
         );
     }
 
-/**
+    /**
      * Dödar NotIdentical-mutanten genom att kräva att env-token (API_TOKEN) kan ge TRUE vid match.
      */
     #[PreserveGlobalState(false)]
