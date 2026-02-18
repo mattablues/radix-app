@@ -17,7 +17,6 @@ foreach ([
     ROOT_PATH . '/routes/updates.php',
 ] as $optionalRouteFile) {
     if (is_file($optionalRouteFile)) {
-        /** @phpstan-ignore-next-line require.fileNotFound optional scaffolded route files */
         require $optionalRouteFile;
     }
 }

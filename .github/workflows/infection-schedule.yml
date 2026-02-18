@@ -18,6 +18,7 @@ env:
 
 jobs:
   infection:
+    timeout-minutes: 25
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     env:
@@ -49,8 +50,81 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-php83-composer-
 
+      - name: Prepare .env for CI (satisfy EnvValidator)
+        run: |
+          mkdir -p cache/health cache/views cache/ratelimit cache/sessions database
+
+          cat > .env << 'EOF'
+          APP_ENV=development
+          APP_DEBUG=0
+          APP_URL=http://localhost
+          APP_NAME=Radix
+
+          APP_LANG=sv
+          APP_TIMEZONE=Europe/Stockholm
+          APP_COPY=Radix
+          APP_COPY_YEAR=2026
+
+          APP_CACHE_PATH=./cache
+          CACHE_ROOT=./cache
+          VIEWS_CACHE_PATH=./cache/views
+          RATELIMIT_CACHE_PATH=./cache/ratelimit
+          HEALTH_CACHE_PATH=./cache/health
+
+          HEALTH_REQUIRE_TOKEN=0
+
+          CORS_ALLOW_ORIGIN=http://localhost
+          CORS_ALLOW_CREDENTIALS=0
+
+          TRUSTED_PROXY=127.0.0.1
+
+          LOCATOR_COUNTRY=SE
+          LOCATOR_CITY=Stockholm
+          LOCATOR_CITY_URL=https://example.test/locator/city
+
+          DB_DRIVER=sqlite
+          DB_NAME=./database/database.sqlite
+          DB_HOST=127.0.0.1
+          DB_PORT=3306
+          DB_USERNAME=ci
+          DB_PASSWORD=
+          DB_CHARSET=utf8mb4
+
+          SESSION_DRIVER=file
+          SESSION_LIFETIME=120
+          SESSION_FILE_PATH=./cache/sessions
+
+          ORM_MODEL_NAMESPACE=App\Models
+
+          SECURE_TOKEN_HMAC=00000000000000000000000000000000
+          SECURE_ENCRYPTION_KEY=00000000000000000000000000000000
+
+          MAIL_HOST=localhost
+          MAIL_PORT=1025
+          MAIL_EMAIL=ci@example.test
+          MAIL_FROM=Radix CI <ci@example.test>
+          MAIL_DEBUG=1
+          MAIL_CHARSET=utf-8
+          MAIL_SECURE=none
+          MAIL_AUTH=0
+          EOF
+
+          touch database/database.sqlite
+
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Install scaffolds (full suite)
+        env:
+          APP_ENV: development
+        run: |
+          php radix scaffold:install auth
+          php radix scaffold:install user
+          php radix scaffold:install admin
+          php radix scaffold:install updates
+
+      - name: PHPStan (after scaffolds)
+        run: composer stan
 
       - name: Pre-check PHPUnit for Infection
         env:
