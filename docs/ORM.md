@@ -43,8 +43,7 @@ Radix System med ORM erbjuder en lättvikts QueryBuilder med säkra bindnings-bu
 use App\Models\User;
 
 // Hämta användare (returnerar Collection av modeller)
-$users = User::query()
-    ->select(['id', 'name'])
+$users = User::select(['id', 'name'])
     ->where('status', '=', 'active')
     ->orderBy('name')
     ->limit(10)
@@ -52,16 +51,14 @@ $users = User::query()
     ->get();
 
 // Enskilt värde
-$email = User::query()
-    ->where('id', '=', 1)
+$email = User::where('id', '=', 1)
     ->value('email');
 
 // Lista/assoc-lista
-$emails = User::query()
-    ->where('status', '=', 'active')
+$emails = User::where('status', '=', 'active')
     ->pluck('email');
 
-$emailsById = User::query()->pluck('email', 'id');
+$emailsById = User::pluck('email', 'id');
 
 // Arbeta med Collection
 $names = $users->pluck('name')->values()->toArray();
@@ -82,16 +79,14 @@ $firstActive = $users->first();
 
 use App\Models\User;
 
-User::query()->select(['id', 'users.name', 'users.name AS user_name']);
-User::query()->selectRaw('COUNT(id) AS total');
+User::select(['id', 'users.name', 'users.name AS user_name']);
+User::selectRaw('COUNT(id) AS total');
 
-$sub = User::query()
-    ->select(['COUNT(*) as c'])
+$sub = User::select(['COUNT(*) as c'])
     ->from('orders')
     ->where('orders.user_id', '=', 10);
 
-User::query()
-    ->from('users')
+User::from('users')
     ->selectSub($sub, 'order_count');
 ```
 
@@ -102,8 +97,8 @@ User::query()
 
 use App\Models\User;
 
-User::query()->from('users AS u');
-User::query()->fromRaw('(SELECT * FROM users WHERE active = 1) AS u');
+User::from('users AS u');
+User::fromRaw('(SELECT * FROM users WHERE active = 1) AS u');
 ```
 
 ### Where/Filter
@@ -113,8 +108,7 @@ User::query()->fromRaw('(SELECT * FROM users WHERE active = 1) AS u');
 
 use App\Models\User;
 
-$q = User::query()
-    ->from('users')
+$q = User::from('users')
     ->where('status', '=', 'active')
     ->orWhere('role', '=', 'moderator')
     ->whereIn('id', [1, 2, 3])
@@ -135,13 +129,12 @@ $q = User::query()
 
 use App\Models\User;
 
-$sub = User::query()
-    ->select(['id'])
+$sub = User::select(['id'])
     ->from('payments')
     ->where('amount', '>', 100);
 
-User::query()->from('users')->whereExists($sub);
-User::query()->from('users')->where('id', 'IN', $sub);
+User::from('users')->whereExists($sub);
+User::from('users')->where('id', 'IN', $sub);
 ```
 
 ### Joins
@@ -151,8 +144,7 @@ User::query()->from('users')->where('id', 'IN', $sub);
 
 use App\Models\User;
 
-User::query()
-    ->from('users')
+User::from('users')
     ->join('profiles', 'users.id', '=', 'profiles.user_id')
     ->leftJoin('orders', 'users.id', '=', 'orders.user_id')
     ->rightJoin('roles', 'users.role_id', '=', 'roles.id')
@@ -162,13 +154,11 @@ User::query()
         [1]
     );
 
-$sub = User::query()
-    ->select(['id', 'user_id'])
+$sub = User::select(['id', 'user_id'])
     ->from('orders')
     ->where('status', '=', 'completed');
 
-User::query()
-    ->from('users')
+User::from('users')
     ->joinSub($sub, 'completed_orders', 'users.id', '=', 'completed_orders.user_id');
 ```
 
@@ -179,8 +169,7 @@ User::query()
 
 use App\Models\User;
 
-User::query()
-    ->from('users')
+User::from('users')
     ->groupBy('role')
     ->having('total', '>', 10) // om du har "COUNT(_) AS total" i select
     ->havingRaw('COUNT(_) > ?', [5])
@@ -195,13 +184,11 @@ User::query()
 
 use App\Models\User;
 
-$q1 = User::query()
-    ->select(['id', 'name'])
+$q1 = User::select(['id', 'name'])
     ->from('users')
     ->where('status', '=', 'active');
 
-$q2 = User::query()
-    ->select(['id', 'name'])
+$q2 = User::select(['id', 'name'])
     ->from('archived_users')
     ->where('status', '=', 'active');
 
@@ -217,16 +204,14 @@ $q1->unionAll($q2);  // UNION ALL
 use App\Models\User;
 
 // Klassisk pagination
-$result = User::query()
-    ->where('status', '=', 'active')
+$result = User::where('status', '=', 'active')
     ->paginate(perPage: 10, currentPage: 2);
 
 // Sök (LIKE i flera kolumner + pagination)
-$search = User::query()
-    ->search('ma', ['first_name', 'last_name', 'email'], perPage: 10, currentPage: 1);
+$search = User::search('ma', ['first_name', 'last_name', 'email'], perPage: 10, currentPage: 1);
 
 // Enkel pagination utan total
-$simple = User::query()->simplePaginate(10, 1);
+$simple = User::simplePaginate(10, 1);
 ```
 
 ### Snabba hämtningar
@@ -237,11 +222,11 @@ $simple = User::query()->simplePaginate(10, 1);
 use App\Models\User;
 
 // Första värdet i första raden (eller null)
-$email = User::query()->where('id', '=', 1)->value('email');
+$email = User::where('id', '=', 1)->value('email');
 
 // Lista/assoc av kolumn
-$emails = User::query()->pluck('email');
-$emailsById = User::query()->pluck('email', 'id');
+$emails = User::pluck('email');
+$emailsById = User::pluck('email', 'id');
 ```
 
 ### Mutationer
@@ -252,8 +237,7 @@ $emailsById = User::query()->pluck('email', 'id');
 use App\Models\User;
 
 // Insert
-User::query()
-    ->from('users')
+User::from('users')
     ->insert([
         'name' => 'John Doe',
         'email' => 'john@example.com',
@@ -261,8 +245,7 @@ User::query()
     ->execute();
 
 // Update
-User::query()
-    ->from('users')
+User::from('users')
     ->where('id', '=', 1)
     ->update([
         'name' => 'Jane Doe',
@@ -271,21 +254,18 @@ User::query()
     ->execute();
 
 // Delete (kräver WHERE)
-User::query()
-    ->from('users')
+User::from('users')
     ->where('id', '=', 1)
     ->delete()
     ->execute();
 
 // Insert or ignore
-User::query()
-    ->from('users')
+User::from('users')
     ->insertOrIgnore(['email' => 'dup@example.com'])
     ->execute();
 
 // Upsert
-User::query()
-    ->from('users')
+User::from('users')
     ->upsert(
         ['email' => 'a@example.com', 'name' => 'A'],
         uniqueBy: ['email']
@@ -295,22 +275,27 @@ User::query()
 
 ### Soft deletes
 
+Om modellen använder soft deletes (dvs har en `deleted_at`-kolumn) filtreras soft-deletade rader bort som standard.
+
 ```php
 <?php
 
 use App\Models\User;
 
-// Default (om modellen använder soft deletes): filtrerar bort deleted_at != null
-User::query()->whereNull('deleted_at');
+// Standard: returnerar endast icke soft-deletade (deleted_at IS NULL)
+User::find(1);
 
-// Visa även soft-deletade
-User::query()->withSoftDeletes();
+// Inkludera även soft-deletade (deleted_at kan vara satt)
+User::find(1, true);
+
+// Visa även soft-deletade i queries (kedjbart)
+User::withSoftDeletes();
 
 // Endast soft-deletade (alias)
-User::query()->onlyTrashed(); // alias till getOnlySoftDeleted()
+User::onlyTrashed(); // alias till getOnlySoftDeleted()
 
 // Endast icke soft-deletade (explicit)
-User::query()->withoutTrashed();
+User::withoutTrashed();
 ```
 
 ### Eager loading och aggregat
@@ -322,17 +307,17 @@ use App\Models\User;
 use Radix\Database\QueryBuilder\QueryBuilder;
 
 // Eager load
-User::query()->with(['profile', 'posts']);
+User::with(['profile', 'posts']);
 
 // Med constraints
-User::query()->with([
+User::with([
     'posts' => function (QueryBuilder $q): void {
         $q->where('published', '=', 1);
     },
 ]);
 
 // withCount / withSum / withAvg / withMin / withMax / withAggregate
-User::query()->withCount('posts')->withSum('posts', 'views', 'posts_views');
+User::withCount('posts')->withSum('posts', 'views', 'posts_views');
 ```
 
 ### Debugging
@@ -342,7 +327,7 @@ User::query()->withCount('posts')->withSum('posts', 'views', 'posts_views');
 
 use App\Models\User;
 
-$q = User::query()->where('name', 'LIKE', '%John%');
+$q = User::where('name', 'LIKE', '%John%');
 
 $sql = $q->toSql();          // SELECT ... WHERE `name` LIKE ?
 $bindings = $q->getBindings(); // ['%John%']
