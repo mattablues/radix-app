@@ -1,16 +1,24 @@
 RewriteEngine On
 
+# Blockera åtkomst till dolda filer (.user.ini, .htaccess, etc.)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
 # Vidarebefordra Authorization-headern (Behövs för vissa autentiseringssystem)
 SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
 
 # Caching för statiska resurser
 <IfModule mod_headers.c>
     <FilesMatch "\.(js|css|png|jpg|gif|svg|woff|woff2|ttf|eot|ico)$">
-        Header set Cache-Control "max-age=31536000, public"
+        Header set Cache-Control "max-age=86400, public"
     </FilesMatch>
-    # Ignorera cachelagring för resurser med query-parametrar
-    <If "%{QUERY_STRING} =~ /v=/">
-        Header set Cache-Control "no-cache, must-revalidate"
+
+    # Om resursen har cache-busting via ?v=... kan vi cacha hårt
+    <If "%{QUERY_STRING} =~ /(^|&)v=/">
+        <FilesMatch "\.(js|css|png|jpg|gif|svg|woff|woff2|ttf|eot|ico)$">
+            Header set Cache-Control "max-age=31536000, public, immutable"
+        </FilesMatch>
     </If>
 </IfModule>
 
