@@ -1,14 +1,19 @@
 {
-    "name": "mats/radix",
+    "name": "mattablues/radix-app",
     "description": "Radix System",
+    "type": "project",
     "license": "MIT",
     "authors": [
         {
             "name": "Mats Åkebrand",
-            "email": "malle@akebrands.se"
+            "email": "<EMAIL>"
         }
     ],
     "scripts": {
+        "post-create-project-cmd": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php -r \"echo PHP_EOL.'Skapade .env från .env.example (om den saknades).'.PHP_EOL.'Nästa steg: fyll i .env och kör: php radix app:setup'.PHP_EOL;\""
+        ],
         "stan": "php tools/phpstan.php",
         "stan:minimal": "phpstan analyse -c phpstan.minimal.neon",
         "test": "php -d xdebug.mode=off vendor/bin/phpunit",
@@ -18,7 +23,7 @@
         "format": "php-cs-fixer fix",
         "format:check": "php-cs-fixer fix --dry-run --diff"
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true,
     "autoload": {
         "psr-4": {
@@ -46,7 +51,7 @@
     },
     "require": {
         "php": "^8.3",
-        "mattablues/radix-framework": "dev-main",
+        "mattablues/radix-framework": "^1.0.0",
         "ext-pdo": "*",
         "phpmailer/phpmailer": "v6.12.0",
         "ext-gd": "*",
