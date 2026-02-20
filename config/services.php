@@ -46,6 +46,12 @@ foreach ($configFiles as $file) {
 /** @var array<string,mixed> $configData */
 $container->add('config', new Config($configData));
 
+$container->addShared(\Radix\Config\Config::class, function () use ($container): \Radix\Config\Config {
+    /** @var \Radix\Config\Config $cfg */
+    $cfg = $container->get('config');
+    return $cfg;
+});
+
 $container->add(\Radix\Support\FileCache::class, fn() => new \Radix\Support\FileCache(getenv('APP_CACHE_PATH') ?: null));
 
 $container->addShared(\Radix\Support\Logger::class, fn() => new \Radix\Support\Logger('app'));

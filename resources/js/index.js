@@ -1,4 +1,4 @@
-import Alpine from "alpinejs";
+import Alpine from '@alpinejs/csp'
 import Collapse from "@alpinejs/collapse";
 import Ajax from "@imacrayon/alpine-ajax";
 import Ui from "@alpinejs/ui";
@@ -15,6 +15,29 @@ Alpine.plugin(Collapse);
 Alpine.plugin(Ui);
 Alpine.plugin(Focus);
 Alpine.plugin(Ajax);
+
+Alpine.data('cookieConsent', () => ({
+  showCookieBanner: false,
+
+  init() {
+    try {
+      this.showCookieBanner = window.localStorage.getItem('cookies_choice') === null
+    } catch (e) {
+      // Om localStorage är blockat (privat läge, policy, etc) — visa bannern ändå.
+      this.showCookieBanner = true
+    }
+  },
+
+  accept() {
+    try { window.localStorage.setItem('cookies_choice', 'accepted') } catch (e) {}
+    this.showCookieBanner = false
+  },
+
+  reject() {
+    try { window.localStorage.setItem('cookies_choice', 'rejected') } catch (e) {}
+    this.showCookieBanner = false
+  },
+}));
 
 Alpine.start();
 
@@ -120,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (pageId === 'admin-events-index') {
         const { initialTerm, initialPage } = getInitialState();
-        const endpoint = getEndpointFromForm('system-events-search-form', '/api/v1/admin/search/system-events');
+        const endpoint = getEndpointFromForm('system-events-search-form', '/api/v1/search/system-events');
 
         initTableSearch(
             'systemEvents',
@@ -142,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (pageId === 'admin-updates-index') {
         const { initialTerm, initialPage } = getInitialState();
-        const endpoint = getEndpointFromForm('system-updates-search-form', '/api/v1/admin/search/system-updates');
+        const endpoint = getEndpointFromForm('system-updates-search-form', '/api/v1/search/system-updates');
 
         initTableSearch(
             'systemUpdates',
@@ -206,4 +229,98 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }
     // ---------- /Tabell-sök ----------
+
+    // ---------- Scroll to top (dold tills du scrollar) ----------
+    (function initScrollToTop() {
+        const scrollBtn = document.getElementById('scrollToTop');
+        if (!scrollBtn) return;
+
+        const SHOW_AFTER_PX = 300;
+
+        const show = () => {
+            scrollBtn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+            scrollBtn.classList.add('opacity-100', 'translate-y-0');
+        };
+
+        const hide = () => {
+            scrollBtn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+            scrollBtn.classList.remove('opacity-100', 'translate-y-0');
+        };
+
+        const prefersReducedMotion =
+            window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const onScroll = () => {
+            if (window.scrollY > SHOW_AFTER_PX) show();
+            else hide();
+        };
+
+        scrollBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: prefersReducedMotion ? 'auto' : 'smooth',
+            });
+        });
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll(); // init-läge
+    })();
+    // ---------- /Scroll to top ----------
+    // ---------- Smooth scroll + rensa hash (mjukare: rensa efter scroll) ----------
+    (function initAnchorScroll() {
+        const allowed = new Set(['kom-igang', 'versioner', 'github']);
+        const headerOffset = 60; // px
+
+        document.addEventListener('click', (e) => {
+            const a = e.target.closest('a');
+            if (!a) return;
+
+            let url;
+            try {
+                url = new URL(a.href, window.location.href);
+            } catch {
+                return;
+            }
+
+            const hash = url.hash || '';
+            if (!hash.startsWith('#') || hash.length < 2) return;
+
+            const id = decodeURIComponent(hash.slice(1));
+            if (!allowed.has(id)) return;
+
+            const samePage =
+                url.origin === window.location.origin &&
+                url.pathname === window.location.pathname;
+
+            if (!samePage) return;
+
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            e.preventDefault();
+
+            const targetY = Math.max(
+                0,
+                el.getBoundingClientRect().top + window.pageYOffset - headerOffset
+            );
+
+            const prefersReducedMotion =
+                window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            window.scrollTo({
+                top: targetY,
+                behavior: prefersReducedMotion ? 'auto' : 'smooth',
+            });
+
+            // Rensa hash EFTER scroll (mjukare känsla)
+            const distance = Math.abs(window.scrollY - targetY);
+            const durationMs = prefersReducedMotion ? 0 : Math.min(900, Math.max(250, distance * 0.6));
+
+            window.clearTimeout(window.__hashCleanupTimer);
+            window.__hashCleanupTimer = window.setTimeout(() => {
+                history.replaceState(null, '', window.location.pathname + window.location.search);
+            }, durationMs);
+        });
+    })();
+    // ---------- /Smooth scroll + rensa hash ----------
 });
