@@ -1,7 +1,6 @@
 <div
-    x-data="{
-        showCookieBanner: !localStorage.getItem('cookies_accepted')
-    }"
+    x-data="cookieConsent"
+    x-init="init()"
     x-show="showCookieBanner"
     x-transition:enter="transition ease-out duration-500"
     x-transition:enter-start="translate-y-full opacity-0"
@@ -20,19 +19,31 @@
                 </svg>
             </div>
             <div class="text-left">
-                <p class="text-white font-bold text-sm mb-1 text-balance">Vi värnar om din säkerhet</p>
+                <p class="text-white font-bold text-sm mb-1 text-balance">Cookies & integritet</p>
                 <p class="text-slate-400 text-xs leading-relaxed">
-                    Vi använder nödvändiga cookies för att hantera din inloggning och skydda dina uppgifter.
-                    Genom att fortsätta godkänner du detta. <a href="{{ route('cookie.index') }}" class="text-indigo-400 hover:text-indigo-300 underline font-medium">Läs mer här</a>.
+                    Vi använder nödvändiga cookies för grundfunktioner och säkerhet (t.ex. att komma ihåg ditt val här och skydda formulär).
+                    Om du använder administrativa delar kan sessionscookies även förekomma vid inloggning.
+                    <a href="{{ route('cookie.index') }}" class="text-indigo-400 hover:text-indigo-300 underline font-medium">Läs mer</a>.
                 </p>
             </div>
         </div>
 
-        <button
-            @click="localStorage.setItem('cookies_accepted', 'true'); showCookieBanner = false"
-            class="whitespace-nowrap px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-2xl transition-all shadow-lg shadow-indigo-500/20 transform active:scale-95 cursor-pointer"
-        >
-            Jag förstår
-        </button>
+        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <button
+                type="button"
+                @click="accept()"
+                class="w-full md:w-auto whitespace-nowrap px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-2xl transition-all shadow-lg shadow-indigo-500/20 transform active:scale-95 cursor-pointer"
+            >
+                Acceptera
+            </button>
+
+            <button
+                type="button"
+                @click="reject()"
+                class="w-full md:w-auto whitespace-nowrap px-8 py-3 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-2xl transition-all border border-white/10 transform active:scale-95 cursor-pointer"
+            >
+                Avvisa
+            </button>
+        </div>
     </div>
 </div>
