@@ -1,35 +1,24 @@
 <div
-  x-data="{ restoreFocusEl: null }"
-  x-show="openCloseModal"
+  x-data="modalFocusRestore('closeCurrentPassword')"
+  x-show="$store.modals.closeAccount"
   x-cloak
-  x-on:keydown.escape.window="openCloseModal = false"
-  x-trap.noscroll="openCloseModal"
-  x-effect="
-    if (openCloseModal) {
-      if (!restoreFocusEl) restoreFocusEl = document.activeElement;
-      $nextTick(() => { $refs.closeCurrentPassword?.focus(); });
-    } else {
-      const el = restoreFocusEl;
-      restoreFocusEl = null;
-      if (el && typeof el.focus === 'function') {
-        $nextTick(() => { el.focus(); });
-      }
-    }
-  "
+  x-on:keydown.escape.window="$store.modals.closeCloseAccount()"
+  x-trap.noscroll="$store.modals.closeAccount"
+  x-effect="onToggle($store.modals.closeAccount)"
   role="dialog"
   aria-modal="true"
   aria-labelledby="close-modal-title"
   aria-describedby="close-modal-description"
   class="fixed inset-0 z-50 overflow-y-auto"
-  {% if (isset($modal) && $modal === 'close') : %}x-init="openCloseModal = true"{% endif %}
+  {% if (isset($modal) && $modal === 'close') : %}x-init="$store.modals.openCloseAccount()"{% endif %}
 >
   <!-- Backdrop -->
-  <div x-show="openCloseModal" x-transition.opacity class="fixed inset-0 bg-black/60"></div>
+  <div x-show="$store.modals.closeAccount" x-transition.opacity class="fixed inset-0 bg-black/60"></div>
 
   <!-- Modal Container -->
   <div
-    x-show="openCloseModal" x-transition
-    x-on:click="openCloseModal = false"
+    x-show="$store.modals.closeAccount" x-transition
+    x-on:click="$store.modals.closeCloseAccount()"
     class="relative flex min-h-screen items-center justify-center p-4"
   >
     <div
@@ -85,7 +74,7 @@
         <div class="mt-4 flex justify-end gap-3 pt-4 border-t border-gray-50">
           <button
             type="button"
-            x-on:click="openCloseModal = false"
+            x-on:click="$store.modals.closeCloseAccount()"
             class="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
           >
             Avbryt
