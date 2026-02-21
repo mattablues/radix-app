@@ -1,35 +1,24 @@
 <div
-  x-data="{ restoreFocusEl: null }"
-  x-show="openDeleteModal"
+  x-data="modalFocusRestore('deleteCurrentPassword')"
+  x-show="$store.modals.deleteAccount"
   x-cloak
-  x-on:keydown.escape.window="openDeleteModal = false"
-  x-trap.noscroll="openDeleteModal"
-  x-effect="
-    if (openDeleteModal) {
-      if (!restoreFocusEl) restoreFocusEl = document.activeElement;
-      $nextTick(() => { $refs.deleteCurrentPassword?.focus(); });
-    } else {
-      const el = restoreFocusEl;
-      restoreFocusEl = null;
-      if (el && typeof el.focus === 'function') {
-        $nextTick(() => { el.focus(); });
-      }
-    }
-  "
+  x-on:keydown.escape.window="$store.modals.closeDeleteAccount()"
+  x-trap.noscroll="$store.modals.deleteAccount"
+  x-effect="onToggle($store.modals.deleteAccount)"
   role="dialog"
   aria-modal="true"
   aria-labelledby="delete-modal-title"
   aria-describedby="delete-modal-description"
   class="fixed inset-0 z-50 overflow-y-auto"
-  {% if (isset($modal) && $modal === 'delete') : %}x-init="openDeleteModal = true"{% endif %}
+  {% if (isset($modal) && $modal === 'delete') : %}x-init="$store.modals.openDeleteAccount()"{% endif %}
 >
   <!-- Backdrop -->
-  <div x-show="openDeleteModal" x-transition.opacity class="fixed inset-0 bg-black/60"></div>
+  <div x-show="$store.modals.deleteAccount" x-transition.opacity class="fixed inset-0 bg-black/60"></div>
 
   <!-- Modal Container -->
   <div
-    x-show="openDeleteModal" x-transition
-    x-on:click="openDeleteModal = false"
+    x-show="$store.modals.deleteAccount" x-transition
+    x-on:click="$store.modals.closeDeleteAccount()"
     class="relative flex min-h-screen items-center justify-center p-4"
   >
     <div
@@ -90,7 +79,7 @@
         <div class="mt-4 flex justify-end gap-3 pt-4 border-t border-gray-50">
           <button
             type="button"
-            x-on:click="openDeleteModal = false"
+            x-on:click="$store.modals.closeDeleteAccount()"
             class="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
           >
             Avbryt

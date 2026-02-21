@@ -26,19 +26,7 @@
       </div>
 
       {% if($apiToken instanceof \App\Models\Token && $apiToken->isValid()) : %}
-        <div class="flex items-center gap-3" x-data="{
-          copied: false,
-          copy() {
-            const el = document.createElement('textarea');
-            el.value = '{{ $apiToken->value }}';
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            this.copied = true;
-            setTimeout(() => this.copied = false, 2000);
-          }
-        }">
+        <div class="flex items-center gap-3" x-data="apiTokenCopy('{{ $apiToken->value }}')">
           <code class="bg-slate-100 px-4 py-2 rounded-lg text-xs font-mono text-indigo-600 flex-1 truncate">
             {{ $apiToken->value }}
           </code>
@@ -57,8 +45,8 @@
           {{ csrf_field()|raw }}
           <button
             type="submit"
+            data-confirm-submit="Vill du verkligen generera en ny nyckel? Den gamla kommer sluta fungera direkt."
             class="text-[9px] font-bold text-gray-400 uppercase tracking-widest hover:text-red-500 transition-colors cursor-pointer"
-            onclick="return confirm('Vill du verkligen generera en ny nyckel? Den gamla kommer sluta fungera direkt.')"
           >
             Ersätt befintlig nyckel
           </button>
