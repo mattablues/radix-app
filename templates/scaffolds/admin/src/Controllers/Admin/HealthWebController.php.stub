@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers\Admin;
 
 use Radix\Controller\AbstractController;
+use Radix\Http\JsonResponse;
 use Radix\Http\Response;
 
 final class HealthWebController extends AbstractController
@@ -20,5 +21,35 @@ final class HealthWebController extends AbstractController
             'checks' => $checks,
             'ok' => $ok,
         ]);
+    }
+
+    public function json(): JsonResponse
+    {
+        $env = getenv('APP_ENV') ?: 'production';
+
+        $checks = $this->health->run();
+        $ok = (bool) ($checks['_ok'] ?? false);
+        unset($checks['_ok']);
+
+        if ($env === 'production') {
+            $checks = [
+                'db' => isset($checks['db']) ? ($checks['db'] === 'ok' ? 'ok' : 'fail') : 'unknown',
+                'fs' => isset($checks['fs']) ? ($checks['fs'] === 'ok' ? 'ok' : 'fail') : 'unknown',
+            ];
+        }
+
+        $res = new JsonResponse();
+        $res->setStatusCode($ok ? 200 : 500);
+        $res->setHeader('Content-Type', 'application/json; charset=utf-8');
+        $res->setHeader('Cache-Control', 'no-store, must-revalidate, max-age=0');
+        $res->setHeader('Pragma', 'no-cache');
+        $res->setHeader('Expires', '0');
+
+        $res->setBody((string) json_encode(
+            ['ok' => $ok, 'checks' => $checks],
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+        ));
+
+        return $res;
     }
 }
