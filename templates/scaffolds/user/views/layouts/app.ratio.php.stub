@@ -14,7 +14,7 @@
   <link rel="manifest" href="/favicons/site.webmanifest" />
 </head>
 <body
-  x-data="{ openSidebar: false, openCloseModal: false, openDeleteModal: false }"
+  x-data
   id="{% yield pageId %}"
   data-page-id="{% yield pageId %}"
   class="relative min-h-screen bg-slate-50 {% yield pageClass %} text-slate-600 antialiased flex flex-col"
@@ -59,7 +59,12 @@
           </a>
 
           <!-- Hamburger -->
-          <button type="button" class="text-gray-400 lg:hidden hover:text-white p-1 transition-colors cursor-pointer" x-on:click="openSidebar = !openSidebar" aria-label="Öppna meny">
+          <button
+              type="button"
+              class="text-gray-400 lg:hidden hover:text-white p-1 transition-colors cursor-pointer"
+              x-on:click="$store.sidebar.toggle()"
+              aria-label="Öppna meny"
+            >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" />
             </svg>
@@ -92,8 +97,9 @@
   </header>
 
   <!-- Sidebar -->
-  <div class="sidebar h-screen fixed top-0 lg:left-0 py-20 px-4 w-(--sidebar-w) transition-all duration-300 overflow-y-auto text-left bg-gray-900 shadow-2xl hide-scrollbar z-40 flex flex-col"
-    :class="openSidebar ? 'left-0' : 'left-(--sidebar-w-neg)'"
+  <div
+    class="sidebar h-screen fixed top-0 lg:left-0 py-20 px-4 w-(--sidebar-w) transition-all duration-300 overflow-y-auto text-left bg-gray-900 shadow-2xl hide-scrollbar z-40 flex flex-col"
+    :class="$store.sidebar.open ? 'left-0' : 'left-(--sidebar-w-neg)'"
   >
     <div class="flex-1 space-y-4">
       <div class="text-xxs font-black uppercase tracking-[0.2em] text-gray-500 mb-4 px-4">Navigation</div>
@@ -108,19 +114,19 @@
         </a>
 
         <!-- Konto Dropdown -->
-        <div x-data="{ sidebarDropdown: {{ in_array($pageId, ['user-index', 'user-edit', 'user-password', 'user-api-token']) ? 'true' : 'false' }} }">
-          <button @click="sidebarDropdown = !sidebarDropdown" class="w-full group flex items-center justify-between px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-gray-100 transition-all cursor-pointer">
+        <div x-data="sidebarDropdown({{ in_array($pageId, ['user-index', 'user-edit', 'user-password', 'user-api-token']) ? 'true' : 'false' }})">
+          <button @click="toggle()" class="w-full group flex items-center justify-between px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-gray-100 transition-all cursor-pointer">
             <span class="flex items-center gap-3">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               <span class="text-sm font-bold">Mitt konto</span>
             </span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-300" :class="sidebarDropdown ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-300" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          <ul x-show="sidebarDropdown" x-cloak x-collapse class="mt-1 ml-4 border-l border-gray-800 space-y-1">
+          <ul x-show="open" x-cloak x-collapse class="mt-1 ml-4 border-l border-gray-800 space-y-1">
             <li><a href="{{ route('user.index') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'user-index') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">Visa profil</a></li>
             <li><a href="{{ route('user.edit') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'user-edit') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">Redigera profil</a></li>
             {% if($currentUser->hasAtLeast('moderator')) : %}
@@ -130,12 +136,12 @@
 
           {% if(!$currentUser->isAdmin()) : %}
             <li class="pt-2 mt-2 border-t border-gray-800/50">
-              <button @click="openCloseModal = true" class="w-full text-left py-2 px-8 text-sm text-gray-500 hover:text-red-400 transition-colors cursor-pointer">
+              <button @click="$store.modals.openCloseAccount()" class="w-full text-left py-2 px-8 text-sm text-gray-500 hover:text-red-400 transition-colors cursor-pointer">
                 Stäng konto
               </button>
             </li>
             <li>
-              <button @click="openDeleteModal = true" class="w-full text-left py-2 px-8 text-sm text-gray-500 hover:text-red-500 font-medium transition-colors cursor-pointer">
+              <button @click="$store.modals.openDeleteAccount()" class="w-full text-left py-2 px-8 text-sm text-gray-500 hover:text-red-500 font-medium transition-colors cursor-pointer">
                 Radera konto
               </button>
             </li>
@@ -144,26 +150,26 @@
         </div>
       </nav>
 
-  {% if($currentUser->hasAtLeast('moderator')) : %}
+{% if($currentUser->hasAtLeast('moderator')) : %}
       <div class="pt-4 mt-4 border-t border-gray-800">
         <div class="text-xxs font-black uppercase tracking-[0.2em] text-gray-500 mb-4 px-4">Administration</div>
 
         <nav class="space-y-1">
           <!-- Användarhantering Dropdown -->
-          <div x-data="{ sidebarDropdown: {{ (strpos($pageId, 'admin-user') !== false || $pageId === 'users') ? 'true' : 'false' }} }">
-            <button @click="sidebarDropdown = !sidebarDropdown" class="w-full group flex items-center justify-between px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-gray-100 transition-all cursor-pointer">
+          <div x-data="sidebarDropdown({{ (strpos($pageId, 'admin-user') !== false || $pageId === 'users') ? 'true' : 'false' }})">
+            <button @click="toggle()" class="w-full group flex items-center justify-between px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-gray-100 transition-all cursor-pointer">
               <span class="flex items-center gap-3">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
                 <span class="text-sm font-bold">Användare</span>
               </span>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-300" :class="sidebarDropdown ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-300" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
-            <ul x-show="sidebarDropdown" x-cloak x-collapse class="mt-1 ml-4 border-l border-gray-800 space-y-1">
+            <ul x-show="open" x-cloak x-collapse class="mt-1 ml-4 border-l border-gray-800 space-y-1">
               <li>
                 <a href="{{ route('admin.user.index') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'admin-users-index') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">
                   Visa alla
@@ -184,20 +190,20 @@
             </ul>
           </div>
           <!-- System Dropdown -->
-          <div x-data="{ systemDropdown: {{ (strpos($pageId, 'admin-update') !== false || strpos($pageId, 'admin-event') !== false || strpos($pageId, 'admin-create') !== false || $pageId === 'health') ? 'true' : 'false' }} }">
-            <button @click="systemDropdown = !systemDropdown" class="w-full group flex items-center justify-between px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-gray-100 transition-all cursor-pointer">
+          <div x-data="systemDropdown({{ (strpos($pageId, 'admin-update') !== false || strpos($pageId, 'admin-event') !== false || strpos($pageId, 'admin-create') !== false || $pageId === 'health') ? 'true' : 'false' }})">
+            <button @click="toggle()" class="w-full group flex items-center justify-between px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-gray-100 transition-all cursor-pointer">
               <span class="flex items-center gap-3">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <span class="text-sm font-bold">System</span>
               </span>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-300" :class="systemDropdown ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-300" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
-            <ul x-show="systemDropdown" x-cloak x-collapse class="mt-1 ml-4 border-l border-gray-800 space-y-1">
+            <ul x-show="open" x-cloak x-collapse class="mt-1 ml-4 border-l border-gray-800 space-y-1">
               <!-- Systemstatus (Tidigare fristående) -->
               <li>
                 <a href="{{ route('admin.health.index') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'health') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">
@@ -242,13 +248,15 @@
     </div>
   </div>
 
-  {% include "components/modal-close.ratio.php" %}
-  {% include "components/modal-delete.ratio.php" %}
+  {% if(!$currentUser->isAdmin()) : %}
+    {% include "components/modal-close.ratio.php" %}
+    {% include "components/modal-delete.ratio.php" %}
+  {% endif; %}
 
-  <main
-    class="max-w-[1180px] flex-1 lg:ml-(--sidebar-w) pt-8 px-4 md:px-8 pb-12 transition-all duration-300"
-    x-on:click="if (openSidebar) openSidebar = false"
-  >
+    <main
+      class="max-w-[1180px] flex-1 lg:ml-(--sidebar-w) pt-8 px-4 md:px-8 pb-12 transition-all duration-300"
+      x-on:click="$store.sidebar.close()"
+    >
     {% include "components/noscript.ratio.php" %}
     <div class="max-w-6xl mx-auto">
         {% yield body %}
