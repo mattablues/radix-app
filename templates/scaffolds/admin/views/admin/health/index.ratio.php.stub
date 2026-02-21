@@ -89,13 +89,17 @@
       </div>
 
       <!-- API Länk -->
-      <div class="mt-8 flex justify-center md:justify-start">
-        <a href="/api/v1/health" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-lg hover:bg-slate-900 transition-all shadow-md shadow-slate-200">
+      <div class="mt-8 flex flex-col items-center md:items-start gap-2">
+        <a href="{{ route('admin.health.json') }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-lg hover:bg-slate-900 transition-all shadow-md shadow-slate-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
           </svg>
           Visa rådata (JSON)
         </a>
+
+        <p class="text-xs text-gray-500">
+          Kräver att du är inloggad (moderator+) och på tillåten IP. Utloggad → omdirigeras till inloggning.
+        </p>
       </div>
     </section>
 {% endblock %}

@@ -52,6 +52,10 @@ $router->group(
                 \App\Controllers\Admin\HealthWebController::class, 'index',
             ])->name('admin.health.index')->middleware(['ip.allowlist']);
 
+            $router->get('/health.json', [
+                \App\Controllers\Admin\HealthWebController::class, 'json',
+            ])->name('admin.health.json')->middleware(['ip.allowlist']);
+
             // System Events
             $router->get('/events', [
                 SystemEventController::class, 'index',
