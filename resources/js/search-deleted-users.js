@@ -65,12 +65,35 @@ export default class SearchDeletedUsers extends SearchTable {
     const suffix = this.currentQuerySuffix();
     this.modalForm.setAttribute('action', `/admin/users/${encodeURIComponent(id)}/restore${suffix}`);
 
+    // Spara fokus så vi kan återställa när modalen stängs
+    this.__restoreFocusEl = document.activeElement;
+
     this.modal.classList.remove('hidden');
     this.modal.setAttribute('aria-hidden', 'false');
+
+    // Flytta fokus in i modalen (Avbryt först)
+    const cancel = this.modalCancel || document.getElementById('restore-user-cancel');
+    if (cancel && typeof cancel.focus === 'function') {
+      setTimeout(() => cancel.focus(), 0);
+    }
   }
 
   closeRestoreModal() {
     if (!this.modal) return;
+
+    const restoreEl = this.__restoreFocusEl;
+    this.__restoreFocusEl = null;
+
+    // Flytta fokus UT ur modalen innan aria-hidden=true
+    if (restoreEl && typeof restoreEl.focus === 'function' && !this.modal.contains(restoreEl)) {
+      try { restoreEl.focus(); } catch (e) {}
+    } else {
+      const active = document.activeElement;
+      if (active && this.modal.contains(active) && typeof active.blur === 'function') {
+        active.blur();
+      }
+    }
+
     this.modal.classList.add('hidden');
     this.modal.setAttribute('aria-hidden', 'true');
   }

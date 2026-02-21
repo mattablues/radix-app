@@ -39,7 +39,126 @@ Alpine.data('cookieConsent', () => ({
   },
 }));
 
+Alpine.store('sidebar', {
+  open: false,
+  close() { this.open = false },
+  openIt() { this.open = true },
+  toggle() { this.open = !this.open },
+});
+
+Alpine.store('modals', {
+  closeAccount: false,
+  deleteAccount: false,
+
+  openCloseAccount() { this.closeAccount = true },
+  closeCloseAccount() { this.closeAccount = false },
+
+  openDeleteAccount() { this.deleteAccount = true },
+  closeDeleteAccount() { this.deleteAccount = false },
+});
+
+Alpine.data('modalFocusRestore', (refName) => ({
+  restoreFocusEl: null,
+
+  onToggle(isOpen) {
+    if (isOpen) {
+      if (!this.restoreFocusEl) this.restoreFocusEl = document.activeElement;
+
+      // Fokusera ett element i modalen om det finns
+      this.$nextTick(() => {
+        const el = this.$refs && this.$refs[refName] ? this.$refs[refName] : null;
+        if (el && typeof el.focus === 'function') el.focus();
+      });
+      return;
+    }
+
+    const el = this.restoreFocusEl;
+    this.restoreFocusEl = null;
+
+    if (el && typeof el.focus === 'function') {
+      this.$nextTick(() => { el.focus(); });
+    }
+  },
+}));
+
+Alpine.data('apiTokenCopy', (token) => ({
+  copied: false,
+
+  async copy() {
+    const value = String(token || '');
+    if (!value) return;
+
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(value);
+      } else {
+        const el = document.createElement('textarea');
+        el.value = value;
+        el.setAttribute('readonly', '');
+        el.style.position = 'absolute';
+        el.style.left = '-9999px';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      }
+
+      this.copied = true;
+      window.setTimeout(() => { this.copied = false; }, 2000);
+    } catch (e) {
+      this.copied = false;
+    }
+  },
+
+  confirmReplace() {
+    return window.confirm('Vill du verkligen generera en ny nyckel? Den gamla kommer sluta fungera direkt.');
+  },
+
+  replace(form) {
+    if (!form || typeof form.requestSubmit !== 'function') {
+      if (form && typeof form.submit === 'function' && this.confirmReplace()) form.submit();
+      return;
+    }
+
+    if (this.confirmReplace()) {
+      form.requestSubmit();
+    }
+  },
+}));
+
+Alpine.data('sidebarDropdown', (initialOpen = false) => ({
+  open: !!initialOpen,
+  toggle() { this.open = !this.open },
+}));
+
+Alpine.data('systemDropdown', (initialOpen = false) => ({
+  open: !!initialOpen,
+  toggle() { this.open = !this.open },
+}));
+
+Alpine.data('flashMessage', () => ({
+  show: true,
+
+  init() {
+    window.setTimeout(() => { this.show = false; }, 5000);
+  },
+}));
+
 Alpine.start();
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-confirm-submit]');
+  if (!btn) return;
+
+  const msg = btn.getAttribute('data-confirm-submit') || '';
+  if (!msg) return;
+
+  const ok = window.confirm(msg);
+  if (!ok) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
 
 // Kör dina funktioner
 addTableAria();

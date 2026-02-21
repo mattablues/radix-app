@@ -99,12 +99,36 @@ export default class SearchUsers extends SearchTable {
     const suffix = this.currentQuerySuffix();
     this.blockForm.setAttribute('action', `/admin/users/${encodeURIComponent(id)}/block${suffix}`);
 
+    // Spara fokus så vi kan återställa när modalen stängs
+    this.__restoreFocusEl = document.activeElement;
+
     this.blockModal.classList.remove('hidden');
     this.blockModal.setAttribute('aria-hidden', 'false');
+
+    // Flytta fokus in i modalen (Avbryt först)
+    const cancel = document.getElementById('block-user-cancel');
+    if (cancel && typeof cancel.focus === 'function') {
+      setTimeout(() => cancel.focus(), 0);
+    }
   }
 
   closeBlockModal() {
     if (!this.blockModal) return;
+
+    // Plocka restore-target direkt
+    const restoreEl = this.__restoreFocusEl;
+    this.__restoreFocusEl = null;
+
+    // Flytta fokus UT ur modalen innan aria-hidden=true
+    if (restoreEl && typeof restoreEl.focus === 'function' && !this.blockModal.contains(restoreEl)) {
+      try { restoreEl.focus(); } catch (e) {}
+    } else {
+      const active = document.activeElement;
+      if (active && this.blockModal.contains(active) && typeof active.blur === 'function') {
+        active.blur();
+      }
+    }
+
     this.blockModal.classList.add('hidden');
     this.blockModal.setAttribute('aria-hidden', 'true');
   }
@@ -117,16 +141,37 @@ export default class SearchUsers extends SearchTable {
     const suffix = this.currentQuerySuffix();
     this.activationForm.setAttribute('action', `/admin/users/${encodeURIComponent(id)}/send-activation${suffix}`);
 
+    // Spara fokus så vi kan återställa när modalen stängs
+    this.__restoreFocusElActivation = document.activeElement;
+
     this.activationModal.classList.remove('hidden');
     this.activationModal.setAttribute('aria-hidden', 'false');
+
+    // Flytta fokus in i modalen (Avbryt först)
+    const cancel = document.getElementById('activation-user-cancel');
+    if (cancel && typeof cancel.focus === 'function') {
+      setTimeout(() => cancel.focus(), 0);
+    }
   }
 
   closeActivationModal() {
     if (!this.activationModal) return;
+
+    const restoreEl = this.__restoreFocusElActivation;
+    this.__restoreFocusElActivation = null;
+
+    if (restoreEl && typeof restoreEl.focus === 'function' && !this.activationModal.contains(restoreEl)) {
+      try { restoreEl.focus(); } catch (e) {}
+    } else {
+      const active = document.activeElement;
+      if (active && this.activationModal.contains(active) && typeof active.blur === 'function') {
+        active.blur();
+      }
+    }
+
     this.activationModal.classList.add('hidden');
     this.activationModal.setAttribute('aria-hidden', 'true');
   }
-
 
   statusBadgeHtml(status) {
     const s = String(status || '').toLowerCase();
