@@ -10,18 +10,24 @@
         }
     ],
     "scripts": {
-        "post-create-project-cmd": [
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
-            "@php -r \"echo PHP_EOL.'Skapade .env från .env.example (om den saknades).'.PHP_EOL.'Nästa steg: fyll i .env och kör: php radix app:setup'.PHP_EOL;\""
-        ],
-        "stan": "php tools/phpstan.php",
-        "stan:minimal": "phpstan analyse -c phpstan.minimal.neon",
-        "test": "php -d xdebug.mode=off vendor/bin/phpunit",
-        "infect": "php tools/infection.php",
-        "infect:pcov": "php tools/infection.php pcov",
-        "infect:xdebug": "php tools/infection.php xdebug",
-        "format": "php-cs-fixer fix",
-        "format:check": "php-cs-fixer fix --dry-run --diff"
+      "post-create-project-cmd": [
+        "@php tools/env-bootstrap.php",
+        "@php -r \"echo PHP_EOL.'OK: .env skapad/uppdaterad och secrets genererade vid behov.'.PHP_EOL;\""
+      ],
+      "post-install-cmd": [
+        "@php tools/env-bootstrap.php"
+      ],
+      "post-update-cmd": [
+        "@php tools/env-bootstrap.php"
+      ],
+      "stan": "php tools/phpstan.php",
+      "stan:minimal": "phpstan analyse -c phpstan.minimal.neon",
+      "test": "php -d xdebug.mode=off vendor/bin/phpunit",
+      "infect": "php tools/infection.php",
+      "infect:pcov": "php tools/infection.php pcov",
+      "infect:xdebug": "php tools/infection.php xdebug",
+      "format": "php-cs-fixer fix",
+      "format:check": "php-cs-fixer fix --dry-run --diff"
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
