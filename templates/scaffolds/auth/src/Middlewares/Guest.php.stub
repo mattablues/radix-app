@@ -18,7 +18,7 @@ final class Guest implements MiddlewareInterface
         if ($request->session()->has(Session::AUTH_KEY)) {
             $request->session()->setFlashMessage('Sidan kan inte visas när du är inloggad!', 'warning');
 
-            $targetRoute = is_file(ROOT_PATH . '/routes/user.php')
+            $targetRoute = route_exists('dashboard.index')
                 ? 'dashboard.index'
                 : 'home.index';
 
