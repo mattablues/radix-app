@@ -82,7 +82,7 @@ class LoginController extends AbstractController
             userId: $user->id
         );
 
-        $targetRoute = is_file(ROOT_PATH . '/routes/user.php')
+        $targetRoute = route_exists('dashboard.index')
             ? 'dashboard.index'
             : 'home.index';
 
