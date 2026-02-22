@@ -1,6 +1,7 @@
 # Miljöfiler
 .env
 .env.test
+.env.bak
 
 # Byggade assets
 public/css/app.css

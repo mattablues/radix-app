@@ -2,7 +2,26 @@
 
 declare(strict_types=1);
 
-$container = require ROOT_PATH . '/config/services.php';
+try {
+    $container = require ROOT_PATH . '/config/services.php';
+} catch (\Throwable $e) {
+    $env = strtolower((string) getenv('APP_ENV'));
+    $isProd = in_array($env, ['prod', 'production'], true);
+
+    $msg = '[bootstrap] config/services.php failed: ' . $e->getMessage();
+    error_log($msg);
+
+    if (PHP_SAPI === 'cli') {
+        fwrite(STDERR, $msg . PHP_EOL);
+        exit(1);
+    }
+
+    http_response_code(500);
+    echo $isProd
+        ? 'Application misconfigured. Check server logs.'
+        : ('Bootstrap error: ' . $e->getMessage());
+    exit;
+}
 
 ini_set('session.gc_maxlifetime', '1200'); // 20 minuter
 ini_set('session.gc_probability', '1');
