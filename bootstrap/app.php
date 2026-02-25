@@ -32,9 +32,90 @@ date_default_timezone_set(getApplicationTimezone());
 set_error_handler('\Radix\Error\RadixErrorHandler::handleError');
 set_exception_handler('\Radix\Error\RadixErrorHandler::handleException');
 
-if(getenv('APP_ENV') !== 'development' && is_running_from_console()) {
-   http_response_code(403);
-   exit('Forbidden: Access is denied.');
+if (is_running_from_console()) {
+    $env = strtolower((string) getenv('APP_ENV'));
+    $isProd = in_array($env, ['prod', 'production'], true);
+
+    if ($isProd) {
+        $argv = $GLOBALS['argv'] ?? [];
+        $cmd = is_array($argv) && isset($argv[1]) && is_string($argv[1]) ? trim($argv[1]) : '';
+
+        $isDeploy = getenv('RADIX_DEPLOY') === '1';
+
+        // Alltid OK i prod (låg risk)
+        $allowAlways = [
+            'cache:clear',
+        ];
+
+        // OK i prod endast vid deploy (medvetet "armad" körning)
+        $allowWhenDeploy = [
+            'migrations:migrate',
+        ];
+
+        // Extra tydlighet: kommandon vi aktivt vill avråda från i prod
+        $blockedInProd = [
+            'app:setup' => 'Kör dev/demo-seeders och är inte avsett för production.',
+            'migrations:rollback' => 'Rollback i production kan ge dataförlust/inkonsistens.',
+            'seeds:run' => 'Seeders är dev/demo i detta projekt.',
+            'seeds:rollback' => 'Seeders är dev/demo i detta projekt.',
+            'scaffold:install' => 'Scaffold ska köras i dev/CI, inte i production.',
+        ];
+
+        // Blocka hela prefix-grupper också (tydligt för MIT-användare)
+        $blockedPrefixes = [
+            'make:' => 'Kodgeneratorer ska inte köras i production.',
+            'seeds:' => 'Seeders är dev/demo i detta projekt.',
+            'scaffold:' => 'Scaffold ska köras i dev/CI, inte i production.',
+        ];
+
+        $denyReason = null;
+
+        if ($cmd === '') {
+            $denyReason = 'Inget kommando angavs.';
+        }
+
+        if ($denyReason === null && isset($blockedInProd[$cmd])) {
+            $denyReason = $blockedInProd[$cmd];
+        }
+
+        if ($denyReason === null) {
+            foreach ($blockedPrefixes as $prefix => $reason) {
+                if (str_starts_with($cmd, $prefix)) {
+                    $denyReason = $reason;
+                    break;
+                }
+            }
+        }
+
+        $allowed = $denyReason === null && (
+            in_array($cmd, $allowAlways, true)
+            || ($isDeploy && in_array($cmd, $allowWhenDeploy, true))
+        );
+
+        if (!$allowed) {
+            http_response_code(403);
+
+            fwrite(STDERR, "Forbidden: CLI command not allowed in production." . PHP_EOL);
+            fwrite(STDERR, "Command: " . ($cmd !== '' ? $cmd : '<none>') . PHP_EOL);
+
+            if ($denyReason !== null) {
+                fwrite(STDERR, "Reason: {$denyReason}" . PHP_EOL);
+            }
+
+            fwrite(STDERR, PHP_EOL);
+            fwrite(STDERR, "Allowed in production (always): " . implode(', ', $allowAlways) . PHP_EOL);
+            fwrite(STDERR, "Allowed in production (deploy only): " . implode(', ', $allowWhenDeploy) . PHP_EOL);
+
+            if (!$isDeploy) {
+                fwrite(STDERR, PHP_EOL);
+                fwrite(STDERR, "To run deploy-only commands, set RADIX_DEPLOY=1 for this run." . PHP_EOL);
+                fwrite(STDERR, "Example (Windows CMD): set RADIX_DEPLOY=1 && php radix migrations:migrate" . PHP_EOL);
+                fwrite(STDERR, "Example (PowerShell): \$env:RADIX_DEPLOY='1'; php radix migrations:migrate; Remove-Item Env:RADIX_DEPLOY" . PHP_EOL);
+            }
+
+            exit(1);
+        }
+    }
 }
 
 if (getenv('APP_MAINTENANCE') === '1') {
@@ -70,7 +151,9 @@ if (php_sapi_name() === 'cli' && getenv('SESSION_DRIVER') === 'database') {
         echo "SESSION_DRIVER är satt till 'database' men tabellen 'sessions' saknas.\n\n";
         echo "Gör följande:\n";
         echo "1. Ändra till SESSION_DRIVER=file i din .env fil.\n";
-        echo "2. Kör: php radix app:setup\n";
+        echo "2. Kör migrations för att skapa sessions-tabellen:\n";
+        echo "   - Production: RADIX_DEPLOY=1 php radix migrations:migrate\n";
+        echo "   - Development: php radix migrations:migrate\n";
         echo "3. Ändra tillbaka till SESSION_DRIVER=database om du önskar.\n\n";
         exit(1);
     }
