@@ -1,7 +1,6 @@
 {% extends "layouts/app.ratio.php" %}
 {% block title %}Stängda konton{% endblock %}
 {% block pageId %}admin-user-closed{% endblock %}
-{% block searchId %}search-deleted-users{% endblock %}
 
 {% block body %}
   <section>

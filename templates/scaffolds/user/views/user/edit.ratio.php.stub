@@ -1,7 +1,6 @@
 {% extends "layouts/app.ratio.php" %}
 {% block title %}Redigera konto{% endblock %}
 {% block pageId %}user-edit{% endblock %}
-{% block searchId %}search-users{% endblock %}
 {% block body %}
     <section>
       <div class="mb-8">
@@ -61,22 +60,31 @@
         </div>
 
         <!-- Knappar -->
-        <div class="flex flex-wrap items-center gap-3">
-          <button type="submit" class="bg-indigo-600 text-white py-2 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300 shadow-md shadow-indigo-100">
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <button
+            type="submit"
+            class="inline-flex w-full sm:w-auto justify-center items-center bg-indigo-600 text-white py-2 px-4 sm:px-6 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300 shadow-md shadow-indigo-100"
+          >
             Spara ändringar
           </button>
 
-          <a href="{{ route('user.password.edit') }}" class="py-2 px-6 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition duration-300">
+          <a
+            href="{{ route('user.password.edit') }}"
+            class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-4 sm:px-6 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition duration-300"
+          >
             Byt lösenord
           </a>
 
-          <a href="{{ route('user.index') }}" class="py-2 px-6 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition duration-300">
+          <a
+            href="{{ route('user.index') }}"
+            class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-4 sm:px-6 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition duration-300"
+          >
             Avbryt
           </a>
 
           {% if (error($errors, 'form-error')) : %}
           <div class="w-full mt-4 p-3 bg-red-50 border border-red-100 rounded-lg">
-              <p class="text-xxs text-red-600 font-semibold leading-tight text-center">{{ error($errors, 'form-error') }}</p>
+            <p class="text-xxs text-red-600 font-semibold leading-tight text-center">{{ error($errors, 'form-error') }}</p>
           </div>
           {% endif %}
         </div>

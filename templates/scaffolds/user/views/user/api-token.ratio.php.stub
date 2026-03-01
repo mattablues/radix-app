@@ -1,7 +1,6 @@
 {% extends "layouts/app.ratio.php" %}
 {% block title %}API-nyckel{% endblock %}
 {% block pageId %}user-api-token{% endblock %}
-{% block searchId %}search-users{% endblock %}
 {% block body %}
   <section>
     <div class="mb-8">

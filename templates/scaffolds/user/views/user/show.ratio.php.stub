@@ -1,7 +1,6 @@
 {% extends "layouts/app.ratio.php" %}
 {% block title %}Konto{% endblock %}
 {% block pageId %}show-user{% endblock %}
-{% block searchId %}search-users{% endblock %}
 {% block body %}
     <section x-data="{ openRoleModal: false, selectedRole: '{{ $user ? $user->fetchGuardedAttribute('role') : '' }}' }">
       <div class="mb-8">
@@ -59,7 +58,7 @@
 
                 <!-- Status & Åtgärder (som en ny "rad" med 2 kolumner, linjerar med grid) -->
                 <div class="sm:col-span-2 md:mt-2 md:pt-6 border-t border-gray-50">
-                  <div class="grid grid-cols-2 gap-x-12 gap-y-4 items-center">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 items-center">
                     <div class="flex flex-col">
                       <span class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Kontostatus</span>
                       <span class="inline-flex items-center text-sm font-medium">

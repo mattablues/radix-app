@@ -1,7 +1,6 @@
 {% extends "layouts/app.ratio.php" %}
 {% block title %}Dashboard | Radix Control{% endblock %}
 {% block pageId %}dashboard{% endblock %}
-{% block searchId %}search-users{% endblock %}
 {% block body %}
     <section>
       <!-- Välkomsthälsning -->
