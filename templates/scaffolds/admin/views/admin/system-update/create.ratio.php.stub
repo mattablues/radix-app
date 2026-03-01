@@ -1,7 +1,6 @@
 {% extends "layouts/app.ratio.php" %}
 {% block title %}Ny Systemuppdatering{% endblock %}
 {% block pageId %}admin-update-create{% endblock %}
-{% block searchId %}search-users{% endblock %}
 {% block body %}
     <section>
       <div class="mb-8">
@@ -88,11 +87,18 @@
         </div>
 
         <!-- Knappar -->
-        <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
-          <button type="submit" class="bg-indigo-600 text-white py-2.5 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300 shadow-md shadow-indigo-100">
+        <div class="flex flex-col gap-3 pt-4 border-t border-gray-100 sm:flex-row sm:items-center">
+          <button
+            type="submit"
+            class="inline-flex w-full sm:w-auto justify-center items-center bg-indigo-600 text-white py-2.5 px-4 sm:px-6 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300 shadow-md shadow-indigo-100"
+          >
             Publicera uppdatering
           </button>
-          <a href="{{ route('admin.system-update.index') }}" class="py-2.5 px-6 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition duration-300">
+
+          <a
+            href="{{ route('admin.system-update.index') }}"
+            class="inline-flex w-full sm:w-auto justify-center items-center py-2.5 px-4 sm:px-6 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition duration-300"
+          >
             Avbryt
           </a>
         </div>

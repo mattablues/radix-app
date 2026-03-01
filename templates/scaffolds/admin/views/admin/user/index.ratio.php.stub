@@ -1,7 +1,6 @@
 {% extends "layouts/app.ratio.php" %}
 {% block title %}Konton{% endblock %}
 {% block pageId %}admin-users-index{% endblock %}
-{% block searchId %}search-users{% endblock %}
 
 {% block body %}
   <section>
