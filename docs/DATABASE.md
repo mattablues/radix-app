@@ -1,20 +1,50 @@
-# Database: Migrations & Seeding
+# docs/DATABASE.md
 
-Radix använder ett versionshanterat system för databasscheman (migrations) och ett system för att fylla databasen med startdata (seeding).
+← [`Tillbaka till index`](INDEX.md)
+
+# Database: migrations & seeders (Radix App)
+
+Radix använder ett versionshanterat system för databasscheman (**migrations**) och ett system för att fylla databasen med startdata (**seeders**).
+
+---
 
 ## Migrations
 
-Migreringar är PHP-filer som beskriver ändringar i databasen. De ligger i `database/migrations/`.
+Migreringar är PHP-filer som beskriver ändringar i databasen. De ligger i:
 
-### Skapa en migrering
-Använd CLI-verktyget för att generera en ny fil:
+- `database/migrations/`
+
+### Skapa en migration
+
+`make:migration` stödjer en *operation* (t.ex. `create`, `alter`) + tabellnamn.
+
 ```bash
-php radix make:migration create_users_table
+php radix make:migration <operation> <table>
 ```
 
-### Migreringsstruktur
-Varje migrering har en `up()`-metod (för att skapa/ändra) och en `down()`-metod (för att ångra).
+Exempel:
+
+```bash
+php radix make:migration create users
+php radix make:migration alter users
+php radix make:migration create blog_posts
+```
+
+> Operationen måste ha en matchande stub under templates (t.ex. `create_table.stub`, `alter_table.stub`).
+
+### Struktur (up/down)
+
+Varje migration har:
+
+- `up()` (applicera ändringen)
+- `down()` (ångra ändringen)
+
 ```php
+<?php
+
+use Radix\Database\Migration\Schema;
+use Radix\Database\Migration\Table;
+
 return new class {
     public function up(Schema $schema): void {
         $schema->create('users', function (Table $table) {
@@ -31,34 +61,81 @@ return new class {
 };
 ```
 
-### Köra migreringar
+### Köra migrations
+
 ```bash
 php radix migrations:migrate
 ```
 
-För att ångra den senaste migreringen:
+### Rollback (senaste migrationer)
+
 ```bash
 php radix migrations:rollback
 ```
 
-## Seeding
+> Tips: Rollback är bra i development, men ska användas med extra eftertanke i production.
 
-Seeders används för att fylla databasen med t.ex. en administratör eller testdata. De ligger i `database/seeds/`.
+---
+
+## Seeders
+
+Seeders används för att fylla databasen med t.ex. en admin-användare eller testdata.
+
+Seeders ligger typiskt i:
+
+- `database/seeders/`
 
 ### Skapa en seeder
+
 ```bash
 php radix make:seeder UserSeeder
 ```
 
-### Köra seeds
+### Köra seeders
+
 ```bash
 php radix seeds:run
 ```
 
-## Setup-kommandot
+### Rollback seeders (om stöds i din setup)
 
-För att snabbt återställa hela databasen (rensa allt, kör alla migreringar och alla seeds) kan du använda:
+```bash
+php radix seeds:rollback
+```
+
+---
+
+## `app:setup` (snabb setup)
+
+För att snabbt få en fungerande databas lokalt kan du köra:
+
+```bash
+php radix app:setup
+```
+
+Det kommandot:
+- rensar cache
+- kör migrations
+- kör seeders (om det finns några)
+
+### `--fresh` (wipa databasen)
+
+Om du vill återställa databasen helt och köra om allt:
+
 ```bash
 php radix app:setup --fresh
 ```
-*Varning: Detta raderar all befintlig data i databasen!*
+
+**Varning:** `--fresh` raderar befintlig data.
+
+---
+
+## Scaffolds och migrationer
+
+Scaffolds kan lägga till nya migrationsfiler.
+
+Efter att du installerat ett scaffold (ofta med `--force`) behöver du därför vanligtvis köra:
+
+```bash
+php radix migrations:migrate
+```

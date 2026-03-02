@@ -1,12 +1,25 @@
-# Loggning (Logger)
+# docs/LOGGING.md
 
-Loggningssystemet i Radix (`Radix\Support\Logger`) gör det enkelt att spara händelser till disk med olika allvarlighetsgrader. Det stödjer kanaler, logg-rotation och kontext-interpolering.
+← [`Tillbaka till index`](INDEX.md)
+
+# Loggning (Logger) (Radix App)
+
+Radix har ett loggningssystem via `Radix\Support\Logger` som gör det enkelt att skriva loggar till disk med olika nivåer.
+
+Det stödjer bland annat:
+
+- loggnivåer (debug/info/warning/error)
+- kanaler (t.ex. `app`, `health`, `billing`)
+- rotation/retention
+- kontext + interpolering
+
+---
 
 ## Loggnivåer
 
-Radix stödjer de vanligaste loggnivåerna:
-
 ```php
+<?php
+
 use Radix\Support\Logger;
 
 $logger = new Logger('app'); // 'app' är kanalen
@@ -17,30 +30,50 @@ $logger->warning('Lågt lagringsutrymme');
 $logger->error('Kunde inte ansluta till databasen');
 ```
 
-## Kontext och Interpolering
+---
 
-Du kan skicka med en array som kontext. Om meddelandet innehåller platshållare (inuti `{}`) byts de automatiskt ut mot värden från kontexten. Övrig data sparas som JSON i slutet av loggraden.
+## Kontext och interpolering
+
+Du kan skicka med en array som kontext. Om meddelandet innehåller platshållare (`{...}`) byts de ut mot värden från kontexten. Övrig data loggas som JSON.
 
 ```php
-// Loggar: [Datum] app.INFO Användare Anna skapades {"role":"admin"}
+<?php
+
+use Radix\Support\Logger;
+
+$logger = new Logger('app');
+
+// Loggar ungefär: [Datum] app.INFO Användare Anna skapades {"role":"admin"}
 $logger->info('Användare {name} skapades', [
     'name' => 'Anna',
-    'role' => 'admin'
+    'role' => 'admin',
 ]);
 ```
 
-## Rotation och Retention
+---
 
-Logger-klassen hanterar automatiskt filstorlekar och städning:
+## Rotation och retention
 
-1.  **Rotation**: Om en loggfil överstiger maxgränsen (standard 10 MB) skapas en ny fil (t.ex. `app-2024-01-20.log.1`).
-2.  **Retention**: Gamla loggfiler tas automatiskt bort efter ett visst antal dagar (standard 14 dagar).
+Logger-klassen kan hantera logg-rotation (t.ex. när filen blir för stor) och retention (ta bort gamla filer efter X dagar).
 
 Du kan konfigurera detta i konstruktorn:
+
 ```php
+<?php
+
+use Radix\Support\Logger;
+
 $logger = new Logger(
     channel: 'billing',
     maxBytes: 5 * 1024 * 1024, // 5 MB
-    retentionDays: 30          // Spara i en månad
+    retentionDays: 30          // Spara i 30 dagar
 );
 ```
+
+---
+
+## Tips
+
+- Skapa separata kanaler för “brusiga” områden (t.ex. `health`) så att `app`-loggen förblir läsbar.
+- Logga aldrig hemligheter (tokens, nycklar, lösenord).
+- I production: logga fel tydligt, men undvik att exponera stack traces till slutanvändaren (se [`docs/SECURITY.md`](SECURITY.md)).

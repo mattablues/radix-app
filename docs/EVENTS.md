@@ -1,12 +1,36 @@
-# Events och Listeners i Radix
+# docs/EVENTS.md
 
-Radix använder en `EventDispatcher` för att implementera "Observer"-mönstret. Detta gör det möjligt att reagera på händelser i systemet (t.ex. att en användare har registrerat sig) utan att blanda ihop logiken i controllern.
+← [`Tillbaka till index`](INDEX.md)
 
-## 1. Skapa en Event
+# Events & listeners (Radix App)
 
-En event är en enkel klass som bär på den data som behövs. De placeras vanligtvis i `src/Events/`.
+Radix använder en `EventDispatcher` för att implementera ett Observer-liknande mönster.  
+Det gör att du kan reagera på händelser (t.ex. “user registrerad”, “user blocked”) utan att blanda in logiken i controllers.
+
+---
+
+## Översikt
+
+- **Event** = en enkel klass som bär data
+- **Listener** = en klass som hanterar eventet (oftast via `__invoke`)
+- **Registrering** = i appens listener-konfig (vanligtvis `config/listeners.php`)
+- **Dispatch** = via `EventDispatcher`
+
+---
+
+## 1) Skapa en event
+
+Events placeras typiskt i:
+
+- `src/Events/`
+
+Exempel:
 
 ```php
+<?php
+
+declare(strict_types=1);
+
 namespace App\Events;
 
 use Radix\EventDispatcher\Event;
@@ -16,41 +40,62 @@ final class UserRegisteredEvent extends Event
     public function __construct(
         public string $email,
         public string $firstName,
-        public string $activationLink
+        public string $activationLink,
     ) {}
 }
 ```
 
-## 2. Skapa en Listener
+---
 
-En listener är en klass som utför en handling när en event triggas. Den bör ha en `__invoke`-metod. De placeras i `src/EventListeners/`.
+## 2) Skapa en listener
+
+Listeners placeras typiskt i:
+
+- `src/EventListeners/`
+
+En listener är ofta en klass med en `__invoke(...)`-metod:
 
 ```php
+<?php
+
+declare(strict_types=1);
+
 namespace App\EventListeners;
 
 use App\Events\UserRegisteredEvent;
 use Radix\Mailer\MailManager;
 
-readonly class SendActivationEmailListener
+final readonly class SendActivationEmailListener
 {
     public function __construct(private MailManager $mailManager) {}
 
     public function __invoke(UserRegisteredEvent $event): void
     {
-        $this->mailManager->send($event->email, 'Välkommen!', "Klicka här: {$event->activationLink}");
+        $this->mailManager->send(
+            $event->email,
+            'Välkommen!',
+            "Klicka här: {$event->activationLink}"
+        );
     }
 }
 ```
 
-## 3. Registrera Listeners
+---
 
-Alla lyssnare registreras i `config/listeners.php`. Radix stödjer två sätt att instansiera lyssnare via `ListenersServiceProvider`:
+## 3) Registrera listeners
 
-1.  **container**: Hämtar lyssnaren direkt från DI-containern.
-2.  **custom**: Instansierar lyssnaren manuellt med specifika beroenden från containern.
+Listeners registreras i appens konfiguration (vanligtvis `config/listeners.php`).
 
-**Exempel (`config/listeners.php`):**
+Radix stödjer typiskt två sätt att instansiera listeners:
+
+- **container**: hämta lyssnaren direkt från DI-containern
+- **custom**: skapa lyssnaren manuellt med specificerade dependencies
+
+Exempel:
+
 ```php
+<?php
+
 return [
     \App\Events\UserRegisteredEvent::class => [
         [
@@ -60,32 +105,40 @@ return [
             'priority' => 10,
         ],
     ],
-    \App\Events\UserBlockedEvent::class => [
-        [
-            'listener' => \App\EventListeners\LogoutListener::class,
-            'type' => 'container',
-            'stopPropagation' => true,
-        ],
-    ],
 ];
 ```
 
-## 4. Trigga en Event
+---
 
-För att skicka iväg en händelse använder du `EventDispatcher`.
+## 4) Dispatcha en event
+
+Du dispatchar en event via `EventDispatcher`:
 
 ```php
-// I en controller eller service
+<?php
+
+use App\Events\UserRegisteredEvent;
+
 $dispatcher = app(\Radix\EventDispatcher\EventDispatcher::class);
 
 $event = new UserRegisteredEvent($email, $firstName, $link);
 $dispatcher->dispatch($event);
 ```
 
-## Stoppa spridning (Stop Propagation)
+---
 
-Om du vill förhindra att efterföljande lyssnare för samma händelse körs, kan du sätta `'stopPropagation' => true` i konfigurationen (förutsatt att event-klassen är "stoppable"). Detta är användbart vid t.ex. säkerhetshändelser där ett blockerat konto ska avbryta alla andra processer.
+## Stoppa spridning (stop propagation)
 
-## Inbyggda händelser
+Om du vill förhindra att efterföljande listeners för samma event körs kan du (om din setup stödjer det) sätta:
 
-Radix skickar även ut inbyggda händelser, som t.ex. `ResponseEvent` precis innan ett svar skickas till webbläsaren. Detta används av systemet för att automatiskt lägga till headers för t.ex. `Cache-Control` och `CORS`.
+- `'stopPropagation' => true`
+
+Det kan vara användbart vid t.ex. säkerhetshändelser där ett blockerat konto ska avbryta vidare flöden.
+
+---
+
+## Inbyggda events
+
+Ramverket kan även dispatcha interna events (t.ex. events runt response/request) som används för att t.ex. lägga headers (CORS, cache-control, security headers).
+
+I appen kan du koppla på egna listeners på samma sätt om du vill hooka in logik runt request/response-livscykeln.

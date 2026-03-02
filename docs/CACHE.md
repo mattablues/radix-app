@@ -1,12 +1,21 @@
-# Cache (FileCache)
+# docs/CACHE.md
 
-Radix tillhandahåller ett enkelt filbaserat cachesystem via klassen `Radix\Support\FileCache`. Det är idealiskt för att lagra beräkningstunga resultat eller API-svar temporärt.
+← [`Tillbaka till index`](INDEX.md)
+
+# Cache (FileCache) (Radix App)
+
+Radix tillhandahåller ett filbaserat cachesystem via `Radix\Support\FileCache`.  
+Det passar bra för att lagra beräkningstunga resultat eller temporära API-svar.
+
+---
 
 ## Grundläggande användning
 
-Du kan lagra strängar, arrayer eller objekt. All data serialiseras automatiskt till JSON.
+Du kan lagra strängar, arrayer eller objekt. Data serialiseras automatiskt.
 
 ```php
+<?php
+
 use Radix\Support\FileCache;
 
 $cache = new FileCache();
@@ -22,17 +31,41 @@ if ($weather === null) {
 }
 ```
 
+---
+
 ## TTL (Time To Live)
 
-Du kan ange utgångstiden som ett heltal (sekunder) eller som ett `DateInterval`-objekt.
+TTL kan anges i sekunder eller som ett `DateInterval`-objekt.
 
 ```php
-// Spara i en vecka med DateInterval
-$cache->set('key', $value, new DateInterval('P7D'));
+<?php
+
+use DateInterval;
+use Radix\Support\FileCache;
+
+$cache = new FileCache();
+
+// Spara i en vecka
+$cache->set('key', ['a' => 1], new DateInterval('P7D'));
 ```
+
+---
 
 ## Hantering och städning
 
-- **`delete(key)`**: Tar bort en specifik nyckel.
-- **`clear()`**: Rensar hela cachen.
-- **`prune()`**: Skannar mappen och tar bort alla filer som har gått ut. Detta bör köras regelbundet, till exempel via ett schemalagt jobb.
+- `delete($key)` — tar bort en specifik nyckel
+- `clear()` — rensar hela cachen
+- `prune()` — skannar cache-mappen och tar bort utgångna filer (bra att köra via schema/cron)
+
+---
+
+## Rensa cache via CLI
+
+Om du vill rensa appens cache (t.ex. efter config/template-ändringar):
+
+```bash
+php radix cache:clear
+```
+Se även:
+
+- [`docs/CLI.md`](CLI.md)

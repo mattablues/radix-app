@@ -1,88 +1,130 @@
-# Filhantering (Reader & Writer)
+# docs/FILES.md
 
-Radix tillhandahåller ett strömlinjeformat API för att läsa och skriva filer i olika format (JSON, CSV, XML, Text) via klasserna `Radix\File\Reader` och `Radix\File\Writer`.
+← [`Tillbaka till index`](INDEX.md)
+
+# Filhantering (Reader & Writer) (Radix App)
+
+Radix tillhandahåller ett API för att läsa och skriva filer i flera format (JSON, CSV, XML, text) via:
+
+- `Radix\File\Reader`
+- `Radix\File\Writer`
+
+Det här är praktiskt för import/export, integrationer och “batch-jobb”.
+
+---
 
 ## Läsa filer (Reader)
 
-`Reader`-klassen erbjuder statiska metoder för att snabbt läsa in data till PHP-strukturer.
+`Reader` erbjuder statiska metoder för att läsa in data till PHP-strukturer.
 
-### JSON & Text
+### JSON & text
+
 ```php
+<?php
+
 use Radix\File\Reader;
 
-// Läs JSON till en associativ array
+// Läs JSON
 $data = Reader::json('data.json');
 
-// Läs råtext med automatisk konvertering till UTF-8
+// Läs råtext och konvertera till UTF-8 vid behov
 $text = Reader::text('legacy.txt', 'ISO-8859-1');
 ```
 
 ### CSV & XML
+
 ```php
-// Läs CSV med headers (mappas automatiskt till assoc-arrayer)
+<?php
+
+use Radix\File\Reader;
+
+// CSV med headers (assoc per rad)
 $rows = Reader::csv('users.csv', delimiter: ';', hasHeader: true);
 
-// Läs XML till en array
+// XML till array
 $config = Reader::xml('config.xml', assoc: true);
 ```
 
 ### Streaming (för stora filer)
-För att hantera stora filer utan att använda för mycket minne kan du använda streaming:
+
+För stora filer kan du använda streaming för att hålla minnesanvändningen låg.
+
 ```php
-Reader::csvStream('huge_data.csv', function(array $row) {
+<?php
+
+use Radix\File\Reader;
+
+Reader::csvStream('huge_data.csv', function (array $row): void {
     // Körs för varje rad i filen
-    echo $row['email'];
+    echo $row['email'] ?? '';
 }, hasHeader: true);
 ```
 
+---
+
 ## Skriva filer (Writer)
 
-`Writer`-klassen gör det enkelt att spara data och skapar automatiskt mappar som saknas.
+`Writer` gör det enkelt att spara data och skapar mappar om de saknas.
 
-### JSON & Text
+### JSON & text
+
 ```php
+<?php
+
 use Radix\File\Writer;
 
-// Skriv snyggt formaterad JSON
-Writer::json('storage/output.json', ['status' => 'ok', 'count' => 5]);
+Writer::json('storage/output.json', [
+    'status' => 'ok',
+    'count' => 5,
+]);
 
-// Skriv råtext
-Writer::text('logs/test.log', 'Händelse registrerad.');
+Writer::text('storage/logs/test.log', 'Händelse registrerad.');
 ```
 
-### CSV med validering
-Du kan validera din data mot ett schema innan den skrivs till CSV:
+### CSV
+
 ```php
+<?php
+
+use Radix\File\Writer;
+
 $data = [
     ['id' => '1', 'email' => 'test@example.com'],
-    ['id' => '2', 'email' => 'invalid-email']
+    ['id' => '2', 'email' => 'invalid-email'],
 ];
 
-$schema = [
-    'required' => ['id', 'email'],
-    'types' => ['id' => 'int']
-];
-
-// Validerar och skriver till fil
 Writer::csv('storage/users.csv', $data, headers: ['id', 'email']);
 ```
 
-### Streaming (Skriva)
+### Streaming (skriva)
+
 ```php
-Writer::csvStream('export.csv', function($writeRow) {
+<?php
+
+use Radix\File\Writer;
+
+Writer::csvStream('storage/export.csv', function (callable $writeRow): void {
     foreach ($largeDataset as $user) {
         $writeRow([$user->id, $user->email]);
     }
 }, headers: ['ID', 'Email']);
 ```
 
+---
+
 ## Encoding-stöd
-Både Reader och Writer stödjer konvertering mellan olika teckenkodningar. Detta är användbart vid integration med äldre system som t.ex. använder `ISO-8859-1`.
+
+Både Reader och Writer stödjer konvertering mellan teckenkodningar, vilket är användbart vid integration med äldre system.
 
 ```php
-// Läser från Windows-format och returnerar UTF-8
+<?php
+
+use Radix\File\Reader;
+use Radix\File\Writer;
+
+// Läs CP1252 och få UTF-8
 $content = Reader::text('windows.txt', 'CP1252');
 
-// Skriver UTF-8 sträng till fil i ISO-8859-1 format
+// Skriv UTF-8 till ISO-8859-1
 Writer::text('export.csv', $utf8String, 'ISO-8859-1');
 ```

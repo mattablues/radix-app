@@ -1,5 +1,7 @@
 # CI-variabler (GitHub Actions)
 
+← [`Till docs/index`](../docs/INDEX.md)
+
 Det här repot använder repo-variabler (inte secrets) för att styra vilka delar av CI som körs.
 
 ## Var sätter man dem?

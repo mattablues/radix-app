@@ -1,68 +1,115 @@
-# Bilder och Uppladdning
+# docs/IMAGES.md
 
-Radix förenklar hanteringen av bilder och filuppladdningar genom klasserna `Radix\File\Upload` och `Radix\File\Image`, samt genom den smidiga tjänsten `App\Services\UploadService`.
+← [`Tillbaka till index`](INDEX.md)
+
+# Bilder & uppladdningar (Radix App)
+
+Radix förenklar hanteringen av filer och bilder via:
+
+- `Radix\File\Upload` (säker uppladdning/flytt/validering)
+- `Radix\File\Image` (bildbehandling via GD)
+- (valfritt) en app-service, t.ex. `App\Services\UploadService`, för att hålla controllers rena
+
+---
 
 ## Uppladdning (Upload)
 
-Klassen `Radix\File\Upload` hanterar säker flytt av filer från temporära mappar till din lagringsplats. Den skapar automatiskt mappar och genererar unika filnamn.
+`Radix\File\Upload` hanterar säker flytt av filer från temporära mappar till din lagringsplats.
+Den skapar mappar vid behov och kan generera unika filnamn.
 
-### Grundläggande exempel
+### Grundexempel
+
 ```php
-$file = $request->files['avatar'];
+<?php
+
+use Radix\File\Upload;
+
+/** @var array<string,mixed> $files */
+$files = $request->files;
+
+/** @var mixed $file */
+$file = $files['avatar'] ?? null;
+
 $upload = new Upload($file, ROOT_PATH . '/public/uploads/');
 
 if ($upload->validate(['avatar' => 'file_type:image/jpeg|file_size:2'])) {
-    $path = $upload->save(); // Returnerar fullständig sökväg till den sparade filen
+    $path = $upload->save(); // returnerar sökvägen till sparad fil
 }
 ```
 
+---
+
 ## Bildbehandling (Image)
 
-`Image`-klassen är en wrapper runt PHP GD och gör det enkelt att manipulera bilder (resizing, cropping, vattenstämplar).
+`Radix\File\Image` är en wrapper runt PHP GD och gör det enkelt att manipulera bilder (resize/crop/rotation/filter).
 
 ```php
+<?php
+
+use Radix\File\Image;
+
 $image = new Image('path/to/image.jpg');
 
 // Ändra storlek (auto, portrait, landscape, exact)
 $image->resizeImage(800, 600, 'auto');
 
-// Beskär bilden till exakta mått (centrerat)
+// Beskär till exakta mått (centrerat)
 $image->resizeImage(200, 200, 'crop');
 
-// Applicera filter eller rotation
+// Rotation och filter
 $image->rotateImage(90);
 $image->applyGrayscale();
 
-// Spara den bearbetade bilden
+// Spara
 $image->saveImage('path/to/new_image.jpg', quality: 80);
 ```
 
-## UploadService (Rekommenderat flöde)
+---
 
-För att hålla dina Controllers rena bör du använda `UploadService`. Den kombinerar uppladdning och bildbehandling i ett svep.
+## UploadService (rekommenderat flöde)
 
-### Använda fördefinierade profiler
+För att hålla controllers tunna är det ofta bäst att lägga uppladdningslogik i en service (t.ex. `App\Services\UploadService`) som:
+
+- validerar filen
+- laddar upp filen
+- (valfritt) kör bildbehandling
+- returnerar URL/path
+
+### Exempel: fördefinierade “profiler”
+
 ```php
-$service = new UploadService();
+<?php
 
-// Laddar upp, beskär till 200x200 och sparar som avatar.jpg
+$service = new \App\Services\UploadService();
+
+// Avatar: ladda upp + cropa till 200x200
 $url = $service->uploadAvatar($request->files['avatar'], $directory);
 
-// Laddar upp och skalar till produktbild (600x600)
+// Produktbild: ladda upp + skala
 $url = $service->uploadProductImage($request->files['photo'], $directory);
 ```
 
-### Anpassad bearbetning
-Du kan skicka med en callback för att skräddarsy bearbetningen:
+### Exempel: anpassad bearbetning med callback
+
 ```php
-$service->uploadImage($file, $dir, function(Image $image) {
+<?php
+
+use Radix\File\Image;
+
+$service->uploadImage($file, $dir, function (Image $image): void {
     $image->resizeImage(400, 300);
     $image->addWatermark('logo.png', x: 10, y: 10);
 });
 ```
 
+---
+
 ## Säkerhetstips
 
-1.  **Validering**: Använd alltid `file_type` och `file_size` regler i din validator.
-2.  **Lagring**: Spara filer utanför webbroten om de inte ska vara publika, eller använd unika ID-mappar (t.ex. `/public/images/user/{id}/`).
-3.  **Filnamn**: Radix genererar automatiskt säkra `uniqid()`-baserade filnamn för att förhindra överskrivning och skadliga filnamn.
+1) **Validera alltid** med `file_type` och `file_size` (se `docs/VALIDATION.md`)
+2) **Lagra smart**
+   - publika bilder: under `public/`
+   - privata filer: utanför webbroten eller bakom auth
+3) **Filnamn**
+   - undvik att lita på originalnamn från användaren
+   - använd unika, säkra namn (t.ex. genererade)

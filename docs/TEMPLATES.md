@@ -1,31 +1,54 @@
-# Radix Template System
+# docs/TEMPLATES.md
 
-Radix använder ett eget templatesystem (via `RadixTemplateViewer`) som kombinerar kraften i PHP med en renare syntax för layouts och komponenter. Mallfiler använder filändelsen `.ratio.php`.
+← [`Tillbaka till index`](INDEX.md)
+
+# Templates (Radix App)
+
+Radix App använder ett eget templatesystem (via `RadixTemplateViewer`) som kombinerar PHP med en renare syntax för layouts och komponenter.
+
+Mallfiler använder filändelsen:
+
+- `.ratio.php`
+
+---
 
 ## Grundläggande syntax
 
-### Variabler
-För att skriva ut en variabel (som automatiskt escapas för säkerhet):
+### Variabler (auto-escaping)
+
+Skriv ut en variabel (auto-escapas för säkerhet):
+
 ```html
 {{ $name }}
 ```
 
-Om du vill skriva ut rå HTML (använd med försiktighet):
+### Rå HTML (`|raw`) — använd med försiktighet
+
+Om du vill skriva ut HTML utan escaping:
+
 ```html
 {{ $html_content | raw }}
 ```
 
-### PHP-direktiv
-Du kan köra vanliga PHP-kommandon inuti `{% %}`:
+> Använd bara `|raw` när du vet att innehållet är säkert (t.ex. genererat av dig själv eller sanerat). Annars riskerar du XSS.
+
+---
+
+## PHP-direktiv (`{% ... %}`)
+
+Du kan köra PHP-kontrollstrukturer inuti `{% %}`:
+
 ```html
 {% foreach ($items as $item): %}
     <li>{{ $item }}</li>
 {% endforeach; %}
 ```
 
-## Layouts och Arv
+---
 
-Du kan definiera en baslayout och sedan utöka den i dina vyer.
+## Layouts och arv
+
+Du kan definiera en baslayout och låta vyer ärva från den.
 
 **Layout (`views/layouts/app.ratio.php`):**
 ```html
@@ -53,9 +76,15 @@ Du kan definiera en baslayout och sedan utöka den i dina vyer.
 {% endblock %}
 ```
 
-## Komponenter
+---
 
-Komponenter ligger i `views/components/` och anropas med `<x-` taggar.
+## Komponenter (`<x-...>`)
+
+Komponenter ligger i:
+
+- `views/components/`
+
+De anropas med `<x-...>`-syntax.
 
 **Exempelkomponent (`views/components/alert.ratio.php`):**
 ```html
@@ -71,8 +100,53 @@ Komponenter ligger i `views/components/` och anropas med `<x-` taggar.
 </x-alert>
 ```
 
-### Namngivna Slots
-Om en komponent behöver mer än ett innehållsområde:
+---
+
+## Props (`{% props(...) %}`) i komponenter
+
+Komponenter kan deklarera vilka “props” de förväntar sig (och ev. standardvärden).  
+Det gör komponenter mer robusta och själv-dokumenterande.
+
+### Exempel: props med default-värden
+
+**Komponent (`views/components/card.ratio.php`):**
+```php
+{% props([
+    'title',
+    'shadow' => 'shadow-sm',
+    'padding' => 'p-6'
+]) %}
+
+<div class="bg-white border border-gray-200 rounded-2xl {{ $shadow }} {{ $padding }}">
+    <h4 class="text-lg font-bold mb-2">{{ $title }}</h4>
+    {{ slot }}
+</div>
+```
+
+**Användning:**
+```html
+<x-card title="Profil">
+    <p>Innehåll i kortet.</p>
+</x-card>
+
+<x-card title="Admin" shadow="shadow-lg" padding="p-10">
+    <p>Större kort.</p>
+</x-card>
+```
+
+### Slot-konvention (viktigt)
+
+- `{{ slot }}` = renderad slot (tänkt för HTML från nästlade komponenter)
+- `{{ $slot }}` = slot som data (escapas)
+
+Om du bygger wrapper-komponenter som ska kunna innehålla HTML/komponenter inuti är `{{ slot }}` oftast rätt val.
+
+---
+
+## Namngivna slots
+
+Om en komponent behöver flera innehållsområden kan du använda namngivna slots:
+
 ```html
 <x-modal>
     <x-slot:title>Bekräfta</x-slot:title>
@@ -80,29 +154,36 @@ Om en komponent behöver mer än ett innehållsområde:
 </x-modal>
 ```
 
+---
+
 ## Inkluderingar
-Du kan inkludera mindre fragment (t.ex. en header) direkt:
+
+Du kan inkludera mindre fragment:
+
 ```html
 {% include "partials/nav.ratio.php" %}
 ```
 
-## Globala Variabler
-Du kan dela data med alla vyer via containern eller direkt i `RadixTemplateViewer`:
-```php
-$viewer->shared('appName', 'Radix Framework');
-```
+---
 
-I mallen:
+## Globala variabler
+
+Du kan dela data med alla vyer via viewer (t.ex. genom att registrera “shared” data vid boot).
+
+I template:
+
 ```html
 {{ $appName }}
 ```
 
-## Caching
-Mallar kompileras och cachas i `cache/views/` för maximal prestanda.
-- I **development** (`APP_ENV=dev`) är cachen inaktiverad.
-- I **production** minifieras koden automatiskt vid kompilering.
+---
 
-Du kan rensa cachen via CLI:
+## Cache
+
+Templates kompileras och cachas för prestanda.
+
+Vid felsökning (eller om du har ändrat templates och inte ser effekten direkt), rensa cache:
+
 ```bash
 php radix cache:clear
-```
+``

@@ -1,58 +1,129 @@
-# Radix Cookbook (COOKBOOK.md)
+# docs/COOKBOOK.md
 
-Detta dokument innehåller snabba recept för vanliga utvecklingsuppgifter i Radix.
+← [`Tillbaka till index`](INDEX.md)
 
-## Skapa en ny sida (End-to-End)
-1. **Skapa Modell**: Om sidan behöver data, skapa en fil i `src/Models/`.
-2. **Skapa Controller**: Skapa `src/Controllers/NyController.php` som ärver `AbstractController`.
-3. **Definiera Route**: Lägg till rutten i `routes/web.php`.
-4. **Skapa Vy**: Skapa `views/ny-sida.ratio.php`.
-5. **Validering**: Använd `Radix\Support\Validator` i kontrollern för inkommande POST-data.
+# Radix Cookbook (Radix App)
 
-## Lägga till ett nytt CLI-kommando
-1. Skapa en ny klass i `src/Commands/` (eller motsvarande mapp).
-2. Registrera kommandot i `radix`-binären eller via en Service Provider.
-3. Kör `php radix --md > docs/CLI.md` för att uppdatera dokumentationen.
+Detta dokument innehåller snabba recept för vanliga utvecklingsuppgifter i Radix App.
 
 ---
 
-# Release & Deployment (RELEASES.md)
+## Skapa en ny sida (end-to-end)
 
-Checklista för att ta Radix från utveckling till produktion.
+1) **Skapa modell** (om sidan behöver data)  
+   Lägg en modell i `src/Models/`.
 
-## 1. Miljökonfiguration (.env)
-Säkerställ följande värden i produktion:
+2) **Skapa controller**  
+   Skapa en controller i `src/Controllers/` som ärver `AbstractController`.
+
+3) **Definiera route**  
+   Lägg till routen i `routes/web.php`.
+
+4) **Skapa vy**  
+   Skapa en vy i `views/`, t.ex. `views/ny-sida.ratio.php`.
+
+5) **Validering (om du tar emot input)**  
+   Validera i kontrollern eller via en form request. Se `docs/VALIDATION.md`.
+
+---
+
+## Lägga till ett nytt CLI-kommando
+
+Rekommenderat sätt i Radix App:
+
+1) Skapa ett nytt kommando med generatorn:
+
+```bash
+php radix make:command UsersSyncCommand
+```
+
+2) Om du vill välja CLI-namn själv:
+
+```bash
+php radix make:command UsersSyncCommand --command=users:sync
+```
+
+3) Om kommandot inte dyker upp (eller efter större ändringar), rensa cache:
+
+```bash
+php radix cache:clear
+```
+
+Se även:
+
+- [`docs/CLI.md`](CLI.md)
+
+---
+
+## Release & deployment (snabb checklista)
+
+### Miljö
+
+I production vill du normalt ha:
+
 - `APP_ENV=production`
-- `APP_DEBUG=false`
-- `VIEWS_CACHE_PATH=cache/views`
+- `APP_DEBUG=0`
+- templates/view-cache aktiverad (för prestanda)
 
-## 2. Optimering
-Kör dessa kommandon på servern vid deployment:
-- `composer install --no-dev --optimize-autoloader`
-- `npm ci && npm run build` (om frontend ändrats)
-- `php radix cache:clear` (om du har ett sådant kommando)
+### Deployment-kommandon (exempel)
 
-## 3. Rättigheter
+```bash
+composer install --no-dev --optimize-autoloader
+npm ci
+npm run build
+php radix cache:clear
+```
+
+> Om du använder deploy-säkerhet för CLI i production kan du behöva köra migrations med deploy-flagga/variabel enligt din policy.
+
+### Rättigheter
+
 Säkerställ att webbservern kan skriva till:
+
 - `storage/`
 - `cache/`
 
 ---
 
-# Utvecklingsflöde (DEVELOPMENT_FLOW.md)
+## Utvecklingsflöde (snabbt)
 
-Hur vi arbetar effektivt med Radix-templaten.
+Innan du pushar:
 
-## 1. Test-Driven Development (TDD)
-Vi strävar efter hög testtäckning. Innan du pushar:
-- Kör PHPUnit: `vendor/bin/phpunit`
-- Kör Infection för att hitta svaga tester: `composer infect`
-- Kontrollera statisk analys: `composer stan`
+### Tester
 
-## 2. Kodstil (Linting)
-Vi använder PHP-CS-Fixer. Fixa formateringen automatiskt med:
-- `composer format` (om scriptet finns i composer.json) eller kör `.php-cs-fixer.dist.php`.
+```bash
+composer test
+```
 
-## 3. Arbeta med Vyer & Cache
-Om du gör ändringar i `RadixTemplateViewer` eller ändrar logik i komponenter och inte ser ändringen:
-- Rensa vyn-cachen manuellt i `cache/views/` eller använd rensningskommandot i din `commands`-fil.
+### Statisk analys
+
+```bash
+composer stan
+```
+
+### Mutation testing (valfritt)
+
+```bash
+composer infect
+```
+
+### Kodstil
+
+```bash
+composer format
+composer format:check
+```
+
+---
+
+## Arbeta med vyer & cache
+
+Om du ändrar templates/komponenter och inte ser effekten direkt:
+
+1) rensa cache:
+
+```bash
+php radix cache:clear
+```
+
+2) kontrollera att du kör rätt miljö (`APP_ENV`, debug/cache-beteende)

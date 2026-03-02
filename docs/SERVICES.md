@@ -1,55 +1,120 @@
-# Services och Dependency Injection
+# docs/SERVICES.md
 
-Radix använder en kraftfull Dependency Injection (DI) container för att hantera objekt och deras beroenden. Detta gör koden testbar och modulär.
+← [`Tillbaka till index`](INDEX.md)
+
+# Services & Dependency Injection (Radix App)
+
+Radix App använder en Dependency Injection-container (DI) för att hantera objekt och deras beroenden.  
+Det gör koden mer testbar, mer modulär och enklare att underhålla.
+
+---
+
+## Översikt
+
+I Radix App registrerar du tjänster främst via:
+
+- **Service Providers** (`src/Providers/` + `config/providers.php`)
+- **Container-boot** i `config/services.php` (för wire-up av core services och bindingar)
+
+I praktiken:
+
+- appen “bootar” containern
+- config laddas
+- providers registrerar/konfigurerar tjänster
+- controllers/services/listeners får dependencies via konstruktorinjektion
+
+---
 
 ## Service Providers
 
-Service Providers är centrala platser för att registrera tjänster i containern. De definieras i `src/Providers/` och aktiveras i `config/providers.php`.
+Service Providers är centrala platser för att registrera tjänster i containern.
+
+- Providers ligger i `src/Providers/`
+- Aktiveras via `config/providers.php`
+
+Exempel:
 
 ```php
+<?php
+
+declare(strict_types=1);
+
 namespace App\Providers;
 
 use Radix\ServiceProvider\ServiceProviderInterface;
 
-readonly class MyServiceProvider implements ServiceProviderInterface
+final class MyServiceProvider implements ServiceProviderInterface
 {
     public function register(): void
     {
         $container = app();
-        $container->set(MyService::class, fn() => new MyService('config-value'));
+
+        $container->addShared(\App\Services\MyService::class, function () {
+            return new \App\Services\MyService('config-value');
+        });
     }
 }
 ```
 
-## Konfiguration (`config/services.php`)
+> Rekommendation: lägg “app-nära” wiring i providers så att `config/services.php` inte blir en monolit.
 
-För enklare tjänster eller tjänster som kräver specifik konfiguration kan du använda `config/services.php`. Här kan du definiera hur klasser ska instansieras.
+---
+
+## `config/services.php` (container-boot)
+
+För tjänster som kräver specifik wiring, paths eller setup kan de registreras i `config/services.php`.
+
+Typiska exempel:
+- konfigurationsobjekt (`Config`)
+- cache/logging
+- db-connection
+- migrator/seed runner
+- viewer/template engine
+- commands registry
+
+---
 
 ## Använda containern
 
-### Via Autowiring
-Det rekommenderade sättet är att låta Radix injicera beroenden automatiskt via konstruktorn i Controllers, Services eller Listeners:
+### 1) Autowiring (rekommenderat)
+
+Det föredragna sättet är konstruktorinjektion i controllers/services/listeners:
 
 ```php
 public function __construct(
-    private MyService $service,
-    private Database $db
+    private readonly \App\Services\AuthService $authService,
 ) {}
 ```
 
-### Via Helper-funktionen `app()`
-Du kan även hämta tjänster manuellt (Service Location), även om konstruktor-injektion föredras:
+### 2) Helpern `app()` (service locator)
+
+Du kan hämta tjänster manuellt (mindre idealiskt, men ibland praktiskt):
 
 ```php
 $mailer = app(\Radix\Mailer\MailManager::class);
 ```
 
-## Globala Helpers
-Radix tillhandahåller flera helpers som interagerar med containern:
-- `app()` - Hämtar containern eller en specifik tjänst.
-- `request()` - Hämtar den nuvarande HTTP-requesten.
-- `view()` - Renderar en vy via `RadixTemplateViewer`.
-- `config()` - Hämtar värden från konfigurationsfilerna.
+---
+
+## Vanliga helpers
+
+Radix brukar ha helpers som interagerar med containern och appens tjänster, t.ex.:
+
+- `app()` — hämtar containern eller en specifik tjänst
+- `request()` — hämtar nuvarande request (om tillgängligt)
+- `view()` — renderar en vy via viewer
+- `config()` — hämtar värden från sammanslagen konfiguration
+
+---
 
 ## Miljövariabler (.env)
-Känslig konfiguration eller miljöspecifika inställningar lagras i `.env` och nås via `getenv()` eller `config()`-helpers.
+
+Känslig och miljöspecifik konfiguration ligger i `.env` och nås via `getenv()` (eller via config-lager om du mappar env => config).
+
+Bra tumregel:
+- secrets i `.env`
+- defaults och struktur i `config/`
+
+Se även:
+
+- [`docs/CONFIG.md`](CONFIG.md)
