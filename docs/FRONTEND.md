@@ -1,13 +1,37 @@
-# Frontend & Templates (FRONTEND.md)
+# docs/FRONTEND.md
 
-Radix använder en modern frontend-stack med **Tailwind CSS v4**, **Alpine.js** och den inbyggda mallmotorn **RadixTemplateViewer** (`.ratio.php`).
+← [`Tillbaka till index`](INDEX.md)
 
-## 1. Komponenter (<x-komponent>)
+# Frontend (Radix App)
 
-Komponenter lagras i `views/components/`. Du anropar dem med syntaxen `<x-namn>`. Om en komponent ligger i en undermapp, t.ex. `views/components/ui/card.ratio.php`, anropar du den med `<x-ui.card>`.
+Radix App använder en modern frontend-stack med:
 
-### 1.1 Props ({% props %})
-Varje komponent kan deklarera vilka variabler den förväntar sig och deras standardvärden med `{% props(...) %}`. Detta gör komponenten mer robust och själv-dokumenterande.
+- **Tailwind CSS v4**
+- **Alpine.js**
+- templates i **RadixTemplateViewer** (`.ratio.php`)
+
+> Den här filen fokuserar på hur du jobbar med frontend i views/templates. För ren template-syntax (extends/slots/props osv), se även `docs/TEMPLATES.md`.
+
+---
+
+## 1) Komponenter (`<x-komponent>`)
+
+Komponenter lagras i:
+
+- `views/components/`
+
+Du anropar dem med syntaxen `<x-namn>`.  
+Om en komponent ligger i en undermapp, t.ex. `views/components/ui/card.ratio.php`, anropar du den som:
+
+```html
+<x-ui.card />
+```
+
+---
+
+## 2) Props i komponenter (`{% props %}`)
+
+Komponenter kan deklarera vilka “props” de förväntar sig och deras standardvärden med `{% props(...) %}`.
 
 **Exempel: `views/components/ui/button.ratio.php`**
 ```php
@@ -33,109 +57,72 @@ Varje komponent kan deklarera vilka variabler den förväntar sig och deras stan
 
 ---
 
-## 2. Auto-escaping & `|raw` (VIKTIGT)
+## 3) Auto-escaping & `|raw` (VIKTIGT)
 
-RadixTemplateViewer auto-escapar som default allt som renderas via `{{ ... }}` med `secure_output(...)`.
+RadixTemplateViewer auto-escapar som default allt som renderas via `{{ ... }}`.
 
-### 2.1 Grundregel: `{{ $var }}` är text (escapas)
-Allt som skrivs med `{{ $var }}` behandlas som **text** och HTML-escapas.
+### Grundregel: `{{ $var }}` är text (escapas)
 
-```php
+```html
 <h4>{{ $title }}</h4>
 ```
 
-Om `$title` råkar innehålla HTML (t.ex. `<b>Hej</b>`) renderas det som text: `&lt;b&gt;Hej&lt;/b&gt;`.
+Om `$title` råkar innehålla HTML renderas det som text (HTML-escapat).
 
-### 2.2 Undantag: `|raw` (endast när du vet att det är säkert)
-`|raw` säger uttryckligen “rendera utan escaping”.
+### Undantag: `|raw` (endast när du vet att det är säkert)
 
-Använd detta **mycket sparsamt** och bara när innehållet är:
-- genererat av er själva, eller
-- sanerat/whitelistat innan rendering.
-
-```php
+```html
 <div>{{ $htmlFragment|raw }}</div>
 ```
 
-**Rekommendation:** Om värdet kan innehålla användargenererat innehåll → använd inte `|raw`.
+Använd `|raw` sparsamt och bara om innehållet är kontrollerat/sanerad.
 
-### 2.3 Slot-konvention: `{{ slot }}` vs `{{ $slot }}`
-I templates finns två vanliga sätt att skriva ut slot:
+### Slot-konvention: `{{ slot }}` vs `{{ $slot }}`
 
-- `{{ slot }}` = **renderad slot (raw)**  
-  Använd när slotten kan innehålla HTML från nästlade komponenter och ska renderas som HTML.
+- `{{ slot }}` = renderad slot (raw), för markup/nestlade komponenter
+- `{{ $slot }}` = slot som data (escapas), för “visa som text”
 
-- `{{ $slot }}` = **slot som data (escapas)**  
-  Använd när du vill visa slot-innehållet som text (t.ex. felsökning eller “visa markupen”).
-
-**Exempel (wrapper som ska stödja nested components):**
-```php
+**Wrapper-exempel:**
+```html
 <div class="wrapper">{{ slot }}</div>
 ```
 
-**Exempel (visa slot som text):**
-```php
+**Debug-exempel:**
+```html
 <pre>{{ $slot }}</pre>
 ```
 
-### 2.4 Props som innehåller HTML
-Skicka helst **data** som props och bygg markup i komponenten.
+### Props som innehåller HTML
 
-Om en prop verkligen ska kunna innehålla HTML: gör det till ett **medvetet API** och använd `|raw` i komponenten:
+Skicka helst data som props och bygg markup i komponenten.
+
+Om en prop verkligen ska kunna innehålla HTML: gör det till ett medvetet API och använd `|raw` i komponenten:
 
 ```php
 {% props(['titleHtml' => '']) %}
 <h4>{{ $titleHtml|raw }}</h4>
 ```
 
-Det gör att valet att rendera rå HTML ligger i komponenten (inte i anropsstället), vilket är lättare att granska.
-
 ---
 
-## 3. Slots (Innehållsplatshållare)
+## 4) Slots (innehållsplatshållare)
 
 Slots används för att skicka in HTML-innehåll i en komponent.
 
-### 3.1 Standard Slot ($slot)
-Allt innehåll som placeras mellan komponentens start- och slut-tagg hamnar i variabeln `$slot`.
+### Standard slot
 
-**Exempel: `views/components/card.ratio.php`**
-```php
-<div class="card p-6 bg-white shadow">
-    {{ $slot }}
-</div>
-```
+Innehåll mellan start/slut-tag hamnar i komponentens slot.
 
-**Användning:**
 ```html
 <x-card>
-    <p>Det här innehållet hamnar i $slot.</p>
+    <p>Det här blir slot-innehåll.</p>
 </x-card>
 ```
 
-### 3.2 Namngivna Slots (<x-slot:namn>)
-Om en komponent behöver innehåll på flera olika ställen (t.ex. header, body, footer) används namngivna slots.
+### Namngivna slots (`<x-slot:namn>`)
 
-**Exempel: `views/components/modal.ratio.php`**
-```php
-{% props(['class' => '']) %}
+Använd när en komponent har flera “ytor” (header/footer osv).
 
-<div class="modal {{ $class }}">
-    <header class="border-b">
-        {{ $header }}
-    </header>
-
-    <main class="p-4">
-        {{ $slot }} <!-- Standardinnehåll -->
-    </main>
-
-    <footer class="border-t">
-        {{ $footer }}
-    </footer>
-</div>
-```
-
-**Användning:**
 ```html
 <x-modal class="max-w-lg">
     <x-slot:header>
@@ -153,25 +140,25 @@ Om en komponent behöver innehåll på flera olika ställen (t.ex. header, body,
 
 ---
 
-## 4. Alpine.js Integration
+## 5) Alpine.js i templates
 
-Radix är optimerat för Alpine.js. Du kan använda Alpine-direktiv direkt i dina komponenter och slots.
+Du kan använda Alpine-direktiv direkt i komponenter och views.
 
 ```html
 <x-card x-data="{ open: false }">
     <button @click="open = !open">Visa mer</button>
 
     <div x-show="open" x-collapse>
-        {{ $slot }}
+        {{ slot }}
     </div>
 </x-card>
 ```
 
 ---
 
-## 5. Tillgång till global data
+## 6) Global data i views
 
-Variabler som registrerats via `$viewer->shared('key', 'value')` är tillgängliga i alla komponenter och vyer.
+Variabler som delas med viewer (t.ex. via `$viewer->shared(...)`) är tillgängliga i alla komponenter och vyer.
 
 ```html
 <p>Inloggad som: {{ $globalUser->name }}</p>
@@ -179,11 +166,22 @@ Variabler som registrerats via `$viewer->shared('key', 'value')` är tillgängli
 
 ---
 
-## 6. Versionshantering av assets
+## 7) Versionshantering av assets
 
-För att undvika cache-problem i webbläsaren vid deployment, använd hjälparen `versioned_file()`. Den lägger till en tidshash baserat på filens senaste ändring.
+För att undvika cache-problem i webbläsaren vid deployment, använd hjälparen `versioned_file()`.
+Den lägger till en tidshash baserat på filens senaste ändring.
 
 ```html
 <link rel="stylesheet" href="{{ versioned_file('/css/app.css') }}">
 <script src="{{ versioned_file('/js/app.js') }}"></script>
 ```
+
+### Om du använder CSP med `nonce`
+
+Om din Content Security Policy kräver `nonce` på inline/script-taggar, använd nonce-attributet på script-taggen:
+
+```html
+<script nonce="{{ secure_output(csp_nonce(), true) }}" src="{{ versioned_file('/js/app.js') }}"></script>
+```
+
+> Obs: `nonce` behövs bara om du har CSP aktiverat och policyn kräver det för script.

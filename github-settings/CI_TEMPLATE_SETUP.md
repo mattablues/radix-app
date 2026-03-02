@@ -1,5 +1,7 @@
 # CI Template Setup (checklista när du skapar ett nytt repo från Radix-template)
 
+← [`Till docs/index`](../docs/INDEX.md)
+
 Det här dokumentet är en “gör-så-här”-lista för att få CI stabilt och förutsägbart i ett nytt repo som bygger på templaten.
 
 ## 0) Förutsättningar

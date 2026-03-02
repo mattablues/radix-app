@@ -11,7 +11,7 @@ use Radix\Http\Response;
 use RuntimeException;
 use Throwable;
 
-class Dashboard extends AbstractController
+class DashboardController extends AbstractController
 {
     public function index(): Response
     {

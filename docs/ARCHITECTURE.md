@@ -1,69 +1,94 @@
-# Arkitekturöversikt (ARCHITECTURE.md)
+# docs/ARCHITECTURE.md
 
-Detta dokument beskriver de tekniska principerna bakom Radix-systemet och hur ett anrop (Request) bearbetas.
+← [`Tillbaka till index`](INDEX.md)
 
-## 1. Request-cykeln
-1.  **Entry Point**: Alla anrop börjar i `public/index.php`.
-2.  **Bootstrap**: `bootstrap/app.php` initierar containern och laddar konfiguration.
-3.  **Middleware**: Anropet passerar genom globala och rutt-specifika middlewares (t.ex. `RateLimiter`, `RequestLogger`).
-4.  **Routing**: `routes/` mappar URL:en till en metod i en `Controller`.
-5.  **Controller**: Kontrollern i `src/Controllers` hanterar logik, interagerar med modeller och returnerar en `Response`.
-6.  **Template Engine**: Vyer renderas via `RadixTemplateViewer`.
+# Arkitekturöversikt (Radix App)
 
-## 2. Template Engine (RadixTemplateViewer)
-Radix använder en egen motor för `.ratio.php`-filer. Den stöder:
-- **Inheritance**: `{% extends "layout.ratio.php" %}` och `{% block %}`.
-- **Components**: `<x-komponent attribut="värde">` som mappar mot `views/components/`.
-- **Caching**: Kompilerade mallar sparas i `cache/views/` för maximal prestanda.
-- **Säkerhet**: Automatisk XSS-skydd via `secure_output()` i alla `{{ }}`-block.
+Detta dokument beskriver de tekniska principerna bakom Radix App och hur ett anrop (Request) normalt bearbetas.
 
 ---
 
-# Databas & Modeller (DATABASE.md)
+## 1) Request-cykeln (översikt)
 
-Radix använder ett Active Record-inspirerat mönster för databashantering.
+1. **Entry point**  
+   Alla web-anrop börjar i `public/index.php`.
 
-## 1. Modeller (src/Models)
-Modeller ärver från ett baslager i frameworket. De hanterar:
-- **Fillable fields**: Definierar vilka fält som får mass-assignas.
-- **Relations**: Metoder som `user()` i `Status`-modellen definierar kopplingar mellan tabeller.
+2. **Bootstrap**  
+   Bootstrappen initierar containern och laddar konfiguration (t.ex. via `bootstrap/` och `config/`).
 
-## 2. SystemEvent & Loggning
-Använd `App\Models\SystemEvent::log()` för att spara viktiga händelser i databasen:
-- `info`: Allmänna händelser (t.ex. "Konto aktiverat").
-- `warning`: Potentiella problem.
-- `error`: Kritiska fel.
+3. **Middleware**  
+   Anropet passerar globala och/eller route-specifika middleware (t.ex. auth, rate limiting, security headers).
 
-## 3. Tokens & Säkerhet
-- **Personal Access Tokens**: Skapas via `Token::createToken($userId, $name)`.
-- **Activation Tokens**: Används vid registrering och lagras som HMAC-hashar i `status`-tabellen.
+4. **Routing**  
+   Router matchar URL + HTTP-metod mot en route och dess handler (controller/callable).
+
+5. **Controller/Handler**  
+   Din controller (under `src/Controllers`) kör logik, pratar med services/modeller och returnerar en `Response`.
+
+6. **Rendering**  
+   För web: vyer renderas via template-motorn (`.ratio.php`).  
+   För API: JSON returneras via `JsonResponse`/API-controller.
 
 ---
 
-# Frontend-guide (FRONTEND.md)
+## 2) Container & Service Providers
 
-Projektet använder en modern frontend-stack baserad på Tailwind CSS och Alpine.js.
+Appen använder en DI-container:
 
-## 1. Tailwind CSS 4
-Vi använder Tailwind 4 CLI (`@tailwindcss/cli`). 
-- **Konfiguration**: Sker främst via CSS-variabler i huvudfilen under `resources/css/`.
-- **Build**: Körs via `npm run start:build` (lokalt) eller automatiskt i CI om `ENABLE_FRONTEND_BUILD=1`.
+- “core wiring” sker vid boot (typiskt i `config/services.php`)
+- providers (i `src/Providers/`) registreras enligt `config/providers.php`
 
-## 2. Alpine.js
-Vi använder Alpine.js 3.14 med flera kraftfulla plugins:
-- **@alpinejs/focus**: För tillgängliga modaler och formulär.
-- **@alpinejs/collapse**: För dragspelsmenyer.
-- **@imacrayon/alpine-ajax**: För sömlösa siduppdateringar utan omladdning.
+Rekommendation:
+- keep boot/wiring tydligt separerat
+- flytta app-funktionalitet till providers och services
 
-## 3. Formular & Honeypot
-För att skydda mot spam använder vi en dynamisk Honeypot-lösning:
-1.  Kontrollern genererar ett `honeypot_id` och sparar i sessionen.
-2.  Vyn renderar ett dolt fält med detta ID.
-3.  `Validator` i kontrollern verifierar att fältet är tomt.
+Se även:
 
-Exempel på validering:
-```php
-$validator = new Validator($data, [
-    $expectedHoneypotId => 'honeypot',
-]);
+- [`docs/SERVICES.md`](SERVICES.md)
+
+---
+
+## 3) Templates (rendering)
+
+Templates använder:
+
+- `.ratio.php`
+- layouts (`{% extends %}`, `{% block %}`, `{% yield %}`)
+- komponenter (`<x-...>`) och props (`{% props %}`)
+- caching av kompilerade templates (för prestanda)
+
+Se även:
+
+- [`docs/TEMPLATES.md`](TEMPLATES.md)
+- [`docs/FRONTEND.md`](FRONTEND.md)
+
+---
+
+## 4) Databas & ORM (hur det brukar kopplas in)
+
+Databas och ORM används via modeller (t.ex. `src/Models`) och Radix QueryBuilder/ORM.
+
+Se även:
+
+- [`docs/DATABASE.md`](DATABASE.md)
+- [`docs/ORM.md`](ORM.md)
+
+---
+
+## 5) “Moduler” via scaffolds
+
+Radix App byggs stegvis via scaffolds (t.ex. `auth`, `user`, `admin`, `updates`), som kan lägga till:
+
+- routes/controllers/views
+- middleware/providers/listeners-konfig
+- migrations/seeders
+
+Efter att du installerat ett scaffold kör du typiskt:
+
+```bash
+php radix migrations:migrate
 ```
+
+Se även:
+
+- [`docs/CLI.md`](CLI.md)

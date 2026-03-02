@@ -11,7 +11,7 @@ $router->group(
         // Inloggad användare (ingen /admin-prefix)
         $router->group(['middleware' => ['auth']], function () use ($router) {
             $router->get('/dashboard', [
-                \App\Controllers\Dashboard::class, 'index',
+                \App\Controllers\DashboardController::class, 'index',
             ])->name('dashboard.index');
 
             $router->get('/user', [

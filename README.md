@@ -1,82 +1,108 @@
-# Radix Framework
+# README.md
+
+# Radix App
+
+Radix App är en **starter-applikation** för Radix som skapas via `composer create-project`.  
+Själva ramverket lever som ett separat Composer-paket: `mattablues/radix-framework`.
+
+> Den här repot är alltså “appen”, inte frameworket.
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <!-- doctoc will insert TOC here -->
 
 - [Översikt](#översikt)
-- [Komponenter](#komponenter)
-- [Dokumentation](#dokumentation)
 - [Installation](#installation)
-- [Snabbstart (ORM – kort)](#snabbstart-orm--kort)
+- [Dokumentation](#dokumentation)
+- [CLI (radix)](#cli-radix)
+- [Scaffolds (lägga till funktionalitet)](#scaffolds-lägga-till-funktionalitet)
 - [Utveckling & test](#utveckling--test)
 - [Licens](#licens)
 
-## Översikt
-Radix Framework är ett litet PHP 8.3-framework med “batteries included”: routing, middleware, templating, validering, fil-hantering och ett lättvikts ORM/QueryBuilder.
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## Komponenter
-- Routing + dispatcher (controllers/callables)
-- Middleware-pipeline
-- HTTP: Request/Response, JsonResponse, redirects
-- Template/view-system
-- Validering + helpers
-- Fil: Reader/Writer/Upload
-- Middleware: rate limiting, logging, security headers (om aktiverat)
-- ORM/QueryBuilder: models, relations, pagination, soft deletes, eager loading
-- CI: PHPUnit, PHPStan, format-check, valfritt Infection + schedule
+## Översikt
+
+Radix App är en färdig projektstruktur med routing, controllers, views/templates, CLI och en minimal starter-setup.
+
+- Skapa projektet med `composer create-project`
+- Kör `php radix app:setup` för grundsetup (migrations + ev. seeders)
+- Lägg till mer funktionalitet stegvis via `scaffold:install ...` + `migrations:migrate`
+
+## Installation
+
+Skapa ett nytt projekt:
+
+```bash
+composer create-project mattablues/radix-app <din-app>
+cd <din-app>
+```
+
+Installera frontend dependencies (om du ska bygga assets):
+
+```bash
+npm install
+```
+
+Grundsetup:
+
+```bash
+php radix app:setup
+```
 
 ## Dokumentation
 
-För en djupdykning i hur Radix fungerar, se vår kompletta dokumentationsindex:
+All dokumentation för appen finns under `docs/`.
 
-👉 **[Radix Documentation Index](docs/INDEX.md)**
+👉 **[Radix App Documentation Index](docs/INDEX.md)**
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+## CLI (radix)
 
-- Docs-index: `docs/INDEX.md`
-- ORM / QueryBuilder (full guide): `docs/ORM.md`
-- CI / GitHub Actions:
-  - `github-settings/CI_VARIABLES.md`
-  - `github-settings/CI_TEMPLATE_SETUP.md`
+Kör CLI:
 
-## Installation
-- Kräver PHP 8.3+, PDO (MySQL/SQLite m.fl.)
-- Installera dependencies via Composer.
-- Konfigurera databaskoppling i din container/DatabaseManager.
-- Kör migrationer via ditt migrationssystem.
+```bash
+php radix [command] [arguments]
+```
 
-## Snabbstart (ORM – kort)
+Se hela listan och vanliga flöden här:
 
-```php
-<?php
+- `docs/CLI.md`
 
-use App\Models\User;
+## Scaffolds (lägga till funktionalitet)
 
-$users = User::query()
-    ->select(['id', 'name'])
-    ->where('status', '=', 'active')
-    ->orderBy('name')
-    ->limit(10)
-    ->offset(0)
-    ->get();
+Scaffolds är “paket” som lägger till filer + konfiguration + ev. migrations för ett steg (t.ex. `auth`, `user`, `admin`, `updates`).
 
-$email = User::query()
-    ->where('id', '=', 1)
-    ->value('email');
+Installera scaffold:
 
-$emails = User::query()
-    ->where('status', '=', 'active')
-    ->pluck('email');
+```bash
+php radix scaffold:install <preset> --force
+```
+
+> `--force` behövs ofta eftersom starter-projektet kan ha “tomma” filer (t.ex. routes) för att hålla PHPStan nöjd.
+
+Kör sedan migrations (scaffold kan lägga till nya migrationsfiler):
+
+```bash
+php radix migrations:migrate
 ```
 
 ## Utveckling & test
 
-```powershell
-composer install
+Vanliga kommandon (via Composer scripts):
+
+```bash
 composer format:check
 composer stan
-vendor/bin/phpunit -c phpunit.xml --do-not-cache-result
+composer test
+```
+
+Valfritt (mutation testing):
+
+```bash
+composer infect:pcov
+composer infect:xdebug
 ```
 
 ## Licens
+
 MIT

@@ -1,77 +1,119 @@
-# Controllers i Radix
+# docs/CONTROLLERS.md
 
-Controllers hanterar inkommande HTTP-förfrågningar och returnerar svar. De fungerar som en brygga mellan dina modeller och vyer.
+← [`Tillbaka till index`](INDEX.md)
 
-## Skapa en Controller
+# Controllers (Radix App)
 
-Det enklaste sättet att skapa en controller är via CLI:
+Controllers hanterar inkommande HTTP-förfrågningar och returnerar ett `Response`. De är “limmet” mellan routing, affärslogik (services) och rendering (views/JSON).
+
+---
+
+## Skapa en controller
+
+Det enklaste sättet är via CLI:
 
 ```bash
 php radix make:controller UserController
 ```
 
-Detta skapar en ny fil i `src/Controllers/`. Om du vill skapa en controller i en undermapp (t.ex. för API), använd:
+Det skapar en fil under:
+
+- `src/Controllers/`
+
+Om du vill skapa en controller i en undermapp (t.ex. för API) kan du ange en path:
 
 ```bash
 php radix make:controller Api/UserController
 ```
 
-## AbstractController (Web)
+---
 
-Vanliga webb-controllers bör ärva från `Radix\Controller\AbstractController`. Detta ger dig tillgång till vy-rendering, CSRF-skydd och sessionshantering.
+## Web controllers: `AbstractController`
 
-### Grundläggande flöde
+Vanliga webb-controllers bör ärva från `Radix\Controller\AbstractController`.
+
+### Exempel (web)
 
 ```php
+<?php
+
+declare(strict_types=1);
+
 namespace App\Controllers;
 
 use Radix\Controller\AbstractController;
 use Radix\Http\Response;
 
-class HomeController extends AbstractController
+final class HomeController extends AbstractController
 {
     public function index(): Response
     {
-        // Rendera en vy från views/home.ratio.php
         return $this->view('home', [
-            'title' => 'Välkommen till Radix'
+            'title' => 'Välkommen till Radix',
         ]);
     }
 }
 ```
 
-### Inbyggt CSRF-skydd
-Genom att anropa `$this->before()` i dina POST/PUT/DELETE-metoder valideras CSRF-token automatiskt:
+Det här ger dig bland annat:
+- vy-rendering via `$this->view(...)`
+- tillgång till request/session via `$this->request`
+- en “before hook” för t.ex. CSRF-kontroller (se nedan)
+
+---
+
+## CSRF-skydd för POST/PUT/DELETE
+
+I actions som ändrar data bör du köra:
+
+```php
+$this->before();
+```
+
+Exempel:
 
 ```php
 public function store(): Response
 {
-    $this->before(); // Validerar CSRF automatiskt
-    // Fortsätt med att spara data...
+    $this->before(); // validerar CSRF-token (och ev. annan preflight som din controller bas har)
+    // ... spara data ...
+    return redirect(route('home.index'));
 }
 ```
 
-## ApiController (JSON)
+> Rekommendation: gör det till en vana att anropa `before()` tidigt i “write”-actions.
 
-För API:er bör du istället ärva från `Radix\Controller\ApiController`. Denna klass är optimerad för JSON-kommunikation.
+---
 
-- **`$this->json($data)`**: Returnerar ett korrekt formaterat JSON-svar.
-- **`$this->validateRequest($rules)`**: Validerar inkommande JSON-data och skickar automatiskt `422` vid fel.
-- **`getJsonPayload()`**: Hämtar och dekodar JSON från förfrågans body.
+## API controllers (JSON)
 
-## Dependency Injection
+Om du bygger API-endpoints använder du en API-anpassad controller (t.ex. `Radix\Controller\ApiController` om den finns i din setup).
 
-Radix stöder autowiring i controllerns konstruktor. Du kan injicera tjänster som behövs direkt:
+Typiska helpers brukar vara:
+- JSON responses (t.ex. `$this->json($data)`)
+- validering av inkommande payload och automatiska `422`-svar
+- `getJsonPayload()`/liknande för att läsa request-body
+
+> Exakt klassnamn och helpers beror på vilken bascontroller som finns i din Radix-version, men principen är densamma: web => HTML/views, api => JSON.
+
+---
+
+## Dependency Injection (DI) i controllers
+
+Controllers kan ta dependencies i konstruktorn. Då kan du flytta logik till services och hålla controllers tunna.
+
+Exempel:
 
 ```php
 public function __construct(
-    private MailManager $mail,
-    private EventDispatcher $events
+    private readonly \App\Services\AuthService $authService,
 ) {}
 ```
 
-## Hjälpmetoder i Controllers
+---
 
-- **`$this->request`**: Tillgång till Request-objektet (GET, POST, Session, Headers).
-- **`$this->viewer`**: Tillgång till vy-systemet.
-- **`filters()`**: Du kan definiera en `filters()`-metod för att registrera anpassade template-filter som bara gäller för denna controller.
+## Bra praxis
+
+- Håll controllers små: “ta in request => kalla service => returnera response”
+- Lägg affärslogik i `src/Services/`
+- Lägg validering i form requests (t.ex. via `make:form-request`) när det passar

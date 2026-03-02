@@ -1,50 +1,78 @@
-# E-posthantering (Mail)
+# docs/MAIL.md
 
-Radix erbjuder ett smidigt sätt att skicka e-post genom `MailManager`. Systemet stödjer både enkla textmeddelanden och rika HTML-mejl som renderas via vyer.
+← [`Tillbaka till index`](INDEX.md)
+
+# E-post (Mail) (Radix App)
+
+Radix kan skicka e-post via `Radix\Mailer\MailManager`.  
+Systemet stödjer både enkla textmeddelanden och HTML-mejl renderade via templates.
+
+---
 
 ## Konfiguration
 
-Inställningar för e-post hittas i din `.env`-fil. Radix använder vanligtvis SMTP för att skicka mejl.
+Mail styrs via `.env` + ev. configfil (beroende på din setup).
 
-```bash
+Typiska SMTP-variabler:
+
+```dotenv
 MAIL_HOST=smtp.example.com
 MAIL_PORT=587
-MAIL_USERNAME=user@example.com
-MAIL_PASSWORD=your-password
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=noreply@example.com
-MAIL_FROM_NAME="Radix App"
+MAIL_SECURE=tls
+MAIL_AUTH=1
+MAIL_ACCOUNT=
+MAIL_PASSWORD=
+MAIL_EMAIL=noreply@example.com
+MAIL_FROM="Radix App"
 ```
 
-Ytterligare detaljer finns i `config/email.php`.
+> Tips: slå på mail-debug i development om du vill se mer information vid sändning.
+
+---
 
 ## Skicka e-post
 
-Du kan injicera `Radix\Mailer\MailManager` i din klass för att skicka mejl.
+Du kan injicera `Radix\Mailer\MailManager` i t.ex. en service eller listener.
 
-### Enkelt exempel
+### Enkelt exempel (text)
+
 ```php
-public function __construct(private MailManager $mailManager) {}
+<?php
 
-public function sendWelcome() {
-    $this->mailManager->send(
-        'user@example.com',
-        'Välkommen!',
-        'Tack för att du valde vår tjänst.'
-    );
+use Radix\Mailer\MailManager;
+
+final readonly class WelcomeMailer
+{
+    public function __construct(private MailManager $mailManager) {}
+
+    public function sendWelcome(string $to): void
+    {
+        $this->mailManager->send(
+            $to,
+            'Välkommen!',
+            'Tack för att du valde vår tjänst.'
+        );
+    }
 }
 ```
 
-### Använda Templates (HTML)
-För att skicka snygga HTML-mejl kan du skicka med en array med template-information som det fjärde argumentet:
+---
+
+## Skicka HTML-mail via templates
+
+Du kan skicka HTML-mejl genom att referera till en template (t.ex. `views/emails/activate.ratio.php`) och skicka data.
+
+Exempel:
 
 ```php
+<?php
+
 $this->mailManager->send(
     'user@example.com',
     'Aktivera konto',
-    '', // Tomt för text-body om template används
+    '', // text-body kan vara tomt om template används
     [
-        'template' => 'emails.activate', // Hittas i views/emails/activate.ratio.php
+        'template' => 'emails.activate',
         'data' => [
             'firstName' => 'Anna',
             'url' => 'https://example.com/activate/token'
@@ -54,18 +82,25 @@ $this->mailManager->send(
 );
 ```
 
-## E-post via Events
+---
 
-Det rekommenderade sättet att skicka mejl i Radix är via **Events**. Istället för att skicka mejlet direkt i en Controller, triggar du en händelse:
+## Rekommenderat: skicka mail via events
 
-1.  **Event**: `UserRegisteredEvent` triggas i din Controller.
-2.  **Listener**: `SendActivationEmailListener` fångar händelsen.
-3.  **Mail**: Lyssnaren använder `MailManager` för att skicka mejlet.
+För att hålla controllers rena är det ofta bättre att:
 
-Detta håller din kod ren och gör att e-postutskicket sker "bakom kulisserna".
+1) dispatcha en event (t.ex. `UserRegisteredEvent`)
+2) låta en listener skicka mejlet
+
+Då slipper du mail-logik i controllers och kan enklare testa/utveckla vidare.
+
+Se:
+
+- [`docs/EVENTS.md`](EVENTS.md)
+
+---
 
 ## Felsökning
 
-- **Loggar**: Om e-postmisslyckas, kontrollera `storage/logs/` för SMTP-felmeddelanden.
-- **Portar**: Se till att din server tillåter utgående trafik på port 587 (TLS) eller 465 (SSL).
-- **Templates**: Om mejlet ser konstigt ut, kontrollera att din `.ratio.php` fil i `views/emails/` är korrekt formaterad.
+- Kontrollera loggar om mail misslyckas (se `docs/LOGGING.md`)
+- Kontrollera att din server tillåter utgående trafik på rätt port (t.ex. 587 TLS / 465 SSL)
+- Om HTML-mejl ser fel ut: kontrollera att din `.ratio.php` template är korrekt och att data skickas in som du tänker

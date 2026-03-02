@@ -1,71 +1,121 @@
-# API-utveckling i Radix
+# docs/API.md
 
-Radix har inbyggt stöd för att bygga RESTful API:er. Systemet särskiljer automatiskt på API-anrop och vanliga webbanrop baserat på URL-strukturen `/api/v{version}/`.
+← [`Tillbaka till index`](INDEX.md)
 
-## ApiController
+# API (Radix App)
 
-När du bygger API:er bör dina controllers ärva från `Radix\Controller\ApiController`. Denna basklass tillhandahåller hjälpfunktioner för JSON-svar och API-specifik validering.
+Radix har stöd för att bygga REST-liknande API:er. Ofta särskiljs API från web genom URL-struktur (t.ex. `/api/v1/...`), och API-svar returneras som JSON.
 
-### Exempel på Controller
+---
+
+## ApiController (JSON)
+
+När du bygger API:er kan dina controllers ärva från en API-basklass (t.ex. `Radix\Controller\ApiController` i din setup).
+
+Den brukar ge:
+
+- helpers för JSON-svar (t.ex. `$this->json(...)`)
+- API-anpassad validering (returnerar JSON vid fel, inte redirects)
+- konsekventa statuskoder
+
+---
+
+## Exempel: API-controller
+
 ```php
+<?php
+
+declare(strict_types=1);
+
 namespace App\Controllers\Api;
 
+use App\Models\User;
 use Radix\Controller\ApiController;
 use Radix\Http\JsonResponse;
-use App\Models\User;
 
-class UserController extends ApiController
+final class UserController extends ApiController
 {
     public function index(): JsonResponse
     {
-        // validateRequest kontrollerar token/session automatiskt
+        // Om din setup har API-validering/auth-helper, kör den här
         $this->validateRequest();
 
         $users = User::all();
 
-        // returnerar automatiskt ett JsonResponse med rätt headers
         return $this->json([
             'success' => true,
-            'data' => $users
+            'data' => $users,
         ]);
     }
 }
 ```
 
-## JSON-svar och Felhantering
+---
 
-Använd `$this->json($data, $statusCode)` för att skicka svar. Vid valideringsfel eller andra problem kan du använda `respondWithErrors()`:
+## JSON-svar och fel
+
+Skicka svar med tydlig statuskod.
+
+Exempel (404):
 
 ```php
+<?php
+
 if (!$user) {
     return $this->respondWithErrors(['user' => 'Hittades inte'], 404);
 }
 ```
 
-## Validering
+---
 
-API-validering skiljer sig från webbvalidering då den inte omdirigerar användaren vid fel, utan returnerar ett `422 Unprocessable Entity` svar med felmeddelandena i JSON-format.
+## Validering (API)
+
+API-validering ska normalt returnera `422 Unprocessable Entity` med fel i JSON-format (i stället för att redirecta tillbaka).
+
+Exempel:
 
 ```php
+<?php
+
 $this->validateRequest([
     'email' => 'required|email',
-    'password' => 'required|min:8'
+    'password' => 'required|min:8',
 ]);
 ```
 
+Se även:
+
+- [`docs/VALIDATION.md`](VALIDATION.md)
+
+---
+
 ## Routing för API
 
-API-rutter bör grupperas i `routes/api.php` med rätt prefix och middleware.
+API-rutter grupperas ofta i `routes/api.php` med version-prefix och middleware.
 
 ```php
-$router->group(['path' => '/api/v1', 'middleware' => ['api.throttle', 'api.auth']], function($router) {
+<?php
+
+use App\Controllers\Api\UserController;
+
+$router->group(['path' => '/api/v1', 'middleware' => ['api.throttle', 'api.auth']], function ($router) {
     $router->get('/users', [UserController::class, 'index']);
     $router->post('/users', [UserController::class, 'store']);
 });
 ```
 
-## Säkerhet och CORS
+---
 
-- **Rate Limiting**: Använd `api.throttle` middleware för att begränsa antal anrop.
-- **CORS**: Inställningar för vilka domäner som får anropa ditt API finns i `config/cors.php`.
-- **CSRF**: API-anrop (under `/api/v...`) är undantagna från standard CSRF-validering för att underlätta för externa klienter, men bör istället skyddas med tokens eller session-auth.
+## Säkerhet (CORS, rate limiting, auth)
+
+Rekommendationer:
+
+- **Rate limiting:** sätt throttling på publika endpoints
+- **CORS:** tillåt bara origins du behöver
+- **Auth:** skydda API med token eller session-baserad auth (beroende på use case)
+- **CSRF:** API-endpoints brukar inte använda samma CSRF-flöde som web, men måste skyddas på annat sätt
+
+Se även:
+
+- [`docs/SECURITY.md`](SECURITY.md)
+- [`docs/HTTP.md`](HTTP.md)

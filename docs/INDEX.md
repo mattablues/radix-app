@@ -1,47 +1,70 @@
-# Radix Framework Documentation
+# docs/INDEX.md
 
-Välkommen till dokumentationen för Radix – ett modernt, lättviktigt PHP-ramverk byggt för snabb utveckling med full kontroll.
+# Radix App — Dokumentation
 
-## Snabbstart
-1. **Installation**: Följ stegen i [README.md](../README.md) för att sätta upp miljön.
-2. **Konfiguration**: Se [CONFIG.md](CONFIG.md) för hur du ställer inte `.env` och filer i `config/`.
-3. **CLI**: Lär dig kommandona i [CLI.md](CLI.md) för att hantera cachen och databasen.
+Det här är dokumentationen för **Radix App** (starter-projektet).
 
-## Kärnkoncept
-- **[Routing](ROUTING.md)**: Hur du definierar webb- och API-rutter.
-- **[Controllers](CONTROLLERS.md)**: Hantera logik och returnera svar (Web & API).
-- **[Middleware](MIDDLEWARE.md)**: Hantera request/response-pipelinen (auth, loggning, etc).
-- **[Validation](VALIDATION.md)**: Validera användardata och filer med enkla regler.
-- **[File Handling](FILES.md)**: Läs och skriv JSON, CSV och XML med Reader & Writer.
-- **[Images & Uploads](IMAGES.md)**: Hantera bilduppladdning och bildbehandling.
-- **[Geo Location](GEOLOCATION.md)**: Identifiera besökarens geografiska position via IP.
-- **[Templates](TEMPLATES.md)**: Bygg snygga vyer med layouts och komponenter.
-- **[Frontend & Components](FRONTEND.md)**: Arbeta med komponenter, props, slots, Tailwind 4 och Alpine.js.
-- **[Services & DI](SERVICES.md)**: Förstå hur beroenden injiceras och tjänster registreras.
-- **[Frontend](FRONTEND.md)**: Arbeta med Tailwind 4 och Alpine.js i vyer.
+---
 
-## Databas & Modellering
-- **[Database & Migrations](DATABASE.md)**: Skapa tabeller och populera dem med data.
-- **[ORM](ORM.md)**: Arbeta med modeller och databasen på ett objektorienterat sätt.
+## Start här
 
-## Arkitektur & Logik
-- **[Architecture](ARCHITECTURE.md)**: Övergripande systemdesign och request-cykeln.
-- **[Events & Listeners](EVENTS.md)**: Koppla isär din logik med händelser.
-- **[API Development](API.md)**: Bygg RESTful API:er med JSON-svar.
-- **[Caching](CACHE.md)**: Spara temporär data med FileCache.
-- **[Logging](LOGGING.md)**: Logga händelser och fel till disk.
-- **[Email Handling](MAIL.md)**: Skicka mejl via SMTP och mallar.
-- **[HTTP System](HTTP.md)**: Djupdykning i Request, Response och Redirects.
-- **[Security](SECURITY.md)**: CSP, CSRF-skydd och säker utdata.
+1. **Installation:** [`INSTALLATION.md`](INSTALLATION.md)
 
-## Arbetsflöde & Driftsättning
-- **[Cookbook](COOKBOOK.md)**: Praktiska guider för vanliga utvecklingsuppgifter.
-- **[Development Flow](DEVELOPMENT_FLOW.md)**: Hur vi använder TDD, PHPStan och kodstil.
-- **[Releases](RELEASES.md)**: Checklista för deployment och produktion.
+---
 
-## Utveckling & Bidrag
-- **[Testing](TESTING.md)**: Hur du skriver och kör tester med PHPUnit.
-- **[CI Setup](../github-settings/CI_TEMPLATE_SETUP.md)**: Checklista för att sätta upp GitHub Actions.
-- **[CI Variables](../github-settings/CI_VARIABLES.md)**: Beskrivning av miljövariabler för CI.
-- **[Contributing](CLI_CONTRIBUTING.md)**: Guide för att bygga ut CLI-verktyget.
-```
+## CLI & scaffolds
+
+- **CLI (kommandon, policy, exempel):** [`CLI.md`](CLI.md)
+- **Scaffolds:** (ingår i CLI-dokumentationen just nu)
+
+---
+
+## Appens byggstenar
+
+- **Konfiguration:** [`CONFIG.md`](CONFIG.md)
+- **Routing:** [`ROUTING.md`](ROUTING.md)
+- **Controllers:** [`CONTROLLERS.md`](CONTROLLERS.md)
+- **Middleware:** [`MIDDLEWARE.md`](MIDDLEWARE.md)
+- **HTTP (request/response):** [`HTTP.md`](HTTP.md)
+
+---
+
+## Databas & modellering
+
+- **Database & migrations:** [`DATABASE.md`](DATABASE.md)
+- **ORM:** [`ORM.md`](ORM.md)
+- **Validation:** [`VALIDATION.md`](VALIDATION.md)
+
+---
+
+## Templates & frontend
+
+- **Templates:** [`TEMPLATES.md`](TEMPLATES.md)
+- **Frontend (Tailwind/Alpine/components):** [`FRONTEND.md`](FRONTEND.md)
+- **Images & uploads:** [`IMAGES.md`](IMAGES.md)
+
+---
+
+## Arkitektur & avancerat
+
+- **Architecture:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
+- **Events & listeners:** [`EVENTS.md`](EVENTS.md)
+- **Services & DI:** [`SERVICES.md`](SERVICES.md)
+- **Caching:** [`CACHE.md`](CACHE.md)
+- **Logging:** [`LOGGING.md`](LOGGING.md)
+- **Mail:** [`MAIL.md`](MAIL.md)
+- **Security:** [`SECURITY.md`](SECURITY.md)
+- **API:** [`API.md`](API.md)
+- **Geo location:** [`GEOLOCATION.md`](GEOLOCATION.md)
+- **Cookbook:** [`COOKBOOK.md`](COOKBOOK.md)
+
+---
+
+## Kvalitet & utveckling
+
+- **Testing:** [`TESTING.md`](TESTING.md)
+
+### CI (GitHub Actions)
+
+- **CI template setup:** [`../github-settings/CI_TEMPLATE_SETUP.md`](../github-settings/CI_TEMPLATE_SETUP.md)
+- **CI-variabler:** [`../github-settings/CI_VARIABLES.md`](../github-settings/CI_VARIABLES.md)

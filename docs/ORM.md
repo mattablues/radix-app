@@ -1,4 +1,8 @@
-# Radix System med ORM
+# docs/ORM.md
+
+← [`Tillbaka till index`](INDEX.md)
+
+# ORM (Radix App)
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <!-- doctoc will insert TOC here -->
@@ -28,12 +32,16 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-Radix System med ORM erbjuder en lättvikts QueryBuilder med säkra bindnings-buckets och enkel modell-hydrering. Stöd för WHERE/JOINS/UNION/AGGREGAT, pagination/sök, soft deletes, eager loading och mutationer (insert/update/delete/upsert).
+Radix ORM erbjuder en lättvikts QueryBuilder med säkra bindnings-buckets och enkel modell-hydrering. Stöd för WHERE/JOINS/UNION/AGGREGAT, pagination/sök, soft deletes, eager loading och mutationer (insert/update/delete/upsert).
+
+> I Radix behöver du normalt **inte** skriva `User::query()` för vanliga fall. Du kan använda `User::...` direkt (t.ex. `User::find(1)`).
 
 ## Installation
+
 - Kräver PHP 8.3+, PDO (MySQL/SQLite m.fl.)
-- Installera dependencies via Composer och konfigurera databaskoppling i app-container/DatabaseManager.
-- Kör migrationer via ditt migrationssystem.
+- Konfigurera databaskoppling i appens config/.env
+- Kör migrationer via CLI:
+  - `php radix migrations:migrate`
 
 ## Snabbstart
 
@@ -60,12 +68,16 @@ $emails = User::where('status', '=', 'active')
 
 $emailsById = User::pluck('email', 'id');
 
+// Snabb hämtning av en modell
+$user = User::find(1);
+
 // Arbeta med Collection
 $names = $users->pluck('name')->values()->toArray();
 $firstActive = $users->first();
 ```
 
 ## API-översikt
+
 - Alla metoder returnerar samma builderinstans (chainable).
 - `toSql()` returnerar SQL med placeholders.
 - `getBindings()` returnerar bindningar i rätt ordning.
@@ -227,6 +239,9 @@ $email = User::where('id', '=', 1)->value('email');
 // Lista/assoc av kolumn
 $emails = User::pluck('email');
 $emailsById = User::pluck('email', 'id');
+
+// En modell direkt
+$user = User::find(1);
 ```
 
 ### Mutationer
@@ -329,14 +344,15 @@ use App\Models\User;
 
 $q = User::where('name', 'LIKE', '%John%');
 
-$sql = $q->toSql();          // SELECT ... WHERE `name` LIKE ?
+$sql = $q->toSql();            // SELECT ... WHERE `name` LIKE ?
 $bindings = $q->getBindings(); // ['%John%']
 
 // debugSql() interpolerar bindningar till läsbar sträng (endast utveckling)
 ```
 
 ## Traits-översikt
-Följande traits i QueryBuilder (`framework/src/Database/QueryBuilder/Concerns`) modulariserar funktionaliteten:
+
+Följande traits i QueryBuilder modulariserar funktionaliteten:
 - Bindings, BuildsWhere, Joins, Ordering, CompilesSelect, CompilesMutations, Unions, Pagination,
   SoftDeletes, EagerLoad, WithCount, WithAggregate, WithCtes, Windows, Wrapping, Functions,
   Locks, Transactions, CaseExpressions, InsertSelect, JsonFunctions, GroupingSets.
@@ -344,25 +360,38 @@ Följande traits i QueryBuilder (`framework/src/Database/QueryBuilder/Concerns`)
 Observera: Inte alla funktioner kanske stöds av varje databasdialekt; använd dialektens capability där relevant.
 
 ## Design: Bindnings-buckets
+
 - Bindningar hanteras i separata buckets: select, join, where, having, order, union, mutation.
 - `compileAllBindings()` körs i `toSql()`/`compileMutationSql()` för att platta ihop bindningar i rätt ordning:
   - mutation (SET/VALUES) först (viktigt för UPDATE), därefter select/join/where/having/order/union.
 - Fördel: inga krockar när SQL byggs i flera steg (t.ex. subqueries, joinRaw, havingRaw).
 
 ## Säkerhet och validering
+
 - `where()` validerar operatorer.
 - `delete()` utan WHERE kastar RuntimeException.
 - wrapColumn/alias säkrar quoting; använd `selectRaw()`/`whereRaw()`/`havingRaw()`/`joinRaw()` med medföljande bindningar när du behöver fri SQL.
 
 ## Testning
+
 - PHPUnit: kör `vendor/bin/phpunit`.
 - PHPStan: kör `vendor/bin/phpstan analyse`.
 - Samtliga core-tester för QueryBuilder ska passera.
 
 ## Vanliga frågor
-- Varför ser jag backticks runt alias (AS `alias`)? Builder wrappar alias konsekvent för att undvika krockar med reserverade ord. Testa mot DB-dialekten – MySQL/SQLite accepterar detta.
-- Varför returnerar `get()` en Collection nu? För ett rikare, kedjbart API. Behöver du array i t.ex. pagination/search-respons, konverteras Collection till array automatiskt.
-- Påverkas relationer av Collection? Nej. Relationernas returtyper är oförändrade (arrays för “many”, Model|null för “one”) för bakåtkompatibilitet.
+
+### Varför ser jag backticks runt alias (AS `alias`)?
+
+Builder wrappar alias konsekvent för att undvika krockar med reserverade ord. Testa mot din DB-dialekt — MySQL/SQLite accepterar detta.
+
+### Varför returnerar `get()` en Collection?
+
+För ett rikare, kedjbart API. Behöver du array i t.ex. pagination/search-respons kan du konvertera Collection till array.
+
+### Påverkas relationer av Collection?
+
+Nej. Relationernas returtyper är oförändrade (arrays för “many”, Model|null för “one”) för bakåtkompatibilitet.
 
 ## Licens
+
 MIT (den licens du använder för projektet).
