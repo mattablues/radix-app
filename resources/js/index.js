@@ -442,4 +442,57 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     })();
     // ---------- /Smooth scroll + rensa hash ----------
+
+    (function initLogoutFastTap() {
+      const forms = document.querySelectorAll('form[data-logout-form]');
+      if (!forms.length) return;
+
+      const bind = (form) => {
+        if (form.__logoutBound) return;
+        form.__logoutBound = true;
+
+        const submit = () => {
+          const btn = form.querySelector('button[type="submit"]');
+          if (btn) btn.disabled = true;
+
+          if (typeof form.requestSubmit === 'function') form.requestSubmit();
+          else form.submit();
+        };
+
+        // iOS: touchend kan kännas bättre än click i scrollbara/fixed ytor
+        form.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          submit();
+        }, { passive: false });
+
+        form.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          submit();
+        }, true);
+      };
+
+      forms.forEach(bind);
+    })();
+
+    // ---------- Logout: visa "Loggar ut..." direkt ----------
+    (function initLogoutPendingState() {
+      const form = document.querySelector('form[data-logout-form]');
+      if (!form) return;
+
+      form.addEventListener('submit', () => {
+          const btn = form.querySelector('button[type="submit"]');
+          if (!btn) return;
+
+          btn.disabled = true;
+          btn.classList.add('opacity-60', 'cursor-not-allowed');
+
+          const label = btn.querySelector('[data-logout-label]');
+          if (label) label.textContent = 'Loggar ut…';
+
+          const spinner = btn.querySelector('[data-logout-spinner]');
+          if (spinner) spinner.classList.remove('hidden');
+      });
+  })();
 });
