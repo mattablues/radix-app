@@ -89,7 +89,10 @@ namespace Radix\Tests\Api {
             putenv('CACHE_PATH=' . $projectRoot . '/cache/views');
 
             // Endast temp-baserad, unik katalog för HEALTH_CACHE_PATH
-            $uniqueHealth = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . '.__health__' . uniqid('', true) . DIRECTORY_SEPARATOR . 'sub';
+            $uniqueHealth = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . '.__health__' . uniqid(
+                '',
+                true
+            ) . DIRECTORY_SEPARATOR . 'sub';
             putenv('HEALTH_CACHE_PATH=' . $uniqueHealth);
             if (!is_dir($uniqueHealth)) {
                 @mkdir($uniqueHealth, 0o755, true);
@@ -114,6 +117,7 @@ namespace Radix\Tests\Api {
             // Minimal DatabaseManager-stub
             $dbManager = new class ($this->dbConn) {
                 public function __construct(private Connection $conn) {}
+
                 public function connection(): Connection
                 {
                     return $this->conn;
@@ -133,7 +137,10 @@ namespace Radix\Tests\Api {
             putenv('HEALTH_REQUIRE_TOKEN');
             putenv('HEALTH_CACHE_PATH');
 
-            $healthDir = rtrim((string) (defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__, 2)), '/\\') . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'health';
+            $healthDir = rtrim(
+                (string) (defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__, 2)),
+                '/\\'
+            ) . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR . 'health';
             $this->rrmdir($healthDir);
 
             // Rensa alla .__health__* i projektroten rekursivt
@@ -355,7 +362,7 @@ namespace Radix\Tests\Api {
                 $router->get('/test', function () {
                     return new Response();
                 })
-                       ->middleware(['request.id']);
+                    ->middleware(['request.id']);
 
                 $middleware = [
                     'request.id' => \Radix\Middleware\Middlewares\RequestId::class,
@@ -373,7 +380,11 @@ namespace Radix\Tests\Api {
 
                 $headers = $response->getHeaders();
                 $this->assertArrayHasKey('X-Request-Id', $headers);
-                $this->assertSame($customId, $headers['X-Request-Id'], 'Middleware should preserve existing X-Request-Id');
+                $this->assertSame(
+                    $customId,
+                    $headers['X-Request-Id'],
+                    'Middleware should preserve existing X-Request-Id'
+                );
             } finally {
                 // Städa upp
                 unset($_SERVER['HTTP_X_REQUEST_ID']);
@@ -847,7 +858,6 @@ namespace Radix\Tests\Api {
 
                 $this->assertTrue($result['_ok'], 'Health check failed! Does the mutant path match our trap file?');
                 $this->assertEquals('ok', $result['fs'] ?? '', 'FS check failed');
-
             } finally {
                 chmod($trapFile, 0o666);
                 @unlink($trapFile);
@@ -871,6 +881,7 @@ namespace Radix\Tests\Api {
 
             $dbManager = new class ($dbConn) {
                 public function __construct(private Connection $conn) {}
+
                 public function connection(): Connection
                 {
                     return $this->conn;
@@ -917,7 +928,10 @@ namespace Radix\Tests\Api {
                 }
             }
 
-            $this->assertTrue($foundDbLog, 'Expected log message "db=ok" was not found. DB check might have failed or been skipped.');
+            $this->assertTrue(
+                $foundDbLog,
+                'Expected log message "db=ok" was not found. DB check might have failed or been skipped.'
+            );
         }
 
         public function testHealthServiceLogsDirectoryCreation(): void
@@ -974,12 +988,20 @@ namespace Radix\Tests\Api {
 
                 if (DIRECTORY_SEPARATOR === '/') {
                     $perms = fileperms($healthDir) & 0o777;
-                    $this->assertEquals(0o755, $perms, sprintf('Directory permissions mismatch. Expected 0755, got 0%o', $perms));
+                    $this->assertEquals(
+                        0o755,
+                        $perms,
+                        sprintf('Directory permissions mismatch. Expected 0755, got 0%o', $perms)
+                    );
                 }
 
                 $actualPerms = \App\Services\FileSystemSpy::$lastMkdirPermissions;
                 if ($actualPerms !== null) {
-                    $this->assertEquals(0o755, $actualPerms, sprintf('mkdir permissions mismatch. Expected 0755, got %d', $actualPerms));
+                    $this->assertEquals(
+                        0o755,
+                        $actualPerms,
+                        sprintf('mkdir permissions mismatch. Expected 0755, got %d', $actualPerms)
+                    );
                 }
             } finally {
                 umask($oldUmask);
@@ -1059,7 +1081,11 @@ namespace Radix\Tests\Api {
 
             $lastFile = \App\Services\FileSystemSpy::$lastFilePath;
             $this->assertIsString($lastFile);
-            $this->assertStringStartsWith($ctxDir . DIRECTORY_SEPARATOR, $lastFile, 'Probe-filen ska ligga under bas med separator');
+            $this->assertStringStartsWith(
+                $ctxDir . DIRECTORY_SEPARATOR,
+                $lastFile,
+                'Probe-filen ska ligga under bas med separator'
+            );
 
             putenv('HEALTH_CACHE_PATH');
             if (is_dir($dir)) {
@@ -1089,7 +1115,11 @@ namespace Radix\Tests\Api {
             $this->assertArrayHasKey('fs', $result);
             $this->assertIsString($result['fs']);
             $this->assertStringStartsWith('fail: ', $result['fs']);
-            $this->assertGreaterThan(strlen('fail: '), strlen($result['fs']), 'Fail-meddelandet får inte vara bara prefixet'); // dödar ConcatOperandRemoval
+            $this->assertGreaterThan(
+                strlen('fail: '),
+                strlen($result['fs']),
+                'Fail-meddelandet får inte vara bara prefixet'
+            ); // dödar ConcatOperandRemoval
 
             // _ok ska vara false vid fel (säkerhetsnät)
             $this->assertFalse($result['_ok']);
@@ -1240,6 +1270,100 @@ namespace Radix\Tests\Api {
             // ingen katalog skapas i projektroten här, bara under systemets temp
         }
 
+        public function testFsFailsWhenHealthCachePathIsWhitespaceOnly(): void
+        {
+            // Dödar:
+            // - UnwrapTrim (trim($dir)==='' -> $dir==='')
+            // - LogicalOr (|| -> &&)
+            putenv('HEALTH_CACHE_PATH=   ');
+
+            $spy = new TestSpyLogger();
+            $result = (new \App\Services\HealthCheckService($spy))->run();
+
+            $this->assertFalse($result['_ok'], 'Whitespace-only HEALTH_CACHE_PATH ska ge _ok=false');
+            $this->assertArrayHasKey('fs', $result);
+            $this->assertIsString($result['fs']);
+            $this->assertStringContainsString('HEALTH_CACHE_PATH must be set', $result['fs']);
+
+            $foundFailLog = false;
+            foreach ($spy->logs as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $msg = $entry['msg'] ?? '';
+                if (is_string($msg) && str_contains($msg, 'fs=fail')) {
+                    $foundFailLog = true;
+                    break;
+                }
+            }
+            $this->assertTrue($foundFailLog, 'Förväntade en fs=fail-logg vid whitespace-only HEALTH_CACHE_PATH');
+
+            putenv('HEALTH_CACHE_PATH');
+        }
+
+        public function testFsTrimsHealthCachePathBeforeUsingIt(): void
+        {
+            // Dödar:
+            // - UnwrapTrim av "$dir = trim($dir);"
+            \App\Services\FileSystemSpy::$forceFilePutContentsFail = false;
+
+            $dir = rtrim(sys_get_temp_dir(), "/\\") . DIRECTORY_SEPARATOR . 'health-trim-' . uniqid('', true);
+
+            // Se till att vi börjar från en "ren" situation
+            if (is_dir($dir)) {
+                $this->rrmdir($dir);
+            }
+
+            putenv('HEALTH_CACHE_PATH=  ' . $dir . '  ');
+
+            $spy = new TestSpyLogger();
+            (new \App\Services\HealthCheckService($spy))->run();
+
+            $this->assertDirectoryExists($dir, 'Katalogen ska skapas på den trimmade sökvägen (utan whitespace)');
+
+            $resolved = realpath($dir);
+            $this->assertNotFalse($resolved);
+
+            $lastFile = \App\Services\FileSystemSpy::$lastFilePath;
+            $this->assertIsString($lastFile);
+            $this->assertSame(
+                $resolved . DIRECTORY_SEPARATOR . 'probe.txt',
+                $lastFile,
+                'Probe-filen ska skrivas till realpath(trimmad_dir)/probe.txt'
+            );
+
+            putenv('HEALTH_CACHE_PATH');
+            $this->rrmdir($dir);
+        }
+
+        public function testFsDoesNotTreatDriveLetterSubstringAsAbsolutePath(): void
+        {
+            // OS-oberoende: testa stränglogiken direkt (ingen filsystemaccess, ingen ":"-problematik).
+            // Dödar:
+            // - LogicalOrAllSubExprNegation
+            // - LogicalOrSingleSubExprNegation
+            // - PregMatchRemoveCaret
+            $rm = new \ReflectionMethod(\App\Services\HealthCheckService::class, 'isAbsolutePath');
+            $rm->setAccessible(true);
+
+            // Om regexen tappar "^" så skulle detta felaktigt bli "true"
+            $this->assertFalse(
+                (bool) $rm->invoke(null, 'fooC:\\bar'),
+                'Drive-letter substring i mitten ("fooC:\bar") får inte räknas som absolut. Regexen måste vara förankrad med ^.'
+            );
+
+            // Säkerhetsnät: en riktig drive-letter path ska fortfarande räknas som absolut
+            $this->assertTrue(
+                (bool) $rm->invoke(null, 'C:\\Windows\\Temp'),
+                'En riktig drive-letter path ("C:\...") ska räknas som absolut.'
+            );
+
+            // Säkerhetsnät: en unix-lik absolut path ska räknas som absolut
+            $this->assertTrue(
+                (bool) $rm->invoke(null, DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . 'tmp'),
+                'Path som börjar med DIRECTORY_SEPARATOR ska räknas som absolut.'
+            );
+        }
     }
 
     /**

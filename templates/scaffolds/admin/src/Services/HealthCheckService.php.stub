@@ -52,12 +52,16 @@ class HealthCheckService
         try {
             $dir = getenv('HEALTH_CACHE_PATH');
 
-            // Strikt validering (immun mot LogicalOr-mutation)
-            if (!is_string($dir)) {
-                throw new RuntimeException('HEALTH_CACHE_PATH must be set to an absolute directory.');
+            if (!is_string($dir) || trim($dir) === '') {
+                throw new RuntimeException('HEALTH_CACHE_PATH must be set.');
             }
-            if ($dir === '') {
-                throw new RuntimeException('HEALTH_CACHE_PATH must be set to an absolute directory.');
+
+            $dir = trim($dir);
+
+            $isAbsolute = self::isAbsolutePath($dir);
+
+            if (!$isAbsolute) {
+                $dir = rtrim(ROOT_PATH, '/\\') . DIRECTORY_SEPARATOR . ltrim($dir, '/\\');
             }
 
             if (!is_dir($dir)) {
@@ -65,9 +69,8 @@ class HealthCheckService
                 $this->log('created_dir {dir}', ['dir' => $dir]);
             }
 
-            // Robust realpath-guard utan jämförelse som kan inverteras men som ändrar beteende
             $base = $dir;
-            $resolved = realpath($dir); // string|false
+            $resolved = realpath($dir);
             if ($resolved !== false) {
                 $base = $resolved;
             }
@@ -88,6 +91,12 @@ class HealthCheckService
 
         $checks['_ok'] = $ok;
         return $checks;
+    }
+
+    private static function isAbsolutePath(string $dir): bool
+    {
+        return str_starts_with($dir, DIRECTORY_SEPARATOR) // /home/... eller \Windows\...
+            || preg_match('/^[A-Za-z]:[\\\\\\/]/', $dir) === 1; // C:\... eller C:/...
     }
 
     /**
