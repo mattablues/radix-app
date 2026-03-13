@@ -138,7 +138,7 @@ export default class SearchSystemUpdates extends SearchTable {
       const editUrl = this.escapeHtml(u.edit_url || '#');
 
       const major = u.is_major
-        ? `<span class="inline-flex w-fit px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-100 text-amber-700 border border-amber-200">Major</span>`
+        ? `<span class="inline-flex w-fit px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-indigo-100 text-indigo-700 border border-indigo-200">Major</span>`
         : '';
 
       return `
