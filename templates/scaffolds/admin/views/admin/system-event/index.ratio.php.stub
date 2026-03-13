@@ -3,13 +3,10 @@
 {% block pageId %}admin-events-index{% endblock %}
 {% block body %}
     <section>
-      <div class="flex items-start justify-between gap-4 mb-6">
+      <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-6">
         <div>
-            <h1 class="text-3xl font-semibold">Systemhändelser</h1>
-            <p class="text-sm text-gray-500 mt-1">Översikt över aktiviteter och händelser i systemet.</p>
-        </div>
-        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-3">
-          {{ $events['pagination']['total'] ?? 0 }} loggar totalt
+          <h1 class="text-3xl font-semibold text-slate-900">Systemhändelser</h1>
+          <p class="mt-2 text-slate-600">Översikt över aktiviteter och händelser i systemet.</p>
         </div>
       </div>
 
@@ -19,6 +16,7 @@
         action="/admin/events"
         class="mb-4"
         data-search-endpoint="{{ route('api.search.system-events') }}"
+        data-per-page="{{ $events['pagination']['per_page'] ?? 10 }}"
       >
         <div class="flex gap-2 items-center">
           <input
@@ -26,22 +24,36 @@
             type="search"
             name="q"
             value="{{ $q ?? '' }}"
-            placeholder="Sök i händelser..."
-            class="w-full md:w-[420px] text-base md:text-sm rounded-xl bg-white border border-gray-200 px-4 py-2 focus:ring-0 focus:border-gray-300"
+            placeholder="Sök typ, användare eller innehåll..."
+            class="w-full md:w-[420px] text-base md:text-sm rounded-xl bg-white border border-slate-200 px-4 py-2 focus:ring-0 focus:border-gray-300"
             autocomplete="off"
           >
-          <button type="submit" class="px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold">
+          <button type="submit" class="px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold transition-colors">
             Sök
           </button>
 
           <button
             id="system-events-clear"
             type="button"
-            class="px-3 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-gray-900"
+            class="px-3 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors"
             {% if(($q ?? '') === '') : %}disabled{% endif; %}
           >
             Rensa
           </button>
+        </div>
+
+        <div
+          id="system-events-search-summary"
+          class="mt-3 text-xs text-slate-500"
+          data-total="{{ $events['pagination']['total'] ?? 0 }}"
+        >
+          {% if(($q ?? '') !== '') : %}
+            Resultat för <span class="font-semibold text-slate-700">"{{ $q }}"</span>
+            <span class="text-slate-300">•</span>
+            {{ $events['pagination']['total'] ?? 0 }} loggar totalt
+          {% else : %}
+            {{ $events['pagination']['total'] ?? 0 }} loggar totalt
+          {% endif; %}
         </div>
       </form>
 

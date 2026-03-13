@@ -54,19 +54,19 @@ export default class SearchProfiles extends Search {
 
             if (this.results.length > 0) {
                 const ul = document.createElement('ul');
-                ul.className = 'divide-y divide-gray-100';
+                ul.className = 'divide-y divide-slate-100';
 
                 this.results.forEach(result => {
                     const li = document.createElement('li');
-                    li.className = 'px-3 py-1.5 hover:bg-gray-50';
+                    li.className = 'px-3 py-1.5 hover:bg-emerald-50/50';
                     const userRoute = `/user/${result.id}/show`;
 
                     li.innerHTML = `
                         <a href="${userRoute}" class="flex items-center gap-3">
                             <img src="${result.avatar_url || result.avatar}" alt="${result.first_name}" class="w-8 h-8 rounded-full object-cover">
                             <div>
-                                <div class="text-sm font-medium text-blue-600 hover:underline">${result.first_name} ${result.last_name}</div>
-                                <p class="text-xs text-gray-600">${result.email}</p>
+                                <div class="text-sm font-medium text-emerald-700 hover:underline">${result.first_name} ${result.last_name}</div>
+                                <p class="text-xs text-slate-600">${result.email}</p>
                             </div>
                         </a>
                     `;
@@ -80,7 +80,7 @@ export default class SearchProfiles extends Search {
                 if (pager) this.resultContainer.appendChild(pager);
 
             } else {
-                this.resultContainer.innerHTML = `<p class="p-3 text-gray-500">Inga resultat hittades.</p>`;
+                this.resultContainer.innerHTML = `<p class="p-3 text-slate-500">Inga resultat hittades.</p>`;
             }
 
             this.showDropdown();
@@ -112,8 +112,8 @@ export default class SearchProfiles extends Search {
                         <div class="flex items-center gap-4">
                             <img src="${result.avatar}" alt="${result.first_name}" class="w-10 h-10 rounded-full object-cover">
                             <div>
-                                <a href="${userRoute}" class="font-semibold text-blue-600 hover:underline">${result.first_name} ${result.last_name}</a>
-                                <p class="text-sm text-gray-600">${result.email}</p>
+                                <a href="${userRoute}" class="font-semibold text-emerald-700 hover:underline">${result.first_name} ${result.last_name}</a>
+                                <p class="text-sm text-slate-600">${result.email}</p>
                             </div>
                         </div>
                     `;
@@ -126,7 +126,7 @@ export default class SearchProfiles extends Search {
                 if (pager) resultContainer.appendChild(pager);
 
             } else {
-                resultContainer.innerHTML = `<p class="text-gray-500">Inga resultat hittades.</p>`;
+                resultContainer.innerHTML = `<p class="text-slate-500">Inga resultat hittades.</p>`;
             }
         }
     }

@@ -5,7 +5,6 @@ export default class SearchSystemEvents extends SearchTable {
     super({
       ...options,
       colspan: 4,
-      perPage: options.perPage ?? 20
     });
   }
 
@@ -15,8 +14,9 @@ export default class SearchSystemEvents extends SearchTable {
     if (!items.length) {
       this.tbody.innerHTML = `
         <tr>
-          <td colspan="${this.colspan}" class="px-4 py-10 text-center text-gray-400">
-            Inga resultat hittades.
+          <td colspan="${this.colspan}" class="px-4 py-10 text-center">
+            <p class="text-slate-500 font-medium">Inga systemhändelser matchade din sökning.</p>
+            <p class="mt-2 text-sm text-slate-400">Prova att söka på typ, användare eller innehåll i händelsen.</p>
           </td>
         </tr>
       `;
@@ -25,13 +25,13 @@ export default class SearchSystemEvents extends SearchTable {
 
     const html = items.map((e) => {
       const userCell = e.user_name
-        ? `<span class="text-xs font-medium text-indigo-600">${this.escapeHtml(e.user_name)}</span>`
-        : `<span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest">System</span>`;
+        ? `<span class="text-xs font-medium text-emerald-700">${this.escapeHtml(e.user_name)}</span>`
+        : `<span class="text-[10px] font-bold text-slate-300 uppercase tracking-widest">System</span>`;
 
       return `
-        <tr class="group hover:bg-blue-50/30 transition-all duration-200">
+        <tr class="group hover:bg-emerald-50/30 transition-all duration-200">
           <td class="px-4 py-4 whitespace-nowrap">
-            <span class="text-xs font-medium text-gray-500">${this.escapeHtml(e.created_at || '')}</span>
+            <span class="text-xs font-medium text-slate-500">${this.escapeHtml(e.created_at || '')}</span>
           </td>
           <td class="px-4 py-4">
             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase border ${this.escapeHtml(e.type_badge_class || '')}">

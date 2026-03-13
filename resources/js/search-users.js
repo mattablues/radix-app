@@ -5,7 +5,6 @@ export default class SearchUsers extends SearchTable {
     super({
       ...options,
       colspan: 5,
-      perPage: options.perPage ?? 20
     });
 
     // Modal: block user
@@ -206,8 +205,9 @@ export default class SearchUsers extends SearchTable {
     if (!items.length) {
       this.tbody.innerHTML = `
         <tr>
-          <td colspan="${this.colspan}" class="px-4 py-10 text-center text-gray-400">
-            Inga resultat hittades.
+          <td colspan="${this.colspan}" class="px-4 py-10 text-center">
+            <p class="text-slate-500 font-medium">Inga konton matchade din sökning.</p>
+            <p class="mt-2 text-sm text-slate-400">Prova att söka på namn eller e-postadress.</p>
           </td>
         </tr>
       `;
@@ -244,7 +244,7 @@ export default class SearchUsers extends SearchTable {
 
 
       const actionHtml = isAdmin
-        ? `<span class="p-1.5 text-gray-300" title="Admin kan ej ändras här">
+        ? `<span class="p-1.5 text-slate-300" title="Admin kan ej ändras här">
              <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
              </svg>
@@ -252,7 +252,7 @@ export default class SearchUsers extends SearchTable {
         : `
           <button
             type="button"
-            class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+            class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
             title="Skicka aktivering"
             data-action="send-activation"
             data-user-id="${id}"
@@ -262,13 +262,13 @@ export default class SearchUsers extends SearchTable {
           </button>
 
           ${isBlocked ? `
-            <span class="p-2 text-gray-400 cursor-not-allowed">
+            <span class="p-2 text-slate-400 cursor-not-allowed">
               <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728A9 9 0 115.636 5.636m12.728 12.728L5.636 5.636" /></svg>
             </span>
           ` : `
             <button
               type="button"
-              class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+              class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
               title="Blockera användare"
               data-action="block-user"
               data-user-id="${id}"
@@ -280,17 +280,17 @@ export default class SearchUsers extends SearchTable {
         `;
 
       return `
-        <tr class="group hover:bg-blue-50/30 transition-all duration-200">
-          <td class="px-4 py-4 text-xs font-medium text-gray-400 max-md:hidden">
+        <tr class="group hover:bg-emerald-50/30 transition-all duration-200">
+          <td class="px-4 py-4 text-xs font-medium text-slate-400 max-md:hidden">
             #${id}
           </td>
 
           <td class="px-4 py-4">
             <div class="flex flex-col">
-              <a href="${showUrl}" class="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+              <a href="${showUrl}" class="text-sm font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors">
                 ${first} ${last}
               </a>
-              <span class="text-xs text-gray-500">${email}</span>
+              <span class="text-xs text-slate-500">${email}</span>
             </div>
           </td>
 
@@ -300,10 +300,10 @@ export default class SearchUsers extends SearchTable {
 
           <td class="px-4 py-4 max-sm:hidden">
             <div class="flex flex-col">
-              <span class="text-xs font-medium ${String(active).toLowerCase() === 'online' ? 'text-emerald-600' : 'text-gray-600'}">
+              <span class="text-xs font-medium ${String(active).toLowerCase() === 'online' ? 'text-emerald-600' : 'text-slate-600'}">
                 ${active ? (active.charAt(0).toUpperCase() + active.slice(1)) : 'Offline'}
               </span>
-              <span class="text-[10px] text-gray-400 italic">
+              <span class="text-[10px] text-slate-400 italic">
                 ${activeAt}
               </span>
             </div>

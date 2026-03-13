@@ -4,10 +4,10 @@
 
 {% block body %}
   <section>
-    <div class="flex items-start justify-between gap-4 mb-6">
-      <h1 class="text-3xl font-semibold">Konton</h1>
-      <div class="text-xs text-gray-600 font-medium hidden md:block mt-3">
-        {{ $users['pagination']['total'] ?? 0 }} totalt
+    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-semibold text-slate-900">Konton</h1>
+        <p class="mt-2 text-slate-600">Här hittar du alla användarkonton och deras aktuella status.</p>
       </div>
     </div>
 
@@ -17,6 +17,7 @@
       action="/admin/users"
       class="mb-4"
       data-search-endpoint="{{ route('api.search.users') }}"
+      data-per-page="{{ $users['pagination']['per_page'] ?? 10 }}"
     >
       <div class="flex gap-2 items-center">
         <input
@@ -24,22 +25,36 @@
           type="search"
           name="q"
           value="{{ $q ?? '' }}"
-          placeholder="Sök användare..."
-          class="w-full md:w-[420px] text-base md:text-sm rounded-xl bg-white border border-gray-200 px-4 py-2 focus:ring-0 focus:border-gray-300"
+          placeholder="Sök namn eller e-postadress..."
+          class="w-full md:w-[420px] text-base md:text-sm rounded-xl bg-white border border-slate-200 px-4 py-2 focus:ring-0 focus:border-gray-300"
           autocomplete="off"
         >
-        <button type="submit" class="px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold">
+        <button type="submit" class="px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold transition-colors">
           Sök
         </button>
 
         <button
           id="users-clear"
           type="button"
-          class="px-3 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-gray-900"
+          class="px-3 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors"
           {% if(($q ?? '') === '') : %}disabled{% endif; %}
         >
           Rensa
         </button>
+      </div>
+
+      <div
+        id="users-search-summary"
+        class="mt-3 text-xs text-slate-500"
+        data-total="{{ $users['pagination']['total'] ?? 0 }}"
+      >
+        {% if(($q ?? '') !== '') : %}
+          Resultat för <span class="font-semibold text-slate-700">"{{ $q }}"</span>
+          <span class="text-slate-300">•</span>
+          {{ $users['pagination']['total'] ?? 0 }} konton totalt
+        {% else : %}
+          {{ $users['pagination']['total'] ?? 0 }} konton totalt
+        {% endif; %}
       </div>
     </form>
 
