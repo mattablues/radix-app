@@ -5,7 +5,6 @@ export default class SearchSystemUpdates extends SearchTable {
     super({
       ...options,
       colspan: 4,
-      perPage: options.perPage ?? 10
     });
 
     // Delete-modal (måste finnas i vyn)
@@ -107,8 +106,9 @@ export default class SearchSystemUpdates extends SearchTable {
     if (!items.length) {
       this.tbody.innerHTML = `
         <tr>
-          <td colspan="${this.colspan}" class="px-4 py-10 text-center text-gray-400">
-            Inga resultat hittades.
+          <td colspan="${this.colspan}" class="px-4 py-10 text-center">
+            <p class="text-slate-500 font-medium">Inga systemuppdateringar matchade din sökning.</p>
+            <p class="mt-2 text-sm text-slate-400">Prova att söka på version, titel eller beskrivning.</p>
           </td>
         </tr>
       `;
@@ -138,14 +138,14 @@ export default class SearchSystemUpdates extends SearchTable {
       const editUrl = this.escapeHtml(u.edit_url || '#');
 
       const major = u.is_major
-        ? `<span class="inline-flex w-fit px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-indigo-100 text-indigo-700 border border-indigo-200">Major</span>`
+        ? `<span class="inline-flex w-fit px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-100 text-amber-700 border border-amber-200">Major</span>`
         : '';
 
       return `
-        <tr class="group hover:bg-blue-50/30 transition-all duration-200">
+        <tr class="group hover:bg-emerald-50/30 transition-all duration-200">
           <td class="px-4 py-4">
             <div class="flex flex-col gap-1">
-              <span class="text-sm font-black text-gray-900">${version}</span>
+              <span class="text-sm font-black text-slate-900">${version}</span>
               ${major}
             </div>
           </td>
@@ -153,25 +153,25 @@ export default class SearchSystemUpdates extends SearchTable {
           <td class="px-4 py-4">
             <div class="flex flex-col">
               <span class="text-sm font-bold text-slate-800">${title}</span>
-              <span class="text-xs text-gray-500 line-clamp-1 max-w-md">${description}</span>
+              <span class="text-xs text-slate-500 line-clamp-1 max-w-md">${description}</span>
             </div>
           </td>
 
           <td class="px-4 py-4 max-sm:hidden">
-            <span class="text-xs font-medium text-gray-600">${releasedAt}</span>
+            <span class="text-xs font-medium text-slate-600">${releasedAt}</span>
           </td>
 
           <td class="px-4 py-4 text-right">
             <div class="flex items-center justify-end gap-1">
               <a href="${editUrl}"
-                 class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                 class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
                  title="Redigera">
                 ${editIcon}
               </a>
 
               <button
                 type="button"
-                class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                 title="Radera"
                 data-action="delete-update"
                 data-update-id="${id}"

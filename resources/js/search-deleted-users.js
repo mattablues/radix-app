@@ -5,7 +5,6 @@ export default class SearchDeletedUsers extends SearchTable {
     super({
       ...options,
       colspan: 5,
-      perPage: options.perPage ?? 20
     });
 
     // Restore-modal
@@ -104,8 +103,9 @@ export default class SearchDeletedUsers extends SearchTable {
     if (!items.length) {
       this.tbody.innerHTML = `
         <tr>
-          <td colspan="${this.colspan}" class="px-4 py-10 text-center text-gray-400">
-            Inga resultat hittades.
+          <td colspan="${this.colspan}" class="px-4 py-10 text-center">
+            <p class="text-slate-500 font-medium">Inga stängda konton matchade din sökning.</p>
+            <p class="mt-2 text-sm text-slate-400">Prova att söka på namn eller e-postadress.</p>
           </td>
         </tr>
       `;
@@ -127,28 +127,28 @@ export default class SearchDeletedUsers extends SearchTable {
 
       return `
         <tr class="group hover:bg-emerald-50/30 transition-all duration-200">
-          <td class="px-4 py-4 text-xs font-medium text-gray-400 max-md:hidden">
+          <td class="px-4 py-4 text-xs font-medium text-slate-400 max-md:hidden">
             #${id}
           </td>
 
           <td class="px-4 py-4">
             <div class="flex flex-col">
-              <span class="text-sm font-semibold text-gray-900">${first} ${last}</span>
-              <span class="text-xs text-gray-500">${email}</span>
+              <span class="text-sm font-semibold text-slate-900">${first} ${last}</span>
+              <span class="text-xs text-slate-500">${email}</span>
             </div>
           </td>
 
           <td class="px-4 py-4 max-sm:hidden">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-gray-100 text-gray-600 border border-gray-200">
-              <span class="size-1.5 rounded-full bg-gray-400"></span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 border border-slate-200">
+              <span class="size-1.5 rounded-full bg-slate-400"></span>
               Stängt
             </span>
           </td>
 
           <td class="px-4 py-4 max-sm:hidden">
-            <div class="flex flex-col text-xs text-gray-500">
+            <div class="flex flex-col text-xs text-slate-500">
               <span class="font-medium italic">Kontot är inaktivt</span>
-              <span class="text-[10px] text-gray-400">${deletedAt || 'Datum saknas'}</span>
+              <span class="text-[10px] text-slate-400">${deletedAt || 'Datum saknas'}</span>
             </div>
           </td>
 

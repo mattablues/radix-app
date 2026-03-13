@@ -48,20 +48,20 @@ export default class Search {
         if (this.resultContainer) {
             this.resultContainer.innerHTML = '';
         } else if (this.mainContent) {
-            this.mainContent.innerHTML = '<p class="text-gray-500">Inga sökord har angetts.</p>';
+            this.mainContent.innerHTML = '<p class="text-slate-500">Inga sökord har angetts.</p>';
         }
     }
 
     showLoading() {
         if (this.resultContainer) {
-            this.resultContainer.innerHTML = '<p class="loading-indicator text-gray-500 p-3">Laddar...</p>';
+            this.resultContainer.innerHTML = '<p class="loading-indicator text-slate-500 p-3">Laddar...</p>';
             this.showDropdown();
             return;
         }
         let loadingIndicator = this.mainContent.querySelector('.loading-indicator');
         if (!loadingIndicator) {
             loadingIndicator = document.createElement('p');
-            loadingIndicator.classList.add('loading-indicator', 'text-gray-500');
+            loadingIndicator.classList.add('loading-indicator', 'text-slate-500');
             loadingIndicator.innerText = 'Laddar...';
             this.mainContent.appendChild(loadingIndicator);
         }
@@ -110,7 +110,7 @@ export default class Search {
         const info = document.createElement('div');
         const start = (current_page - 1) * per_page + 1;
         const end = Math.min(current_page * per_page, total);
-        info.className = 'text-xs text-gray-600 font-bold';
+        info.className = 'text-xs text-slate-600 font-bold';
         info.textContent = `Visar ${start}–${end} av ${total}`;
 
         topRow.appendChild(info);
@@ -119,9 +119,9 @@ export default class Search {
         const bottomRow = document.createElement('div');
         bottomRow.className = 'flex items-center justify-center gap-1.5';
 
-        const baseBtnCls = 'h-6 min-w-6 px-1.5 py-0.5 text-xs rounded border flex items-center justify-center';
-        const activeCls = 'text-blue-600 border-blue-200 hover:bg-blue-50';
-        const disabledCls = 'text-gray-300 border-gray-200 cursor-not-allowed';
+        const baseBtnCls = 'h-6 min-w-6 px-1.5 py-0.5 text-xs rounded border flex items-center justify-center transition-colors';
+        const activeCls = 'text-emerald-700 border-emerald-200 hover:bg-emerald-50';
+        const disabledCls = 'text-slate-300 border-slate-200 cursor-not-allowed';
 
         // SVG-ikoner
         const iconSize = 14; // matcha ungefär text-xs-höjd
@@ -155,12 +155,12 @@ export default class Search {
             const el = document.createElement('button');
             el.type = 'button';
             if (isEllipsis) {
-                el.className = `${baseBtnCls} text-gray-400 border-gray-200`;
+                el.className = `${baseBtnCls} text-slate-400 border-slate-200`;
                 el.textContent = '…';
                 el.disabled = true;
                 return el;
             }
-            el.className = `${baseBtnCls} ${isActive ? 'bg-blue-600 text-white border-blue-600' : activeCls}`;
+            el.className = `${baseBtnCls} ${isActive ? 'bg-emerald-600 text-white border-emerald-600' : activeCls}`;
             el.textContent = String(p);
             el.style.lineHeight = '1';
             if (!isActive) {

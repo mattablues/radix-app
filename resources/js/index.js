@@ -1,14 +1,18 @@
-import Alpine from '@alpinejs/csp'
-import Collapse from "@alpinejs/collapse";
-import Ajax from "@imacrayon/alpine-ajax";
-import Ui from "@alpinejs/ui";
-import Focus from "@alpinejs/focus";
-import { addTableAria } from "./addTableAria";
-import SearchProfiles from './search-profiles';
-import SearchSystemEvents from './search-system-events';
-import SearchSystemUpdates from './search-system-updates';
-import SearchUsers from './search-users';
-import SearchDeletedUsers from './search-deleted-users';
+import Alpine from '@alpinejs/csp';
+import Collapse from '@alpinejs/collapse';
+import Ajax from '@imacrayon/alpine-ajax';
+import Ui from '@alpinejs/ui';
+import Focus from '@alpinejs/focus';
+
+import { addTableAria } from './addTableAria';
+import { initTableSearches } from './search-init';
+import {
+  initAnchorScroll,
+  initHeaderSearch,
+  initLogoutFastTap,
+  initLogoutPendingState,
+  initScrollToTop,
+} from './ui-init';
 
 window.Alpine = Alpine;
 Alpine.plugin(Collapse);
@@ -21,21 +25,154 @@ Alpine.data('cookieConsent', () => ({
 
   init() {
     try {
-      this.showCookieBanner = window.localStorage.getItem('cookies_choice') === null
+      this.showCookieBanner = window.localStorage.getItem('cookies_choice') === null;
     } catch (e) {
-      // Om localStorage är blockat (privat läge, policy, etc) — visa bannern ändå.
-      this.showCookieBanner = true
+      this.showCookieBanner = true;
     }
   },
 
   accept() {
-    try { window.localStorage.setItem('cookies_choice', 'accepted') } catch (e) {}
-    this.showCookieBanner = false
+    try {
+      window.localStorage.setItem('cookies_choice', 'accepted');
+    } catch (e) {}
+    this.showCookieBanner = false;
   },
 
   reject() {
-    try { window.localStorage.setItem('cookies_choice', 'rejected') } catch (e) {}
-    this.showCookieBanner = false
+    try {
+      window.localStorage.setItem('cookies_choice', 'rejected');
+    } catch (e) {}
+    this.showCookieBanner = false;
+  },
+}));
+
+Alpine.data('tooltip', (opts = {}) => ({
+  open: false,
+  title: opts.title || 'Information',
+  content: opts.content || '',
+  maxWidthPx: Number(opts.maxWidthPx || 320),
+  offsetPx: Number(opts.offsetPx || 10),
+
+  panelStyle: '',
+
+  // Intern state
+  _closeTimer: null,
+
+  init() {
+    // Läs från data-attributes om inget skickats in (CSP-säkert)
+    const ds = this.$el && this.$el.dataset ? this.$el.dataset : {};
+    if (!opts.title && ds.tooltipTitle) this.title = ds.tooltipTitle;
+    if (!opts.content && ds.tooltipContent) this.content = ds.tooltipContent;
+    if (!opts.maxWidthPx && ds.tooltipMaxWidthPx) this.maxWidthPx = Number(ds.tooltipMaxWidthPx) || this.maxWidthPx;
+    if (!opts.offsetPx && ds.tooltipOffsetPx) this.offsetPx = Number(ds.tooltipOffsetPx) || this.offsetPx;
+
+    const onRelayout = () => { if (this.open) this.updatePosition(); };
+    window.addEventListener('scroll', onRelayout, { passive: true });
+    window.addEventListener('resize', onRelayout);
+
+    this.$cleanup = () => {
+      window.removeEventListener('scroll', onRelayout);
+      window.removeEventListener('resize', onRelayout);
+      window.clearTimeout(this._closeTimer);
+    };
+  },
+
+  destroy() {
+    if (typeof this.$cleanup === 'function') this.$cleanup();
+  },
+
+  isHoverCapable() {
+    return window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  },
+
+  show() {
+    this.open = true;
+    this.$nextTick(() => this.updatePosition());
+  },
+
+  hide() {
+    this.open = false;
+  },
+
+  toggle() {
+    this.open ? this.hide() : this.show();
+  },
+
+  scheduleHide(delayMs = 120) {
+    window.clearTimeout(this._closeTimer);
+    this._closeTimer = window.setTimeout(() => this.hide(), delayMs);
+  },
+
+  cancelScheduledHide() {
+    window.clearTimeout(this._closeTimer);
+    this._closeTimer = null;
+  },
+
+  // Hover (desktop)
+  onTriggerEnter() {
+    if (!this.isHoverCapable()) return;
+    this.cancelScheduledHide();
+    this.show();
+  },
+
+  onTriggerLeave() {
+    if (!this.isHoverCapable()) return;
+    this.scheduleHide(160);
+  },
+
+  onPanelEnter() {
+    if (!this.isHoverCapable()) return;
+    this.cancelScheduledHide();
+    this.show();
+  },
+
+  onPanelLeave() {
+    if (!this.isHoverCapable()) return;
+    this.scheduleHide(120);
+  },
+
+  updatePosition() {
+    const trigger = this.$refs.trigger;
+    const panel = this.$refs.panel;
+    if (!trigger || !panel) return;
+
+    const vw = window.innerWidth || document.documentElement.clientWidth;
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+
+    const effectiveMaxWidth = Math.max(200, Math.min(this.maxWidthPx, vw - 16));
+    panel.style.maxWidth = effectiveMaxWidth + 'px';
+
+    const t = trigger.getBoundingClientRect();
+
+    const prevDisplay = panel.style.display;
+    const prevVisibility = panel.style.visibility;
+    panel.style.display = 'block';
+    panel.style.visibility = 'hidden';
+
+    const p = panel.getBoundingClientRect();
+
+    panel.style.display = prevDisplay;
+    panel.style.visibility = prevVisibility;
+
+    const spaceAbove = t.top;
+    const spaceBelow = vh - t.bottom;
+
+    const isMobile = vw < 768;
+
+    const placeAboveDesktopRule =
+      spaceAbove >= (p.height + this.offsetPx) || spaceAbove >= spaceBelow;
+
+    // Mobil: föredra under. Desktop: föredra över men flippar vid behov.
+    const placeAbove = isMobile ? false : placeAboveDesktopRule;
+
+    let top;
+    if (placeAbove) top = Math.max(8, t.top - p.height - this.offsetPx);
+    else top = Math.min(vh - p.height - 8, t.bottom + this.offsetPx);
+
+    const idealLeft = t.left + (t.width / 2) - (p.width / 2);
+    const left = Math.min(Math.max(8, idealLeft), vw - p.width - 8);
+
+    this.panelStyle = `position:fixed; top:${top}px; left:${left}px; width:${Math.min(p.width, effectiveMaxWidth)}px;`;
   },
 }));
 
@@ -160,339 +297,13 @@ document.addEventListener('click', (e) => {
   }
 }, true);
 
-// Kör dina funktioner
 addTableAria();
 
 document.addEventListener('DOMContentLoaded', () => {
-    const mainContent = document.querySelector('main');
-
-    const searchProfileInput = document.getElementById('search-profiles');
-
-    if (searchProfileInput && mainContent) {
-        new SearchProfiles('search-profiles', 'main');
-    }
-
-    // ---------- Header-sök (robust / valfri) ----------
-    const btn = document.getElementById('search-toggle');
-    const wrap = document.getElementById('search-wrap');
-
-    if (btn && wrap) {
-        const open = () => {
-            wrap.classList.remove('hidden');
-            wrap.style.position = 'absolute';
-            wrap.style.left = '0';
-            wrap.style.right = '0';
-            wrap.style.top = '100%';
-            wrap.style.marginTop = '0.5rem';
-            wrap.style.zIndex = '70';
-
-            setTimeout(() => {
-                if (searchProfileInput) searchProfileInput.focus();
-            }, 0);
-        };
-
-        const close = () => {
-            wrap.classList.add('hidden');
-            wrap.removeAttribute('style');
-
-            if (searchProfileInput) searchProfileInput.value = '';
-
-            const dropdown = document.getElementById('search-dropdown');
-
-            if (dropdown) {
-                const resultContainer = dropdown.querySelector('.result-container');
-                if (resultContainer) resultContainer.innerHTML = '';
-                dropdown.classList.add('hidden');
-            }
-        };
-
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (wrap.classList.contains('hidden')) open(); else close();
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!wrap.contains(e.target) && !btn.contains(e.target)) close();
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') close();
-        });
-    }
-    // ---------- /Header-sök ----------
-
-    // ---------- Tabell-sök (robust / destroy / guards) ----------
-    window.__tableSearchInstances = window.__tableSearchInstances || {};
-
-    const getPageId = () =>
-        document.querySelector('[data-page-id]')?.getAttribute('data-page-id')
-        || (document.body ? document.body.id : null);
-
-    const exists = (id) => !!document.getElementById(id);
-
-    const getEndpointFromForm = (formId, fallback) => {
-        const form = document.getElementById(formId);
-        const endpoint = form ? (form.getAttribute('data-search-endpoint') || '') : '';
-        return endpoint || fallback;
-    };
-
-    const getInitialState = () => {
-        const params = new URLSearchParams(window.location.search);
-        return {
-            initialTerm: (params.get('q') || '').trim(),
-            initialPage: parseInt(params.get('page') || '1', 10) || 1
-        };
-    };
-
-    const initTableSearch = (key, requiredIds, createInstance) => {
-        const ok = requiredIds.every(exists);
-        if (!ok) return null;
-
-        const prev = window.__tableSearchInstances[key];
-        if (prev && typeof prev.destroy === 'function') {
-            prev.destroy();
-        }
-
-        const instance = createInstance();
-        window.__tableSearchInstances[key] = instance;
-        return instance;
-    };
-
-    const pageId = getPageId();
-
-    if (pageId === 'admin-events-index') {
-        const { initialTerm, initialPage } = getInitialState();
-        const endpoint = getEndpointFromForm('system-events-search-form', '/api/v1/search/system-events');
-
-        initTableSearch(
-            'systemEvents',
-            ['system-events-search-form', 'system-events-search', 'system-events-tbody'],
-            () => new SearchSystemEvents({
-                formId: 'system-events-search-form',
-                clearBtnId: 'system-events-clear',
-                inputId: 'system-events-search',
-                tbodyId: 'system-events-tbody',
-                pagerId: 'system-events-pager',
-                endpoint,
-                routeBase: '/admin/events',
-                perPage: 20,
-                initialTerm,
-                initialPage
-            })
-        );
-    }
-
-    if (pageId === 'admin-updates-index') {
-        const { initialTerm, initialPage } = getInitialState();
-        const endpoint = getEndpointFromForm('system-updates-search-form', '/api/v1/search/system-updates');
-
-        initTableSearch(
-            'systemUpdates',
-            ['system-updates-search-form', 'system-updates-search', 'system-updates-tbody'],
-            () => new SearchSystemUpdates({
-                formId: 'system-updates-search-form',
-                clearBtnId: 'system-updates-clear',
-                inputId: 'system-updates-search',
-                tbodyId: 'system-updates-tbody',
-                pagerId: 'system-updates-pager',
-                endpoint,
-                routeBase: '/admin/updates',
-                perPage: 10,
-                initialTerm,
-                initialPage
-            })
-        );
-    }
-
-    if (pageId === 'admin-users-index') {
-        const { initialTerm, initialPage } = getInitialState();
-        const endpoint = getEndpointFromForm('users-search-form', '/api/v1/search/users');
-
-        initTableSearch(
-            'users',
-            ['users-search-form', 'users-search', 'users-tbody'],
-            () => new SearchUsers({
-                formId: 'users-search-form',
-                clearBtnId: 'users-clear',
-                inputId: 'users-search',
-                tbodyId: 'users-tbody',
-                pagerId: 'users-pager',
-                endpoint,
-                routeBase: '/admin/users',
-                perPage: 20,
-                initialTerm,
-                initialPage
-            })
-        );
-    }
-
-    if (pageId === 'admin-user-closed') {
-        const { initialTerm, initialPage } = getInitialState();
-        const endpoint = getEndpointFromForm('deleted-users-search-form', '/api/v1/search/deleted-users');
-
-        initTableSearch(
-            'deletedUsers',
-            ['deleted-users-search-form', 'deleted-users-search', 'deleted-users-tbody'],
-            () => new SearchDeletedUsers({
-                formId: 'deleted-users-search-form',
-                clearBtnId: 'deleted-users-clear',
-                inputId: 'deleted-users-search',
-                tbodyId: 'deleted-users-tbody',
-                pagerId: 'deleted-users-pager',
-                endpoint,
-                routeBase: '/admin/users/closed',
-                perPage: 20,
-                initialTerm,
-                initialPage
-            })
-        );
-    }
-    // ---------- /Tabell-sök ----------
-
-    // ---------- Scroll to top (dold tills du scrollar) ----------
-    (function initScrollToTop() {
-        const scrollBtn = document.getElementById('scrollToTop');
-        if (!scrollBtn) return;
-
-        const SHOW_AFTER_PX = 300;
-
-        const show = () => {
-            scrollBtn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
-            scrollBtn.classList.add('opacity-100', 'translate-y-0');
-        };
-
-        const hide = () => {
-            scrollBtn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
-            scrollBtn.classList.remove('opacity-100', 'translate-y-0');
-        };
-
-        const prefersReducedMotion =
-            window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-        const onScroll = () => {
-            if (window.scrollY > SHOW_AFTER_PX) show();
-            else hide();
-        };
-
-        scrollBtn.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: prefersReducedMotion ? 'auto' : 'smooth',
-            });
-        });
-
-        window.addEventListener('scroll', onScroll, { passive: true });
-        onScroll(); // init-läge
-    })();
-    // ---------- /Scroll to top ----------
-    // ---------- Smooth scroll + rensa hash (mjukare: rensa efter scroll) ----------
-    (function initAnchorScroll() {
-        const allowed = new Set(['kom-igang', 'versioner', 'github']);
-        const headerOffset = 60; // px
-
-        document.addEventListener('click', (e) => {
-            const a = e.target.closest('a');
-            if (!a) return;
-
-            let url;
-            try {
-                url = new URL(a.href, window.location.href);
-            } catch {
-                return;
-            }
-
-            const hash = url.hash || '';
-            if (!hash.startsWith('#') || hash.length < 2) return;
-
-            const id = decodeURIComponent(hash.slice(1));
-            if (!allowed.has(id)) return;
-
-            const samePage =
-                url.origin === window.location.origin &&
-                url.pathname === window.location.pathname;
-
-            if (!samePage) return;
-
-            const el = document.getElementById(id);
-            if (!el) return;
-
-            e.preventDefault();
-
-            const targetY = Math.max(
-                0,
-                el.getBoundingClientRect().top + window.pageYOffset - headerOffset
-            );
-
-            const prefersReducedMotion =
-                window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-            window.scrollTo({
-                top: targetY,
-                behavior: prefersReducedMotion ? 'auto' : 'smooth',
-            });
-
-            // Rensa hash EFTER scroll (mjukare känsla)
-            const distance = Math.abs(window.scrollY - targetY);
-            const durationMs = prefersReducedMotion ? 0 : Math.min(900, Math.max(250, distance * 0.6));
-
-            window.clearTimeout(window.__hashCleanupTimer);
-            window.__hashCleanupTimer = window.setTimeout(() => {
-                history.replaceState(null, '', window.location.pathname + window.location.search);
-            }, durationMs);
-        });
-    })();
-    // ---------- /Smooth scroll + rensa hash ----------
-
-    (function initLogoutFastTap() {
-      const forms = document.querySelectorAll('form[data-logout-form]');
-      if (!forms.length) return;
-
-      const bind = (form) => {
-        if (form.__logoutBound) return;
-        form.__logoutBound = true;
-
-        const submit = () => {
-          const btn = form.querySelector('button[type="submit"]');
-          if (btn) btn.disabled = true;
-
-          if (typeof form.requestSubmit === 'function') form.requestSubmit();
-          else form.submit();
-        };
-
-        // iOS: touchend kan kännas bättre än click i scrollbara/fixed ytor
-        form.addEventListener('touchend', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          submit();
-        }, { passive: false });
-
-        form.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          submit();
-        }, true);
-      };
-
-      forms.forEach(bind);
-    })();
-
-    // ---------- Logout: visa "Loggar ut..." direkt ----------
-    (function initLogoutPendingState() {
-      const form = document.querySelector('form[data-logout-form]');
-      if (!form) return;
-
-      form.addEventListener('submit', () => {
-          const btn = form.querySelector('button[type="submit"]');
-          if (!btn) return;
-
-          btn.disabled = true;
-          btn.classList.add('opacity-60', 'cursor-not-allowed');
-
-          const label = btn.querySelector('[data-logout-label]');
-          if (label) label.textContent = 'Loggar ut…';
-
-          const spinner = btn.querySelector('[data-logout-spinner]');
-          if (spinner) spinner.classList.remove('hidden');
-      });
-  })();
+  initHeaderSearch();
+  initTableSearches();
+  initScrollToTop();
+  initAnchorScroll();
+  initLogoutFastTap();
+  initLogoutPendingState();
 });

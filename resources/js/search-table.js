@@ -6,15 +6,23 @@ export default class SearchTable {
   constructor(options) {
     this.form = options.formId ? document.getElementById(options.formId) : null;
     this.clearBtn = options.clearBtnId ? document.getElementById(options.clearBtnId) : null;
+    this.csrfToken = this.getCsrfToken();
 
     this.input = document.getElementById(options.inputId);
     this.tbody = document.getElementById(options.tbodyId);
     this.pager = document.getElementById(options.pagerId);
+    this.notice = options.noticeId ? document.getElementById(options.noticeId) : null;
+    this.summary = options.summaryId ? document.getElementById(options.summaryId) : null;
+    this.noticeHtml = options.noticeHtml ?? '';
+
+    this.summarySingular = options.summarySingular ?? 'resultat';
+    this.summaryPlural = options.summaryPlural ?? 'resultat';
+    this.summarySuffix = options.summarySuffix ?? 'totalt';
 
     this.endpoint = options.endpoint;
     this.routeBase = options.routeBase;
 
-    this.perPage = options.perPage ?? 10;
+    this.perPage = options.perPage ?? (Number.parseInt(this.form?.dataset?.perPage || '10', 10) || 10);
     this.colspan = options.colspan ?? 1;
 
     this.term = options.initialTerm ?? '';
@@ -32,7 +40,6 @@ export default class SearchTable {
       this.fetchAndRender(this.term, this.page, true);
     }, options.debounceMs ?? 250);
 
-    // Registrera instans + bind popstate en gång
     SearchTable.instances.add(this);
     if (!SearchTable.popstateBound) {
       SearchTable.popstateBound = true;
@@ -47,11 +54,15 @@ export default class SearchTable {
   }
 
   init() {
-    // Pager ska vara valfri
     if (!this.input || !this.tbody) return;
 
     this.input.value = this.term;
     this.setClearEnabled();
+    this.renderNotice(this.term);
+    this.renderSummary({
+      term: this.term,
+      total: Number.parseInt(this.summary?.dataset?.total || '0', 10) || 0
+    });
 
     if (this.form) {
       this._onSubmit = (e) => {
@@ -82,7 +93,6 @@ export default class SearchTable {
       this.clearBtn.addEventListener('click', this._onClear);
     }
 
-    // Pager-event bara om den finns
     if (this.pager) {
       this._onPagerClick = (e) => {
         const a = e.target.closest('a');
@@ -109,15 +119,40 @@ export default class SearchTable {
     }
   }
 
-  // Nytt: städa upp (för SPA / re-init utan full reload)
+  getCsrfToken() {
+    return this.form?.querySelector('input[name="csrf_token"]')?.value ?? '';
+  }
+
+  csrfField() {
+    if (!this.csrfToken) {
+      return '';
+    }
+
+    return `<input type="hidden" name="csrf_token" value="${this.escapeHtml(this.csrfToken)}">`;
+  }
+
+  currentQuerySuffix() {
+    const params = new URLSearchParams();
+
+    if (this.term) {
+      params.set('q', this.term);
+    }
+
+    if (this.page > 1) {
+      params.set('page', String(this.page));
+    }
+
+    const query = params.toString();
+
+    return query ? `?${query}` : '';
+  }
+
   destroy() {
-    // 1) Stoppa ev. pågående request
     if (this._abort) {
       this._abort.abort();
       this._abort = null;
     }
 
-    // 2) Ta bort event listeners som denna instans la till
     if (this.form && this._onSubmit) {
       this.form.removeEventListener('submit', this._onSubmit);
     }
@@ -136,7 +171,6 @@ export default class SearchTable {
     this._onClear = null;
     this._onPagerClick = null;
 
-    // 3) Avregistrera instansen så den inte får popstate längre
     SearchTable.instances.delete(this);
   }
 
@@ -152,27 +186,40 @@ export default class SearchTable {
       this.input.value = this.term;
     }
     this.setClearEnabled();
+    this.renderNotice(this.term);
 
     this.fetchAndRender(this.term, this.page, false);
   }
 
-  /**
-   * Bygger querystring-suffix baserat på nuvarande URL (q + page).
-   * - Tar bara med q om den inte är tom
-   * - Tar bara med page om page > 1
-   * @return {string} Ex: "?q=test&page=2" eller "".
-   */
-  currentQuerySuffix() {
-    const params = new URLSearchParams(window.location.search);
-    const q = (params.get('q') || '').trim();
-    const page = parseInt(params.get('page') || '1', 10) || 1;
+  renderNotice(term) {
+    if (!this.notice) return;
 
-    const qs = new URLSearchParams();
-    if (q) qs.set('q', q);
-    if (page > 1) qs.set('page', String(page));
+    if (term) {
+      this.notice.classList.remove('hidden');
+      return;
+    }
 
-    const s = qs.toString();
-    return s ? `?${s}` : '';
+    this.notice.classList.add('hidden');
+  }
+
+  getSummaryNoun(total) {
+    return total === 1 ? this.summarySingular : this.summaryPlural;
+  }
+
+  renderSummary(meta = {}) {
+    if (!this.summary) return;
+
+    const term = String(meta.term ?? this.term ?? '').trim();
+    const total = Number.parseInt(String(meta.total ?? 0), 10) || 0;
+    const noun = this.getSummaryNoun(total);
+    const suffix = this.summarySuffix ? ` ${this.summarySuffix}` : '';
+
+    if (term) {
+      this.summary.innerHTML = `Resultat för <span class="font-semibold text-slate-700">"${this.escapeHtml(term)}"</span> <span class="text-slate-300">•</span> ${total} ${this.escapeHtml(noun)}${this.escapeHtml(suffix)}`;
+      return;
+    }
+
+    this.summary.textContent = `${total} ${noun}${suffix}`;
   }
 
   setClearEnabled() {
@@ -227,6 +274,8 @@ export default class SearchTable {
 
       this.renderRows(items);
       this.renderPager(meta, term);
+      this.renderNotice(term);
+      this.renderSummary(meta);
 
       if (updateUrl) {
         const u = new URL(this.routeBase, window.location.origin);
@@ -245,7 +294,7 @@ export default class SearchTable {
     if (!items.length) {
       this.tbody.innerHTML = `
         <tr>
-          <td colspan="${this.colspan}" class="px-4 py-10 text-center text-gray-400">
+          <td colspan="${this.colspan}" class="px-4 py-10 text-center text-slate-400">
             Inga resultat hittades.
           </td>
         </tr>
@@ -354,7 +403,7 @@ export default class SearchTable {
   showLoading() {
     this.tbody.innerHTML = `
       <tr>
-        <td colspan="${this.colspan}" class="px-4 py-6 text-center text-gray-400">
+        <td colspan="${this.colspan}" class="px-4 py-6 text-center text-slate-400">
           Laddar...
         </td>
       </tr>
