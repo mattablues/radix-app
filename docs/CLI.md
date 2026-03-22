@@ -90,12 +90,34 @@ php radix scaffold:install admin --force
 php radix scaffold:install routes/auth --dry-run
 ```
 
-### Viktigt: använd ofta `--force`
+### Viktigt: placeholder-filer (PHPStan) och när du ska använda `--force`
 
-För att PHPStan inte ska klaga i en helt ny app kan starter-projektet innehålla vissa “tomma” filer (t.ex. route-filer).
-När du installerar ett scaffold behöver du därför ofta `--force` för att scaffoldet ska kunna skriva över dessa filer.
+I en helt ny / minimal install kan starter-projektet innehålla vissa **placeholder-filer** (t.ex. route-filer) för att PHPStan och statisk analys inte ska klaga.
 
-Exempel:
+När du installerar scaffolds vill du ofta att dessa placeholders ska **skrivas över** – men utan att råka skriva över “riktiga” filer.
+
+Rekommenderat:
+
+- `--force-placeholders`  
+  Skriver över **endast** filer som är markerade som placeholder (t.ex. `// RADIX_PLACEHOLDER`).  
+  Det här är det du normalt vill använda i en ny app.
+
+- `--force`  
+  Skriver över **allt**. Använd när du verkligen menar det.
+
+#### Exempel (rekommenderas i ny app)
+
+```bash
+php radix scaffold:install auth --force-placeholders
+```
+
+#### Exempel (installera allt som ingår i “starter all”)
+
+```bash
+php radix scaffold:install --all --force-placeholders
+```
+
+#### Exempel (full overwrite – använd med försiktighet)
 
 ```bash
 php radix scaffold:install auth --force
