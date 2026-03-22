@@ -73,34 +73,46 @@ Det här kommandot:
 
 ## 5) Lägga till mer funktionalitet via scaffolds
 
-Om du vill ha mer än “starter”-nivån installerar du ett scaffold (t.ex. `auth`, `user`, `admin`, `updates`).  
+Om du vill ha mer än “starter”-nivån installerar du ett scaffold (t.ex. `auth`, `user`, `admin`, `updates`).
 Varje scaffold lägger till det som behövs för just det steget (inkl. migrationsfiler).
 
 ### 5.1 Scaffold-kommandot
 
 ```bash
-php radix scaffold:install <preset> [--force] [--dry-run]
+php radix scaffold:install <preset>|--all [--force] [--force-placeholders] [--dry-run]
 ```
 
 **Options:**
 - `<preset>` Namn eller path till preset under presets-root (t.ex. `auth`, `routes/auth`)
-- `--force` Skriv över befintliga filer
+- `--all` Installera ALLA presets under presets-root (top-level + dependencies)
+- `--force` Skriv över befintliga filer (använd med försiktighet)
+- `--force-placeholders` Skriv över endast placeholder-filer (rekommenderas i första hand)
 - `--dry-run` Visa vad som skulle göras utan att skriva några filer
 
 **Examples:**
 ```bash
 php radix scaffold:install auth
-php radix scaffold:install user
-php radix scaffold:install admin --force
+php radix scaffold:install auth --dry-run
+php radix scaffold:install auth --force-placeholders
 php radix scaffold:install routes/auth --dry-run
+php radix scaffold:install --all --dry-run
+php radix scaffold:install --all --force-placeholders
 ```
 
-### 5.2 Viktigt: `--force` (p.g.a. "tomma" route-filer)
+### 5.2 Viktigt: när ska man använda `--force`?
 
-För att PHPStan inte ska klaga i en ny app kan starter-projektet innehålla vissa “tomma” filer (t.ex. route-filer).  
-När du installerar ett scaffold behöver du därför ofta använda `--force` för att scaffoldet ska kunna skriva över dessa filer.
+I en ny app kan det finnas **placeholder-filer** (t.ex. tomma route-filer) för att verktyg som PHPStan ska vara nöjda direkt.
+När du installerar ett scaffold kan dessa behöva ersättas.
 
-Exempel:
+- Använd i första hand:
+
+```bash
+php radix scaffold:install auth --force-placeholders
+```
+
+Det skriver bara över filer som är markerade som placeholders och minimerar risken att råka skriva över något du redan jobbat med.
+
+- Använd `--force` endast när du **medvetet vill skriva över allt** som krockar (t.ex. om du vill “återställa” filer till scaffoldets version):
 
 ```bash
 php radix scaffold:install auth --force
