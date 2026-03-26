@@ -13,4 +13,9 @@ return [
         'maintenance' => getenv('APP_MAINTENANCE') ?: '0',
         'debug' => getenv('APP_DEBUG') ?: '0',
     ],
+
+    'http' => [
+        // Max request size för web (multipart/form-data etc). I MB.
+        'web_max_request_mb' => (int) (getenv('WEB_MAX_REQUEST_MB') ?: 6),
+    ],
 ];
