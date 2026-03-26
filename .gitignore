@@ -27,6 +27,9 @@ tests/crop_test_*.png
 tests/quality_*.jpg
 tests/thumb_delegate.jpg
 
+/.preset
+/.requires.php
+
 # Test/coverage-cache
 .phpunit.cache/
 .phpunit.result.cache
