@@ -75,10 +75,23 @@ Scaffolds är “paket” som lägger till filer + konfiguration + ev. migration
 Installera scaffold:
 
 ```bash
-php radix scaffold:install <preset> --force
+php radix scaffold:install <preset>
 ```
 
-> `--force` behövs ofta eftersom starter-projektet kan ha “tomma” filer (t.ex. routes) för att hålla PHPStan nöjd.
+> Tips: I en ny app kan det finnas **placeholder-filer** (t.ex. tomma route-filer) för att verktyg som PHPStan ska vara nöjda direkt.  
+> Om scaffold-installationen behöver skriva över sådana filer, använd i första hand `--force-placeholders`.
+
+Rekommenderat när du installerar i en ny/ren app:
+
+```bash
+php radix scaffold:install <preset> --force-placeholders
+```
+
+Använd `--force` endast när du **medvetet vill skriva över allt** som krockar (t.ex. om du vill “återställa” filer till scaffoldets version):
+
+```bash
+php radix scaffold:install <preset> --force
+```
 
 Kör sedan migrations (scaffold kan lägga till nya migrationsfiler):
 

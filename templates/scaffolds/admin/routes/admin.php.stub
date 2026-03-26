@@ -9,7 +9,7 @@ use App\Controllers\Admin\SystemUpdateController;
 
 // Global grupp för web med request-id + logging
 $router->group(
-    ['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.2mb', 'csrf', 'share.user']],
+    ['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.web', 'csrf', 'share.user']],
     function () use ($router) {
         // Admin: exakt admin-roll
         $router->group(['path' => '/admin', 'middleware' => ['auth', 'role.exact.admin']], function () use ($router) {

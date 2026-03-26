@@ -6,6 +6,7 @@ return [
     // Sätt säkra headers och nonce först
     'security.headers' => \Radix\Middleware\Middlewares\SecurityHeaders::class,
     'limit.2mb' => \Radix\Middleware\Middlewares\LimitRequestSize::class,
+    'limit.web' => \App\Middlewares\LimitRequestSizeWebAware::class,
     'csrf' => \App\Middlewares\Csrf::class, // byt till klassnamn
     'private' => \App\Middlewares\PrivateApp::class,
     'location' => \App\Middlewares\Location::class,
