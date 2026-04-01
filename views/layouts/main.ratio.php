@@ -23,6 +23,7 @@
 
   {% yield content %}
   <main class="grow">
+    {% $theme = 'public'; %}
     {% include "components/flash.ratio.php" %}
     {% include "components/noscript.ratio.php" %}
     {% yield body %}

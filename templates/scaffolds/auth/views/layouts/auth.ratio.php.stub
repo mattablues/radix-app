@@ -47,6 +47,7 @@
     <div class="absolute bottom-1/4 -right-20 size-96 bg-slate-200/40 rounded-full blur-3xl -z-10"></div>
 
     <div class="container-centered py-12">
+      {% $theme = 'public'; %}
       {% include "components/flash.ratio.php" %}
       {% include "components/noscript.ratio.php" %}
 

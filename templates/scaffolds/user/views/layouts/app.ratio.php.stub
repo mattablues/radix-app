@@ -20,6 +20,7 @@
   class="relative min-h-screen bg-slate-50 {% yield pageClass %} text-slate-600 antialiased flex flex-col"
 >
 
+  {% $theme = 'app'; %}
   {% include "components/flash.ratio.php" %}
 
   <header class="sticky top-0 z-50 w-full bg-gray-900 shadow-lg">
