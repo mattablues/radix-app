@@ -2,6 +2,10 @@
     {% $message = $session->flashMessage(); %}
 {% endif; %}
 {% $theme = $theme ?? 'public'; %}
+{% if ($session->has('flash_notification')) : %}
+    {% $message = $session->flashMessage(); %}
+{% endif; %}
+{% $theme = $theme ?? 'public'; %}
 {% $iconColor = ''; %}
 {% $panelClass = ''; %}
 {% $textClass = ''; %}
@@ -25,8 +29,8 @@
     {% $badgeClass = 'bg-emerald-50 text-emerald-700 border border-emerald-100'; %}
     {% $badgeText = 'Klart'; %}
   {% elseif($message['type'] === 'info') : %}
-    {% $iconColor = 'bg-sky-50 text-sky-600 border border-sky-100'; %}
-    {% $badgeClass = 'bg-sky-50 text-sky-700 border border-sky-100'; %}
+    {% $iconColor = 'bg-blue-50 text-blue-700 border border-blue-100'; %}
+    {% $badgeClass = 'bg-blue-50 text-blue-700 border border-blue-100'; %}
     {% $badgeText = 'Info'; %}
   {% elseif($message['type'] === 'warning') : %}
     {% $iconColor = 'bg-amber-50 text-amber-600 border border-amber-100'; %}
@@ -51,8 +55,8 @@
     {% $badgeClass = 'bg-emerald-500/15 text-emerald-300 border border-emerald-400/10'; %}
     {% $badgeText = 'Klart'; %}
   {% elseif($message['type'] === 'info') : %}
-    {% $iconColor = 'bg-amber-500/15 text-amber-300 border border-amber-400/10'; %}
-    {% $badgeClass = 'bg-amber-500/15 text-amber-300 border border-amber-400/10'; %}
+    {% $iconColor = 'bg-blue-500/15 text-blue-300 border border-blue-400/10'; %}
+    {% $badgeClass = 'bg-blue-500/15 text-blue-300 border border-blue-400/10'; %}
     {% $badgeText = 'Info'; %}
   {% elseif($message['type'] === 'warning') : %}
     {% $iconColor = 'bg-amber-500/15 text-amber-400 border border-amber-400/10'; %}
@@ -78,7 +82,7 @@
   >
     <div class="{{ $panelClass }} rounded-2xl p-4">
       {% if($theme !== 'app') : %}
-        <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.08),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.10),transparent_30%)]"></div>
+        <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.10),transparent_30%)]"></div>
       {% endif; %}
 
       <div class="relative flex items-start justify-between gap-4">
