@@ -1,0 +1,54 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers\Admin;
+
+use App\Models\SystemEvent;
+use App\Models\User;
+use Radix\Controller\AbstractController;
+use Radix\Http\Response;
+use RuntimeException;
+use Throwable;
+
+final class SystemController extends AbstractController
+{
+    public function index(): Response
+    {
+        $userCount = User::count()->int() ?? 0;
+
+        $latestEvents = SystemEvent::with('user')
+            ->orderBy('created_at', 'DESC')
+            ->limit(10)
+            ->get();
+
+        $systemStatus = 'OK';
+        $statusColor = 'emerald';
+
+        try {
+            $dbCheck = User::selectRaw('1')->fetchRaw();
+
+            $isWritable = is_dir(cache_path('views')) && is_writable(cache_path('views'));
+
+            if (!$dbCheck || !$isWritable) {
+                throw new RuntimeException('System health check failed');
+            }
+        } catch (Throwable $e) {
+            $systemStatus = 'Error';
+            $statusColor = 'red';
+        }
+
+        $latestUpdate = null;
+        if (class_exists(\App\Models\SystemUpdate::class)) {
+            $latestUpdate = \App\Models\SystemUpdate::orderBy('id', 'DESC')->first();
+        }
+
+        return $this->view('admin.system.index', [
+            'userCount' => $userCount,
+            'latestEvents' => $latestEvents,
+            'systemStatus' => $systemStatus,
+            'statusColor' => $statusColor,
+            'latestUpdate' => $latestUpdate,
+        ]);
+    }
+}
