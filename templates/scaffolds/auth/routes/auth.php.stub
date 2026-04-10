@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 // Global grupp för web med request-id + logging
 $router->group(
-    ['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.web', 'csrf', 'share.user']],
+    ['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.web', 'csrf']],
     function () use ($router) {
         // Registrering (privat + guest)
         $router->group(['middleware' => ['private', 'guest']], function () use ($router) {
@@ -73,6 +73,6 @@ $router->group(
         // Logout – kräver auth
         $router->post('/logout', [
             \App\Controllers\Auth\LogoutController::class, 'index',
-        ])->name('auth.logout.index')->middleware(['auth']);
+        ])->name('auth.logout.index')->middleware(['auth', 'share.user']);
     }
 );

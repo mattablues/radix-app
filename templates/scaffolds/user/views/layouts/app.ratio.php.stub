@@ -191,7 +191,7 @@
             </ul>
           </div>
           <!-- System Dropdown -->
-          <div x-data="systemDropdown({{ (strpos($pageId, 'admin-update') !== false || strpos($pageId, 'admin-event') !== false || strpos($pageId, 'admin-create') !== false || $pageId === 'health') ? 'true' : 'false' }})">
+          <div x-data="systemDropdown({{ (strpos($pageId, 'admin-update') !== false || strpos($pageId, 'admin-event') !== false || strpos($pageId, 'admin-create') !== false || $pageId === 'admin-system' || $pageId === 'health') ? 'true' : 'false' }})">
             <button @click="toggle()" class="w-full group flex items-center justify-between px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-gray-100 transition-all cursor-pointer">
               <span class="flex items-center gap-3">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -205,6 +205,12 @@
             </button>
 
             <ul x-show="open" x-cloak x-collapse class="mt-1 ml-4 border-l border-gray-800 space-y-1">
+              <!-- Systemöversikt -->
+              <li>
+                <a href="{{ route('admin.system.index') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'admin-system') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">
+                  Översikt
+                </a>
+              </li>
               <!-- Systemstatus (Tidigare fristående) -->
               <li>
                 <a href="{{ route('admin.health.index') }}" class="block py-2 px-8 text-sm {{ ($pageId === 'health') ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-200' }}">
