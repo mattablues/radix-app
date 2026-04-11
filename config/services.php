@@ -494,6 +494,24 @@ $container->addShared(\Radix\Session\RadixSessionHandler::class, function () use
     /** @var array<string,mixed> $sessionConfig */
     $sessionConfig = $config->get('session');
 
+    $driver = $sessionConfig['driver'] ?? null;
+    $isDatabaseDriver = is_string($driver) && strtolower($driver) === 'database';
+
+    if ($isDatabaseDriver && $dbConnection === null) {
+        // CLI: friktionsfri first-run (migrations etc) => fallback till file
+        if (PHP_SAPI === 'cli') {
+            $sessionConfig['driver'] = 'file';
+            $sessionConfig['file_path'] ??= 'storage/sessions';
+        } else {
+            // Web: tydligt fel så det inte maskeras i runtime
+            throw new \RuntimeException(
+                "SESSION_DRIVER=database kräver en fungerande PDO-anslutning. "
+                . "Verifiera DB_*-inställningar och kör migrationer (inkl. sessions-tabellen), "
+                . "eller sätt SESSION_DRIVER=file."
+            );
+        }
+    }
+
     return new \Radix\Session\RadixSessionHandler($sessionConfig, $dbConnection);
 });
 
