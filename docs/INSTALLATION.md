@@ -48,6 +48,8 @@ npm install
 
 Säkerställ att du har en `.env` på plats och att den innehåller nödvändiga värden för din miljö (t.ex. databasinställningar om du ska köra migrationer).
 
+Default i starter är `SESSION_DRIVER=file` (du kan byta till `database` efter att du kört migrationer om du vill).
+
 > Exakta nycklar varierar beroende på hur din `config/` är uppsatt. Se även `docs/CONFIG.md` när vi lägger tillbaka den.
 
 ---
