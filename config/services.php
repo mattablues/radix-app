@@ -545,7 +545,7 @@ $container->addShared(\Radix\Viewer\TemplateViewerInterface::class, function () 
         }
     }
 
-    $currentVersion = 'v1.0.0';
+    $currentVersion = 'v1.1.7';
     if (is_object($latestUpdate) && method_exists($latestUpdate, 'getAttribute')) {
         $v = $latestUpdate->getAttribute('version');
         if (is_string($v) && $v !== '') {

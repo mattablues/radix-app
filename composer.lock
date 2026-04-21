@@ -83,16 +83,16 @@
         },
         {
             "name": "mattablues/radix-framework",
-            "version": "v1.1.5",
+            "version": "v1.1.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mattablues/radix-framework.git",
-                "reference": "b5e3493e6ba61bf3046c19b7da71a13abab9c55a"
+                "reference": "6217b51bdfd69b2a1b76bd8bdc6ac084b7298214"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/b5e3493e6ba61bf3046c19b7da71a13abab9c55a",
-                "reference": "b5e3493e6ba61bf3046c19b7da71a13abab9c55a",
+                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/6217b51bdfd69b2a1b76bd8bdc6ac084b7298214",
+                "reference": "6217b51bdfd69b2a1b76bd8bdc6ac084b7298214",
                 "shasum": ""
             },
             "require": {
@@ -125,9 +125,9 @@
             "description": "Radix Framework",
             "support": {
                 "issues": "https://github.com/mattablues/radix-framework/issues",
-                "source": "https://github.com/mattablues/radix-framework/tree/v1.1.5"
+                "source": "https://github.com/mattablues/radix-framework/tree/v1.1.7"
             },
-            "time": "2026-04-11T16:23:59+00:00"
+            "time": "2026-04-20T18:26:04+00:00"
         },
         {
             "name": "phpmailer/phpmailer",

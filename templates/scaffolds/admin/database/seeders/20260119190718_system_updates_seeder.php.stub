@@ -6,7 +6,7 @@ final class SystemUpdatesSeeder
 {
     public function run(): void
     {
-        $version = 'v1.0.0';
+        $version = 'v1.1.7';
 
         // Kontrollera om versionen redan finns för att undvika dubbletter
         $systemUpdates = \App\Models\SystemUpdate::where('version', '=', $version)
@@ -30,8 +30,8 @@ final class SystemUpdatesSeeder
 
     public function down(): void
     {
-        // Ta bort version 1.0.0 om vi rullar tillbaka seedern
-        $systemUpdate = \App\Models\SystemUpdate::where('version', '=', '1.0.0')
+        // Ta bort version 1.1.7 om vi rullar tillbaka seedern
+        $systemUpdate = \App\Models\SystemUpdate::where('version', '=', 'v1.1.7')
             ->first();
 
         if (!$systemUpdate) {
@@ -39,7 +39,7 @@ final class SystemUpdatesSeeder
         }
 
         // ta bort barn först
-        \App\Models\SystemUpdate::where('version', '=', '1.0.0')
+        \App\Models\SystemUpdate::where('version', '=', 'v1.1.7')
             ->delete();
         $systemUpdate->forceDelete(); // hård radering, kringgår soft deletes
     }
