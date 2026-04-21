@@ -27,7 +27,7 @@
                         {{ $recentUpdates[0]->getAttribute('version') }}
                         {{ $recentUpdates[0]->getAttribute('is_major') ? 'Stable' : 'Update' }}
                       {% else : %}
-                        v1.0.0
+                        v1.1.7
                       {% endif; %}
                     </span>
                   </li>

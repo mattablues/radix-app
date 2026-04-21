@@ -12,7 +12,7 @@ class HomeController extends AbstractController
 {
     public function index(): Response
     {
-        $latestVersion = 'v1.0.0';
+        $latestVersion = 'v1.1.7';
 
         try {
             /** @var class-string<\App\Models\SystemUpdate> $systemUpdateClass */
@@ -28,7 +28,7 @@ class HomeController extends AbstractController
                 }
             }
         } catch (Throwable) {
-            $latestVersion = 'v1.0.0';
+            $latestVersion = 'v1.1.7';
         }
 
         return $this->view('home.index', ['latestVersion' => $latestVersion]);
