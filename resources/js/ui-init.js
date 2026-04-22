@@ -3,9 +3,10 @@ import SearchProfiles from './search-profiles';
 export function initHeaderSearch() {
   const mainContent = document.querySelector('main');
   const searchProfileInput = document.getElementById('search-profiles');
+  const searchEndpoint = searchProfileInput?.dataset?.searchEndpoint || '';
 
-  if (searchProfileInput && mainContent) {
-    new SearchProfiles('search-profiles', 'main');
+  if (searchProfileInput && mainContent && searchEndpoint) {
+    new SearchProfiles('search-profiles', 'main', searchEndpoint);
   }
 
   const button = document.getElementById('search-toggle');

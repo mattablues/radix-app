@@ -1,16 +1,26 @@
 import Search from './search';
 
 export default class SearchProfiles extends Search {
-    constructor(searchInputId, mainContentSelector) {
+    constructor(searchInputId, mainContentSelector, endpoint) {
         super(searchInputId, mainContentSelector);
+        this.endpoint = endpoint || '';
         this.meta = { term: '', total: 0, per_page: 2, current_page: 1, last_page: 0 };
     }
 
     async performSearch(term, page = 1) {
+        if (!this.endpoint) {
+            if (this.resultContainer) {
+                this.resultContainer.innerHTML = `<p class="p-3 text-red-500">Sökningen är inte korrekt konfigurerad.</p>`;
+            } else if (this.mainContent) {
+                this.mainContent.innerHTML = `<p class="text-red-500">Sökningen är inte korrekt konfigurerad.</p>`;
+            }
+            return;
+        }
+
         try {
             this.showLoading();
 
-            const response = await fetch('/api/v1/search/profiles', {
+            const response = await fetch(this.endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -48,7 +58,6 @@ export default class SearchProfiles extends Search {
     }
 
     renderResults() {
-        // Dropdown-rendering om den finns
         if (this.resultContainer) {
             this.resultContainer.innerHTML = '';
 
@@ -59,11 +68,12 @@ export default class SearchProfiles extends Search {
                 this.results.forEach(result => {
                     const li = document.createElement('li');
                     li.className = 'px-3 py-1.5 hover:bg-emerald-50/50';
-                    const userRoute = `/user/${result.id}/show`;
+                    const userRoute = result.show_url || '#';
+                    const avatarUrl = result.avatar_url || result.avatar || '';
 
                     li.innerHTML = `
                         <a href="${userRoute}" class="flex items-center gap-3">
-                            <img src="${result.avatar_url || result.avatar}" alt="${result.first_name}" class="w-8 h-8 rounded-full object-cover">
+                            <img src="${avatarUrl}" alt="${result.first_name}" class="w-8 h-8 rounded-full object-cover">
                             <div>
                                 <div class="text-sm font-medium text-emerald-700 hover:underline">${result.first_name} ${result.last_name}</div>
                                 <p class="text-xs text-slate-600">${result.email}</p>
@@ -75,7 +85,6 @@ export default class SearchProfiles extends Search {
 
                 this.resultContainer.appendChild(ul);
 
-                // Paginering i dropdown (enkel: föregående/nästa)
                 const pager = this.renderPager();
                 if (pager) this.resultContainer.appendChild(pager);
 
@@ -87,7 +96,6 @@ export default class SearchProfiles extends Search {
             return;
         }
 
-        // Fallback: rendera i mainContent
         if (this.mainContent) {
             let resultContainer = this.mainContent.querySelector('.result-container');
             if (!resultContainer) {
@@ -106,11 +114,12 @@ export default class SearchProfiles extends Search {
                     const li = document.createElement('li');
                     li.classList.add('search-result-item');
 
-                    const userRoute = `/user/${result.id}/show`;
+                    const userRoute = result.show_url || '#';
+                    const avatarUrl = result.avatar_url || result.avatar || '';
 
                     li.innerHTML = `
                         <div class="flex items-center gap-4">
-                            <img src="${result.avatar}" alt="${result.first_name}" class="w-10 h-10 rounded-full object-cover">
+                            <img src="${avatarUrl}" alt="${result.first_name}" class="w-10 h-10 rounded-full object-cover">
                             <div>
                                 <a href="${userRoute}" class="font-semibold text-emerald-700 hover:underline">${result.first_name} ${result.last_name}</a>
                                 <p class="text-sm text-slate-600">${result.email}</p>

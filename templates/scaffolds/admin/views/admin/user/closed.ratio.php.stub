@@ -14,9 +14,10 @@
     <form
       id="deleted-users-search-form"
       method="get"
-      action="/admin/users/closed"
+      action="{{ route('admin.user.closed') }}"
       class="mb-4"
       data-search-endpoint="{{ route('api.search.deleted-users') }}"
+      data-route-base="{{ route('admin.user.closed') }}"
       data-per-page="{{ $users['pagination']['per_page'] ?? 10 }}"
     >
       <div class="flex gap-2 items-center">
@@ -115,6 +116,7 @@
                     <button
                       type="button"
                       data-action="restore-user"
+                      data-action-url="{{ route('admin.user.restore', ['id' => $user->getAttribute('id')]) }}"
                       data-user-id="{{ $user->getAttribute('id') }}"
                       data-user-email="{{ addslashes($user->getAttribute('email')) }}"
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 rounded-lg transition-all"

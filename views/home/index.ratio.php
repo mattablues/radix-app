@@ -29,7 +29,7 @@
                 </h1>
 
                 <p class="text-sm font-mono text-slate-400 mb-6">
-                    Version: {{ $latestVersion ?? 'v1.0.0' }}
+                    Version: {{ $latestVersion ?? 'v1.1.7' }}
                 </p>
 
                 <p class="text-lg md:text-xl text-slate-300 leading-relaxed mb-10 px-4">

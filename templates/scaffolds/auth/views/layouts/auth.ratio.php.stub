@@ -62,7 +62,7 @@
     <div class="container-centered flex flex-col md:flex-row justify-between items-center gap-6 px-6">
       <div class="flex items-center gap-4">
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-          &copy; {{ copyright(getenv('APP_COPY'), getenv('APP_COPY_YEAR')) }} | Radix Engine
+          &copy; {{ copyright(getenv('APP_COPY'), getenv('APP_COPY_YEAR')) }}
         </p>
       </div>
 

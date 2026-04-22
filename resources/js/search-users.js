@@ -7,47 +7,49 @@ export default class SearchUsers extends SearchTable {
       colspan: 5,
     });
 
-    // Modal: block user
     this.blockModal = document.getElementById('block-user-modal');
     this.blockBackdrop = document.getElementById('block-user-backdrop');
     this.blockCancel = document.getElementById('block-user-cancel');
     this.blockEmail = document.getElementById('block-user-email');
     this.blockForm = document.getElementById('block-user-form');
 
-    // Modal: send activation
     this.activationModal = document.getElementById('activation-user-modal');
     this.activationBackdrop = document.getElementById('activation-user-backdrop');
     this.activationCancel = document.getElementById('activation-user-cancel');
     this.activationEmail = document.getElementById('activation-user-email');
     this.activationForm = document.getElementById('activation-user-form');
 
-    // Viktigt: init() kan ha körts innan dessa fanns (pga super()).
-    // Bind därför modal-events här också, när vi vet att referenserna är satta.
+    this._onTbodyClick = null;
+    this._boundEscHandler = null;
+
     this.bindModalHandlers();
   }
 
   bindModalHandlers() {
-    // Stäng block-modal
     if (this.blockBackdrop && !this._blockBackdropBound) {
       this._blockBackdropBound = true;
-      this.blockBackdrop.addEventListener('click', () => this.closeBlockModal());
+      this._onBlockBackdropClick = () => this.closeBlockModal();
+      this.blockBackdrop.addEventListener('click', this._onBlockBackdropClick);
     }
+
     if (this.blockCancel && !this._blockCancelBound) {
       this._blockCancelBound = true;
-      this.blockCancel.addEventListener('click', () => this.closeBlockModal());
+      this._onBlockCancelClick = () => this.closeBlockModal();
+      this.blockCancel.addEventListener('click', this._onBlockCancelClick);
     }
 
-    // Stäng activation-modal
     if (this.activationBackdrop && !this._activationBackdropBound) {
       this._activationBackdropBound = true;
-      this.activationBackdrop.addEventListener('click', () => this.closeActivationModal());
-    }
-    if (this.activationCancel && !this._activationCancelBound) {
-      this._activationCancelBound = true;
-      this.activationCancel.addEventListener('click', () => this.closeActivationModal());
+      this._onActivationBackdropClick = () => this.closeActivationModal();
+      this.activationBackdrop.addEventListener('click', this._onActivationBackdropClick);
     }
 
-    // ESC
+    if (this.activationCancel && !this._activationCancelBound) {
+      this._activationCancelBound = true;
+      this._onActivationCancelClick = () => this.closeActivationModal();
+      this.activationCancel.addEventListener('click', this._onActivationCancelClick);
+    }
+
     if (!this._boundEscHandler) {
       this._boundEscHandler = (e) => {
         if (e.key === 'Escape') {
@@ -55,6 +57,7 @@ export default class SearchUsers extends SearchTable {
           this.closeActivationModal();
         }
       };
+
       document.addEventListener('keydown', this._boundEscHandler);
     }
   }
@@ -62,67 +65,116 @@ export default class SearchUsers extends SearchTable {
   init() {
     super.init();
 
-    if (!this.tbody) return;
+    if (!this.tbody) {
+      return;
+    }
 
-    // OBS: ta gärna bort auto-fetch nu när du har serverrender + modaler i DOM
-    // this.fetchAndRender(this.term, this.page, false);
+    if (!this._onTbodyClick) {
+      this._onTbodyClick = (e) => {
+        const blockBtn = e.target.closest('button[data-action="block-user"]');
 
-    this.tbody.addEventListener('click', (e) => {
-      const blockBtn = e.target.closest('button[data-action="block-user"]');
-      if (blockBtn) {
-        const id = blockBtn.getAttribute('data-user-id') || '';
-        const email = blockBtn.getAttribute('data-user-email') || '';
-        if (!id) return;
-        this.openBlockModal(id, email);
-        return;
-      }
+        if (blockBtn) {
+          const action = blockBtn.getAttribute('data-action-url') || '';
+          const email = blockBtn.getAttribute('data-user-email') || '';
 
-      const activationBtn = e.target.closest('button[data-action="send-activation"]');
-      if (activationBtn) {
-        const id = activationBtn.getAttribute('data-user-id') || '';
-        const email = activationBtn.getAttribute('data-user-email') || '';
-        if (!id) return;
-        this.openActivationModal(id, email);
-      }
-    });
+          if (!action) {
+            return;
+          }
 
-    // Bind igen (om init körts innan constructor hann sätta refs, eller om DOM ändrats)
+          this.openBlockModal(action, email);
+          return;
+        }
+
+        const activationBtn = e.target.closest('button[data-action="send-activation"]');
+
+        if (activationBtn) {
+          const action = activationBtn.getAttribute('data-action-url') || '';
+          const email = activationBtn.getAttribute('data-user-email') || '';
+
+          if (!action) {
+            return;
+          }
+
+          this.openActivationModal(action, email);
+        }
+      };
+
+      this.tbody.addEventListener('click', this._onTbodyClick);
+    }
+
     this.bindModalHandlers();
   }
 
-  openBlockModal(id, email) {
-    if (!this.blockModal || !this.blockForm || !this.blockEmail) return;
+  destroy() {
+    if (this.tbody && this._onTbodyClick) {
+      this.tbody.removeEventListener('click', this._onTbodyClick);
+    }
+
+    if (this.blockBackdrop && this._onBlockBackdropClick) {
+      this.blockBackdrop.removeEventListener('click', this._onBlockBackdropClick);
+    }
+
+    if (this.blockCancel && this._onBlockCancelClick) {
+      this.blockCancel.removeEventListener('click', this._onBlockCancelClick);
+    }
+
+    if (this.activationBackdrop && this._onActivationBackdropClick) {
+      this.activationBackdrop.removeEventListener('click', this._onActivationBackdropClick);
+    }
+
+    if (this.activationCancel && this._onActivationCancelClick) {
+      this.activationCancel.removeEventListener('click', this._onActivationCancelClick);
+    }
+
+    if (this._boundEscHandler) {
+      document.removeEventListener('keydown', this._boundEscHandler);
+    }
+
+    this._onTbodyClick = null;
+    this._onBlockBackdropClick = null;
+    this._onBlockCancelClick = null;
+    this._onActivationBackdropClick = null;
+    this._onActivationCancelClick = null;
+    this._boundEscHandler = null;
+
+    super.destroy();
+  }
+
+  openBlockModal(actionUrl, email) {
+    if (!this.blockModal || !this.blockForm || !this.blockEmail) {
+      return;
+    }
 
     this.blockEmail.textContent = email || '';
+    this.blockForm.setAttribute('action', this.withQuerySuffix(actionUrl));
 
-    const suffix = this.currentQuerySuffix();
-    this.blockForm.setAttribute('action', `/admin/users/${encodeURIComponent(id)}/block${suffix}`);
-
-    // Spara fokus så vi kan återställa när modalen stängs
     this.__restoreFocusEl = document.activeElement;
 
     this.blockModal.classList.remove('hidden');
     this.blockModal.setAttribute('aria-hidden', 'false');
 
-    // Flytta fokus in i modalen (Avbryt först)
     const cancel = document.getElementById('block-user-cancel');
+
     if (cancel && typeof cancel.focus === 'function') {
       setTimeout(() => cancel.focus(), 0);
     }
   }
 
   closeBlockModal() {
-    if (!this.blockModal) return;
+    if (!this.blockModal) {
+      return;
+    }
 
-    // Plocka restore-target direkt
     const restoreEl = this.__restoreFocusEl;
     this.__restoreFocusEl = null;
 
-    // Flytta fokus UT ur modalen innan aria-hidden=true
     if (restoreEl && typeof restoreEl.focus === 'function' && !this.blockModal.contains(restoreEl)) {
-      try { restoreEl.focus(); } catch (e) {}
+      try {
+        restoreEl.focus();
+      } catch (e) {}
     } else {
       const active = document.activeElement;
+
       if (active && this.blockModal.contains(active) && typeof active.blur === 'function') {
         active.blur();
       }
@@ -132,37 +184,41 @@ export default class SearchUsers extends SearchTable {
     this.blockModal.setAttribute('aria-hidden', 'true');
   }
 
-  openActivationModal(id, email) {
-    if (!this.activationModal || !this.activationForm || !this.activationEmail) return;
+  openActivationModal(actionUrl, email) {
+    if (!this.activationModal || !this.activationForm || !this.activationEmail) {
+      return;
+    }
 
     this.activationEmail.textContent = email || '';
+    this.activationForm.setAttribute('action', this.withQuerySuffix(actionUrl));
 
-    const suffix = this.currentQuerySuffix();
-    this.activationForm.setAttribute('action', `/admin/users/${encodeURIComponent(id)}/send-activation${suffix}`);
-
-    // Spara fokus så vi kan återställa när modalen stängs
     this.__restoreFocusElActivation = document.activeElement;
 
     this.activationModal.classList.remove('hidden');
     this.activationModal.setAttribute('aria-hidden', 'false');
 
-    // Flytta fokus in i modalen (Avbryt först)
     const cancel = document.getElementById('activation-user-cancel');
+
     if (cancel && typeof cancel.focus === 'function') {
       setTimeout(() => cancel.focus(), 0);
     }
   }
 
   closeActivationModal() {
-    if (!this.activationModal) return;
+    if (!this.activationModal) {
+      return;
+    }
 
     const restoreEl = this.__restoreFocusElActivation;
     this.__restoreFocusElActivation = null;
 
     if (restoreEl && typeof restoreEl.focus === 'function' && !this.activationModal.contains(restoreEl)) {
-      try { restoreEl.focus(); } catch (e) {}
+      try {
+        restoreEl.focus();
+      } catch (e) {}
     } else {
       const active = document.activeElement;
+
       if (active && this.activationModal.contains(active) && typeof active.blur === 'function') {
         active.blur();
       }
@@ -175,9 +231,11 @@ export default class SearchUsers extends SearchTable {
   statusBadgeHtml(status) {
     const s = String(status || '').toLowerCase();
 
-    const label = s === 'activated' ? 'Aktiverad'
-      : s === 'blocked' ? 'Blockerad'
-      : s ? s : 'Okänd';
+    const label = s === 'activated'
+      ? 'Aktiverad'
+      : s === 'blocked'
+        ? 'Blockerad'
+        : s || 'Okänd';
 
     const cls = s === 'activated'
       ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
@@ -234,6 +292,8 @@ export default class SearchUsers extends SearchTable {
 
       const rawShowUrl = u.admin_show_url || u.show_url || '#';
       const showUrl = this.escapeHtml(rawShowUrl);
+      const blockUrl = this.escapeHtml(u.block_url || '');
+      const activationUrl = this.escapeHtml(u.send_activation_url || '');
 
       const status = u.status || '';
       const active = this.escapeHtml(u.active || '');
@@ -241,7 +301,6 @@ export default class SearchUsers extends SearchTable {
 
       const isAdmin = !!u.is_admin;
       const isBlocked = String(u.status || '').toLowerCase() === 'blocked';
-
 
       const actionHtml = isAdmin
         ? `<span class="p-1.5 text-slate-300" title="Admin kan ej ändras här">
@@ -255,6 +314,7 @@ export default class SearchUsers extends SearchTable {
             class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
             title="Skicka aktivering"
             data-action="send-activation"
+            data-action-url="${activationUrl}"
             data-user-id="${id}"
             data-user-email="${email}"
           >
@@ -263,7 +323,9 @@ export default class SearchUsers extends SearchTable {
 
           ${isBlocked ? `
             <span class="p-2 text-slate-400 cursor-not-allowed">
-              <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728A9 9 0 115.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728A9 9 0 115.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
             </span>
           ` : `
             <button
@@ -271,6 +333,7 @@ export default class SearchUsers extends SearchTable {
               class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
               title="Blockera användare"
               data-action="block-user"
+              data-action-url="${blockUrl}"
               data-user-id="${id}"
               data-user-email="${email}"
             >

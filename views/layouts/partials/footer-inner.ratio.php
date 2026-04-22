@@ -61,7 +61,7 @@
 
 <div class="mt-12 pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-        &copy; {{ copyright(getenv('APP_COPY'), getenv('APP_COPY_YEAR')) }} | Radix Framework
+        &copy; {{ copyright(getenv('APP_COPY'), getenv('APP_COPY_YEAR')) }}
     </p>
     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
         Build: {{ $currentVersion }}

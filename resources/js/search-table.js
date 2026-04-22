@@ -1,5 +1,4 @@
 export default class SearchTable {
-  // Håll koll på alla instanser + bara en popstate-listener
   static instances = new Set();
   static popstateBound = false;
 
@@ -41,6 +40,7 @@ export default class SearchTable {
     }, options.debounceMs ?? 250);
 
     SearchTable.instances.add(this);
+
     if (!SearchTable.popstateBound) {
       SearchTable.popstateBound = true;
       window.addEventListener('popstate', () => {
@@ -54,14 +54,16 @@ export default class SearchTable {
   }
 
   init() {
-    if (!this.input || !this.tbody) return;
+    if (!this.input || !this.tbody || !this.endpoint || !this.routeBase) {
+      return;
+    }
 
     this.input.value = this.term;
     this.setClearEnabled();
     this.renderNotice(this.term);
     this.renderSummary({
       term: this.term,
-      total: Number.parseInt(this.summary?.dataset?.total || '0', 10) || 0
+      total: Number.parseInt(this.summary?.dataset?.total || '0', 10) || 0,
     });
 
     if (this.form) {
@@ -71,6 +73,7 @@ export default class SearchTable {
         this.page = 1;
         this.fetchAndRender(this.term, this.page, true);
       };
+
       this.form.addEventListener('submit', this._onSubmit);
     }
 
@@ -79,6 +82,7 @@ export default class SearchTable {
       this.setClearEnabled();
       this._debounced();
     };
+
     this.input.addEventListener('input', this._onInput);
 
     if (this.clearBtn) {
@@ -90,22 +94,34 @@ export default class SearchTable {
         this.setClearEnabled();
         this.fetchAndRender(this.term, this.page, true);
       };
+
       this.clearBtn.addEventListener('click', this._onClear);
     }
 
     if (this.pager) {
       this._onPagerClick = (e) => {
         const a = e.target.closest('a');
-        if (!a) return;
+
+        if (!a) {
+          return;
+        }
 
         const href = a.getAttribute('href') || '';
-        if (!href) return;
-        if (!this.routeBase || !href.includes(this.routeBase)) return;
+
+        if (!href || !this.routeBase) {
+          return;
+        }
+
+        const url = new URL(href, window.location.origin);
+        const routeBaseUrl = new URL(this.routeBase, window.location.origin);
+
+        if (url.pathname !== routeBaseUrl.pathname) {
+          return;
+        }
 
         e.preventDefault();
 
-        const url = new URL(href, window.location.origin);
-        const page = parseInt(url.searchParams.get('page') || '1', 10) || 1;
+        const page = Number.parseInt(url.searchParams.get('page') || '1', 10) || 1;
         const q = (url.searchParams.get('q') || '').trim();
 
         this.term = q;
@@ -115,6 +131,7 @@ export default class SearchTable {
 
         this.fetchAndRender(this.term, this.page, true);
       };
+
       this.pager.addEventListener('click', this._onPagerClick);
     }
   }
@@ -147,6 +164,30 @@ export default class SearchTable {
     return query ? `?${query}` : '';
   }
 
+  withQuerySuffix(url) {
+    const baseUrl = String(url || '').trim();
+
+    if (!baseUrl) {
+      return '';
+    }
+
+    const parsed = new URL(baseUrl, window.location.origin);
+
+    if (this.term) {
+      parsed.searchParams.set('q', this.term);
+    } else {
+      parsed.searchParams.delete('q');
+    }
+
+    if (this.page > 1) {
+      parsed.searchParams.set('page', String(this.page));
+    } else {
+      parsed.searchParams.delete('page');
+    }
+
+    return parsed.toString();
+  }
+
   destroy() {
     if (this._abort) {
       this._abort.abort();
@@ -156,12 +197,15 @@ export default class SearchTable {
     if (this.form && this._onSubmit) {
       this.form.removeEventListener('submit', this._onSubmit);
     }
+
     if (this.input && this._onInput) {
       this.input.removeEventListener('input', this._onInput);
     }
+
     if (this.clearBtn && this._onClear) {
       this.clearBtn.removeEventListener('click', this._onClear);
     }
+
     if (this.pager && this._onPagerClick) {
       this.pager.removeEventListener('click', this._onPagerClick);
     }
@@ -177,7 +221,7 @@ export default class SearchTable {
   handlePopState() {
     const params = new URLSearchParams(window.location.search);
     const term = (params.get('q') || '').trim();
-    const page = parseInt(params.get('page') || '1', 10) || 1;
+    const page = Number.parseInt(params.get('page') || '1', 10) || 1;
 
     this.term = term;
     this.page = page;
@@ -185,6 +229,7 @@ export default class SearchTable {
     if (this.input) {
       this.input.value = this.term;
     }
+
     this.setClearEnabled();
     this.renderNotice(this.term);
 
@@ -192,7 +237,9 @@ export default class SearchTable {
   }
 
   renderNotice(term) {
-    if (!this.notice) return;
+    if (!this.notice) {
+      return;
+    }
 
     if (term) {
       this.notice.classList.remove('hidden');
@@ -207,7 +254,9 @@ export default class SearchTable {
   }
 
   renderSummary(meta = {}) {
-    if (!this.summary) return;
+    if (!this.summary) {
+      return;
+    }
 
     const term = String(meta.term ?? this.term ?? '').trim();
     const total = Number.parseInt(String(meta.total ?? 0), 10) || 0;
@@ -223,12 +272,23 @@ export default class SearchTable {
   }
 
   setClearEnabled() {
-    if (!this.clearBtn) return;
+    if (!this.clearBtn) {
+      return;
+    }
+
     this.clearBtn.disabled = !this.term;
   }
 
   async fetchAndRender(term, page, updateUrl) {
-    if (this._abort) this._abort.abort();
+    if (!this.endpoint || !this.routeBase) {
+      this.renderError('Sökningen är inte korrekt konfigurerad.');
+      return;
+    }
+
+    if (this._abort) {
+      this._abort.abort();
+    }
+
     this._abort = new AbortController();
 
     this.showLoading();
@@ -243,9 +303,9 @@ export default class SearchTable {
           search: {
             term,
             current_page: page,
-            per_page: this.perPage
-          }
-        })
+            per_page: this.perPage,
+          },
+        }),
       });
 
       const contentType = res.headers.get('content-type') || '';
@@ -269,7 +329,7 @@ export default class SearchTable {
         current_page: page,
         last_page: 0,
         first_page: 1,
-        term
+        term,
       };
 
       this.renderRows(items);
@@ -279,18 +339,29 @@ export default class SearchTable {
 
       if (updateUrl) {
         const u = new URL(this.routeBase, window.location.origin);
-        if (term) u.searchParams.set('q', term);
-        if (meta.current_page && meta.current_page > 1) u.searchParams.set('page', String(meta.current_page));
+
+        if (term) {
+          u.searchParams.set('q', term);
+        }
+
+        if (meta.current_page && meta.current_page > 1) {
+          u.searchParams.set('page', String(meta.current_page));
+        }
+
         window.history.pushState({}, '', u.toString());
       }
     } catch (err) {
-      if (err && err.name === 'AbortError') return;
+      if (err && err.name === 'AbortError') {
+        return;
+      }
+
       this.renderError('Kunde inte hämta resultaten.');
     }
   }
 
   renderRows(items) {
     this.tbody.innerHTML = '';
+
     if (!items.length) {
       this.tbody.innerHTML = `
         <tr>
@@ -308,7 +379,9 @@ export default class SearchTable {
     const current = meta.current_page ?? 1;
     const last = meta.last_page ?? 0;
 
-    if (!this.pager) return;
+    if (!this.pager) {
+      return;
+    }
 
     if (!last || last <= 1 || total <= perPage) {
       this.pager.innerHTML = '';
@@ -317,22 +390,35 @@ export default class SearchTable {
 
     const mkUrl = (p) => {
       const u = new URL(this.routeBase, window.location.origin);
-      if (term) u.searchParams.set('q', term);
+
+      if (term) {
+        u.searchParams.set('q', term);
+      }
+
       u.searchParams.set('page', String(p));
+
       return u.toString();
     };
 
     const btnCls = (disabled, active) => {
       const base = 'h-7 min-w-7 px-2 py-1 inline-flex items-center justify-center align-middle border rounded text-sm';
-      if (active) return base + ' pager-active';
-      if (disabled) return base + ' pager-disabled';
-      return base + ' pager-base pager-hover';
+
+      if (active) {
+        return `${base} pager-active`;
+      }
+
+      if (disabled) {
+        return `${base} pager-disabled`;
+      }
+
+      return `${base} pager-base pager-hover`;
     };
 
     const makePageBtn = (p, isActive) => {
       if (isActive) {
         return `<span class="${btnCls(false, true)}" aria-current="page" style="line-height:1">${p}</span>`;
       }
+
       return `<a href="${mkUrl(p)}" class="${btnCls(false, false)}" style="line-height:1">${p}</a>`;
     };
 
@@ -340,15 +426,27 @@ export default class SearchTable {
     const pages = [];
 
     if (last <= 7) {
-      for (let p = 1; p <= last; p++) pages.push(p);
+      for (let p = 1; p <= last; p += 1) {
+        pages.push(p);
+      }
     } else {
       const startRange = Math.max(2, current - interval);
       const endRange = Math.min(last - 1, current + interval);
 
       pages.push(1);
-      if (startRange > 2) pages.push('…');
-      for (let p = startRange; p <= endRange; p++) pages.push(p);
-      if (endRange < last - 1) pages.push('…');
+
+      if (startRange > 2) {
+        pages.push('…');
+      }
+
+      for (let p = startRange; p <= endRange; p += 1) {
+        pages.push(p);
+      }
+
+      if (endRange < last - 1) {
+        pages.push('…');
+      }
+
       pages.push(last);
     }
 
@@ -360,10 +458,23 @@ export default class SearchTable {
     const icon = (which) => {
       const size = 18;
       const common = `class="pointer-events-none" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"`;
-      if (which === 'chevrons-left') return `<svg ${common}><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>`;
-      if (which === 'chevron-left') return `<svg ${common}><polyline points="15 18 9 12 15 6"></polyline></svg>`;
-      if (which === 'chevron-right') return `<svg ${common}><polyline points="9 18 15 12 9 6"></polyline></svg>`;
-      if (which === 'chevrons-right') return `<svg ${common}><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>`;
+
+      if (which === 'chevrons-left') {
+        return `<svg ${common}><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>`;
+      }
+
+      if (which === 'chevron-left') {
+        return `<svg ${common}><polyline points="15 18 9 12 15 6"></polyline></svg>`;
+      }
+
+      if (which === 'chevron-right') {
+        return `<svg ${common}><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+      }
+
+      if (which === 'chevrons-right') {
+        return `<svg ${common}><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>`;
+      }
+
       return '';
     };
 
@@ -384,7 +495,10 @@ export default class SearchTable {
       : `<a href="${mkUrl(last)}" class="${btnCls(false, false)} rounded-r-lg" aria-label="Gå till sista sidan" style="line-height:1">${icon('chevrons-right')}</a>`;
 
     const pageHtml = pages.map((p) => {
-      if (p === '…') return `<span class="h-6 min-w-6 px-1.5 py-0.5 inline-flex items-center justify-center align-middle pager-ellipsis" style="line-height:1">…</span>`;
+      if (p === '…') {
+        return `<span class="h-6 min-w-6 px-1.5 py-0.5 inline-flex items-center justify-center align-middle pager-ellipsis" style="line-height:1">…</span>`;
+      }
+
       return makePageBtn(p, p === current);
     }).join('');
 
@@ -422,6 +536,7 @@ export default class SearchTable {
 
   debounce(fn, wait) {
     let t;
+
     return (...args) => {
       clearTimeout(t);
       t = setTimeout(() => fn.apply(this, args), wait);

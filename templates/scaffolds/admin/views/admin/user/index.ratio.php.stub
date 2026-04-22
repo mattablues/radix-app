@@ -14,9 +14,10 @@
     <form
       id="users-search-form"
       method="get"
-      action="/admin/users"
+      action="{{ route('admin.user.index') }}"
       class="mb-4"
       data-search-endpoint="{{ route('api.search.users') }}"
+      data-route-base="{{ route('admin.user.index') }}"
       data-per-page="{{ $users['pagination']['per_page'] ?? 10 }}"
     >
       <div class="flex gap-2 items-center">
@@ -128,6 +129,7 @@
                         class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                         title="Skicka aktivering"
                         data-action="send-activation"
+                        data-action-url="{{ route('admin.user.send-activation', ['id' => $user->getAttribute('id')]) }}"
                         data-user-id="{{ $user->getAttribute('id') }}"
                         data-user-email="{{ addslashes($user->getAttribute('email')) }}"
                       >
@@ -140,6 +142,7 @@
                           class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                           title="Blockera användare"
                           data-action="block-user"
+                          data-action-url="{{ route('admin.user.block', ['id' => $user->getAttribute('id')]) }}"
                           data-user-id="{{ $user->getAttribute('id') }}"
                           data-user-email="{{ addslashes($user->getAttribute('email')) }}"
                         >
