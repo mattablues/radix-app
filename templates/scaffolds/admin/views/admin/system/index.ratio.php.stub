@@ -32,7 +32,7 @@
         <dt class="text-[10px] font-black text-slate-400 uppercase tracking-[0.22em] mb-2">Build</dt>
         <dd class="flex items-center gap-2 text-2xl font-black text-indigo-600">
           <span class="size-2 bg-indigo-500 rounded-full animate-pulse"></span>
-          {{ $latestUpdate->version ?? 'v1.0.0' }}
+          {{ $latestUpdate->version ?? 'v1.1.7' }}
         </dd>
       </div>
     </div>

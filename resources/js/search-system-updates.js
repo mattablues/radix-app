@@ -7,33 +7,38 @@ export default class SearchSystemUpdates extends SearchTable {
       colspan: 4,
     });
 
-    // Delete-modal (måste finnas i vyn)
     this.modal = document.getElementById('delete-update-modal');
     this.modalBackdrop = document.getElementById('delete-update-backdrop');
     this.modalCancel = document.getElementById('delete-update-cancel');
     this.modalVersion = document.getElementById('delete-update-version');
     this.modalForm = document.getElementById('delete-update-form');
 
-    // Viktigt: init() kan ha körts innan dessa fanns (pga super()).
-    // Bind därför modal-events här också, när vi vet att referenserna är satta.
+    this._onTbodyClick = null;
+    this._boundEscHandler = null;
+
     this.bindModalHandlers();
   }
 
   bindModalHandlers() {
-    // Stäng modalen
     if (this.modalBackdrop && !this._modalBackdropBound) {
       this._modalBackdropBound = true;
-      this.modalBackdrop.addEventListener('click', () => this.closeDeleteModal());
+      this._onModalBackdropClick = () => this.closeDeleteModal();
+      this.modalBackdrop.addEventListener('click', this._onModalBackdropClick);
     }
+
     if (this.modalCancel && !this._modalCancelBound) {
       this._modalCancelBound = true;
-      this.modalCancel.addEventListener('click', () => this.closeDeleteModal());
+      this._onModalCancelClick = () => this.closeDeleteModal();
+      this.modalCancel.addEventListener('click', this._onModalCancelClick);
     }
 
     if (!this._boundEscHandler) {
       this._boundEscHandler = (e) => {
-        if (e.key === 'Escape') this.closeDeleteModal();
+        if (e.key === 'Escape') {
+          this.closeDeleteModal();
+        }
       };
+
       document.addEventListener('keydown', this._boundEscHandler);
     }
   }
@@ -41,56 +46,94 @@ export default class SearchSystemUpdates extends SearchTable {
   init() {
     super.init();
 
-    if (!this.tbody) return;
+    if (!this.tbody) {
+      return;
+    }
 
-    // Event delegation: funkar även efter innerHTML-rendering
-    this.tbody.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-action="delete-update"]');
-      if (!btn) return;
+    if (!this._onTbodyClick) {
+      this._onTbodyClick = (e) => {
+        const btn = e.target.closest('button[data-action="delete-update"]');
 
-      const id = btn.getAttribute('data-update-id') || '';
-      const version = btn.getAttribute('data-update-version') || '';
-      if (!id) return;
+        if (!btn) {
+          return;
+        }
 
-      this.openDeleteModal(id, version);
-    });
+        const actionUrl = btn.getAttribute('data-action-url') || '';
+        const version = btn.getAttribute('data-update-version') || '';
 
-    // Bind igen (om init körts innan constructor hann sätta refs, eller om DOM ändrats)
+        if (!actionUrl) {
+          return;
+        }
+
+        this.openDeleteModal(actionUrl, version);
+      };
+
+      this.tbody.addEventListener('click', this._onTbodyClick);
+    }
+
     this.bindModalHandlers();
   }
 
-  openDeleteModal(id, version) {
-    if (!this.modal || !this.modalForm || !this.modalVersion) return;
+  destroy() {
+    if (this.tbody && this._onTbodyClick) {
+      this.tbody.removeEventListener('click', this._onTbodyClick);
+    }
+
+    if (this.modalBackdrop && this._onModalBackdropClick) {
+      this.modalBackdrop.removeEventListener('click', this._onModalBackdropClick);
+    }
+
+    if (this.modalCancel && this._onModalCancelClick) {
+      this.modalCancel.removeEventListener('click', this._onModalCancelClick);
+    }
+
+    if (this._boundEscHandler) {
+      document.removeEventListener('keydown', this._boundEscHandler);
+    }
+
+    this._onTbodyClick = null;
+    this._onModalBackdropClick = null;
+    this._onModalCancelClick = null;
+    this._boundEscHandler = null;
+
+    super.destroy();
+  }
+
+  openDeleteModal(actionUrl, version) {
+    if (!this.modal || !this.modalForm || !this.modalVersion) {
+      return;
+    }
 
     this.modalVersion.textContent = version || '';
+    this.modalForm.setAttribute('action', this.withQuerySuffix(actionUrl));
 
-    const suffix = this.currentQuerySuffix();
-    this.modalForm.setAttribute('action', `/admin/updates/${encodeURIComponent(id)}/delete${suffix}`);
-
-    // Spara fokus så vi kan återställa när modalen stängs
     this.__restoreFocusEl = document.activeElement;
 
     this.modal.classList.remove('hidden');
     this.modal.setAttribute('aria-hidden', 'false');
 
-    // Flytta fokus in i modalen (Avbryt först)
     const cancel = this.modalCancel || document.getElementById('delete-update-cancel');
+
     if (cancel && typeof cancel.focus === 'function') {
       setTimeout(() => cancel.focus(), 0);
     }
   }
 
   closeDeleteModal() {
-    if (!this.modal) return;
+    if (!this.modal) {
+      return;
+    }
 
     const restoreEl = this.__restoreFocusEl;
     this.__restoreFocusEl = null;
 
-    // Flytta fokus UT ur modalen innan aria-hidden=true
     if (restoreEl && typeof restoreEl.focus === 'function' && !this.modal.contains(restoreEl)) {
-      try { restoreEl.focus(); } catch (e) {}
+      try {
+        restoreEl.focus();
+      } catch (e) {}
     } else {
       const active = document.activeElement;
+
       if (active && this.modal.contains(active) && typeof active.blur === 'function') {
         active.blur();
       }
@@ -136,6 +179,7 @@ export default class SearchSystemUpdates extends SearchTable {
       const description = this.escapeHtml(u.description || '');
       const releasedAt = this.escapeHtml(u.released_at_date || u.released_at || '');
       const editUrl = this.escapeHtml(u.edit_url || '#');
+      const deleteUrl = this.escapeHtml(u.delete_url || '');
 
       const major = u.is_major
         ? `<span class="inline-flex w-fit px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-indigo-100 text-indigo-700 border border-indigo-200">Major</span>`
@@ -174,6 +218,7 @@ export default class SearchSystemUpdates extends SearchTable {
                 class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                 title="Radera"
                 data-action="delete-update"
+                data-action-url="${deleteUrl}"
                 data-update-id="${id}"
                 data-update-version="${version}"
               >

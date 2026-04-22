@@ -21,11 +21,14 @@ function elementExists(id) {
   return !!document.getElementById(id);
 }
 
-function getEndpointFromForm(formId, fallback) {
+function getRequiredFormValue(formId, key) {
   const form = document.getElementById(formId);
-  const endpoint = form ? (form.getAttribute('data-search-endpoint') || '') : '';
 
-  return endpoint || fallback;
+  if (!form) {
+    return '';
+  }
+
+  return form.dataset?.[key] || '';
 }
 
 function initTableSearch(key, requiredIds, createInstance) {
@@ -54,7 +57,12 @@ export function initTableSearches() {
 
   if (pageId === 'admin-events-index') {
     const { initialTerm, initialPage } = getInitialState();
-    const endpoint = getEndpointFromForm('system-events-search-form', '/api/v1/search/system-events');
+    const endpoint = getRequiredFormValue('system-events-search-form', 'searchEndpoint');
+    const routeBase = getRequiredFormValue('system-events-search-form', 'routeBase');
+
+    if (!endpoint || !routeBase) {
+      return;
+    }
 
     initTableSearch(
       'systemEvents',
@@ -70,7 +78,7 @@ export function initTableSearches() {
         summaryPlural: 'loggar',
         summarySuffix: 'totalt',
         endpoint,
-        routeBase: '/admin/events',
+        routeBase,
         initialTerm,
         initialPage,
       }),
@@ -79,7 +87,12 @@ export function initTableSearches() {
 
   if (pageId === 'admin-updates-index') {
     const { initialTerm, initialPage } = getInitialState();
-    const endpoint = getEndpointFromForm('system-updates-search-form', '/api/v1/search/system-updates');
+    const endpoint = getRequiredFormValue('system-updates-search-form', 'searchEndpoint');
+    const routeBase = getRequiredFormValue('system-updates-search-form', 'routeBase');
+
+    if (!endpoint || !routeBase) {
+      return;
+    }
 
     initTableSearch(
       'systemUpdates',
@@ -95,7 +108,7 @@ export function initTableSearches() {
         summaryPlural: 'loggar',
         summarySuffix: 'totalt',
         endpoint,
-        routeBase: '/admin/updates',
+        routeBase,
         initialTerm,
         initialPage,
       }),
@@ -104,7 +117,12 @@ export function initTableSearches() {
 
   if (pageId === 'admin-users-index') {
     const { initialTerm, initialPage } = getInitialState();
-    const endpoint = getEndpointFromForm('users-search-form', '/api/v1/search/users');
+    const endpoint = getRequiredFormValue('users-search-form', 'searchEndpoint');
+    const routeBase = getRequiredFormValue('users-search-form', 'routeBase');
+
+    if (!endpoint || !routeBase) {
+      return;
+    }
 
     initTableSearch(
       'users',
@@ -120,7 +138,7 @@ export function initTableSearches() {
         summaryPlural: 'konton',
         summarySuffix: 'totalt',
         endpoint,
-        routeBase: '/admin/users',
+        routeBase,
         initialTerm,
         initialPage,
       }),
@@ -129,7 +147,12 @@ export function initTableSearches() {
 
   if (pageId === 'admin-user-closed') {
     const { initialTerm, initialPage } = getInitialState();
-    const endpoint = getEndpointFromForm('deleted-users-search-form', '/api/v1/search/deleted-users');
+    const endpoint = getRequiredFormValue('deleted-users-search-form', 'searchEndpoint');
+    const routeBase = getRequiredFormValue('deleted-users-search-form', 'routeBase');
+
+    if (!endpoint || !routeBase) {
+      return;
+    }
 
     initTableSearch(
       'deletedUsers',
@@ -145,7 +168,7 @@ export function initTableSearches() {
         summaryPlural: 'stängda konton',
         summarySuffix: 'totalt',
         endpoint,
-        routeBase: '/admin/users/closed',
+        routeBase,
         initialTerm,
         initialPage,
       }),

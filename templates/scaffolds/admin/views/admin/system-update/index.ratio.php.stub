@@ -13,9 +13,10 @@
       <form
         id="system-updates-search-form"
         method="get"
-        action="/admin/updates"
+        action="{{ route('admin.system-update.index') }}"
         class="mb-4"
         data-search-endpoint="{{ route('api.search.system-updates') }}"
+        data-route-base="{{ route('admin.system-update.index') }}"
         data-per-page="{{ $updates['pagination']['per_page'] ?? 10 }}"
       >
         <div class="flex gap-2 items-center">
@@ -110,6 +111,7 @@
                       class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                       title="Radera"
                       data-action="delete-update"
+                      data-action-url="{{ route('admin.system-update.delete', ['id' => $update->getAttribute('id')]) }}"
                       data-update-id="{{ $update->getAttribute('id') }}"
                       data-update-version="{{ $update->getAttribute('version') }}"
                     >

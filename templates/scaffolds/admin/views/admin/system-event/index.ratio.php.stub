@@ -13,9 +13,10 @@
       <form
         id="system-events-search-form"
         method="get"
-        action="/admin/events"
+        action="{{ route('admin.system-event.index') }}"
         class="mb-4"
         data-search-endpoint="{{ route('api.search.system-events') }}"
+        data-route-base="{{ route('admin.system-event.index') }}"
         data-per-page="{{ $events['pagination']['per_page'] ?? 10 }}"
       >
         <div class="flex gap-2 items-center">

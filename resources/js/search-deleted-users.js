@@ -7,32 +7,38 @@ export default class SearchDeletedUsers extends SearchTable {
       colspan: 5,
     });
 
-    // Restore-modal
     this.modal = document.getElementById('restore-user-modal');
     this.modalBackdrop = document.getElementById('restore-user-backdrop');
     this.modalCancel = document.getElementById('restore-user-cancel');
     this.modalEmail = document.getElementById('restore-user-email');
     this.modalForm = document.getElementById('restore-user-form');
 
-    // Viktigt: SearchTable kan ha triggat init() redan i super()
+    this._onTbodyClick = null;
+    this._boundEscHandler = null;
+
     this.bindModalHandlers();
   }
 
   bindModalHandlers() {
     if (this.modalBackdrop && !this._modalBackdropBound) {
       this._modalBackdropBound = true;
-      this.modalBackdrop.addEventListener('click', () => this.closeRestoreModal());
+      this._onModalBackdropClick = () => this.closeRestoreModal();
+      this.modalBackdrop.addEventListener('click', this._onModalBackdropClick);
     }
 
     if (this.modalCancel && !this._modalCancelBound) {
       this._modalCancelBound = true;
-      this.modalCancel.addEventListener('click', () => this.closeRestoreModal());
+      this._onModalCancelClick = () => this.closeRestoreModal();
+      this.modalCancel.addEventListener('click', this._onModalCancelClick);
     }
 
     if (!this._boundEscHandler) {
       this._boundEscHandler = (e) => {
-        if (e.key === 'Escape') this.closeRestoreModal();
+        if (e.key === 'Escape') {
+          this.closeRestoreModal();
+        }
       };
+
       document.addEventListener('keydown', this._boundEscHandler);
     }
   }
@@ -40,54 +46,94 @@ export default class SearchDeletedUsers extends SearchTable {
   init() {
     super.init();
 
-    if (!this.tbody) return;
+    if (!this.tbody) {
+      return;
+    }
 
-    this.tbody.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-action="restore-user"]');
-      if (!btn) return;
+    if (!this._onTbodyClick) {
+      this._onTbodyClick = (e) => {
+        const btn = e.target.closest('button[data-action="restore-user"]');
 
-      const id = btn.getAttribute('data-user-id') || '';
-      const email = btn.getAttribute('data-user-email') || '';
-      if (!id) return;
+        if (!btn) {
+          return;
+        }
 
-      this.openRestoreModal(id, email);
-    });
+        const actionUrl = btn.getAttribute('data-action-url') || '';
+        const email = btn.getAttribute('data-user-email') || '';
+
+        if (!actionUrl) {
+          return;
+        }
+
+        this.openRestoreModal(actionUrl, email);
+      };
+
+      this.tbody.addEventListener('click', this._onTbodyClick);
+    }
 
     this.bindModalHandlers();
   }
 
-  openRestoreModal(id, email) {
-    if (!this.modal || !this.modalForm || !this.modalEmail) return;
+  destroy() {
+    if (this.tbody && this._onTbodyClick) {
+      this.tbody.removeEventListener('click', this._onTbodyClick);
+    }
+
+    if (this.modalBackdrop && this._onModalBackdropClick) {
+      this.modalBackdrop.removeEventListener('click', this._onModalBackdropClick);
+    }
+
+    if (this.modalCancel && this._onModalCancelClick) {
+      this.modalCancel.removeEventListener('click', this._onModalCancelClick);
+    }
+
+    if (this._boundEscHandler) {
+      document.removeEventListener('keydown', this._boundEscHandler);
+    }
+
+    this._onTbodyClick = null;
+    this._onModalBackdropClick = null;
+    this._onModalCancelClick = null;
+    this._boundEscHandler = null;
+
+    super.destroy();
+  }
+
+  openRestoreModal(actionUrl, email) {
+    if (!this.modal || !this.modalForm || !this.modalEmail) {
+      return;
+    }
 
     this.modalEmail.textContent = email || '';
+    this.modalForm.setAttribute('action', this.withQuerySuffix(actionUrl));
 
-    const suffix = this.currentQuerySuffix();
-    this.modalForm.setAttribute('action', `/admin/users/${encodeURIComponent(id)}/restore${suffix}`);
-
-    // Spara fokus så vi kan återställa när modalen stängs
     this.__restoreFocusEl = document.activeElement;
 
     this.modal.classList.remove('hidden');
     this.modal.setAttribute('aria-hidden', 'false');
 
-    // Flytta fokus in i modalen (Avbryt först)
     const cancel = this.modalCancel || document.getElementById('restore-user-cancel');
+
     if (cancel && typeof cancel.focus === 'function') {
       setTimeout(() => cancel.focus(), 0);
     }
   }
 
   closeRestoreModal() {
-    if (!this.modal) return;
+    if (!this.modal) {
+      return;
+    }
 
     const restoreEl = this.__restoreFocusEl;
     this.__restoreFocusEl = null;
 
-    // Flytta fokus UT ur modalen innan aria-hidden=true
     if (restoreEl && typeof restoreEl.focus === 'function' && !this.modal.contains(restoreEl)) {
-      try { restoreEl.focus(); } catch (e) {}
+      try {
+        restoreEl.focus();
+      } catch (e) {}
     } else {
       const active = document.activeElement;
+
       if (active && this.modal.contains(active) && typeof active.blur === 'function') {
         active.blur();
       }
@@ -124,6 +170,7 @@ export default class SearchDeletedUsers extends SearchTable {
       const last = this.escapeHtml(u.last_name || '');
       const email = this.escapeHtml(u.email || '');
       const deletedAt = this.escapeHtml(u.deleted_at || '');
+      const restoreUrl = this.escapeHtml(u.restore_url || '');
 
       return `
         <tr class="group hover:bg-emerald-50/30 transition-all duration-200">
@@ -157,6 +204,7 @@ export default class SearchDeletedUsers extends SearchTable {
               <button
                 type="button"
                 data-action="restore-user"
+                data-action-url="${restoreUrl}"
                 data-user-id="${id}"
                 data-user-email="${email}"
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 rounded-lg transition-all"

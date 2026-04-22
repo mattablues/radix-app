@@ -32,7 +32,6 @@ final class SystemUpdatesController extends ApiController
         $currentPage = is_numeric($currentPageRaw) ? (int) $currentPageRaw : 1;
         $perPage     = is_numeric($perPageRaw) ? (int) $perPageRaw : 10;
 
-        // Tom term => vanlig paginering (så "Rensa" visar allt)
         if ($term === '') {
             $page = SystemUpdate::orderBy('released_at', 'DESC')
                 ->paginate($perPage, $currentPage);
@@ -66,7 +65,8 @@ final class SystemUpdatesController extends ApiController
                             'is_major' => (bool) $update->getAttribute('is_major'),
                             'released_at' => $releasedAt,
                             'released_at_date' => $releasedAtDate,
-                            'edit_url' => $id !== '' ? '/admin/updates/' . $id . '/edit' : '',
+                            'edit_url' => $id !== '' ? route('admin.system-update.edit', ['id' => $id]) : '',
+                            'delete_url' => $id !== '' ? route('admin.system-update.delete', ['id' => $id]) : '',
                         ];
                     },
                     $page['data'] ?? []
@@ -112,7 +112,8 @@ final class SystemUpdatesController extends ApiController
                     'is_major' => (bool) $update->getAttribute('is_major'),
                     'released_at' => $releasedAt,
                     'released_at_date' => $releasedAtDate,
-                    'edit_url' => $id !== '' ? '/admin/updates/' . $id . '/edit' : '',
+                    'edit_url' => $id !== '' ? route('admin.system-update.edit', ['id' => $id]) : '',
+                    'delete_url' => $id !== '' ? route('admin.system-update.delete', ['id' => $id]) : '',
                 ];
             },
             $results['data'] ?? []

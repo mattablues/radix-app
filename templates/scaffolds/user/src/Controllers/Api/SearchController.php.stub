@@ -12,7 +12,6 @@ class SearchController extends ApiController
 {
     public function profiles(): JsonResponse
     {
-        // Validera förfrågan för att säkerställa att rätt data skickas med
         $this->validateRequestAllowingSession([
             'search.term' => 'required|string|min:1',
             'search.current_page' => 'nullable|integer|min:1',
@@ -24,15 +23,14 @@ class SearchController extends ApiController
             ? $post['search']
             : [];
 
-        $termRaw        = $search['term']          ?? '';
-        $currentPageRaw = $search['current_page']  ?? 1;
-        $perPageRaw     = $search['per_page']      ?? 10;
+        $termRaw        = $search['term'] ?? '';
+        $currentPageRaw = $search['current_page'] ?? 1;
+        $perPageRaw     = $search['per_page'] ?? 10;
 
         $term = is_string($termRaw) ? $termRaw : '';
         $currentPage = is_numeric($currentPageRaw) ? (int) $currentPageRaw : 1;
         $perPage     = is_numeric($perPageRaw) ? (int) $perPageRaw : 10;
 
-        // Kontrollera om söktermen är tom, och returnera tomma resultat om så är fallet
         if ($term === '') {
             return $this->json([
                 'success' => true,
@@ -47,7 +45,6 @@ class SearchController extends ApiController
             ]);
         }
 
-        // Utför sökningen i User-modellen med hjälp av QueryBuilder
         /** @var array{
          *     data: list<\App\Models\User>,
          *     search: array<string,mixed>
@@ -56,7 +53,6 @@ class SearchController extends ApiController
         $results = User::with('status')
             ->search($term, ['first_name', 'last_name', 'email'], $perPage, $currentPage);
 
-        // Formatera resultaten som JSON
         $data = array_map(
             /**
              * @param \App\Models\User $user
@@ -64,12 +60,18 @@ class SearchController extends ApiController
              */
             function (User $user): array {
                 $arr = $user->toArray();
+
                 $avatarRaw = $arr['avatar'] ?? null;
                 $path = is_string($avatarRaw) && $avatarRaw !== ''
                     ? $avatarRaw
                     : '/images/graphics/avatar.png';
 
+                $idRaw = $user->getAttribute('id');
+                $id = (is_int($idRaw) || is_string($idRaw)) ? (string) $idRaw : '';
+
                 $arr['avatar_url'] = versioned_file($path);
+                $arr['show_url'] = $id !== '' ? route('user.show', ['id' => $id]) : '';
+
                 return $arr;
             },
             $results['data']
@@ -78,7 +80,7 @@ class SearchController extends ApiController
         return $this->json([
             'success' => true,
             'data' => $data,
-            'meta' => $results['search'], // Metadata som t.ex. term, current_page, last_page
+            'meta' => $results['search'],
         ]);
     }
 
@@ -98,11 +100,11 @@ class SearchController extends ApiController
 
         $termRaw        = $search['term']          ?? '';
         $currentPageRaw = $search['current_page']  ?? 1;
-        $perPageRaw     = $search['per_page']      ?? 1;
+        $perPageRaw     = $search['per_page']      ?? 10;
 
         $term = is_string($termRaw) ? trim($termRaw) : '';
         $currentPage = is_numeric($currentPageRaw) ? (int) $currentPageRaw : 1;
-        $perPage     = is_numeric($perPageRaw) ? (int) $perPageRaw : 1;
+        $perPage     = is_numeric($perPageRaw) ? (int) $perPageRaw : 10;
 
         // Tom term => vanlig paginering (så "Rensa" visar allt)
         if ($term === '') {
@@ -146,9 +148,9 @@ class SearchController extends ApiController
                             'active' => $activeValue,
                             'active_at' => $activeAtStr,
 
-                            'show_url' => $id !== '' ? '/user/' . $id . '/show' : '',
-                            'send_activation_url' => $id !== '' ? '/admin/users/' . $id . '/send-activation' : '',
-                            'block_url' => $id !== '' ? '/admin/users/' . $id . '/block' : '',
+                            'show_url' => $id !== '' ? route('user.show', ['id' => $id]) : '',
+                            'send_activation_url' => $id !== '' ? route('admin.user.send-activation', ['id' => $id]) : '',
+                            'block_url' => $id !== '' ? route('admin.user.block', ['id' => $id]) : '',
                             'is_admin' => (bool) $user->isAdmin(),
                         ];
                     },
@@ -203,9 +205,9 @@ class SearchController extends ApiController
                     'active' => $activeValue,
                     'active_at' => $activeAtStr,
 
-                    'show_url' => $id !== '' ? '/user/' . $id . '/show' : '',
-                    'send_activation_url' => $id !== '' ? '/admin/users/' . $id . '/send-activation' : '',
-                    'block_url' => $id !== '' ? '/admin/users/' . $id . '/block' : '',
+                    'show_url' => $id !== '' ? route('user.show', ['id' => $id]) : '',
+                    'send_activation_url' => $id !== '' ? route('admin.user.send-activation', ['id' => $id]) : '',
+                    'block_url' => $id !== '' ? route('admin.user.block', ['id' => $id]) : '',
                     'is_admin' => (bool) $user->isAdmin(),
                 ];
             },
@@ -279,7 +281,7 @@ class SearchController extends ApiController
                             'last_name' => $user->getAttribute('last_name'),
                             'email' => $user->getAttribute('email'),
                             'deleted_at' => $deletedAt,
-                            'restore_url' => $id !== '' ? '/admin/users/' . $id . '/restore' : '',
+                            'restore_url' => $id !== '' ? route('admin.user.restore', ['id' => $id]) : '',
                         ];
                     },
                     $page['data'] ?? []
@@ -319,7 +321,7 @@ class SearchController extends ApiController
                     'last_name' => $user->getAttribute('last_name'),
                     'email' => $user->getAttribute('email'),
                     'deleted_at' => $deletedAt,
-                    'restore_url' => $id !== '' ? '/admin/users/' . $id . '/restore' : '',
+                    'restore_url' => $id !== '' ? route('admin.user.restore', ['id' => $id]) : '',
                 ];
             },
             $results['data'] ?? []
