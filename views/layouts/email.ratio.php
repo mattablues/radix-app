@@ -12,7 +12,6 @@
     table { border-collapse: collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; }
     img { border:0; line-height:100%; outline:none; text-decoration:none; }
 
-    /* Radix Brand Styles */
     .btn-primary { background-color: #2563eb !important; border-radius: 12px !important; color: #ffffff !important; display: inline-block; font-size: 14px; font-weight: bold; padding: 14px 28px; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; }
     .text-main { color: #0f172a; }
     .text-muted { color: #64748b; }
@@ -20,6 +19,9 @@
     @media only screen and (max-width: 600px) {
       .container { width:100% !important; padding: 10px !important; }
       .card { border-radius: 16px !important; }
+      .brand-stack { display:block !important; width:100% !important; text-align:center !important; }
+      .brand-icon-wrap { display:block !important; padding:0 0 12px 0 !important; text-align:center !important; }
+      .brand-text-wrap { display:block !important; text-align:center !important; }
     }
   </style>
 </head>
@@ -29,26 +31,27 @@
       <td align="center">
         <table class="container" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px;">
 
-          <!-- Header: Radix Logo -->
+          <!-- Header -->
           <tr>
             <td align="center" style="padding: 40px 0 20px 0;">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                 <tr>
-                  <!-- Denna tabell simulerar kub-loggan för e-post -->
-                  <td style="padding-right: 12px;">
-                    <table role="presentation" cellspacing="1" cellpadding="0" border="0" width="32" height="32">
-                      <tr>
-                        <td bgcolor="#2563eb" width="15" height="15" style="border-top-left-radius: 4px;"></td>
-                        <td bgcolor="#e2e8f0" width="15" height="15" style="border-top-right-radius: 4px;"></td>
-                      </tr>
-                      <tr>
-                        <td bgcolor="#cbd5e1" width="15" height="15" style="border-bottom-left-radius: 4px;"></td>
-                        <td bgcolor="#0f172a" width="15" height="15" style="border-bottom-right-radius: 4px;"></td>
-                      </tr>
-                    </table>
+                  <td style="padding-right: 16px; vertical-align: middle;">
+                    <img
+                      src="{{ getenv('APP_URL') }}/images/graphics/logo-email.png"
+                      alt="Radix"
+                      width="34"
+                      height="34"
+                      style="display: block; width: 34px; height: 34px; border: 0;"
+                    >
                   </td>
-                  <td style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 24px; font-weight: 900; color: #0f172a; font-style: italic; letter-spacing: -1px;">
-                    Radix
+                  <td style="vertical-align: middle; text-align: left;">
+                    <div style="font-family: Helvetica, Arial, sans-serif; font-size: 24px; font-weight: 900; color: #0f172a; font-style: italic; letter-spacing: -1px; line-height: 1.05;">
+                      Radix
+                    </div>
+                    <div style="margin-top: 4px; font-family: Helvetica, Arial, sans-serif; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 2px; line-height: 1.2;">
+                      Systemautomatik
+                    </div>
                   </td>
                 </tr>
               </table>
@@ -77,7 +80,7 @@
           <tr>
             <td align="center" style="padding: 30px 20px;">
               <p style="margin: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px;">
-                &copy; {{ date('Y') }} Radix Engine • Systemautomatik
+                &copy; {{ date('Y') }} Radix • Systemautomatik
               </p>
               <p style="margin: 8px 0 0 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; color: #cbd5e1;">
                 Detta är ett automatiskt systemmeddelande som inte kan besvaras.

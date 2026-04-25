@@ -20,6 +20,34 @@ Alpine.plugin(Ui);
 Alpine.plugin(Focus);
 Alpine.plugin(Ajax);
 
+Alpine.data('mobileMenu', () => ({
+  menu: false,
+
+  open() {
+    this.menu = true;
+  },
+
+  close() {
+    this.menu = false;
+  },
+}));
+
+Alpine.data('publicSidebar', () => ({
+  sidebarOpen: false,
+
+  open() {
+    this.sidebarOpen = true;
+  },
+
+  close() {
+    this.sidebarOpen = false;
+  },
+
+  toggle() {
+    this.sidebarOpen = !this.sidebarOpen;
+  },
+}));
+
 Alpine.data('cookieConsent', () => ({
   showCookieBanner: false,
 
