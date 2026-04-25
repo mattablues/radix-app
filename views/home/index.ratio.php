@@ -1,4 +1,4 @@
-{% extends "layouts/sidebar.ratio.php" %}
+{% extends "layouts/main.ratio.php" %}
 {% block title %}{{ getenv('APP_NAME') ?: 'Radix System' }}{% endblock %}
 {% block pageId %}home{% endblock %}
 {% block body %}
