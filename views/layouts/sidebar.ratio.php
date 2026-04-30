@@ -7,7 +7,7 @@
 
 {% block footerContainer %}
     <div class="transition-[margin] duration-200 lg:ml-(--sidebar-aside-w)">
-        <div class="container-centered">
+        <div class="container-sidebar-main">
         {% include "layouts/partials/footer-inner.ratio.php" %}
         </div>
     </div>
@@ -42,7 +42,7 @@
       </aside>
 
       <main class="transition-[margin] duration-200 lg:ml-(--sidebar-aside-w)">
-        <div class="container-centered pt-4 pb-8">
+        <div class="container-sidebar-main pt-4 pb-8">
           {% include "components/flash.ratio.php" %}
           {% include "components/noscript.ratio.php" %}
           {% yield body %}

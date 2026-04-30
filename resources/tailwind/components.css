@@ -55,6 +55,11 @@
   @apply w-full xl:max-w-[1440px] mx-auto px-3 md:px-5 lg:px-7;
 }
 
+.container-sidebar-main {
+  @apply w-full px-3 md:px-5 lg:px-7;
+  max-width: calc(1440px - var(--sidebar-aside-w));
+}
+
 .container-centered-sm {
   @apply w-full xl:max-w-[900px] mx-auto px-3 md:px-5 lg:px-7;
 }
