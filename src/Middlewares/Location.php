@@ -22,7 +22,7 @@ readonly class Location implements MiddlewareInterface
         if ($appEnv !== 'development') {
             $location = $this->geoLocator->getLocation(); // Hämta plats för besökaren
 
-            if ($location['country'] !== getenv('LOCATOR_COUNTRY') && $location['city'] !== getenv('LOCATOR_CITY')) {
+            if ($location['country'] !== getenv('LOCATOR_COUNTRY') || $location['city'] !== getenv('LOCATOR_CITY')) {
                 $request->session()->setFlashMessage("Endast kommuninvånare i " . getenv('LOCATOR_CITY') . " kommun kan registrera sig för att rösta");
 
                 return new RedirectResponse(route('home.index'));
