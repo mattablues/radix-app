@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "74c87a25342f3ea01d1eebe0f610d852",
+    "content-hash": "1bd9c64da1e38b6f39ca683791abf316",
     "packages": [
         {
             "name": "dflydev/dot-access-data",
@@ -83,16 +83,16 @@
         },
         {
             "name": "mattablues/radix-framework",
-            "version": "v1.1.8",
+            "version": "v2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mattablues/radix-framework.git",
-                "reference": "ec40fcc9fc63b07b2c8590d9fd068fb7dc07711a"
+                "reference": "eaa049a051378b2cfb3defddbbf2fafef948e2ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/ec40fcc9fc63b07b2c8590d9fd068fb7dc07711a",
-                "reference": "ec40fcc9fc63b07b2c8590d9fd068fb7dc07711a",
+                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/eaa049a051378b2cfb3defddbbf2fafef948e2ff",
+                "reference": "eaa049a051378b2cfb3defddbbf2fafef948e2ff",
                 "shasum": ""
             },
             "require": {
@@ -125,9 +125,9 @@
             "description": "Radix Framework",
             "support": {
                 "issues": "https://github.com/mattablues/radix-framework/issues",
-                "source": "https://github.com/mattablues/radix-framework/tree/v1.1.8"
+                "source": "https://github.com/mattablues/radix-framework/tree/v2.0.0"
             },
-            "time": "2026-05-05T11:09:23+00:00"
+            "time": "2026-05-11T15:10:10+00:00"
         },
         {
             "name": "phpmailer/phpmailer",
