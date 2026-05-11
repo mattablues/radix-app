@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1bd9c64da1e38b6f39ca683791abf316",
+    "content-hash": "8b9ec6ce055fd194f94fba68296ebfae",
     "packages": [
         {
             "name": "dflydev/dot-access-data",
@@ -83,7 +83,7 @@
         },
         {
             "name": "mattablues/radix-framework",
-            "version": "v2.0.0",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mattablues/radix-framework.git",
