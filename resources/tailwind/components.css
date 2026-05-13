@@ -124,11 +124,33 @@
   @apply py-2;
 }
 
+.sidebar {
+  left: var(--sidebar-w-neg);
+}
+
+.sidebar.sidebar-open {
+  left: 0;
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    left: 0;
+  }
+}
+
 /* Hjälpklasser bundna till variablerna (så du kan återanvända och byta färger centralt) */
 .pager-base {
   background-color: var(--pagination-bg);
   color: var(--pagination-text);
   border-color: var(--pagination-border);
+}
+
+.pager-base,
+.pager-active,
+.pager-disabled,
+.pager-ellipsis {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .pager-hover:hover {

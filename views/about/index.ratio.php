@@ -45,7 +45,7 @@
           <div class="mb-10 text-center lg:text-left">
             <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-4">Om Radix Systemet</h1>
             <div class="h-1.5 w-20 bg-blue-600 rounded-full mb-6 mx-auto lg:mx-0"></div>
-            <p class="text-xl text-slate-500 leading-relaxed">Ett modernt, lättviktigt och högpresterande framework byggt för professionell webbutveckling.</p>
+            <p class="text-lg text-slate-500 leading-relaxed">Ett modernt, lättviktigt och högpresterande framework byggt för professionell webbutveckling.</p>
           </div>
 
           <div class="prose prose-slate max-w-none lg:space-y-6">

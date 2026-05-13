@@ -32,6 +32,7 @@ export default class SearchTable {
     this._onSubmit = null;
     this._onInput = null;
     this._onClear = null;
+    this._onPagerPointerDown = null;
     this._onPagerClick = null;
 
     this._debounced = this.debounce(() => {
@@ -69,6 +70,7 @@ export default class SearchTable {
     if (this.form) {
       this._onSubmit = (e) => {
         e.preventDefault();
+        this.input.blur();
         this.term = (this.input.value || '').trim();
         this.page = 1;
         this.fetchAndRender(this.term, this.page, true);
@@ -99,6 +101,18 @@ export default class SearchTable {
     }
 
     if (this.pager) {
+      this._onPagerPointerDown = () => {
+        const active = document.activeElement;
+
+        if (
+          active instanceof HTMLInputElement ||
+          active instanceof HTMLTextAreaElement ||
+          active instanceof HTMLSelectElement
+        ) {
+          active.blur();
+        }
+      };
+
       this._onPagerClick = (e) => {
         const a = e.target.closest('a');
 
@@ -129,9 +143,12 @@ export default class SearchTable {
         this.input.value = this.term;
         this.setClearEnabled();
 
-        this.fetchAndRender(this.term, this.page, true);
+        this.fetchAndRender(this.term, this.page, true, {
+          keepRowsWhileLoading: true,
+        });
       };
 
+      this.pager.addEventListener('pointerdown', this._onPagerPointerDown, { passive: true });
       this.pager.addEventListener('click', this._onPagerClick);
     }
   }
@@ -206,6 +223,10 @@ export default class SearchTable {
       this.clearBtn.removeEventListener('click', this._onClear);
     }
 
+    if (this.pager && this._onPagerPointerDown) {
+      this.pager.removeEventListener('pointerdown', this._onPagerPointerDown);
+    }
+
     if (this.pager && this._onPagerClick) {
       this.pager.removeEventListener('click', this._onPagerClick);
     }
@@ -213,6 +234,7 @@ export default class SearchTable {
     this._onSubmit = null;
     this._onInput = null;
     this._onClear = null;
+    this._onPagerPointerDown = null;
     this._onPagerClick = null;
 
     SearchTable.instances.delete(this);
@@ -279,24 +301,24 @@ export default class SearchTable {
     this.clearBtn.disabled = !this.term;
   }
 
-  async fetchAndRender(term, page, updateUrl) {
-    if (!this.endpoint || !this.routeBase) {
-      this.renderError('Sökningen är inte korrekt konfigurerad.');
-      return;
-    }
+  async fetchAndRender(term, page, updateUrl, options = {}) {
+      if (!this.endpoint || !this.routeBase) {
+        this.renderError('Sökningen är inte korrekt konfigurerad.');
+        return;
+      }
 
-    if (this._abort) {
-      this._abort.abort();
-    }
+      if (this._abort) {
+        this._abort.abort();
+      }
 
-    this._abort = new AbortController();
+      this._abort = new AbortController();
 
-    this.showLoading();
+      this.showLoading(options.keepRowsWhileLoading ?? false);
 
-    try {
-      const res = await fetch(this.endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      try {
+        const res = await fetch(this.endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
         signal: this._abort.signal,
         body: JSON.stringify({
@@ -360,6 +382,8 @@ export default class SearchTable {
   }
 
   renderRows(items) {
+    this.clearLoadingState();
+
     this.tbody.innerHTML = '';
 
     if (!items.length) {
@@ -514,7 +538,19 @@ export default class SearchTable {
     `;
   }
 
-  showLoading() {
+  showLoading(keepRows = false) {
+    if (keepRows && this.tbody.children.length > 0) {
+      const tableWrap = this.tbody.closest('.overflow-x-auto') || this.tbody.closest('table') || this.tbody.parentElement;
+
+      if (tableWrap) {
+        tableWrap.style.minHeight = `${tableWrap.offsetHeight}px`;
+        tableWrap.style.transition = 'min-height 150ms ease';
+      }
+
+      this.tbody.classList.add('transition-opacity', 'duration-150', 'pointer-events-none');
+      return;
+    }
+
     this.tbody.innerHTML = `
       <tr>
         <td colspan="${this.colspan}" class="px-4 py-6 text-center text-slate-400">
@@ -524,7 +560,22 @@ export default class SearchTable {
     `;
   }
 
+  clearLoadingState() {
+    const tableWrap = this.tbody.closest('.overflow-x-auto') || this.tbody.closest('table') || this.tbody.parentElement;
+
+    this.tbody.classList.remove('opacity-60', 'transition-opacity', 'duration-150', 'pointer-events-none');
+
+    if (tableWrap) {
+      window.setTimeout(() => {
+        tableWrap.style.minHeight = '';
+        tableWrap.style.transition = '';
+      }, 150);
+    }
+  }
+
   renderError(msg) {
+    this.clearLoadingState();
+
     this.tbody.innerHTML = `
       <tr>
         <td colspan="${this.colspan}" class="px-4 py-6 text-center text-red-500">

@@ -258,6 +258,7 @@ export default class SearchUsers extends SearchTable {
   }
 
   renderRows(items) {
+    this.clearLoadingState();
     this.tbody.innerHTML = '';
 
     if (!items.length) {
