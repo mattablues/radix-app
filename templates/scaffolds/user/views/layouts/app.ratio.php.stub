@@ -102,8 +102,8 @@
 
   <!-- Sidebar -->
   <div
-    class="sidebar h-screen fixed top-0 lg:left-0 py-20 px-4 w-(--sidebar-w) transition-all duration-300 overflow-y-auto text-left bg-gray-900 shadow-2xl hide-scrollbar z-40 flex flex-col"
-    :class="$store.sidebar.open ? 'left-0' : 'left-(--sidebar-w-neg)'"
+    class="sidebar h-screen fixed top-0 py-20 px-4 w-(--sidebar-w) transition-all duration-300 overflow-y-auto text-left bg-slate-950 shadow-2xl hide-scrollbar z-40 flex flex-col"
+    :class="$store.sidebar.open ? 'sidebar-open' : ''"
   >
     <div class="flex-1 space-y-4">
       <div class="text-xxs font-black uppercase tracking-[0.2em] text-gray-500 mb-4 px-4">Navigation</div>

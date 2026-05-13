@@ -9,7 +9,7 @@
         <aside class="area-aside-left sticky-top pt-6 lg:pt-4">
           <div class="space-y-6 lg:space-y-4">
             <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
-              <h4 class="font-bold text-slate-800 mb-2 uppercase text-[10px] tracking-widest text-blue-600">Teknisk Support</h4>
+              <h4 class="font-bold text-slate-800 mb-2 uppercase text-[10px] tracking-widest">Teknisk Support</h4>
               <p class="text-xs text-slate-500 leading-relaxed">Ärenden rörande frameworket eller databasen hanteras prioriterat under vardagar.</p>
             </div>
             <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm border-l-4 border-l-blue-500">
@@ -21,9 +21,10 @@
 
         <!-- Huvudinnehåll (Formulär) -->
         <div class="area-content lg:px-8">
-          <div class="mb-8">
-            <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">Kontakta Radix</h1>
-            <p class="text-slate-500">Frågor om licensering, partnerskap eller teknisk assistans? Vi är bara ett meddelande bort.</p>
+          <div class="mb-10 text-center lg:text-left">
+            <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-4">Kontakta Radix</h1>
+            <div class="h-1.5 w-20 bg-blue-600 rounded-full mb-6 mx-auto lg:mx-0"></div>
+            <p class="text-lg text-slate-500 leading-relaxed">Frågor om licensering, partnerskap eller teknisk assistans? Vi är bara ett meddelande bort.</p>
           </div>
 
           <form action="{{ route('contact.create') }}" method="post" class="bg-white border border-gray-200 p-6 md:p-8 rounded-[2rem] shadow-xl">

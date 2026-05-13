@@ -144,6 +144,7 @@ export default class SearchSystemUpdates extends SearchTable {
   }
 
   renderRows(items) {
+    this.clearLoadingState();
     this.tbody.innerHTML = '';
 
     if (!items.length) {

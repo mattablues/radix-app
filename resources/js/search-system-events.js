@@ -9,6 +9,7 @@ export default class SearchSystemEvents extends SearchTable {
   }
 
   renderRows(items) {
+    this.clearLoadingState();
     this.tbody.innerHTML = '';
 
     if (!items.length) {
