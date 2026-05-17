@@ -82,6 +82,10 @@ jobs:
           LOCATOR_CITY=Stockholm
           LOCATOR_CITY_URL=https://example.test/locator/city
 
+          GEOLOCATOR_ENABLED=0
+          GEOLOCATOR_BASE_URL=http://ip-api.com/json
+          GEOLOCATOR_TIMEOUT=2
+
           DB_DRIVER=sqlite
           DB_NAME=./database/database.sqlite
           DB_HOST=127.0.0.1
@@ -93,6 +97,10 @@ jobs:
           SESSION_DRIVER=file
           SESSION_LIFETIME=120
           SESSION_FILE_PATH=./cache/sessions
+
+          SESSION_COOKIE_SECURE=auto
+          SESSION_COOKIE_HTTPONLY=true
+          SESSION_COOKIE_SAMESITE=Lax
 
           ORM_MODEL_NAMESPACE=App\Models
 
