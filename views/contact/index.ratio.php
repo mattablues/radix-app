@@ -46,7 +46,7 @@
               <div class="relative">
                 <label for="first-name" class="block text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Förnamn</label>
                 <input type="text" name="first_name" id="first-name" value="{{ old('first_name') }}"
-                       placeholder="Mats"
+                       placeholder="Sven"
                        class="w-full px-4 py-3 text-sm border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition duration-300 shadow-sm">
                 {% if (error($errors, 'first_name')) : %}
                   <span class="block absolute -bottom-5 left-1 text-xxs text-red-600 font-medium">{{ error($errors, 'first_name') }}</span>
@@ -56,7 +56,7 @@
               <div class="relative">
                 <label for="last-name" class="block text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">Efternamn</label>
                 <input type="text" name="last_name" id="last-name" value="{{ old('last_name') }}"
-                       placeholder="Åkebrand"
+                       placeholder="Svensson"
                        class="w-full px-4 py-3 text-sm border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition duration-300 shadow-sm">
                 {% if (error($errors, 'last_name')) : %}
                   <span class="block absolute -bottom-5 left-1 text-xxs text-red-600 font-medium">{{ error($errors, 'last_name') }}</span>
@@ -67,7 +67,7 @@
             <div class="relative mb-6">
               <label for="email" class="block text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2 ml-1">E-postadress</label>
               <input type="text" name="email" id="email" value="{{ old('email') }}"
-                     placeholder="mats@radix.se"
+                     placeholder="name@example.se"
                      class="w-full px-4 py-3 text-sm border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition duration-300 shadow-sm">
               {% if (error($errors, 'email')) : %}
                 <span class="block absolute -bottom-5 left-1 text-xxs text-red-600 font-medium">{{ error($errors, 'email') }}</span>

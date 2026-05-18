@@ -1,0 +1,28 @@
+<?php
+
+declare(strict_types=1);
+
+use Radix\Database\Migration\Blueprint;
+use Radix\Database\Migration\Schema;
+
+return new class {
+    public function up(Schema $schema): void
+    {
+        $schema->create('blocked_emails', function (Blueprint $table) {
+            $table->id();
+            $table->string('email');
+            $table->text('reason', options: ['nullable' => true]);
+            $table->integer('created_by_user_id', true, ['nullable' => true]);
+            $table->timestamps();
+
+            $table->unique(['email']);
+            $table->index(['created_by_user_id']);
+            $table->foreign('created_by_user_id', 'users', 'id', 'SET NULL', 'CASCADE');
+        });
+    }
+
+    public function down(Schema $schema): void
+    {
+        $schema->dropIfExists('blocked_emails');
+    }
+};

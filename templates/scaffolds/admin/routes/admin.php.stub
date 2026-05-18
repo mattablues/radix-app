@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 /** @var \Radix\Routing\Router $router */
 
-use App\Controllers\Admin\SystemEventController;
-use App\Controllers\Admin\SystemUpdateController;
-
 // Global grupp för web med request-id + logging
 $router->group(
     ['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.web', 'csrf']],
@@ -64,35 +61,51 @@ $router->group(
 
                 // System Events
                 $router->get('/events', [
-                    SystemEventController::class, 'index',
+                    \App\Controllers\Admin\SystemEventController::class, 'index',
                 ])->name('admin.system-event.index');
 
                 $router->post('/events', [
-                    SystemEventController::class, 'store',
+                    \App\Controllers\Admin\SystemEventController::class, 'store',
                 ])->name('admin.system-event.store')->middleware(['api.throttle.light']);
 
+                $router->get('/blocked-emails', [
+                    \App\Controllers\Admin\BlockedEmailController::class, 'index',
+                ])->name('admin.blocked-email.index');
+
+                $router->get('/blocked-emails/create', [
+                    \App\Controllers\Admin\BlockedEmailController::class, 'create',
+                ])->name('admin.blocked-email.create');
+
+                $router->post('/blocked-emails/create', [
+                    \App\Controllers\Admin\BlockedEmailController::class, 'store',
+                ])->name('admin.blocked-email.store')->middleware(['api.throttle.light']);
+
+                $router->post('/blocked-emails/{id:[\d]+}/delete', [
+                    \App\Controllers\Admin\BlockedEmailController::class, 'delete',
+                ])->name('admin.blocked-email.delete')->middleware(['api.throttle.light']);
+
                 $router->get('/updates', [
-                    SystemUpdateController::class, 'index',
+                    \App\Controllers\Admin\SystemUpdateController::class, 'index',
                 ])->name('admin.system-update.index');
 
                 $router->get('/updates/create', [
-                    SystemUpdateController::class, 'create',
+                    \App\Controllers\Admin\SystemUpdateController::class, 'create',
                 ])->name('admin.system-update.create');
 
                 $router->post('/updates/create', [
-                    SystemUpdateController::class, 'store',
+                    \App\Controllers\Admin\SystemUpdateController::class, 'store',
                 ])->name('admin.system-update.store')->middleware(['api.throttle.light']);
 
                 $router->get('/updates/{id:[\d]+}/edit', [
-                    SystemUpdateController::class, 'edit',
+                    \App\Controllers\Admin\SystemUpdateController::class, 'edit',
                 ])->name('admin.system-update.edit');
 
                 $router->post('/updates/{id:[\d]+}/edit', [
-                    SystemUpdateController::class, 'update',
+                    \App\Controllers\Admin\SystemUpdateController::class, 'update',
                 ])->name('admin.system-update.update')->middleware(['api.throttle.light']);
 
                 $router->post('/updates/{id:[\d]+}/delete', [
-                    SystemUpdateController::class, 'delete',
+                    \App\Controllers\Admin\SystemUpdateController::class, 'delete',
                 ])->name('admin.system-update.delete')->middleware(['api.throttle.hard']);
             });
         });

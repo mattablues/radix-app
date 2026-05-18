@@ -2,6 +2,7 @@ import SearchSystemEvents from './search-system-events';
 import SearchSystemUpdates from './search-system-updates';
 import SearchUsers from './search-users';
 import SearchDeletedUsers from './search-deleted-users';
+import SearchBlockedEmails from './search-blocked-emails';
 
 function getPageId() {
   return document.querySelector('[data-page-id]')?.getAttribute('data-page-id')
@@ -166,6 +167,36 @@ export function initTableSearches() {
         summaryId: 'deleted-users-search-summary',
         summarySingular: 'stängt konto',
         summaryPlural: 'stängda konton',
+        summarySuffix: 'totalt',
+        endpoint,
+        routeBase,
+        initialTerm,
+        initialPage,
+      }),
+    );
+  }
+
+  if (pageId === 'admin-blocked-email-index') {
+    const { initialTerm, initialPage } = getInitialState();
+    const endpoint = getRequiredFormValue('blocked-emails-search-form', 'searchEndpoint');
+    const routeBase = getRequiredFormValue('blocked-emails-search-form', 'routeBase');
+
+    if (!endpoint || !routeBase) {
+      return;
+    }
+
+    initTableSearch(
+      'blockedEmails',
+      ['blocked-emails-search-form', 'blocked-emails-search', 'blocked-emails-tbody'],
+      () => new SearchBlockedEmails({
+        formId: 'blocked-emails-search-form',
+        clearBtnId: 'blocked-emails-clear',
+        inputId: 'blocked-emails-search',
+        tbodyId: 'blocked-emails-tbody',
+        pagerId: 'blocked-emails-pager',
+        summaryId: 'blocked-emails-search-summary',
+        summarySingular: 'blockerad adress',
+        summaryPlural: 'blockerade adresser',
         summarySuffix: 'totalt',
         endpoint,
         routeBase,

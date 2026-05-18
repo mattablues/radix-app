@@ -1,0 +1,238 @@
+{% extends "layouts/app.ratio.php" %}
+{% block title %}Blockerade e-postadresser{% endblock %}
+{% block pageId %}admin-blocked-email-index{% endblock %}
+
+{% block body %}
+  <section
+    x-data="blockedEmailDeleteModal"
+    x-on:keydown.escape.window="close()"
+    x-on:blocked-email-delete.window="openFromEvent($event)"
+  >
+    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-semibold text-slate-900">Blockerade e-postadresser</h1>
+        <p class="mt-2 text-slate-600">
+          Hantera e-postadresser som inte ska kunna skicka meddelanden via kontaktformuläret.
+        </p>
+      </div>
+    </div>
+
+    <form
+      id="blocked-emails-search-form"
+      method="get"
+      action="{{ route('admin.blocked-email.index') }}"
+      class="mb-4"
+      data-search-endpoint="{{ route('api.search.blocked-emails') }}"
+      data-route-base="{{ route('admin.blocked-email.index') }}"
+      data-per-page="{{ $blockedEmails['pagination']['per_page'] ?? 20 }}"
+    >
+      {{ csrf_field()|raw }}
+
+      <div class="flex gap-2 items-center">
+        <input
+          id="blocked-emails-search"
+          type="search"
+          name="q"
+          value="{{ $q ?? '' }}"
+          placeholder="Sök e-postadress eller anledning..."
+          class="w-full md:w-[420px] text-base md:text-sm rounded-xl bg-white border border-slate-200 px-4 py-2 focus:ring-0 focus:border-gray-300"
+          autocomplete="off"
+        >
+
+        <button
+          type="submit"
+          class="px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold transition-colors"
+        >
+          Sök
+        </button>
+
+        <button
+          id="blocked-emails-clear"
+          type="button"
+          class="px-3 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors"
+          {% if(($q ?? '') === '') : %}disabled{% endif; %}
+        >
+          Rensa
+        </button>
+      </div>
+
+      <div
+        id="blocked-emails-search-summary"
+        class="mt-3 text-xs text-slate-500"
+        data-total="{{ $blockedEmails['pagination']['total'] ?? 0 }}"
+      >
+        {% if(($q ?? '') !== '') : %}
+          Resultat för <span class="font-semibold text-slate-700">"{{ $q }}"</span>
+          <span class="text-slate-300">•</span>
+          {{ $blockedEmails['pagination']['total'] ?? 0 }} blockerade adresser totalt
+        {% else : %}
+          {{ $blockedEmails['pagination']['total'] ?? 0 }} blockerade adresser totalt
+        {% endif; %}
+      </div>
+    </form>
+
+    {% if($blockedEmails['data']) : %}
+      <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50/50 border-b border-gray-100">
+                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 max-md:hidden">
+                  ID
+                </th>
+                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                  E-postadress
+                </th>
+                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 max-lg:hidden">
+                  Anledning
+                </th>
+                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 max-xl:hidden">
+                  Tillagd av
+                </th>
+                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 max-sm:hidden">
+                  Skapad
+                </th>
+                <th class="px-4 py-4 text-[11px] font-bold uppercase tracking-wider text-gray-500 text-right">
+                  Åtgärder
+                </th>
+              </tr>
+            </thead>
+
+            <tbody id="blocked-emails-tbody" class="divide-y divide-gray-50">
+              {% foreach($blockedEmails['data'] as $blockedEmail) : %}
+                {% $email = $blockedEmail->getAttribute('email'); %}
+                {% $reason = $blockedEmail->getAttribute('reason'); %}
+                {% $createdAt = $blockedEmail->getAttribute('created_at'); %}
+                {% $createdBy = $blockedEmail->getRelation('createdBy'); %}
+
+                <tr class="group hover:bg-red-50/30 transition-all duration-200">
+                  <td class="px-4 py-4 text-xs font-medium text-gray-400 max-md:hidden">
+                    #{{ $blockedEmail->getAttribute('id') }}
+                  </td>
+
+                  <td class="px-4 py-4">
+                    <div class="flex flex-col">
+                      <span class="text-sm font-semibold text-gray-900 group-hover:text-red-600 transition-colors">
+                        {{ $email }}
+                      </span>
+                      <span class="text-xs text-gray-500 lg:hidden">
+                        {{ $reason ?: 'Ingen anledning angiven' }}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td class="px-4 py-4 max-lg:hidden">
+                    <span class="text-sm text-gray-600">
+                      {{ $reason ?: 'Ingen anledning angiven' }}
+                    </span>
+                  </td>
+
+                  <td class="px-4 py-4 max-xl:hidden">
+                    {% if($createdBy instanceof \App\Models\User) : %}
+                      <div class="flex flex-col">
+                        <span class="text-sm font-medium text-gray-700">
+                          {{ $createdBy->getAttribute('first_name') }} {{ $createdBy->getAttribute('last_name') }}
+                        </span>
+                        <span class="text-xs text-gray-400">
+                          {{ $createdBy->getAttribute('email') }}
+                        </span>
+                      </div>
+                    {% else : %}
+                      <span class="text-sm text-gray-400 italic">System</span>
+                    {% endif; %}
+                  </td>
+
+                  <td class="px-4 py-4 max-sm:hidden">
+                    <span class="text-xs text-gray-500">
+                      {{ $createdAt }}
+                    </span>
+                  </td>
+
+                  <td class="px-4 py-4 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        title="Ta bort blockering"
+                        data-action="delete-blocked-email"
+                        data-delete-action="{{ route('admin.blocked-email.delete', ['id' => $blockedEmail->getAttribute('id')]) }}"
+                        data-delete-email="{{ $email }}"
+                        x-on:click="openFromButton($el)"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m3-3h4a1 1 0 011 1v2H9V5a1 1 0 011-1z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              {% endforeach; %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="blocked-emails-pager" class="mt-6">
+        {% if(($blockedEmails['pagination']['total'] ?? 0) > ($blockedEmails['pagination']['per_page'] ?? 0)) : %}
+          {{ paginate_links($blockedEmails['pagination'], 'admin.blocked-email.index', 2)|raw }}
+        {% endif; %}
+      </div>
+      {% else : %}
+        <div class="bg-white border border-dashed border-gray-300 rounded-2xl p-12 text-center text-gray-500">
+          {% if(($q ?? '') !== '') : %}
+            Inga blockerade e-postadresser matchade din sökning.
+          {% else : %}
+            Inga blockerade e-postadresser har lagts till ännu.
+          {% endif; %}
+        </div>
+        <div id="blocked-emails-pager" class="mt-6"></div>
+      {% endif; %}
+
+    <!-- Modal: Ta bort e-postblockering -->
+    <div
+      x-show="open"
+      x-cloak
+      class="fixed inset-0 z-[100] overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      x-bind:aria-hidden="open ? 'false' : 'true'"
+    >
+      <div
+        class="fixed inset-0 bg-black/60 z-0"
+        x-on:click="close()"
+      ></div>
+
+      <div class="relative z-10 flex min-h-screen items-center justify-center p-4">
+        <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">Ta bort blockering</h2>
+
+          <p class="text-sm text-gray-600 mb-8">
+            Vill du ta bort <strong class="text-gray-900" x-text="email"></strong> från blocklistan?
+          </p>
+
+          <div class="flex justify-end gap-3">
+            <button
+              x-ref="cancel"
+              type="button"
+              class="px-4 py-2 text-sm font-bold text-gray-500"
+              x-on:click="close()"
+            >
+              Avbryt
+            </button>
+
+            <form x-bind:action="action" method="post">
+              {{ csrf_field()|raw }}
+
+              <button
+                type="submit"
+                class="bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-md shadow-red-100"
+              >
+                Ja, ta bort
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

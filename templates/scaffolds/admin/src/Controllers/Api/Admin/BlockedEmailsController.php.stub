@@ -1,0 +1,142 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers\Api\Admin;
+
+use App\Controllers\Api\ApiController;
+use App\Models\BlockedEmail;
+use App\Models\User;
+use Radix\Http\JsonResponse;
+
+final class BlockedEmailsController extends ApiController
+{
+    public function search(): JsonResponse
+    {
+        $this->validateRequestAllowingSession([
+            'search.term' => 'nullable|string',
+            'search.current_page' => 'nullable|integer|min:1',
+            'search.per_page' => 'nullable|integer|min:1',
+        ]);
+
+        $post = $this->request->post;
+
+        $search = isset($post['search']) && is_array($post['search'])
+            ? $post['search']
+            : [];
+
+        $termRaw        = $search['term'] ?? '';
+        $currentPageRaw = $search['current_page'] ?? 1;
+        $perPageRaw     = $search['per_page'] ?? 20;
+
+        $term = is_string($termRaw) ? trim($termRaw) : '';
+        $currentPage = is_numeric($currentPageRaw) ? (int) $currentPageRaw : 1;
+        $perPage = is_numeric($perPageRaw) ? (int) $perPageRaw : 20;
+
+        if ($term === '') {
+            $page = BlockedEmail::with('createdBy')
+                ->orderBy('created_at', 'DESC')
+                ->paginate($perPage, $currentPage);
+
+            return $this->json([
+                'success' => true,
+                'data' => array_map(
+                    /**
+                     * @param mixed $blockedEmail
+                     * @return array<string,mixed>
+                     */
+                    function ($blockedEmail): array {
+                        return $this->serializeBlockedEmail($blockedEmail);
+                    },
+                    $page['data'] ?? []
+                ),
+                'meta' => $page['pagination'] ?? [
+                    'total' => 0,
+                    'per_page' => $perPage,
+                    'current_page' => $currentPage,
+                    'last_page' => 0,
+                    'first_page' => 1,
+                    'term' => $term,
+                ],
+            ]);
+        }
+
+        $results = BlockedEmail::with('createdBy')
+            ->orderBy('created_at', 'DESC')
+            ->search($term, ['email', 'reason'], $perPage, $currentPage);
+
+        $data = array_map(
+            /**
+             * @param mixed $blockedEmail
+             * @return array<string,mixed>
+             */
+            function ($blockedEmail): array {
+                return $this->serializeBlockedEmail($blockedEmail);
+            },
+            $results['data'] ?? []
+        );
+
+        return $this->json([
+            'success' => true,
+            'data' => $data,
+            'meta' => $results['search'] ?? [
+                'term' => $term,
+                'total' => 0,
+                'per_page' => $perPage,
+                'current_page' => $currentPage,
+                'last_page' => 0,
+                'first_page' => 1,
+            ],
+        ]);
+    }
+
+    /**
+     * @param mixed $blockedEmail
+     * @return array<string,mixed>
+     */
+    private function serializeBlockedEmail($blockedEmail): array
+    {
+        if (!$blockedEmail instanceof BlockedEmail) {
+            return [];
+        }
+
+        $idRaw = $blockedEmail->getAttribute('id');
+        $id = (is_int($idRaw) || is_string($idRaw)) ? (string) $idRaw : '';
+
+        $emailRaw = $blockedEmail->getAttribute('email');
+        $email = is_string($emailRaw) ? $emailRaw : '';
+
+        $reasonRaw = $blockedEmail->getAttribute('reason');
+        $reason = is_string($reasonRaw) ? $reasonRaw : '';
+
+        $createdAtRaw = $blockedEmail->getAttribute('created_at');
+        $createdAt = is_string($createdAtRaw) ? $createdAtRaw : '';
+
+        $createdBy = $blockedEmail->getRelation('createdBy');
+
+        $createdByName = null;
+        $createdByEmail = null;
+
+        if ($createdBy instanceof User) {
+            $firstNameRaw = $createdBy->getAttribute('first_name');
+            $lastNameRaw = $createdBy->getAttribute('last_name');
+            $createdByEmailRaw = $createdBy->getAttribute('email');
+
+            $firstName = is_string($firstNameRaw) ? $firstNameRaw : '';
+            $lastName = is_string($lastNameRaw) ? $lastNameRaw : '';
+
+            $createdByName = trim($firstName . ' ' . $lastName);
+            $createdByEmail = is_string($createdByEmailRaw) ? $createdByEmailRaw : null;
+        }
+
+        return [
+            'id' => $id,
+            'email' => $email,
+            'reason' => $reason,
+            'created_at' => $createdAt,
+            'created_by_name' => $createdByName,
+            'created_by_email' => $createdByEmail,
+            'delete_url' => $id !== '' ? route('admin.blocked-email.delete', ['id' => $id]) : '',
+        ];
+    }
+}

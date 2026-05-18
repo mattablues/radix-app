@@ -16,4 +16,8 @@ $router->group(['path' => '/admin'], function (\Radix\Routing\Router $router) {
     $router->post('/search/system-updates', [\App\Controllers\Api\Admin\SystemUpdatesController::class, 'search'])
         ->name('api.search.system-updates')
         ->middleware(['role.min.moderator']);
+
+    $router->post('/search/blocked-emails', [\App\Controllers\Api\Admin\BlockedEmailsController::class, 'search'])
+        ->name('api.search.blocked-emails')
+        ->middleware(['role.min.moderator']);
 });
