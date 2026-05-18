@@ -176,10 +176,10 @@ export function initTableSearches() {
     );
   }
 
-  if (pageId === 'admin-blocked-email-index' || pageId === 'admin-blocked-email-index') {
+  if (pageId === 'admin-blocked-email-index') {
     const { initialTerm, initialPage } = getInitialState();
-    const endpoint = getRequiredFormValue('blocked-email-search-form', 'searchEndpoint');
-    const routeBase = getRequiredFormValue('blocked-email-search-form', 'routeBase');
+    const endpoint = getRequiredFormValue('blocked-emails-search-form', 'searchEndpoint');
+    const routeBase = getRequiredFormValue('blocked-emails-search-form', 'routeBase');
 
     if (!endpoint || !routeBase) {
       return;
@@ -187,14 +187,14 @@ export function initTableSearches() {
 
     initTableSearch(
       'blockedEmails',
-      ['blocked-email-search-form', 'blocked-email-search', 'blocked-email-tbody'],
+      ['blocked-emails-search-form', 'blocked-emails-search', 'blocked-emails-tbody'],
       () => new SearchBlockedEmails({
-        formId: 'blocked-email-search-form',
-        clearBtnId: 'blocked-email-clear',
-        inputId: 'blocked-email-search',
-        tbodyId: 'blocked-email-tbody',
-        pagerId: 'blocked-email-pager',
-        summaryId: 'blocked-email-search-summary',
+        formId: 'blocked-emails-search-form',
+        clearBtnId: 'blocked-emails-clear',
+        inputId: 'blocked-emails-search',
+        tbodyId: 'blocked-emails-tbody',
+        pagerId: 'blocked-emails-pager',
+        summaryId: 'blocked-emails-search-summary',
         summarySingular: 'blockerad adress',
         summaryPlural: 'blockerade adresser',
         summarySuffix: 'totalt',
