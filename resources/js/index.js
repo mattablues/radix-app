@@ -301,6 +301,66 @@ Alpine.data('systemDropdown', (initialOpen = false) => ({
   toggle() { this.open = !this.open },
 }));
 
+Alpine.data('blockedEmailDeleteModal', () => ({
+  open: false,
+  action: '',
+  email: '',
+  restoreFocusEl: null,
+
+  openFromButton(button) {
+    if (!button || !button.dataset) return;
+
+    const action = button.dataset.deleteAction || '';
+    const email = button.dataset.deleteEmail || '';
+
+    if (!action) return;
+
+    this.openModal(action, email);
+  },
+
+  openFromEvent(event) {
+    const detail = event && event.detail ? event.detail : {};
+    const action = detail.action || '';
+    const email = detail.email || '';
+
+    if (!action) return;
+
+    this.openModal(action, email);
+  },
+
+  openModal(action, email) {
+    this.restoreFocusEl = document.activeElement;
+    this.action = action;
+    this.email = email;
+    this.open = true;
+
+    this.$nextTick(() => {
+      const cancel = this.$refs && this.$refs.cancel ? this.$refs.cancel : null;
+
+      if (cancel && typeof cancel.focus === 'function') {
+        cancel.focus();
+      }
+    });
+  },
+
+  close() {
+    this.open = false;
+    this.action = '';
+    this.email = '';
+
+    const restore = this.restoreFocusEl;
+    this.restoreFocusEl = null;
+
+    if (restore && typeof restore.focus === 'function') {
+      this.$nextTick(() => {
+        try {
+          restore.focus();
+        } catch (e) {}
+      });
+    }
+  },
+}));
+
 Alpine.data('flashMessage', () => ({
   show: true,
 

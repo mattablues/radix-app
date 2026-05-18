@@ -1,0 +1,62 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use Radix\Database\ORM\Model;
+
+/**
+ * @property int $id
+ * @property string $email
+ * @property string|null $reason
+ * @property int|null $created_by_user_id
+ * @property string $created_at
+ * @property string $updated_at
+ * @property-read \App\Models\User|null $createdBy
+ */
+class BlockedEmail extends Model
+{
+    protected string $table = 'blocked_emails';
+    protected string $primaryKey = 'id';
+    public bool $timestamps = true;
+
+    /** @var array<int,string> */
+    protected array $fillable = [
+        'email',
+        'reason',
+        'created_by_user_id',
+    ];
+
+    public function setEmailAttribute(string $value): void
+    {
+        $this->attributes['email'] = mb_strtolower(trim($value));
+    }
+
+    public function getEmailAttribute(?string $value): ?string
+    {
+        return $value ?? null;
+    }
+
+    public function createdBy(): \Radix\Database\ORM\Relationships\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id', 'id');
+    }
+
+    public static function normalizeEmail(string $email): string
+    {
+        return mb_strtolower(trim($email));
+    }
+
+    public static function isBlocked(string $email): bool
+    {
+        $email = self::normalizeEmail($email);
+
+        if ($email === '') {
+            return false;
+        }
+
+        return self::where('email', '=', $email)
+            ->exists();
+    }
+}

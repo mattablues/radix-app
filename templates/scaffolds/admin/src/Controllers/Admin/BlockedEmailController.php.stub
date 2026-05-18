@@ -1,0 +1,151 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers\Admin;
+
+use App\Controllers\Concerns\FormHelpers;
+use App\Models\BlockedEmail;
+use App\Models\SystemEvent;
+use Radix\Controller\AbstractController;
+use Radix\Http\Response;
+use Radix\Session\Session;
+
+class BlockedEmailController extends AbstractController
+{
+    use FormHelpers;
+
+    public function index(): Response
+    {
+        $this->before();
+
+        $rawPage = $this->request->get['page'] ?? 1;
+        $page = is_numeric($rawPage) ? (int) $rawPage : 1;
+
+        $rawQ = $this->request->get['q'] ?? '';
+        $q = is_string($rawQ) ? trim($rawQ) : '';
+
+        if ($q !== '') {
+            $results = BlockedEmail::with('createdBy')
+                ->orderBy('created_at', 'DESC')
+                ->search($q, ['email', 'reason'], 20, $page);
+
+            $blockedEmails = [
+                'data' => $results['data'] ?? [],
+                'pagination' => $results['search'] ?? [
+                    'term' => $q,
+                    'total' => 0,
+                    'per_page' => 20,
+                    'current_page' => $page,
+                    'last_page' => 0,
+                    'first_page' => 1,
+                ],
+            ];
+        } else {
+            $blockedEmails = BlockedEmail::with('createdBy')
+                ->orderBy('created_at', 'DESC')
+                ->paginate(20, $page);
+        }
+
+        return $this->view('admin.blocked-email.index', [
+            'blockedEmails' => $blockedEmails,
+            'q' => $q,
+        ]);
+    }
+
+    public function create(): Response
+    {
+        return $this->view('admin.blocked-email.create', $this->beginForm());
+    }
+
+    public function store(): Response
+    {
+        $this->before();
+
+        $rawEmail = $this->request->post['email'] ?? '';
+        $rawReason = $this->request->post['reason'] ?? null;
+
+        $email = is_string($rawEmail) ? BlockedEmail::normalizeEmail($rawEmail) : '';
+        $reason = is_string($rawReason) ? trim($rawReason) : null;
+
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->request->session()->set('old', [
+                'email' => is_string($rawEmail) ? $rawEmail : '',
+                'reason' => is_string($rawReason) ? $rawReason : '',
+            ]);
+
+            return $this->formErrorView('admin.blocked-email.create', [], [
+                'email' => ['Ange en giltig e-postadress.'],
+            ]);
+        }
+
+        $existing = BlockedEmail::where('email', '=', $email)->first();
+
+        if ($existing instanceof BlockedEmail) {
+            $this->request->session()->set('old', [
+                'email' => $email,
+                'reason' => $reason ?? '',
+            ]);
+
+            return $this->formErrorView('admin.blocked-email.create', [], [
+                'email' => ['E-postadressen finns redan i blocklistan.'],
+            ]);
+        }
+
+        $adminId = $this->request->session()->get(Session::AUTH_KEY);
+
+        $blockedEmail = new BlockedEmail();
+        $blockedEmail->fill([
+            'email' => $email,
+            'reason' => $reason !== '' ? $reason : null,
+            'created_by_user_id' => is_numeric($adminId) ? (int) $adminId : null,
+        ]);
+        $blockedEmail->save();
+
+        SystemEvent::log(
+            message: 'E-postadress lades till i blocklistan: ' . $email,
+            type: 'warning',
+            userId: is_numeric($adminId) ? (int) $adminId : null
+        );
+
+        return $this->formRedirectWithFlash(
+            'admin.blocked-email.index',
+            'E-postadressen har lagts till i blocklistan.',
+            'info'
+        );
+    }
+
+    public function delete(string $id): Response
+    {
+        $this->before();
+
+        $blockedEmail = BlockedEmail::find($id);
+
+        if (!$blockedEmail instanceof BlockedEmail) {
+            return $this->formRedirectWithFlash(
+                'admin.blocked-email.index',
+                'Blockerad e-postadress kunde inte hittas.',
+                'error'
+            );
+        }
+
+        $emailRaw = $blockedEmail->getAttribute('email');
+        $email = is_string($emailRaw) ? $emailRaw : '';
+
+        $blockedEmail->forceDelete();
+
+        $adminId = $this->request->session()->get(Session::AUTH_KEY);
+
+        SystemEvent::log(
+            message: 'E-postadress togs bort från blocklistan: ' . $email,
+            type: 'info',
+            userId: is_numeric($adminId) ? (int) $adminId : null
+        );
+
+        return $this->formRedirectWithFlash(
+            'admin.blocked-email.index',
+            'E-postadressen har tagits bort från blocklistan.',
+            'info'
+        );
+    }
+}
