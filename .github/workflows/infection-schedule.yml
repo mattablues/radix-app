@@ -98,6 +98,7 @@ jobs:
           SESSION_LIFETIME=120
           SESSION_FILE_PATH=./cache/sessions
 
+          SESSION_COOKIE_NAME=radix_session
           SESSION_COOKIE_SECURE=auto
           SESSION_COOKIE_HTTPONLY=true
           SESSION_COOKIE_SAMESITE=Lax
