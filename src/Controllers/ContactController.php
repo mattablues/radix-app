@@ -71,13 +71,7 @@ class ContactController extends AbstractController
                 return false;
             }
 
-            $isBlocked = [$blockedEmailClass, 'isBlocked'];
-
-            if (!is_callable($isBlocked)) {
-                return false;
-            }
-
-            return $isBlocked($email) === true;
+            return $blockedEmailClass::isBlocked($email) === true;
         } catch (Throwable) {
             return false;
         }
