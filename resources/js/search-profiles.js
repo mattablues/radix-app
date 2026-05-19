@@ -4,7 +4,14 @@ export default class SearchProfiles extends Search {
     constructor(searchInputId, mainContentSelector, endpoint) {
         super(searchInputId, mainContentSelector);
         this.endpoint = endpoint || '';
+        this.csrfToken = this.getCsrfToken();
         this.meta = { term: '', total: 0, per_page: 2, current_page: 1, last_page: 0 };
+    }
+
+    getCsrfToken() {
+        return document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content') || '';
     }
 
     async performSearch(term, page = 1) {
@@ -23,7 +30,9 @@ export default class SearchProfiles extends Search {
             const response = await fetch(this.endpoint, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': this.csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
                 },
                 credentials: 'same-origin',
                 body: JSON.stringify({

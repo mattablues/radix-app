@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /** @var \Radix\Routing\Router $router */
 
-$router->group(['middleware' => ['api.throttle']], function (\Radix\Routing\Router $router) {
+$router->group(['middleware' => ['api.throttle', 'csrf']], function (\Radix\Routing\Router $router) {
     $router->get('/users', [\App\Controllers\Api\UserController::class, 'index'])
         ->name('api.users.index');
 

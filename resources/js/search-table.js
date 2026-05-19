@@ -154,6 +154,14 @@ export default class SearchTable {
   }
 
   getCsrfToken() {
+    const metaToken = document
+      .querySelector('meta[name="csrf-token"]')
+      ?.getAttribute('content') || '';
+
+    if (metaToken) {
+      return metaToken;
+    }
+
     return this.form?.querySelector('input[name="csrf_token"]')?.value ?? '';
   }
 
@@ -302,23 +310,27 @@ export default class SearchTable {
   }
 
   async fetchAndRender(term, page, updateUrl, options = {}) {
-      if (!this.endpoint || !this.routeBase) {
-        this.renderError('Sökningen är inte korrekt konfigurerad.');
-        return;
-      }
+    if (!this.endpoint || !this.routeBase) {
+      this.renderError('Sökningen är inte korrekt konfigurerad.');
+      return;
+    }
 
-      if (this._abort) {
-        this._abort.abort();
-      }
+    if (this._abort) {
+      this._abort.abort();
+    }
 
-      this._abort = new AbortController();
+    this._abort = new AbortController();
 
-      this.showLoading(options.keepRowsWhileLoading ?? false);
+    this.showLoading(options.keepRowsWhileLoading ?? false);
 
-      try {
-        const res = await fetch(this.endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+    try {
+      const res = await fetch(this.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': this.csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
         credentials: 'same-origin',
         signal: this._abort.signal,
         body: JSON.stringify({

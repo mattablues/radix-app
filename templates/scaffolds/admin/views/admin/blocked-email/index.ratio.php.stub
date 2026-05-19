@@ -26,8 +26,6 @@
       data-route-base="{{ route('admin.blocked-email.index') }}"
       data-per-page="{{ $blockedEmails['pagination']['per_page'] ?? 20 }}"
     >
-      {{ csrf_field()|raw }}
-
       <div class="flex gap-2 items-center">
         <input
           id="blocked-emails-search"

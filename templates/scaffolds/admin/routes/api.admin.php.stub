@@ -8,7 +8,7 @@ $router->get('/health', [\App\Controllers\Api\HealthController::class, 'index'])
     ->name('api.health.index')
     ->middleware(['ip.allowlist']);
 
-$router->group(['path' => '/admin'], function (\Radix\Routing\Router $router) {
+$router->group(['path' => '/admin', 'middleware' => ['api.throttle', 'csrf']], function (\Radix\Routing\Router $router) {
     $router->post('/search/system-events', [\App\Controllers\Api\Admin\SystemEventsController::class, 'search'])
         ->name('api.search.system-events')
         ->middleware(['role.min.moderator']);
