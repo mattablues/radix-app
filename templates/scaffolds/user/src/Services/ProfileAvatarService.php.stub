@@ -8,6 +8,8 @@ use App\Models\User;
 
 final readonly class ProfileAvatarService
 {
+    private const string DEFAULT_AVATAR = '/assets/images/graphics/avatar.png';
+
     public function __construct(private UploadService $uploadService) {}
 
     /**
@@ -20,11 +22,11 @@ final readonly class ProfileAvatarService
             return;
         }
 
-        $uploadDirectory = ROOT_PATH . "/public/images/user/$userId/";
+        $uploadDirectory = ROOT_PATH . "/public/uploads/users/$userId/";
 
-        if ($user->avatar !== '/images/graphics/avatar.png') {
-            $oldAvatarPath = ROOT_PATH . $user->avatar;
-            if (file_exists($oldAvatarPath)) {
+        if ($user->avatar !== self::DEFAULT_AVATAR) {
+            $oldAvatarPath = ROOT_PATH . '/public' . $user->avatar;
+            if (is_file($oldAvatarPath)) {
                 unlink($oldAvatarPath);
             }
         }

@@ -7,10 +7,10 @@
     "test": "tests"
   },
   "scripts": {
-    "watch:tailwind": "npx rimraf public/css/app.css && npx @tailwindcss/cli -i resources/tailwind/index.css -o public/css/app.css --watch && npx touch public/css/app.css",
-    "watch:alpinejs": "npx rimraf public/js/app.js && npx esbuild resources/js/index.js --outfile=public/js/app.js --bundle --watch && npx touch public/js/app.js",
-    "build:css": "npx @tailwindcss/cli -i resources/tailwind/index.css -o public/css/app.css --optimize --minify",
-    "build:js": "npx esbuild resources/js/index.js --outfile=public/js/app.js --bundle --minify --target=es2020",
+    "watch:tailwind": "npx rimraf public/assets/css/app.css && npx @tailwindcss/cli -i resources/tailwind/index.css -o public/assets/css/app.css --watch",
+    "watch:alpinejs": "npx rimraf public/assets/js/app.js && npx esbuild resources/js/index.js --outfile=public/assets/js/app.js --bundle --watch",
+    "build:css": "npx @tailwindcss/cli -i resources/tailwind/index.css -o public/assets/css/app.css --optimize --minify",
+    "build:js": "npx esbuild resources/js/index.js --outfile=public/assets/js/app.js --bundle --minify --target=es2020",
     "start:dev": "npm-run-all --parallel watch:tailwind watch:alpinejs",
     "start:build": "npm-run-all build:js build:css",
     "toc": "doctoc README.md --maxlevel 3"

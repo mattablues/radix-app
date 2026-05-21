@@ -64,7 +64,7 @@ class SearchController extends ApiController
                 $avatarRaw = $arr['avatar'] ?? null;
                 $path = is_string($avatarRaw) && $avatarRaw !== ''
                     ? $avatarRaw
-                    : '/images/graphics/avatar.png';
+                    : '/assets/images/graphics/avatar.png';
 
                 $idRaw = $user->getAttribute('id');
                 $id = (is_int($idRaw) || is_string($idRaw)) ? (string) $idRaw : '';

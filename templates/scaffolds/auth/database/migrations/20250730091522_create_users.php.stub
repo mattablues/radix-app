@@ -14,7 +14,7 @@ return new class {
             $table->string('last_name', 128);
             $table->string('email');
             $table->string('password');
-            $table->string('avatar', options: ['default' => '/images/graphics/avatar.png']);
+            $table->string('avatar', options: ['default' => '/assets/images/graphics/avatar.png']);
             $table->enum('role', ['user', 'support', 'editor', 'moderator', 'admin'], ['default' => 'user']);
             $table->timestamps();
             $table->softDeletes();

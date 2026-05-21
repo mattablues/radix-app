@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>413 - Begäran för stor | Radix</title>
-  <link rel="stylesheet" href="<?= versioned_file('/css/app.css') ?>">
-  <link rel="icon" type="image/png" href="/favicons/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="/favicons/favicon.svg" />
-  <link rel="shortcut icon" href="/favicons/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="<?= versioned_file('/assets/css/app.css'); ?>">
+  <link rel="icon" type="image/png" href="/assets/favicons/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicons/favicon.svg" />
+  <link rel="shortcut icon" href="/assets/favicons/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-title" content="Radix" />
-  <link rel="manifest" href="/favicons/site.webmanifest" />
+  <link rel="manifest" href="/assets/favicons/site.webmanifest" />
 </head>
 <body class="bg-slate-50 text-slate-600 antialiased min-h-screen flex flex-col font-sans">
 
@@ -76,6 +76,5 @@
         &copy; <?= copyright((string) getenv('APP_COPY'), (string) getenv('APP_COPY_YEAR')); ?> | Radix Core
     </p>
   </footer>
-
 </body>
 </html>

@@ -38,7 +38,7 @@ Om du kör CSP som kräver `nonce` på scripts behöver dina script-taggar ha et
 I templates kan det se ut så här:
 
 ```html
-<script nonce="{{ secure_output(csp_nonce(), true) }}" src="{{ versioned_file('/js/app.js') }}"></script>
+<script nonce="{{ secure_output(csp_nonce(), true) }}" src="{{ versioned_file('/assets/js/app.js') }}"></script>
 ```
 
 För mer om asset-versionering, se:

@@ -38,7 +38,7 @@
                 <tr>
                   <td style="padding-right: 16px; vertical-align: middle;">
                     <img
-                      src="{{ getenv('APP_URL') }}/images/graphics/logo-email.png"
+                      src="{{ getenv('APP_URL') }}/assets/images/graphics/logo-email.png"
                       alt="Radix"
                       width="34"
                       height="34"

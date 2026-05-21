@@ -4,9 +4,13 @@
 .env.bak
 
 # Byggade assets
-public/css/app.css
-public/js/app.js
-public/images/user/
+public/assets/css/app.css
+public/assets/js/app.js
+
+# Uploaded/user-generated files
+public/uploads/*
+!public/uploads/.htaccess
+!public/uploads/.gitkeep
 
 # Dependencies
 vendor/

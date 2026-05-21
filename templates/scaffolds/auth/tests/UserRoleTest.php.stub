@@ -35,7 +35,7 @@ class UserRoleTest extends TestCase
                 last_name TEXT NOT NULL,
                 email TEXT NOT NULL UNIQUE,
                 password TEXT NOT NULL,
-                avatar TEXT NOT NULL DEFAULT '/images/graphics/avatar.png',
+                avatar TEXT NOT NULL DEFAULT '/assets/images/graphics/avatar.png',
                 role TEXT NOT NULL DEFAULT 'user',
                 created_at TEXT NULL,
                 updated_at TEXT NULL,
@@ -71,7 +71,7 @@ class UserRoleTest extends TestCase
             ':last_name'  => 'User',
             ':email'      => $email,
             ':password'   => password_hash('secret123', PASSWORD_DEFAULT),
-            ':avatar'     => '/images/graphics/avatar.png',
+            ':avatar'     => '/assets/images/graphics/avatar.png',
             ':role'       => $role,
         ]);
         $id = (int) $pdo->lastInsertId();
@@ -85,7 +85,7 @@ class UserRoleTest extends TestCase
             'first_name' => 'Test',
             'last_name' => 'User',
             'email' => $email,
-            'avatar' => '/images/graphics/avatar.png',
+            'avatar' => '/assets/images/graphics/avatar.png',
             'password' => password_hash('secret123', PASSWORD_DEFAULT),
         ]);
 
