@@ -382,7 +382,7 @@ class UserController extends AbstractController
             ]);
         }
 
-        $userDirectory = ROOT_PATH . '/public/images/user/' . $user->id;
+        $userDirectory = ROOT_PATH . '/public/uploads/users/' . $user->id;
 
         if (is_dir($userDirectory)) {
             $files = array_diff(scandir($userDirectory), ['.', '..']);

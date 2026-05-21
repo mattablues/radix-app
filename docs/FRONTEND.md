@@ -172,8 +172,8 @@ För att undvika cache-problem i webbläsaren vid deployment, använd hjälparen
 Den lägger till en tidshash baserat på filens senaste ändring.
 
 ```html
-<link rel="stylesheet" href="{{ versioned_file('/css/app.css') }}">
-<script src="{{ versioned_file('/js/app.js') }}"></script>
+<link rel="stylesheet" href="{{ versioned_file('/assets/css/app.css') }}">
+<script src="{{ versioned_file('/assets/js/app.js') }}"></script>
 ```
 
 ### Om du använder CSP med `nonce`
@@ -181,7 +181,7 @@ Den lägger till en tidshash baserat på filens senaste ändring.
 Om din Content Security Policy kräver `nonce` på inline/script-taggar, använd nonce-attributet på script-taggen:
 
 ```html
-<script nonce="{{ secure_output(csp_nonce(), true) }}" src="{{ versioned_file('/js/app.js') }}"></script>
+<script nonce="{{ secure_output(csp_nonce(), true) }}" src="{{ versioned_file('/assets/js/app.js') }}"></script>
 ```
 
 > Obs: `nonce` behövs bara om du har CSP aktiverat och policyn kräver det för script.

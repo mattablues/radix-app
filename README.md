@@ -13,6 +13,7 @@ Själva ramverket lever som ett separat Composer-paket: `mattablues/radix-framew
 
 - [Översikt](#översikt)
 - [Installation](#installation)
+- [Public assets och uploads](#public-assets-och-uploads)
 - [Dokumentation](#dokumentation)
 - [CLI (radix)](#cli-radix)
 - [Scaffolds (lägga till funktionalitet)](#scaffolds-lägga-till-funktionalitet)
@@ -48,6 +49,74 @@ Grundsetup:
 
 ```bash
 php radix app:setup
+```
+
+## Public assets och uploads
+
+Radix App använder en rekommenderad standardstruktur för publika assets och användaruppladdningar:
+
+```text
+public/
+  assets/
+    css/
+    js/
+    images/
+      graphics/
+    favicons/
+  uploads/
+```
+
+`public/assets` innehåller appens betrodda frontend-assets, till exempel CSS, JavaScript, favicons, logotyper och statisk grafik.
+
+`public/uploads` är reserverad för användargenererade filer. Den katalogen har striktare `.htaccess`-regler och ska inte användas för appens egna SVG-, JS- eller CSS-filer.
+
+Exempel på app-assets:
+
+```php
+versioned_file('/assets/css/app.css');
+versioned_file('/assets/js/app.js');
+versioned_file('/assets/images/graphics/avatar.png');
+```
+
+Uppladdade avatarer sparas som exempelvis:
+
+```text
+public/uploads/users/1/avatar.jpg
+```
+
+och lagras normalt i databasen som publik path:
+
+```text
+/uploads/users/1/avatar.jpg
+```
+
+Default-avatar i Radix App ligger som app-asset:
+
+```text
+public/assets/images/graphics/avatar.png
+```
+
+med publik path:
+
+```text
+/assets/images/graphics/avatar.png
+```
+
+Denna struktur är en **Radix App-konvention**. Om du använder `mattablues/radix-framework` utan `radix-app` kan du själv välja asset- och upload-struktur. Frameworkets `versioned_file()` är generell och stödjer flera vanliga publika asset-kataloger, till exempel:
+
+```text
+/assets
+/build
+/dist
+/css
+/js
+```
+
+Det innebär:
+
+```text
+radix-app       = färdig rekommenderad struktur
+radix-framework = flexibel grund där utvecklaren väljer själv
 ```
 
 ## Dokumentation

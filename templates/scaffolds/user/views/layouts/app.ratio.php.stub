@@ -6,13 +6,13 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <meta name="csrf-token" content="{{ secure_output($session->csrf()) }}">
   <title>{% yield title %}</title>
-  <link rel="stylesheet" href="{{ versioned_file('/css/app.css') }}">
-  <link rel="icon" type="image/png" href="/favicons/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="/favicons/favicon.svg" />
-  <link rel="shortcut icon" href="/favicons/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="{{ versioned_file('/assets/css/app.css') }}">
+  <link rel="icon" type="image/png" href="/assets/favicons/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicons/favicon.svg" />
+  <link rel="shortcut icon" href="/assets/favicons/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-title" content="Radix" />
-  <link rel="manifest" href="/favicons/site.webmanifest" />
+  <link rel="manifest" href="/assets/favicons/site.webmanifest" />
 </head>
 <body
   x-data
@@ -57,7 +57,7 @@
           <!-- Namn + avatar -->
           <a href="{{ route('user.index') }}" class="hidden sm:flex items-center text-gray-300 hover:text-white gap-3 transition-all duration-300 group">
             <span class="text-sm font-bold border-r border-gray-700 pr-3 py-1">{{ $currentUser->getAttribute('first_name') }} {{ $currentUser->getAttribute('last_name') }}</span>
-            <img src="{{ versioned_file($currentUser->getAttribute('avatar'), '/images/graphics/avatar.png') }}" alt="Avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-gray-800 group-hover:ring-indigo-500 transition-all shadow-sm">
+            <img src="{{ versioned_file($currentUser->getAttribute('avatar'), '/assets/images/graphics/avatar.png') }}" alt="Avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-gray-800 group-hover:ring-indigo-500 transition-all shadow-sm">
           </a>
 
           <!-- Hamburger -->
@@ -333,6 +333,6 @@
 
   {% include "components/cookie-consent.ratio.php" %}
   {% yield alpinejs %}
-  <script nonce="{{ secure_output(csp_nonce(), true) }}" src="{{ versioned_file('/js/app.js') }}"></script>
+  <script nonce="{{ secure_output(csp_nonce(), true) }}" src="{{ versioned_file('/assets/js/app.js') }}"></script>
 </body>
 </html>
