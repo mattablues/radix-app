@@ -1,4 +1,4 @@
-    <div class="alert alert-{{ $type }} {{ $class ?? '' }}" style="{{ $style ?? '' }}">
+    <div class="alert alert-{{ $type }} {{ $class ?? '' }}">
     {% if(isset($header)) : %}
       <div class="alert-header {{ $headerClass ?? '' }}">
         <h3 class="text-2xl">{{ $header }}</h3>

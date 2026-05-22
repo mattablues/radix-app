@@ -5,7 +5,7 @@ declare(strict_types=1);
 /** @var \Radix\Routing\Router $router */
 
 
-$router->group(['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.web', 'csrf']], function () use ($router) {
+$router->group(['middleware' => ['canonical.url', 'request.id', 'api.logger', 'security.headers', 'limit.web', 'csrf']], function () use ($router) {
     $router->get(
         '/changelog',
         [

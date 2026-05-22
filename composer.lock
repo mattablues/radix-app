@@ -83,16 +83,16 @@
         },
         {
             "name": "mattablues/radix-framework",
-            "version": "v1.2.4",
+            "version": "v1.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mattablues/radix-framework.git",
-                "reference": "906785f019fe31ac4df5e062b5ecfa8643da309f"
+                "reference": "c9de5be2207ac3c8470e8b423c12c89976b72968"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/906785f019fe31ac4df5e062b5ecfa8643da309f",
-                "reference": "906785f019fe31ac4df5e062b5ecfa8643da309f",
+                "url": "https://api.github.com/repos/mattablues/radix-framework/zipball/c9de5be2207ac3c8470e8b423c12c89976b72968",
+                "reference": "c9de5be2207ac3c8470e8b423c12c89976b72968",
                 "shasum": ""
             },
             "require": {
@@ -100,6 +100,7 @@
                 "ext-fileinfo": "*",
                 "ext-gd": "*",
                 "ext-libxml": "*",
+                "ext-openssl": "*",
                 "ext-pdo": "*",
                 "php": "^8.3",
                 "psr/container": "^2.0",
@@ -127,9 +128,9 @@
             "description": "Radix Framework",
             "support": {
                 "issues": "https://github.com/mattablues/radix-framework/issues",
-                "source": "https://github.com/mattablues/radix-framework/tree/v1.2.4"
+                "source": "https://github.com/mattablues/radix-framework/tree/v1.2.5"
             },
-            "time": "2026-05-21T11:19:38+00:00"
+            "time": "2026-05-22T17:38:53+00:00"
         },
         {
             "name": "phpmailer/phpmailer",

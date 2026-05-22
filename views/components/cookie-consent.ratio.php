@@ -2,6 +2,7 @@
     x-data="cookieConsent"
     x-init="init()"
     x-show="showCookieBanner"
+    x-cloak
     x-transition:enter="transition ease-out duration-500"
     x-transition:enter-start="translate-y-full opacity-0"
     x-transition:enter-end="translate-y-0 opacity-100"
@@ -9,7 +10,6 @@
     x-transition:leave-start="translate-y-0 opacity-100"
     x-transition:leave-end="translate-y-full opacity-0"
     class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-2xl z-[100]"
-    style="display: none;"
 >
     <div class="bg-slate-900/95 backdrop-blur-md border border-white/10 p-5 md:p-6 rounded-3xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div class="flex items-start gap-4">

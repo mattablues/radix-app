@@ -81,8 +81,6 @@ Alpine.data('tooltip', (opts = {}) => ({
   maxWidthPx: Number(opts.maxWidthPx || 320),
   offsetPx: Number(opts.offsetPx || 10),
 
-  panelStyle: '',
-
   // Intern state
   _closeTimer: null,
 
@@ -93,20 +91,10 @@ Alpine.data('tooltip', (opts = {}) => ({
     if (!opts.content && ds.tooltipContent) this.content = ds.tooltipContent;
     if (!opts.maxWidthPx && ds.tooltipMaxWidthPx) this.maxWidthPx = Number(ds.tooltipMaxWidthPx) || this.maxWidthPx;
     if (!opts.offsetPx && ds.tooltipOffsetPx) this.offsetPx = Number(ds.tooltipOffsetPx) || this.offsetPx;
-
-    const onRelayout = () => { if (this.open) this.updatePosition(); };
-    window.addEventListener('scroll', onRelayout, { passive: true });
-    window.addEventListener('resize', onRelayout);
-
-    this.$cleanup = () => {
-      window.removeEventListener('scroll', onRelayout);
-      window.removeEventListener('resize', onRelayout);
-      window.clearTimeout(this._closeTimer);
-    };
   },
 
   destroy() {
-    if (typeof this.$cleanup === 'function') this.$cleanup();
+    window.clearTimeout(this._closeTimer);
   },
 
   isHoverCapable() {
@@ -115,7 +103,6 @@ Alpine.data('tooltip', (opts = {}) => ({
 
   show() {
     this.open = true;
-    this.$nextTick(() => this.updatePosition());
   },
 
   hide() {
@@ -160,47 +147,7 @@ Alpine.data('tooltip', (opts = {}) => ({
   },
 
   updatePosition() {
-    const trigger = this.$refs.trigger;
-    const panel = this.$refs.panel;
-    if (!trigger || !panel) return;
-
-    const vw = window.innerWidth || document.documentElement.clientWidth;
-    const vh = window.innerHeight || document.documentElement.clientHeight;
-
-    const effectiveMaxWidth = Math.max(200, Math.min(this.maxWidthPx, vw - 16));
-    panel.style.maxWidth = effectiveMaxWidth + 'px';
-
-    const t = trigger.getBoundingClientRect();
-
-    const prevDisplay = panel.style.display;
-    const prevVisibility = panel.style.visibility;
-    panel.style.display = 'block';
-    panel.style.visibility = 'hidden';
-
-    const p = panel.getBoundingClientRect();
-
-    panel.style.display = prevDisplay;
-    panel.style.visibility = prevVisibility;
-
-    const spaceAbove = t.top;
-    const spaceBelow = vh - t.bottom;
-
-    const isMobile = vw < 768;
-
-    const placeAboveDesktopRule =
-      spaceAbove >= (p.height + this.offsetPx) || spaceAbove >= spaceBelow;
-
-    // Mobil: föredra under. Desktop: föredra över men flippar vid behov.
-    const placeAbove = isMobile ? false : placeAboveDesktopRule;
-
-    let top;
-    if (placeAbove) top = Math.max(8, t.top - p.height - this.offsetPx);
-    else top = Math.min(vh - p.height - 8, t.bottom + this.offsetPx);
-
-    const idealLeft = t.left + (t.width / 2) - (p.width / 2);
-    const left = Math.min(Math.max(8, idealLeft), vw - p.width - 8);
-
-    this.panelStyle = `position:fixed; top:${top}px; left:${left}px; width:${Math.min(p.width, effectiveMaxWidth)}px;`;
+    // CSP-safe placeholder. Placering bör hanteras med CSS-klasser i vyn.
   },
 }));
 
@@ -260,8 +207,7 @@ Alpine.data('apiTokenCopy', (token) => ({
         const el = document.createElement('textarea');
         el.value = value;
         el.setAttribute('readonly', '');
-        el.style.position = 'absolute';
-        el.style.left = '-9999px';
+        el.classList.add('js-offscreen-copy');
         document.body.appendChild(el);
         el.select();
         document.execCommand('copy');
@@ -269,6 +215,7 @@ Alpine.data('apiTokenCopy', (token) => ({
       }
 
       this.copied = true;
+
       window.setTimeout(() => { this.copied = false; }, 2000);
     } catch (e) {
       this.copied = false;

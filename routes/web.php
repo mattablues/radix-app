@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 // Global grupp för web med request-id + logging
 
-$router->group(['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.web', 'csrf']], function () use ($router) {
+$router->group(['middleware' => ['canonical.url', 'request.id', 'api.logger', 'security.headers', 'limit.web', 'csrf']], function () use ($router) {
     $router->get('/', [
         \App\Controllers\HomeController::class, 'index',
     ])->name('home.index');

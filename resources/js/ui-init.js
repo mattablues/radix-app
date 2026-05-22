@@ -16,14 +16,9 @@ export function initHeaderSearch() {
     return;
   }
 
-  const open = () => {
+const open = () => {
     wrap.classList.remove('hidden');
-    wrap.style.position = 'absolute';
-    wrap.style.left = '0';
-    wrap.style.right = '0';
-    wrap.style.top = '100%';
-    wrap.style.marginTop = '0.5rem';
-    wrap.style.zIndex = '70';
+    wrap.classList.add('js-absolute-fill-below');
 
     window.setTimeout(() => {
       if (searchProfileInput) {
@@ -34,7 +29,7 @@ export function initHeaderSearch() {
 
   const close = () => {
     wrap.classList.add('hidden');
-    wrap.removeAttribute('style');
+    wrap.classList.remove('js-absolute-fill-below');
 
     if (searchProfileInput) {
       searchProfileInput.value = '';

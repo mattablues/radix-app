@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 return [
     // Sätt säkra headers och nonce först
+    'canonical.url' => \Radix\Middleware\Middlewares\CanonicalUrl::class,
     'security.headers' => \Radix\Middleware\Middlewares\SecurityHeaders::class,
     'limit.2mb' => \Radix\Middleware\Middlewares\LimitRequestSize::class,
     'limit.web' => \App\Middlewares\LimitRequestSizeWebAware::class,

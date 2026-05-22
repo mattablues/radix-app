@@ -275,14 +275,12 @@
     </div>
 
     <!-- Logout -->
-    <div class="pt-4 mt-auto border-t border-gray-800 pb-8"
-         style="padding-bottom: calc(2rem + env(safe-area-inset-bottom));">
+    <div class="pt-4 mt-auto border-t border-gray-800 pb-8 pb-safe-bottom">
       <form action="{{ route('auth.logout.index') }}" method="post" data-logout-form>
         {{ csrf_field()|raw }}
         <button
           type="submit"
-          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all cursor-pointer group touch-manipulation select-none"
-          style="-webkit-touch-callout:none; -webkit-user-select:none; user-select:none;"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all cursor-pointer group no-touch-callout"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:translate-x-1 transition-transform pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

@@ -58,21 +58,26 @@ export default class Search {
             this.showDropdown();
             return;
         }
+
         let loadingIndicator = this.mainContent.querySelector('.loading-indicator');
+
         if (!loadingIndicator) {
             loadingIndicator = document.createElement('p');
             loadingIndicator.classList.add('loading-indicator', 'text-slate-500');
             loadingIndicator.innerText = 'Laddar...';
             this.mainContent.appendChild(loadingIndicator);
         }
-        loadingIndicator.style.display = 'block';
+
+        loadingIndicator.classList.remove('hidden');
     }
 
     hideLoading() {
         if (this.resultContainer) return; // inget separat loading-element i dropdown
+
         const loadingIndicator = this.mainContent.querySelector('.loading-indicator');
+
         if (loadingIndicator) {
-            loadingIndicator.style.display = 'none';
+            loadingIndicator.classList.add('hidden');
         }
     }
 
@@ -119,7 +124,7 @@ export default class Search {
         const bottomRow = document.createElement('div');
         bottomRow.className = 'flex items-center justify-center gap-1.5';
 
-        const baseBtnCls = 'h-6 min-w-6 px-1.5 py-0.5 text-xs rounded border flex items-center justify-center transition-colors';
+        const baseBtnCls = 'h-6 min-w-6 px-1.5 py-0.5 text-xs rounded border flex items-center justify-center transition-colors leading-none';
         const activeCls = 'text-emerald-700 border-emerald-200 hover:bg-emerald-50';
         const disabledCls = 'text-slate-300 border-slate-200 cursor-not-allowed';
 
@@ -135,10 +140,11 @@ export default class Search {
             btn.type = 'button';
             btn.className = `${baseBtnCls} ${disabled ? disabledCls : activeCls}`;
             btn.innerHTML = svg;
+
             if (title) btn.title = title;
+
             btn.setAttribute('aria-label', title || 'Navigera');
-            // Se till att ikonen inte växer
-            btn.style.lineHeight = '1';
+
             if (!disabled) {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -148,21 +154,24 @@ export default class Search {
             } else {
                 btn.disabled = true;
             }
+
             return btn;
         };
 
         const makePageBtn = (p, isActive = false, isEllipsis = false) => {
             const el = document.createElement('button');
             el.type = 'button';
+
             if (isEllipsis) {
                 el.className = `${baseBtnCls} text-slate-400 border-slate-200`;
                 el.textContent = '…';
                 el.disabled = true;
                 return el;
             }
+
             el.className = `${baseBtnCls} ${isActive ? 'bg-emerald-600 text-white border-emerald-600' : activeCls}`;
             el.textContent = String(p);
-            el.style.lineHeight = '1';
+
             if (!isActive) {
                 el.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -172,6 +181,7 @@ export default class Search {
             } else {
                 el.setAttribute('aria-current', 'page');
             }
+
             return el;
         };
 
