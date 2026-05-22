@@ -14,6 +14,51 @@
     display: none !important;
   }
 
+  .pb-safe-bottom {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+  }
+
+  .no-touch-callout {
+    -webkit-touch-callout: none;
+  }
+
+  .leading-none {
+    line-height: 1;
+  }
+
+  .js-absolute-fill-below {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    margin-top: 0.5rem;
+    z-index: 70;
+  }
+
+  .js-offscreen-copy {
+    position: absolute;
+    left: -9999px;
+  }
+
+  .pb-safe-bottom {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+  }
+
+
+  .js-measure-hidden {
+    display: block;
+    visibility: hidden;
+  }
+
+  .js-offscreen-measure {
+    position: absolute;
+    left: -9999px;
+  }
+
+  .js-min-height-transition {
+    transition: min-height 150ms ease;
+  }
+
   .text-xxs {
     font-size: var(--text-xxs);
     line-height: var(--text-xxs--line-height);

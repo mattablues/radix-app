@@ -13,6 +13,7 @@ Själva ramverket lever som ett separat Composer-paket: `mattablues/radix-framew
 
 - [Översikt](#översikt)
 - [Installation](#installation)
+- [Webroot och .htaccess](#webroot-och-htaccess)
 - [Public assets och uploads](#public-assets-och-uploads)
 - [Dokumentation](#dokumentation)
 - [CLI (radix)](#cli-radix)
@@ -50,6 +51,14 @@ Grundsetup:
 ```bash
 php radix app:setup
 ```
+
+## Webroot och .htaccess
+
+Rekommenderat är att peka serverns document root till `public/`.
+
+För enklare webbhotell där document root inte kan ändras finns en `.htaccess` i projektroten som internt skickar requests vidare till `public/`.
+
+Det finns även en `public/.htaccess` som hanterar webbroot-specifika Apache-regler, till exempel routing till `index.php`, skydd av dolda filer och cache headers.
 
 ## Public assets och uploads
 

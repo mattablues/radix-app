@@ -138,36 +138,72 @@
   }
 }
 
-/* Hjälpklasser bundna till variablerna (så du kan återanvända och byta färger centralt) */
-.pager-base {
-  background-color: var(--pagination-bg);
-  color: var(--pagination-text);
-  border-color: var(--pagination-border);
-}
+@layer components {
+  .radix-pagination {
+    @apply flex justify-center;
+  }
 
-.pager-base,
-.pager-active,
-.pager-disabled,
-.pager-ellipsis {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
+  .radix-pagination--mobile {
+    @apply md:hidden w-full overflow-x-auto pb-2 snap-x;
+  }
 
-.pager-hover:hover {
-  background-color: var(--pagination-hover-bg);
-}
+  .radix-pagination--desktop {
+    @apply hidden md:flex;
+  }
 
-.pager-active {
-  background-color: var(--pagination-active-bg);
-  color: var(--pagination-active-text);
-  border-color: var(--pagination-active-border);
-}
+  .radix-pagination__inner {
+    @apply flex min-w-fit shrink-0 items-center justify-center gap-1.5 px-2 text-sm;
+  }
 
-.pager-disabled {
-  color: var(--pagination-disabled-text);
-  border-color: var(--pagination-disabled-border);
-}
+  .radix-pagination--desktop .radix-pagination__inner {
+    @apply px-0;
+  }
 
-.pager-ellipsis {
-  color: var(--pagination-ellipsis-text);
+  .radix-pagination__link {
+    @apply h-7 min-w-7 px-2 py-1 inline-flex items-center justify-center align-middle border rounded text-sm leading-none transition-colors;
+    background-color: var(--pagination-bg);
+    color: var(--pagination-text);
+    border-color: var(--pagination-border);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .radix-pagination__link:not(.radix-pagination__link--active):not(.radix-pagination__link--disabled):hover {
+    background-color: var(--pagination-hover-bg);
+  }
+
+  .radix-pagination__link--active {
+    background-color: var(--pagination-active-bg);
+    color: var(--pagination-active-text);
+    border-color: var(--pagination-active-border);
+  }
+
+  .radix-pagination__link--disabled {
+    color: var(--pagination-disabled-text);
+    border-color: var(--pagination-disabled-border);
+  }
+
+  .radix-pagination__link--active,
+  .radix-pagination__link--disabled {
+    @apply pointer-events-none;
+  }
+
+  .radix-pagination__link--first {
+    @apply rounded-l-lg;
+  }
+
+  .radix-pagination__link--last {
+    @apply rounded-r-lg;
+  }
+
+  .radix-pagination__ellipsis {
+    @apply h-6 min-w-6 px-1.5 py-0.5 inline-flex items-center justify-center align-middle leading-none;
+    color: var(--pagination-ellipsis-text);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .radix-honeypot {
+    @apply hidden;
+  }
 }

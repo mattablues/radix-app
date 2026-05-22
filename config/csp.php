@@ -14,10 +14,10 @@ if ($isDev) {
 return [
     'csp' => [
         'web' => [
-            'default-src' => ["'self'"],
+            'default-src' => ["'none'"],
             'base-uri' => ["'self'"],
             'object-src' => ["'none'"],
-            'style-src' => ["'self'", "'unsafe-inline'"],
+            'style-src' => ["'self'"],
             'script-src' => [
                 "'self'",
                 function (): string {
@@ -27,6 +27,7 @@ return [
             'img-src' => ["'self'", 'data:'],
             'font-src' => ["'self'", 'data:'],
             'connect-src' => $connectSrc,
+            'manifest-src' => ["'self'"],
             'frame-ancestors' => ["'none'"],
             'form-action' => ["'self'"],
         ],

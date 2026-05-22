@@ -1,6 +1,14 @@
+# Fallback för webbhotell där document root inte kan sättas till public/.
+# Om din server redan pekar document root till public/ används normalt public/.htaccess istället.
+
 # Aktivera RewriteEngine
 RewriteEngine On
 
-# Endast omdirigera om inte redan i /public
+# Tvinga HTTP till HTTPS på samma host först, utom lokalt.
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1|.*\.test|.*\.local)(:[0-9]+)?$ [NC]
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# Skicka alla requests internt till public/
 RewriteCond %{REQUEST_URI} !^/public/
 RewriteRule ^(.*)$ public/$1 [L]

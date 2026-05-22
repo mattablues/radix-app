@@ -409,7 +409,7 @@ export default class SearchTable {
     }
   }
 
-  renderPager(meta, term) {
+    renderPager(meta, term) {
     const total = meta.total ?? 0;
     const perPage = meta.per_page ?? this.perPage;
     const current = meta.current_page ?? 1;
@@ -437,25 +437,25 @@ export default class SearchTable {
     };
 
     const btnCls = (disabled, active) => {
-      const base = 'h-7 min-w-7 px-2 py-1 inline-flex items-center justify-center align-middle border rounded text-sm';
+      const base = 'radix-pagination__link';
 
       if (active) {
-        return `${base} pager-active`;
+        return `${base} radix-pagination__link--active`;
       }
 
       if (disabled) {
-        return `${base} pager-disabled`;
+        return `${base} radix-pagination__link--disabled`;
       }
 
-      return `${base} pager-base pager-hover`;
+      return base;
     };
 
     const makePageBtn = (p, isActive) => {
       if (isActive) {
-        return `<span class="${btnCls(false, true)}" aria-current="page" style="line-height:1">${p}</span>`;
+        return `<span class="${btnCls(false, true)}" aria-current="page">${p}</span>`;
       }
 
-      return `<a href="${mkUrl(p)}" class="${btnCls(false, false)}" style="line-height:1">${p}</a>`;
+      return `<a href="${mkUrl(p)}" class="${btnCls(false, false)}">${p}</a>`;
     };
 
     const interval = 2;
@@ -515,50 +515,45 @@ export default class SearchTable {
     };
 
     const first = firstDisabled
-      ? `<span class="${btnCls(true, false)} rounded-l-lg" aria-hidden="true" style="line-height:1">${icon('chevrons-left')}</span>`
-      : `<a href="${mkUrl(1)}" class="${btnCls(false, false)} rounded-l-lg" aria-label="Gå till första sidan" style="line-height:1">${icon('chevrons-left')}</a>`;
+      ? `<span class="${btnCls(true, false)} radix-pagination__link--first" aria-hidden="true">${icon('chevrons-left')}</span>`
+      : `<a href="${mkUrl(1)}" class="${btnCls(false, false)} radix-pagination__link--first" aria-label="Gå till första sidan">${icon('chevrons-left')}</a>`;
 
     const prev = prevDisabled
-      ? `<span class="${btnCls(true, false)}" aria-hidden="true" style="line-height:1">${icon('chevron-left')}</span>`
-      : `<a href="${mkUrl(current - 1)}" class="${btnCls(false, false)}" aria-label="Föregående sida" style="line-height:1">${icon('chevron-left')}</a>`;
+      ? `<span class="${btnCls(true, false)} radix-pagination__link--previous" aria-hidden="true">${icon('chevron-left')}</span>`
+      : `<a href="${mkUrl(current - 1)}" class="${btnCls(false, false)} radix-pagination__link--previous" aria-label="Föregående sida">${icon('chevron-left')}</a>`;
 
     const next = nextDisabled
-      ? `<span class="${btnCls(true, false)}" aria-hidden="true" style="line-height:1">${icon('chevron-right')}</span>`
-      : `<a href="${mkUrl(current + 1)}" class="${btnCls(false, false)}" aria-label="Nästa sida" style="line-height:1">${icon('chevron-right')}</a>`;
+      ? `<span class="${btnCls(true, false)} radix-pagination__link--next" aria-hidden="true">${icon('chevron-right')}</span>`
+      : `<a href="${mkUrl(current + 1)}" class="${btnCls(false, false)} radix-pagination__link--next" aria-label="Nästa sida">${icon('chevron-right')}</a>`;
 
     const lastBtn = lastDisabled
-      ? `<span class="${btnCls(true, false)} rounded-r-lg" aria-hidden="true" style="line-height:1">${icon('chevrons-right')}</span>`
-      : `<a href="${mkUrl(last)}" class="${btnCls(false, false)} rounded-r-lg" aria-label="Gå till sista sidan" style="line-height:1">${icon('chevrons-right')}</a>`;
+      ? `<span class="${btnCls(true, false)} radix-pagination__link--last" aria-hidden="true">${icon('chevrons-right')}</span>`
+      : `<a href="${mkUrl(last)}" class="${btnCls(false, false)} radix-pagination__link--last" aria-label="Gå till sista sidan">${icon('chevrons-right')}</a>`;
 
     const pageHtml = pages.map((p) => {
       if (p === '…') {
-        return `<span class="h-6 min-w-6 px-1.5 py-0.5 inline-flex items-center justify-center align-middle pager-ellipsis" style="line-height:1">…</span>`;
+        return `<span class="radix-pagination__ellipsis">…</span>`;
       }
 
       return makePageBtn(p, p === current);
     }).join('');
 
     this.pager.innerHTML = `
-      <div class="hidden md:flex items-center justify-center gap-1.5" aria-label="Sidnavigering">
-        ${first}${prev}${pageHtml}${next}${lastBtn}
-      </div>
-      <div class="md:hidden w-full overflow-x-auto pb-2 snap-x" aria-label="Sidnavigering">
-        <div class="flex min-w-fit shrink-0 items-center justify-center gap-1.5 px-2 text-sm">
+      <nav class="radix-pagination radix-pagination--mobile" aria-label="Sidnavigering">
+        <div class="radix-pagination__inner">
           ${first}${prev}${pageHtml}${next}${lastBtn}
         </div>
-      </div>
+      </nav>
+      <nav class="radix-pagination radix-pagination--desktop" aria-label="Sidnavigering">
+        <div class="radix-pagination__inner">
+          ${first}${prev}${pageHtml}${next}${lastBtn}
+        </div>
+      </nav>
     `;
   }
 
   showLoading(keepRows = false) {
     if (keepRows && this.tbody.children.length > 0) {
-      const tableWrap = this.tbody.closest('.overflow-x-auto') || this.tbody.closest('table') || this.tbody.parentElement;
-
-      if (tableWrap) {
-        tableWrap.style.minHeight = `${tableWrap.offsetHeight}px`;
-        tableWrap.style.transition = 'min-height 150ms ease';
-      }
-
       this.tbody.classList.add('transition-opacity', 'duration-150', 'pointer-events-none');
       return;
     }
@@ -573,16 +568,7 @@ export default class SearchTable {
   }
 
   clearLoadingState() {
-    const tableWrap = this.tbody.closest('.overflow-x-auto') || this.tbody.closest('table') || this.tbody.parentElement;
-
     this.tbody.classList.remove('opacity-60', 'transition-opacity', 'duration-150', 'pointer-events-none');
-
-    if (tableWrap) {
-      window.setTimeout(() => {
-        tableWrap.style.minHeight = '';
-        tableWrap.style.transition = '';
-      }, 150);
-    }
   }
 
   renderError(msg) {

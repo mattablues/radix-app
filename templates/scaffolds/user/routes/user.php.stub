@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 // Global grupp för web med request-id + logging
 $router->group(
-    ['middleware' => ['request.id', 'api.logger', 'security.headers', 'limit.web', 'csrf']],
+    ['middleware' => ['canonical.url', 'request.id', 'api.logger', 'security.headers', 'limit.web', 'csrf']],
     function () use ($router) {
         // Inloggad användare (ingen /admin-prefix)
         $router->group(['middleware' => ['auth', 'share.user']], function () use ($router) {
