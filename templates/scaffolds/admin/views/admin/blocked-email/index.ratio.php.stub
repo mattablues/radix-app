@@ -190,10 +190,11 @@
     <div
       x-show="open"
       x-cloak
+      x-trap.noscroll="open"
       class="fixed inset-0 z-[100] overflow-y-auto"
       role="dialog"
       aria-modal="true"
-      x-bind:aria-hidden="open ? 'false' : 'true'"
+      aria-labelledby="blocked-email-delete-modal-title"
     >
       <div
         class="fixed inset-0 bg-black/60 z-0"
@@ -202,7 +203,7 @@
 
       <div class="relative z-10 flex min-h-screen items-center justify-center p-4">
         <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
-          <h2 class="text-xl font-bold text-gray-900 mb-4">Ta bort blockering</h2>
+          <h2 id="blocked-email-delete-modal-title" class="text-xl font-bold text-gray-900 mb-4">Ta bort blockering</h2>
 
           <p class="text-sm text-gray-600 mb-8">
             Vill du ta bort <strong class="text-gray-900" x-text="email"></strong> från blocklistan?
