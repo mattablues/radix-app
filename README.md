@@ -11,13 +11,13 @@ Själva ramverket lever som ett separat Composer-paket: `mattablues/radix-framew
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <!-- doctoc will insert TOC here -->
 
-- [Översikt](#översikt)
+- [Översikt](#%C3%B6versikt)
 - [Installation](#installation)
 - [Webroot och .htaccess](#webroot-och-htaccess)
 - [Public assets och uploads](#public-assets-och-uploads)
 - [Dokumentation](#dokumentation)
 - [CLI (radix)](#cli-radix)
-- [Scaffolds (lägga till funktionalitet)](#scaffolds-lägga-till-funktionalitet)
+- [Scaffolds (lägga till funktionalitet)](#scaffolds-l%C3%A4gga-till-funktionalitet)
 - [Utveckling & test](#utveckling--test)
 - [Licens](#licens)
 
