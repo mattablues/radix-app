@@ -80,17 +80,29 @@ Alpine.data('tooltip', (opts = {}) => ({
   content: opts.content || '',
   maxWidthPx: Number(opts.maxWidthPx || 320),
   offsetPx: Number(opts.offsetPx || 10),
+  placement: 'bottom',
 
-  // Intern state
   _closeTimer: null,
+  _pointerDownOnTrigger: false,
 
   init() {
-    // Läs från data-attributes om inget skickats in (CSP-säkert)
     const ds = this.$el && this.$el.dataset ? this.$el.dataset : {};
-    if (!opts.title && ds.tooltipTitle) this.title = ds.tooltipTitle;
-    if (!opts.content && ds.tooltipContent) this.content = ds.tooltipContent;
-    if (!opts.maxWidthPx && ds.tooltipMaxWidthPx) this.maxWidthPx = Number(ds.tooltipMaxWidthPx) || this.maxWidthPx;
-    if (!opts.offsetPx && ds.tooltipOffsetPx) this.offsetPx = Number(ds.tooltipOffsetPx) || this.offsetPx;
+
+    if (!opts.title && ds.tooltipTitle) {
+      this.title = ds.tooltipTitle;
+    }
+
+    if (!opts.content && ds.tooltipContent) {
+      this.content = ds.tooltipContent;
+    }
+
+    if (!opts.maxWidthPx && ds.tooltipMaxWidthPx) {
+      this.maxWidthPx = Number(ds.tooltipMaxWidthPx) || this.maxWidthPx;
+    }
+
+    if (!opts.offsetPx && ds.tooltipOffsetPx) {
+      this.offsetPx = Number(ds.tooltipOffsetPx) || this.offsetPx;
+    }
   },
 
   destroy() {
@@ -103,6 +115,7 @@ Alpine.data('tooltip', (opts = {}) => ({
 
   show() {
     this.open = true;
+    this.updatePosition();
   },
 
   hide() {
@@ -111,6 +124,12 @@ Alpine.data('tooltip', (opts = {}) => ({
 
   toggle() {
     this.open ? this.hide() : this.show();
+  },
+
+  panelPositionClass() {
+    return this.placement === 'top'
+      ? 'bottom-full mb-2'
+      : 'top-full mt-2';
   },
 
   scheduleHide(delayMs = 120) {
@@ -123,31 +142,82 @@ Alpine.data('tooltip', (opts = {}) => ({
     this._closeTimer = null;
   },
 
-  // Hover (desktop)
-  onTriggerEnter() {
-    if (!this.isHoverCapable()) return;
-    this.cancelScheduledHide();
+  onTriggerPointerDown() {
+    this._pointerDownOnTrigger = true;
+  },
+
+  onTriggerFocus() {
+    if (this._pointerDownOnTrigger) {
+      return;
+    }
+
+    this.show();
+  },
+
+  onTriggerClick() {
+    this.toggle();
+    this._pointerDownOnTrigger = false;
+  },
+
+      onTriggerBlur() {
+        this._pointerDownOnTrigger = false;
+
+        if (this.isHoverCapable()) {
+          this.hide();
+        }
+      },
+
+      onTriggerEnter() {
+        if (!this.isHoverCapable()) return;
+
+        this.cancelScheduledHide();
     this.show();
   },
 
   onTriggerLeave() {
     if (!this.isHoverCapable()) return;
+
     this.scheduleHide(160);
   },
 
   onPanelEnter() {
     if (!this.isHoverCapable()) return;
+
     this.cancelScheduledHide();
     this.show();
   },
 
   onPanelLeave() {
     if (!this.isHoverCapable()) return;
+
     this.scheduleHide(120);
   },
 
   updatePosition() {
-    // CSP-safe placeholder. Placering bör hanteras med CSS-klasser i vyn.
+    const trigger = this.$refs && this.$refs.trigger ? this.$refs.trigger : null;
+
+    if (!trigger || typeof trigger.getBoundingClientRect !== 'function') {
+      this.placement = 'bottom';
+      return;
+    }
+
+    const rect = trigger.getBoundingClientRect();
+    const estimatedPanelHeight = 150;
+
+    const scrollContainer = trigger.closest('.overflow-x-auto');
+    const boundaryRect = scrollContainer && typeof scrollContainer.getBoundingClientRect === 'function'
+      ? scrollContainer.getBoundingClientRect()
+      : {
+          top: 0,
+          bottom: window.innerHeight || document.documentElement.clientHeight || 0,
+        };
+
+    const spaceBelow = boundaryRect.bottom - rect.bottom;
+    const spaceAbove = rect.top - boundaryRect.top;
+
+    this.placement = spaceBelow < estimatedPanelHeight && spaceAbove > spaceBelow
+      ? 'top'
+      : 'bottom';
   },
 }));
 
