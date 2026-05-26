@@ -13,15 +13,20 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 # Vidarebefordra Authorization-headern (Behövs för vissa autentiseringssystem)
 SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
 
-# Caching för statiska resurser
+# Caching och säkerhetsheaders för statiska resurser.
+# Dynamiska svar hanteras av Radix SecurityHeaders middleware.
 <IfModule mod_headers.c>
     <FilesMatch "\.(js|mjs|css|png|jpg|jpeg|gif|webp|svg|woff|woff2|ttf|eot|ico|json|webmanifest)$">
+        Header always set X-Content-Type-Options "nosniff"
+        Header always set Cross-Origin-Resource-Policy "same-origin"
         Header set Cache-Control "max-age=86400, public"
     </FilesMatch>
 
     # Om resursen har cache-busting via ?v=... kan vi cacha hårt
     <If "%{QUERY_STRING} =~ /(^|&)v=/">
         <FilesMatch "\.(js|mjs|css|png|jpg|jpeg|gif|webp|svg|woff|woff2|ttf|eot|ico|json|webmanifest)$">
+            Header always set X-Content-Type-Options "nosniff"
+            Header always set Cross-Origin-Resource-Policy "same-origin"
             Header set Cache-Control "max-age=31536000, public, immutable"
         </FilesMatch>
     </If>

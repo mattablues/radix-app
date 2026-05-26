@@ -1,9 +1,7 @@
 Options -ExecCGI -Indexes
 
+# Assets är betrodda filer som deployas av applikationen.
+# Blockera server-side/exekverbara filtyper om något hamnar här av misstag.
 <FilesMatch "\.(php[0-9]?|phtml|phar|cgi|pl|py|sh|bash)$">
     Require all denied
 </FilesMatch>
-
-<IfModule mod_headers.c>
-    Header always set X-Content-Type-Options "nosniff"
-</IfModule>

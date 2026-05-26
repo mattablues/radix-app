@@ -1,10 +1,15 @@
 Options -ExecCGI -Indexes
 
-<FilesMatch "\.(php[0-9]?|phtml|phar|cgi|pl|py|sh|bash|html|htm|js|mjs|css|svg|xml|xhtml|shtml)$">
+# Starter-default: blockera vanliga aktiva/scriptbara filtyper.
+# Om din app endast tillåter bilder kan du göra detta ännu striktare.
+# Om din app tillåter dokument bör du se över Content-Disposition nedan.
+<FilesMatch "\.(php[0-9]?|phtml|phar|cgi|pl|py|sh|bash|html|htm|js|mjs|css|svg|xml|xhtml|shtml|wasm)$">
     Require all denied
 </FilesMatch>
 
 <IfModule mod_headers.c>
-    Header always set X-Content-Type-Options "nosniff"
+    # Standard för starter:
+    # - "inline" gör att bilder visas direkt i browsern.
+    # - "attachment" är säkrare för generella filuppladdningar.
     Header set Content-Disposition "inline"
 </IfModule>
