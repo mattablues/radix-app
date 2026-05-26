@@ -18,12 +18,19 @@ final class SecurityHeadersMiddlewareTest extends TestCase
      *
      * @param array<string, mixed> $cspConfig
      */
-    private function makeMiddleware(array $cspConfig): SecurityHeaders
+    private function makeMiddleware(array $cspConfig, string $corp = ''): SecurityHeaders
     {
         $config = $this->createMock(Config::class);
         $config->method('get')
-            ->with('csp', [])
-            ->willReturn($cspConfig);
+            ->willReturnCallback(
+                static function (string $key, mixed $default = null) use ($cspConfig, $corp): mixed {
+                    return match ($key) {
+                        'security.corp' => $corp,
+                        'csp' => $cspConfig,
+                        default => $default,
+                    };
+                }
+            );
 
         return new SecurityHeaders($config);
     }
@@ -400,5 +407,64 @@ final class SecurityHeadersMiddlewareTest extends TestCase
 
         // default-src ska fortfarande finnas – här märks skillnaden mot break-mutanten
         $this->assertStringContainsString("default-src 'self'", $csp);
+    }
+
+    public function testCrossOriginResourcePolicyHeaderIsSetWhenConfigured(): void
+    {
+        $cspConfig = [
+            'web' => [
+                'default-src' => ["'self'"],
+            ],
+        ];
+
+        $middleware = $this->makeMiddleware($cspConfig, 'same-origin');
+        $handler = $this->makeHandler();
+
+        $request = new Request(
+            uri: '/',
+            method: 'GET',
+            get: [],
+            post: [],
+            files: [],
+            cookie: [],
+            server: []
+        );
+
+        $response = $middleware->process($request, $handler);
+
+        $headers = $response->headers();
+
+        $this->assertSame(
+            'same-origin',
+            $headers['Cross-Origin-Resource-Policy'] ?? null
+        );
+    }
+
+    public function testCrossOriginResourcePolicyHeaderIsNotSetWhenNotConfigured(): void
+    {
+        $cspConfig = [
+            'web' => [
+                'default-src' => ["'self'"],
+            ],
+        ];
+
+        $middleware = $this->makeMiddleware($cspConfig);
+        $handler = $this->makeHandler();
+
+        $request = new Request(
+            uri: '/',
+            method: 'GET',
+            get: [],
+            post: [],
+            files: [],
+            cookie: [],
+            server: []
+        );
+
+        $response = $middleware->process($request, $handler);
+
+        $headers = $response->headers();
+
+        $this->assertArrayNotHasKey('Cross-Origin-Resource-Policy', $headers);
     }
 }
