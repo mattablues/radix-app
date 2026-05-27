@@ -76,7 +76,7 @@ export default class SearchProfiles extends Search {
 
                 this.results.forEach(result => {
                     const li = document.createElement('li');
-                    li.className = 'px-3 py-1.5 hover:bg-emerald-50/50';
+                    li.className = 'px-3 py-1.5 hover:bg-blue-50/50';
                     const userRoute = result.show_url || '#';
                     const avatarUrl = result.avatar_url || result.avatar || '';
 
@@ -84,7 +84,7 @@ export default class SearchProfiles extends Search {
                         <a href="${userRoute}" class="flex items-center gap-3">
                             <img src="${avatarUrl}" alt="${result.first_name}" class="w-8 h-8 rounded-full object-cover">
                             <div>
-                                <div class="text-sm font-medium text-emerald-700 hover:underline">${result.first_name} ${result.last_name}</div>
+                                <div class="text-sm font-medium text-blue-600 hover:underline">${result.first_name} ${result.last_name}</div>
                                 <p class="text-xs text-slate-600">${result.email}</p>
                             </div>
                         </a>
@@ -117,7 +117,7 @@ export default class SearchProfiles extends Search {
 
             if (this.results.length > 0) {
                 const ul = document.createElement('ul');
-                ul.classList.add('search-results');
+                ul.className = 'search-results divide-y divide-slate-100';
 
                 this.results.forEach(result => {
                     const li = document.createElement('li');
@@ -130,7 +130,7 @@ export default class SearchProfiles extends Search {
                         <div class="flex items-center gap-4">
                             <img src="${avatarUrl}" alt="${result.first_name}" class="w-10 h-10 rounded-full object-cover">
                             <div>
-                                <a href="${userRoute}" class="font-semibold text-emerald-700 hover:underline">${result.first_name} ${result.last_name}</a>
+                                <a href="${userRoute}" class="font-semibold text-blue-600 hover:underline">${result.first_name} ${result.last_name}</a>
                                 <p class="text-sm text-slate-600">${result.email}</p>
                             </div>
                         </div>
