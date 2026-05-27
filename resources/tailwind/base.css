@@ -2,6 +2,21 @@
 @plugin "@tailwindcss/forms";
 
 @layer base {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    background-color: var(--color-slate-50);
+    overscroll-behavior-x: none;
+  }
+
+  header {
+    isolation: isolate;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+  }
+
   /* Matcha exakt höjd (t.ex. 37.5px) + nollställ linjehöjd så text centreras */
   input[type=file] {
     height: 37.5px;        /* exakt match mot de andra fälten */

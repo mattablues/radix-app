@@ -134,6 +134,7 @@ export default class SearchTable {
         }
 
         e.preventDefault();
+        a.blur();
 
         const page = Number.parseInt(url.searchParams.get('page') || '1', 10) || 1;
         const q = (url.searchParams.get('q') || '').trim();
