@@ -141,10 +141,19 @@
 @layer components {
   .radix-pagination {
     @apply flex justify-center;
+    width: 100%;
+    max-width: 100%;
   }
 
   .radix-pagination--mobile {
-    @apply md:hidden w-full overflow-x-auto pb-2 snap-x;
+    @apply md:hidden w-full overflow-x-auto overflow-y-hidden pb-2;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .radix-pagination--mobile::-webkit-scrollbar {
+    display: none;
   }
 
   .radix-pagination--desktop {
@@ -207,3 +216,4 @@
     @apply hidden;
   }
 }
+s
