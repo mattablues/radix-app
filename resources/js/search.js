@@ -122,11 +122,11 @@ export default class Search {
 
         // Rad 2: pager-knappar + sidnummer
         const bottomRow = document.createElement('div');
-        bottomRow.className = 'flex items-center justify-center gap-1.5';
+        bottomRow.className = 'radix-pagination__inner';
 
-        const baseBtnCls = 'h-6 min-w-6 px-1.5 py-0.5 text-xs rounded border flex items-center justify-center transition-colors leading-none';
-        const activeCls = 'text-emerald-700 border-emerald-200 hover:bg-emerald-50';
-        const disabledCls = 'text-slate-300 border-slate-200 cursor-not-allowed';
+        const baseBtnCls = 'radix-pagination__link h-6 min-w-6 px-1.5 py-0.5 text-xs';
+        const activeCls = '';
+        const disabledCls = 'radix-pagination__link--disabled';
 
         // SVG-ikoner
         const iconSize = 14; // matcha ungefär text-xs-höjd
@@ -163,13 +163,13 @@ export default class Search {
             el.type = 'button';
 
             if (isEllipsis) {
-                el.className = `${baseBtnCls} text-slate-400 border-slate-200`;
+                el.className = 'radix-pagination__ellipsis';
                 el.textContent = '…';
                 el.disabled = true;
                 return el;
             }
 
-            el.className = `${baseBtnCls} ${isActive ? 'bg-emerald-600 text-white border-emerald-600' : activeCls}`;
+            el.className = `${baseBtnCls} ${isActive ? 'radix-pagination__link--active' : activeCls}`;
             el.textContent = String(p);
 
             if (!isActive) {
