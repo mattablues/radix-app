@@ -15,7 +15,7 @@
 <body id="{% yield pageId %}" class="flex flex-col min-h-screen bg-slate-50 text-slate-600 antialiased font-sans">
 
   <!-- Minimalistisk Auth-Header -->
-  <header class="w-full bg-white/80 backdrop-blur-md border-b border-gray-100 fixed top-0 z-50">
+  <header class="auth-header stable-header w-full bg-white/80 backdrop-blur-md border-b border-gray-100 fixed top-0 left-0 right-0 z-50">
     <div class="container-centered mx-auto px-6">
       <div class="h-16 flex justify-between items-center">
         <a href="{{ route('home.index') }}" class="flex items-center gap-2.5 group">

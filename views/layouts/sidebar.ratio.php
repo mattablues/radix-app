@@ -1,6 +1,6 @@
 {% extends "layouts/main.ratio.php" %}
 {% block headerContainer %}
-    <div class="container-base h-15 flex items-center justify-between">
+    <div class="container-base h-(--header-h) flex items-center justify-between">
     {% include "layouts/partials/header-inner.ratio.php" %}
     </div>
 {% endblock %}
@@ -14,10 +14,12 @@
 {% endblock %}
 
 {% block content %}
-  <div class="flex-1">
+  <div class="flex-1 pt-(--header-h)">
     <div class="relative h-full">
-      <aside x-data="publicSidebar()" class="fixed lg:left-0 left-[-300px] top-[60px] h-[calc(100vh-60px)] w-(--sidebar-aside-w) bg-white border-r border-gray-100 shadow-sm z-40 overflow-y-auto hide-scrollbar transition-all duration-200"
-             x-bind:class="sidebarOpen ? 'left-0' : 'left-[-300px]'">
+      <aside x-data="publicSidebar()"
+        class="stable-sidebar fixed lg:left-0 left-[-300px] top-(--header-h) h-[calc(100vh-var(--header-h))] w-(--sidebar-aside-w) bg-white border-r border-gray-100 shadow-sm z-40 overflow-y-auto hide-scrollbar transition-all duration-200"
+         x-bind:class="sidebarOpen ? 'left-0' : 'left-[-300px]'"
+      >
         <div class="py-6 px-4">
           <nav class="space-y-1">
             <h4 class="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Huvudmeny</h4>

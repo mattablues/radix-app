@@ -2,7 +2,7 @@
   --animate-move-in-top: moveInTop .3s ease-out backwards;
   --animate-move-in-bottom: moveInBottom .3s ease-out backwards;
   --animate-fade-in-top: fadeInTop .5s ease-out forwards;
-  --header-h: 60px;
+  --header-h: 4rem;
     /* Layout-variabler */
   --aside-w: 300px;        /* default för enkel layout */
   --aside-left-w: 300px;   /* default vänster i both */

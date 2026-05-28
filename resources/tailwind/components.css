@@ -138,6 +138,40 @@
   }
 }
 
+.stable-header {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  isolation: isolate;
+}
+
+.stable-sidebar {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  isolation: isolate;
+}
+
+.app-header,
+.auth-header,
+.site-header {
+  height: var(--header-h);
+}
+
+.app-header {
+  background-color: rgb(17 24 39);
+}
+
+.auth-header,
+.site-header {
+  background-color: rgb(255 255 255);
+}
+
+html,
+body {
+  overscroll-behavior-x: none;
+}
+
 @layer components {
   .radix-pagination {
     @apply flex justify-center;
@@ -150,6 +184,9 @@
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
   }
 
   .radix-pagination--mobile::-webkit-scrollbar {
@@ -216,4 +253,3 @@
     @apply hidden;
   }
 }
-s

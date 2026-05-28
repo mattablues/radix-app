@@ -13,16 +13,16 @@
   <link rel="manifest" href="/assets/favicons/site.webmanifest" />
 </head>
 <body id="{% yield pageId %}" class="flex flex-col min-h-screen {% yield pageClass %}">
-  <header class="sticky top-0 z-50 w-full bg-white shadow-xs [--header-h:60px]">
+  <header class="site-header stable-header fixed top-0 left-0 right-0 z-50 w-full bg-white shadow-xs">
     {% yield headerContainer %}
-    <div class="container-centered h-15 flex items-center justify-between">
+    <div class="container-centered h-(--header-h) flex items-center justify-between">
     {% include "layouts/partials/header-inner.ratio.php" %}
     </div>
     {% endyield headerContainer %}
   </header>
 
   {% yield content %}
-  <main class="grow">
+  <main class="grow pt-16">
     {% $theme = 'public'; %}
     {% include "components/flash.ratio.php" %}
     {% include "components/noscript.ratio.php" %}

@@ -21,10 +21,20 @@
 </a>
 
 <!-- Desktop Navigation -->
-<nav class="hidden lg:flex items-center gap-8">
-  <a href="{{ route('home.index') }}" class="text-[11px] font-bold uppercase tracking-widest transition-colors {{ ($pageId === 'home') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600' }}">Hem</a>
-  <a href="{{ route('about.index') }}" class="text-[11px] font-bold uppercase tracking-widest transition-colors {{ in_array($pageId, ['about', 'changelog']) ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600' }}">Om Radix</a>
-  <a href="{{ route('contact.index') }}" class="text-[11px] font-bold uppercase tracking-widest transition-colors {{ ($pageId === 'contact') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600' }}">Kontakt</a>
+<nav class="hidden lg:flex h-full items-center gap-8">
+  <a href="{{ route('home.index') }}"
+     class="nav-link inline-flex h-full items-center text-[11px] font-bold uppercase tracking-widest transition-colors {{ ($pageId === 'home') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600' }}"
+     data-nav-page="home">
+    Hem
+  </a>
+  <a href="{{ route('about.index') }}"
+     class="nav-link inline-flex h-full items-center text-[11px] font-bold uppercase tracking-widest transition-colors {{ in_array($pageId, ['about', 'changelog']) ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600' }}">
+    Om Radix
+  </a>
+  <a href="{{ route('contact.index') }}"
+     class="nav-link inline-flex h-full items-center text-[11px] font-bold uppercase tracking-widest transition-colors {{ ($pageId === 'contact') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600' }}">
+    Kontakt
+  </a>
 </nav>
 
 <!-- Mobile Menu Trigger -->
