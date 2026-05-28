@@ -24,7 +24,7 @@
   {% $theme = 'app'; %}
   {% include "components/flash.ratio.php" %}
 
-  <header class="sticky top-0 z-50 w-full bg-gray-900 shadow-lg">
+  <header class="app-header stable-header fixed top-0 left-0 right-0 z-50 w-full bg-gray-900 shadow-lg">
     <div class="container-base relative">
       <div class="h-16 flex items-center justify-between">
         <a href="{{ route('home.index') }}" class="flex items-center gap-3 group transition-all">
@@ -305,7 +305,7 @@
   {% endif; %}
 
     <main
-      class="max-w-[1180px] flex-1 lg:ml-(--sidebar-w) pt-8 px-4 md:px-8 pb-12 transition-all duration-300"
+      class="max-w-[1180px] flex-1 lg:ml-(--sidebar-w) pt-24 px-4 md:px-8 pb-12 transition-all duration-300"
       x-on:click="$store.sidebar.close()"
     >
     {% include "components/noscript.ratio.php" %}
