@@ -24,7 +24,7 @@
   {% $theme = 'app'; %}
   {% include "components/flash.ratio.php" %}
 
-  <header class="app-header stable-header fixed top-0 left-0 right-0 z-50 w-full bg-gray-900 shadow-lg">
+  <header class="app-header stable-header fixed top-0 left-0 right-0 z-50 w-full shadow-lg">
     <div class="container-base relative">
       <div class="h-16 flex items-center justify-between">
         <a href="{{ route('home.index') }}" class="flex items-center gap-3 group transition-all">
