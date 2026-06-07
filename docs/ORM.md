@@ -1006,6 +1006,67 @@ hasOneThrough
 
 Relationer definieras som metoder på modellen.
 
+Relationens metod returnerar normalt ett relationsobjekt:
+
+```php
+$relation = $user->posts();
+```
+
+För att hämta relationens data direkt används relationens egna metoder:
+
+```php
+$posts = $user->posts()->get();
+
+$profile = $user->profile()->first();
+```
+
+När en relation har laddats via `load()`, `loadMissing()` eller eager loading sparas resultatet på modellen och kan hämtas med:
+
+```php
+$posts = $user->getRelation('posts');
+```
+
+Redan laddade relationer kan också läsas via dynamisk property:
+
+```php
+$user->load('posts');
+
+$posts = $user->posts;
+```
+
+> Skillnad:
+>
+> - `$user->posts()` returnerar relationsobjektet.
+> - `$user->posts` returnerar laddad relationsdata om relationen redan är laddad.
+
+---
+
+## Relationsstatus
+
+Modellen har stöd för att kontrollera och hantera laddade relationer:
+
+```php
+$user->relationLoaded('posts');
+
+$user->unsetRelation('posts');
+
+$user->withoutRelations();
+```
+
+`relationLoaded()` skiljer på:
+
+```php
+relation saknas
+```
+
+och:
+
+```php
+relation är laddad men värdet är null
+```
+
+Det är viktigt för `hasOne`, `belongsTo` och `hasOneThrough`, där `null` kan vara ett giltigt laddat resultat.
+
 ---
 
 ## `hasOne`
@@ -1023,6 +1084,16 @@ Användning:
 
 ```php
 $profile = $user->profile()->first();
+```
+
+Med default-modell:
+
+```php
+$profile = $user->profile()
+    ->withDefault([
+        'avatar' => '/images/default-avatar.png',
+    ])
+    ->first();
 ```
 
 ---
@@ -1044,6 +1115,16 @@ Användning:
 $posts = $user->posts()->get();
 ```
 
+`hasMany` kan också användas som query:
+
+```php
+$posts = $user->posts()
+    ->query()
+    ->where('published', '=', 1)
+    ->orderBy('created_at', 'DESC')
+    ->get();
+```
+
 ---
 
 ## `belongsTo`
@@ -1061,6 +1142,25 @@ Användning:
 
 ```php
 $user = $post->user()->first();
+```
+
+Med query:
+
+```php
+$user = $post->user()
+    ->query()
+    ->where('active', '=', 1)
+    ->first();
+```
+
+Med default-modell:
+
+```php
+$user = $post->user()
+    ->withDefault([
+        'name' => 'Unknown',
+    ])
+    ->first();
 ```
 
 ---
@@ -1087,6 +1187,24 @@ Användning:
 $roles = $user->roles()->get();
 ```
 
+Pivot-operationer:
+
+```php
+$user->roles()->attach(1);
+
+$user->roles()->detach(1);
+
+$user->roles()->sync([1, 2, 3]);
+```
+
+Med pivot-attribut:
+
+```php
+$user->roles()->attach(1, [
+    'created_by' => 10,
+]);
+```
+
 ---
 
 ## `hasManyThrough`
@@ -1105,6 +1223,12 @@ public function votes(): HasManyThrough
         'subject_id'
     );
 }
+```
+
+Användning:
+
+```php
+$votes = $category->votes()->get();
 ```
 
 ---
@@ -1127,23 +1251,33 @@ public function topVote(): HasOneThrough
 }
 ```
 
+Användning:
+
+```php
+$topVote = $category->topVote()->first();
+```
+
 ---
 
-## Lazy loading av relation
+## Relation cardinality
 
-Om relationen finns som metod kan den nås via property-liknande access beroende på modellens magiska getter.
+Relationer kan rapportera om de representerar en eller flera modeller:
+
+```php
+$relation->isOne();
+
+$relation->isMany();
+```
 
 Exempel:
 
 ```php
-$posts = $user->posts;
+$user->profile()->isOne(); // true
+
+$user->posts()->isMany(); // true
 ```
 
-För tydlighet rekommenderas ofta explicit relation:
-
-```php
-$posts = $user->posts()->get();
-```
+Det används internt för att avgöra om constrained loading ska lagra en enskild modell eller en Collection.
 
 ---
 
@@ -1165,6 +1299,18 @@ $users = User::with([
         $query->where('published', '=', 1);
     },
 ])->get();
+```
+
+För many-relationer lagras resultatet som en Collection:
+
+```php
+$posts = $user->getRelation('posts');
+```
+
+För one-relationer lagras resultatet som en modell eller `null`:
+
+```php
+$profile = $user->getRelation('profile');
 ```
 
 ---
@@ -1199,6 +1345,80 @@ $user->load([
 ]);
 ```
 
+För many-relationer blir resultatet en Collection:
+
+```php
+$posts = $user->getRelation('posts');
+```
+
+För one-relationer blir resultatet en modell eller `null`:
+
+```php
+$profile = $user->getRelation('profile');
+```
+
+---
+
+## Relation closure-typer
+
+När du använder `load()` kan closure-parametern styra vad som skickas in.
+
+### QueryBuilder
+
+Om closure-parametern är typad som `QueryBuilder`, skickas relationens query builder in:
+
+```php
+use Radix\Database\QueryBuilder\QueryBuilder;
+
+$user->load([
+    'posts' => function (QueryBuilder $query): void {
+        $query->where('published', '=', 1);
+    },
+]);
+```
+
+För many-relationer hämtas data via:
+
+```php
+$query->get();
+```
+
+För one-relationer hämtas data via:
+
+```php
+$query->first();
+```
+
+### Relationsobjekt
+
+Om closure-parametern är typad som en relationsklass skickas relationsobjektet in:
+
+```php
+use Radix\Database\ORM\Relationships\HasOne;
+
+$user->load([
+    'profile' => function (HasOne $relation): void {
+        $relation->withDefault([
+            'avatar' => '/images/default-avatar.png',
+        ]);
+    },
+]);
+```
+
+Det är användbart för relationsspecifika metoder som `withDefault()`.
+
+### Otypad closure
+
+Om closure-parametern saknar typ skickas relationsobjektet in:
+
+```php
+$user->load([
+    'posts' => function ($relation): void {
+        // $relation är relationsobjektet
+    },
+]);
+```
+
 ---
 
 ## `loadMissing()`
@@ -1208,6 +1428,22 @@ Ladda relationer bara om de inte redan är laddade:
 ```php
 $user->loadMissing(['posts', 'profile']);
 ```
+
+Med constraint:
+
+```php
+use Radix\Database\QueryBuilder\QueryBuilder;
+
+$user->loadMissing([
+    'posts' => function (QueryBuilder $query): void {
+        $query->where('published', '=', 1);
+    },
+]);
+```
+
+`loadMissing()` laddar inte om relationer som redan finns i modellens relations-cache.
+
+Det gäller även relationer som är laddade med värdet `null`.
 
 ---
 
